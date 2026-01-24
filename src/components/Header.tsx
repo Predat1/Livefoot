@@ -1,16 +1,25 @@
 import { Search, Menu, Bell, Star } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 const Header = () => {
+  const location = useLocation();
+  
   const navItems = [
-    { label: "MATCHES", href: "/", active: true },
+    { label: "MATCHES", href: "/" },
     { label: "NEWS", href: "/news" },
     { label: "COMPETITIONS", href: "/competitions" },
     { label: "TEAMS", href: "/teams" },
     { label: "PLAYERS", href: "/players" },
     { label: "TRANSFERS", href: "/transfers" },
   ];
+
+  const isActive = (href: string) => {
+    if (href === "/") return location.pathname === "/";
+    return location.pathname.startsWith(href);
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-header text-header-foreground shadow-lg">
@@ -20,14 +29,10 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between gap-4">
         {/* Logo */}
         <div className="flex items-center gap-10">
-          <a href="/" className="group flex items-center gap-3">
+          <Link to="/" className="group flex items-center gap-3">
             <div className="relative flex h-10 w-10 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110">
               <svg viewBox="0 0 24 24" className="h-6 w-6 fill-primary-foreground">
                 <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-                <path
-                  d="M12 3C6.48 3 2 7.48 2 12s4.48 9 10 9 9-4.48 9-9-4.48-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7z"
-                  fill="currentColor"
-                />
                 <polygon points="12,6 13.5,10 18,10 14.5,13 16,18 12,15 8,18 9.5,13 6,10 10.5,10" fill="currentColor" />
               </svg>
             </div>
@@ -35,25 +40,26 @@ const Header = () => {
               <span className="text-xl font-black tracking-tight">BESOCCER</span>
               <span className="text-[10px] font-medium text-header-foreground/60 tracking-widest">LIVE SCORES</span>
             </div>
-          </a>
+          </Link>
 
           {/* Navigation - Desktop */}
           <nav className="hidden items-center gap-1 lg:flex">
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.label}
-                href={item.href}
-                className={`relative px-4 py-2 text-sm font-semibold transition-all duration-300 hover:text-primary ${
-                  item.active 
+                to={item.href}
+                className={cn(
+                  "relative px-4 py-2 text-sm font-semibold transition-all duration-300 hover:text-primary",
+                  isActive(item.href) 
                     ? "text-primary" 
                     : "text-header-foreground/70 hover:text-header-foreground"
-                }`}
+                )}
               >
                 {item.label}
-                {item.active && (
+                {isActive(item.href) && (
                   <span className="absolute -bottom-0.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary" />
                 )}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>

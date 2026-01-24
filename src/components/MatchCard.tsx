@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Star, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,14 +26,20 @@ const MatchCard = ({ match }: MatchCardProps) => {
   const isFinished = match.status === "finished";
 
   return (
-    <div className="group relative flex items-center justify-between px-4 py-4 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0">
+    <Link 
+      to={`/match/${match.id}`}
+      className="group relative flex items-center justify-between px-4 py-4 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
+    >
       {/* Live indicator bar */}
       {isLive && (
         <div className="absolute left-0 top-0 h-full w-1 bg-live rounded-r-full" />
       )}
 
       {/* Favorite button */}
-      <button className="mr-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-primary hover:scale-110">
+      <button 
+        onClick={(e) => e.preventDefault()}
+        className="mr-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-primary hover:scale-110"
+      >
         <Star className="h-4 w-4" />
       </button>
 
@@ -135,10 +142,10 @@ const MatchCard = ({ match }: MatchCardProps) => {
       </div>
 
       {/* Arrow */}
-      <button className="ml-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-primary">
+      <div className="ml-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:text-primary">
         <ChevronRight className="h-5 w-5" />
-      </button>
-    </div>
+      </div>
+    </Link>
   );
 };
 
