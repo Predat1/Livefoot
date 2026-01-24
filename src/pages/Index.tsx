@@ -1,18 +1,45 @@
+import { useState, useCallback } from "react";
 import Header from "@/components/Header";
 import DatePicker from "@/components/DatePicker";
 import LeagueSection from "@/components/LeagueSection";
+import PullToRefreshIndicator from "@/components/PullToRefresh";
+import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
 import { mockLeagues } from "@/data/mockData";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { Trophy, TrendingUp, Zap } from "lucide-react";
 
 const Index = () => {
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const stats = [
     { icon: Trophy, label: "Competitions", value: "156" },
     { icon: TrendingUp, label: "Live", value: "12" },
     { icon: Zap, label: "Goals", value: "87" },
   ];
 
+  const handleRefresh = useCallback(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setRefreshKey((prev) => prev + 1);
+  }, []);
+
+  const { containerRef, pullDistance, isRefreshing, progress } = usePullToRefresh({
+    onRefresh: handleRefresh,
+  });
+
+  const { items: visibleLeagues, hasMore, isLoading, loadMoreRef } = useInfiniteScroll({
+    initialItems: mockLeagues,
+    itemsPerPage: 3,
+  });
+
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={containerRef} className="min-h-screen bg-background relative" key={refreshKey}>
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        progress={progress}
+      />
+      
       <Header />
       <DatePicker />
 
@@ -49,10 +76,17 @@ const Index = () => {
 
         {/* Leagues */}
         <div className="space-y-3 sm:space-y-4">
-          {mockLeagues.map((league, index) => (
+          {visibleLeagues.map((league, index) => (
             <LeagueSection key={league.id} league={league} index={index} />
           ))}
         </div>
+
+        {/* Infinite Scroll Loader */}
+        <InfiniteScrollLoader
+          ref={loadMoreRef}
+          isLoading={isLoading}
+          hasMore={hasMore}
+        />
       </main>
 
       {/* Footer */}

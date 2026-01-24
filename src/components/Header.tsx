@@ -1,9 +1,10 @@
-import { Search, Menu, Bell, Star, X } from "lucide-react";
+import { Search, Menu, Bell, Star, X, Download } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Header = () => {
   const location = useLocation();
@@ -78,6 +79,20 @@ const Header = () => {
               />
             </div>
 
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            {/* Install App - Desktop only */}
+            <Link to="/install" className="hidden sm:block">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl text-header-foreground/70 hover:bg-header-foreground/10 hover:text-primary"
+              >
+                <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            </Link>
+
             {/* Favorites - Desktop only */}
             <Button
               variant="ghost"
@@ -138,6 +153,14 @@ const Header = () => {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                to="/install"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-3 rounded-xl text-sm font-semibold text-header-foreground/70 hover:bg-header-foreground/10 hover:text-header-foreground flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Install App
+              </Link>
               <div className="mt-4 pt-4 border-t border-header-foreground/10">
                 <Button
                   className="w-full h-11 rounded-xl gradient-primary font-semibold shadow-lg shadow-primary/30"
