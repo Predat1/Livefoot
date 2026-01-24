@@ -28,25 +28,25 @@ const MatchCard = ({ match }: MatchCardProps) => {
   return (
     <Link 
       to={`/match/${match.id}`}
-      className="group relative flex items-center justify-between px-4 py-4 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
+      className="group relative flex items-center justify-between px-2 sm:px-4 py-3 sm:py-4 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
     >
       {/* Live indicator bar */}
       {isLive && (
         <div className="absolute left-0 top-0 h-full w-1 bg-live rounded-r-full" />
       )}
 
-      {/* Favorite button */}
+      {/* Favorite button - hidden on mobile */}
       <button 
         onClick={(e) => e.preventDefault()}
-        className="mr-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-primary hover:scale-110"
+        className="mr-2 sm:mr-3 text-muted-foreground/40 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-primary hover:scale-110"
       >
         <Star className="h-4 w-4" />
       </button>
 
       {/* Home Team */}
-      <div className="flex flex-1 items-center justify-end gap-3">
+      <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
         <span className={cn(
-          "text-sm font-semibold transition-colors",
+          "text-xs sm:text-sm font-semibold transition-colors truncate text-right",
           isFinished && match.homeTeam.score! > match.awayTeam.score! 
             ? "text-foreground" 
             : isFinished 
@@ -55,26 +55,26 @@ const MatchCard = ({ match }: MatchCardProps) => {
         )}>
           {match.homeTeam.name}
         </span>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/80 shadow-sm transition-transform duration-300 group-hover:scale-110">
+        <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-md sm:rounded-lg bg-muted/80 shadow-sm transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
           {match.homeTeam.logo ? (
             <img
               src={match.homeTeam.logo}
               alt={match.homeTeam.name}
-              className="h-6 w-6 object-contain"
+              className="h-4 w-4 sm:h-6 sm:w-6 object-contain"
             />
           ) : (
-            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
+            <div className="h-3.5 w-3.5 sm:h-5 sm:w-5 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
           )}
         </div>
       </div>
 
       {/* Score / Time */}
-      <div className="mx-5 flex min-w-[100px] flex-col items-center">
+      <div className="mx-2 sm:mx-5 flex min-w-[70px] sm:min-w-[100px] flex-col items-center flex-shrink-0">
         {isLive || isFinished ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <span
               className={cn(
-                "min-w-[32px] rounded-lg px-2 py-1 text-center text-base font-black shadow-sm transition-all duration-300",
+                "min-w-[24px] sm:min-w-[32px] rounded-md sm:rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 text-center text-sm sm:text-base font-black shadow-sm transition-all duration-300",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
                   : "bg-score-bg text-primary-foreground"
@@ -82,10 +82,10 @@ const MatchCard = ({ match }: MatchCardProps) => {
             >
               {match.homeTeam.score}
             </span>
-            <span className="text-lg font-bold text-muted-foreground">-</span>
+            <span className="text-sm sm:text-lg font-bold text-muted-foreground">-</span>
             <span
               className={cn(
-                "min-w-[32px] rounded-lg px-2 py-1 text-center text-base font-black shadow-sm transition-all duration-300",
+                "min-w-[24px] sm:min-w-[32px] rounded-md sm:rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 text-center text-sm sm:text-base font-black shadow-sm transition-all duration-300",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
                   : "bg-score-bg text-primary-foreground"
@@ -95,42 +95,42 @@ const MatchCard = ({ match }: MatchCardProps) => {
             </span>
           </div>
         ) : (
-          <div className="rounded-lg bg-primary/10 px-4 py-1.5">
-            <span className="text-base font-bold text-primary">
+          <div className="rounded-md sm:rounded-lg bg-primary/10 px-2 sm:px-4 py-1 sm:py-1.5">
+            <span className="text-xs sm:text-base font-bold text-primary">
               {match.time}
             </span>
           </div>
         )}
         {isLive && match.minute && (
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-live live-pulse" />
-            <span className="text-xs font-bold text-live">
+          <div className="mt-1 sm:mt-1.5 flex items-center gap-1">
+            <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-live live-pulse" />
+            <span className="text-[10px] sm:text-xs font-bold text-live">
               {match.minute}'
             </span>
           </div>
         )}
         {isFinished && (
-          <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Full Time
+          <span className="mt-0.5 sm:mt-1 text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            FT
           </span>
         )}
       </div>
 
       {/* Away Team */}
-      <div className="flex flex-1 items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/80 shadow-sm transition-transform duration-300 group-hover:scale-110">
+      <div className="flex flex-1 items-center gap-1.5 sm:gap-3 min-w-0">
+        <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-md sm:rounded-lg bg-muted/80 shadow-sm transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
           {match.awayTeam.logo ? (
             <img
               src={match.awayTeam.logo}
               alt={match.awayTeam.name}
-              className="h-6 w-6 object-contain"
+              className="h-4 w-4 sm:h-6 sm:w-6 object-contain"
             />
           ) : (
-            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-accent/40 to-accent/20" />
+            <div className="h-3.5 w-3.5 sm:h-5 sm:w-5 rounded-full bg-gradient-to-br from-accent/40 to-accent/20" />
           )}
         </div>
         <span className={cn(
-          "text-sm font-semibold transition-colors",
+          "text-xs sm:text-sm font-semibold transition-colors truncate",
           isFinished && match.awayTeam.score! > match.homeTeam.score! 
             ? "text-foreground" 
             : isFinished 
@@ -141,8 +141,8 @@ const MatchCard = ({ match }: MatchCardProps) => {
         </span>
       </div>
 
-      {/* Arrow */}
-      <div className="ml-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:text-primary">
+      {/* Arrow - hidden on mobile */}
+      <div className="ml-2 sm:ml-3 text-muted-foreground/40 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:text-primary">
         <ChevronRight className="h-5 w-5" />
       </div>
     </Link>
