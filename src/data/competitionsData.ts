@@ -6,8 +6,15 @@ export const mockCompetitions = [
     logo: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
     teams: 20,
     currentMatchday: 22,
+    totalMatchdays: 38,
     topScorer: "E. Haaland",
     topScorerGoals: 18,
+    topScorerTeam: "Manchester City",
+    topAssist: "K. De Bruyne",
+    topAssistCount: 12,
+    season: "2023-24",
+    startDate: "2023-08-11",
+    endDate: "2024-05-19",
   },
   {
     id: "la-liga",
@@ -16,8 +23,15 @@ export const mockCompetitions = [
     logo: "🇪🇸",
     teams: 20,
     currentMatchday: 21,
-    topScorer: "R. Lewandowski",
+    totalMatchdays: 38,
+    topScorer: "J. Bellingham",
     topScorerGoals: 15,
+    topScorerTeam: "Real Madrid",
+    topAssist: "A. Griezmann",
+    topAssistCount: 10,
+    season: "2023-24",
+    startDate: "2023-08-11",
+    endDate: "2024-05-26",
   },
   {
     id: "serie-a",
@@ -26,8 +40,15 @@ export const mockCompetitions = [
     logo: "🇮🇹",
     teams: 20,
     currentMatchday: 22,
-    topScorer: "V. Osimhen",
-    topScorerGoals: 14,
+    totalMatchdays: 38,
+    topScorer: "L. Martínez",
+    topScorerGoals: 16,
+    topScorerTeam: "Inter Milan",
+    topAssist: "H. Çalhanoğlu",
+    topAssistCount: 9,
+    season: "2023-24",
+    startDate: "2023-08-19",
+    endDate: "2024-05-26",
   },
   {
     id: "bundesliga",
@@ -36,8 +57,15 @@ export const mockCompetitions = [
     logo: "🇩🇪",
     teams: 18,
     currentMatchday: 19,
+    totalMatchdays: 34,
     topScorer: "H. Kane",
-    topScorerGoals: 20,
+    topScorerGoals: 22,
+    topScorerTeam: "Bayern Munich",
+    topAssist: "F. Wirtz",
+    topAssistCount: 11,
+    season: "2023-24",
+    startDate: "2023-08-18",
+    endDate: "2024-05-18",
   },
   {
     id: "ligue-1",
@@ -46,8 +74,15 @@ export const mockCompetitions = [
     logo: "🇫🇷",
     teams: 18,
     currentMatchday: 20,
+    totalMatchdays: 34,
     topScorer: "K. Mbappé",
-    topScorerGoals: 16,
+    topScorerGoals: 18,
+    topScorerTeam: "PSG",
+    topAssist: "O. Dembélé",
+    topAssistCount: 13,
+    season: "2023-24",
+    startDate: "2023-08-11",
+    endDate: "2024-05-18",
   },
   {
     id: "champions-league",
@@ -56,8 +91,15 @@ export const mockCompetitions = [
     logo: "⭐",
     teams: 32,
     currentMatchday: 6,
+    totalMatchdays: 8,
     topScorer: "E. Haaland",
     topScorerGoals: 8,
+    topScorerTeam: "Manchester City",
+    topAssist: "V. Júnior",
+    topAssistCount: 5,
+    season: "2023-24",
+    startDate: "2023-09-19",
+    endDate: "2024-06-01",
   },
   {
     id: "europa-league",
@@ -66,8 +108,15 @@ export const mockCompetitions = [
     logo: "🌍",
     teams: 32,
     currentMatchday: 5,
+    totalMatchdays: 8,
     topScorer: "R. Lukaku",
-    topScorerGoals: 5,
+    topScorerGoals: 6,
+    topScorerTeam: "Roma",
+    topAssist: "P. Dybala",
+    topAssistCount: 4,
+    season: "2023-24",
+    startDate: "2023-09-21",
+    endDate: "2024-05-22",
   },
   {
     id: "primeira-liga",
@@ -76,14 +125,22 @@ export const mockCompetitions = [
     logo: "🇵🇹",
     teams: 18,
     currentMatchday: 18,
+    totalMatchdays: 34,
     topScorer: "V. Gyökeres",
-    topScorerGoals: 22,
+    topScorerGoals: 24,
+    topScorerTeam: "Sporting CP",
+    topAssist: "A. Trincão",
+    topAssistCount: 8,
+    season: "2023-24",
+    startDate: "2023-08-11",
+    endDate: "2024-05-19",
   },
 ];
 
 export const standingsData: Record<string, Array<{
   position: number;
   team: string;
+  logo: string;
   played: number;
   won: number;
   drawn: number;
@@ -92,19 +149,85 @@ export const standingsData: Record<string, Array<{
   ga: number;
   gd: number;
   points: number;
+  form: string[];
+  trend: "up" | "down" | "same";
 }>> = {
   "premier-league": [
-    { position: 1, team: "Liverpool", played: 22, won: 17, drawn: 4, lost: 1, gf: 52, ga: 18, gd: 34, points: 55 },
-    { position: 2, team: "Arsenal", played: 22, won: 15, drawn: 5, lost: 2, gf: 48, ga: 20, gd: 28, points: 50 },
-    { position: 3, team: "Manchester City", played: 22, won: 14, drawn: 5, lost: 3, gf: 50, ga: 22, gd: 28, points: 47 },
-    { position: 4, team: "Chelsea", played: 22, won: 12, drawn: 6, lost: 4, gf: 42, ga: 25, gd: 17, points: 42 },
-    { position: 5, team: "Aston Villa", played: 22, won: 11, drawn: 5, lost: 6, gf: 38, ga: 30, gd: 8, points: 38 },
+    { position: 1, team: "Liverpool", logo: "🔴", played: 22, won: 17, drawn: 4, lost: 1, gf: 52, ga: 18, gd: 34, points: 55, form: ["W", "W", "D", "W", "W"], trend: "up" },
+    { position: 2, team: "Arsenal", logo: "🔴⚪", played: 22, won: 15, drawn: 5, lost: 2, gf: 48, ga: 20, gd: 28, points: 50, form: ["W", "D", "W", "W", "D"], trend: "same" },
+    { position: 3, team: "Manchester City", logo: "🔵", played: 22, won: 14, drawn: 5, lost: 3, gf: 50, ga: 22, gd: 28, points: 47, form: ["L", "W", "W", "D", "W"], trend: "down" },
+    { position: 4, team: "Chelsea", logo: "🔵", played: 22, won: 12, drawn: 6, lost: 4, gf: 42, ga: 25, gd: 17, points: 42, form: ["W", "W", "L", "W", "D"], trend: "up" },
+    { position: 5, team: "Aston Villa", logo: "🟣", played: 22, won: 11, drawn: 5, lost: 6, gf: 38, ga: 30, gd: 8, points: 38, form: ["D", "W", "W", "L", "W"], trend: "up" },
+    { position: 6, team: "Tottenham", logo: "⚪", played: 22, won: 10, drawn: 5, lost: 7, gf: 40, ga: 32, gd: 8, points: 35, form: ["L", "W", "D", "W", "L"], trend: "down" },
+    { position: 7, team: "Newcastle", logo: "⚫⚪", played: 22, won: 10, drawn: 4, lost: 8, gf: 35, ga: 28, gd: 7, points: 34, form: ["W", "L", "W", "W", "D"], trend: "up" },
+    { position: 8, team: "Manchester United", logo: "🔴", played: 22, won: 9, drawn: 5, lost: 8, gf: 28, ga: 30, gd: -2, points: 32, form: ["D", "L", "W", "L", "W"], trend: "same" },
   ],
   "la-liga": [
-    { position: 1, team: "Real Madrid", played: 21, won: 15, drawn: 4, lost: 2, gf: 45, ga: 15, gd: 30, points: 49 },
-    { position: 2, team: "Barcelona", played: 21, won: 14, drawn: 5, lost: 2, gf: 48, ga: 20, gd: 28, points: 47 },
-    { position: 3, team: "Atlético Madrid", played: 21, won: 13, drawn: 4, lost: 4, gf: 40, ga: 22, gd: 18, points: 43 },
-    { position: 4, team: "Athletic Bilbao", played: 21, won: 10, drawn: 7, lost: 4, gf: 32, ga: 18, gd: 14, points: 37 },
-    { position: 5, team: "Real Sociedad", played: 21, won: 9, drawn: 6, lost: 6, gf: 28, ga: 22, gd: 6, points: 33 },
+    { position: 1, team: "Real Madrid", logo: "⚪", played: 21, won: 15, drawn: 4, lost: 2, gf: 45, ga: 15, gd: 30, points: 49, form: ["W", "W", "W", "D", "W"], trend: "up" },
+    { position: 2, team: "Barcelona", logo: "🔵🔴", played: 21, won: 14, drawn: 5, lost: 2, gf: 48, ga: 20, gd: 28, points: 47, form: ["W", "D", "W", "W", "L"], trend: "down" },
+    { position: 3, team: "Atlético Madrid", logo: "🔴⚪", played: 21, won: 13, drawn: 4, lost: 4, gf: 40, ga: 22, gd: 18, points: 43, form: ["D", "W", "W", "W", "D"], trend: "up" },
+    { position: 4, team: "Athletic Bilbao", logo: "🔴⚪", played: 21, won: 10, drawn: 7, lost: 4, gf: 32, ga: 18, gd: 14, points: 37, form: ["W", "D", "D", "W", "W"], trend: "up" },
+    { position: 5, team: "Real Sociedad", logo: "🔵⚪", played: 21, won: 9, drawn: 6, lost: 6, gf: 28, ga: 22, gd: 6, points: 33, form: ["L", "W", "D", "L", "W"], trend: "down" },
+    { position: 6, team: "Real Betis", logo: "🟢⚪", played: 21, won: 8, drawn: 7, lost: 6, gf: 26, ga: 24, gd: 2, points: 31, form: ["D", "D", "W", "L", "D"], trend: "same" },
+  ],
+  "serie-a": [
+    { position: 1, team: "Inter Milan", logo: "🔵⚫", played: 22, won: 18, drawn: 2, lost: 2, gf: 55, ga: 14, gd: 41, points: 56, form: ["W", "W", "W", "W", "D"], trend: "up" },
+    { position: 2, team: "Juventus", logo: "⚫⚪", played: 22, won: 14, drawn: 6, lost: 2, gf: 38, ga: 18, gd: 20, points: 48, form: ["D", "W", "D", "W", "L"], trend: "down" },
+    { position: 3, team: "AC Milan", logo: "🔴⚫", played: 22, won: 12, drawn: 5, lost: 5, gf: 40, ga: 26, gd: 14, points: 41, form: ["W", "L", "W", "W", "D"], trend: "up" },
+    { position: 4, team: "Napoli", logo: "🔵", played: 22, won: 11, drawn: 6, lost: 5, gf: 42, ga: 25, gd: 17, points: 39, form: ["W", "W", "D", "L", "W"], trend: "up" },
+    { position: 5, team: "Atalanta", logo: "🔵⚫", played: 22, won: 11, drawn: 5, lost: 6, gf: 45, ga: 28, gd: 17, points: 38, form: ["W", "W", "W", "L", "D"], trend: "same" },
+  ],
+  "bundesliga": [
+    { position: 1, team: "Leverkusen", logo: "🔴⚫", played: 19, won: 17, drawn: 2, lost: 0, gf: 52, ga: 14, gd: 38, points: 53, form: ["W", "W", "W", "D", "W"], trend: "up" },
+    { position: 2, team: "Bayern Munich", logo: "🔴⚪", played: 19, won: 13, drawn: 3, lost: 3, gf: 50, ga: 22, gd: 28, points: 42, form: ["W", "W", "L", "W", "W"], trend: "up" },
+    { position: 3, team: "Stuttgart", logo: "🔴⚪", played: 19, won: 12, drawn: 4, lost: 3, gf: 45, ga: 25, gd: 20, points: 40, form: ["D", "W", "W", "W", "L"], trend: "down" },
+    { position: 4, team: "Dortmund", logo: "🟡⚫", played: 19, won: 11, drawn: 4, lost: 4, gf: 42, ga: 28, gd: 14, points: 37, form: ["L", "W", "D", "W", "W"], trend: "up" },
+    { position: 5, team: "RB Leipzig", logo: "⚪🔴", played: 19, won: 10, drawn: 4, lost: 5, gf: 38, ga: 24, gd: 14, points: 34, form: ["W", "L", "W", "D", "W"], trend: "same" },
+  ],
+  "ligue-1": [
+    { position: 1, team: "PSG", logo: "🔵🔴", played: 20, won: 16, drawn: 3, lost: 1, gf: 52, ga: 18, gd: 34, points: 51, form: ["W", "W", "W", "D", "W"], trend: "up" },
+    { position: 2, team: "Nice", logo: "🔴⚫", played: 20, won: 12, drawn: 5, lost: 3, gf: 35, ga: 18, gd: 17, points: 41, form: ["W", "D", "W", "L", "W"], trend: "up" },
+    { position: 3, team: "Monaco", logo: "🔴⚪", played: 20, won: 11, drawn: 4, lost: 5, gf: 38, ga: 26, gd: 12, points: 37, form: ["D", "W", "W", "W", "L"], trend: "down" },
+    { position: 4, team: "Lille", logo: "🔴", played: 20, won: 10, drawn: 6, lost: 4, gf: 32, ga: 22, gd: 10, points: 36, form: ["W", "D", "W", "D", "W"], trend: "up" },
+    { position: 5, team: "Marseille", logo: "🔵⚪", played: 20, won: 9, drawn: 5, lost: 6, gf: 35, ga: 28, gd: 7, points: 32, form: ["L", "W", "D", "W", "L"], trend: "down" },
+  ],
+  "champions-league": [
+    { position: 1, team: "Real Madrid", logo: "⚪", played: 6, won: 5, drawn: 1, lost: 0, gf: 16, ga: 5, gd: 11, points: 16, form: ["W", "W", "D", "W", "W"], trend: "up" },
+    { position: 2, team: "Bayern Munich", logo: "🔴⚪", played: 6, won: 5, drawn: 0, lost: 1, gf: 18, ga: 7, gd: 11, points: 15, form: ["W", "W", "L", "W", "W"], trend: "up" },
+    { position: 3, team: "Manchester City", logo: "🔵", played: 6, won: 4, drawn: 1, lost: 1, gf: 14, ga: 6, gd: 8, points: 13, form: ["W", "D", "W", "L", "W"], trend: "same" },
+    { position: 4, team: "Arsenal", logo: "🔴⚪", played: 6, won: 4, drawn: 1, lost: 1, gf: 12, ga: 5, gd: 7, points: 13, form: ["W", "W", "W", "D", "L"], trend: "down" },
+    { position: 5, team: "Inter Milan", logo: "🔵⚫", played: 6, won: 4, drawn: 0, lost: 2, gf: 10, ga: 6, gd: 4, points: 12, form: ["W", "L", "W", "W", "L"], trend: "same" },
+  ],
+};
+
+export const topScorers: Record<string, Array<{
+  position: number;
+  player: string;
+  team: string;
+  goals: number;
+  assists: number;
+  matches: number;
+  minutesPerGoal: number;
+}>> = {
+  "premier-league": [
+    { position: 1, player: "Erling Haaland", team: "Manchester City", goals: 18, assists: 5, matches: 20, minutesPerGoal: 89 },
+    { position: 2, player: "Mohamed Salah", team: "Liverpool", goals: 15, assists: 10, matches: 22, minutesPerGoal: 112 },
+    { position: 3, player: "Ollie Watkins", team: "Aston Villa", goals: 13, assists: 8, matches: 22, minutesPerGoal: 136 },
+    { position: 4, player: "Cole Palmer", team: "Chelsea", goals: 12, assists: 7, matches: 21, minutesPerGoal: 145 },
+    { position: 5, player: "Alexander Isak", team: "Newcastle", goals: 12, assists: 3, matches: 18, minutesPerGoal: 118 },
+  ],
+  "la-liga": [
+    { position: 1, player: "Jude Bellingham", team: "Real Madrid", goals: 15, assists: 6, matches: 20, minutesPerGoal: 108 },
+    { position: 2, player: "Robert Lewandowski", team: "Barcelona", goals: 14, assists: 5, matches: 21, minutesPerGoal: 122 },
+    { position: 3, player: "Antoine Griezmann", team: "Atlético Madrid", goals: 12, assists: 8, matches: 21, minutesPerGoal: 138 },
+    { position: 4, player: "Vinícius Júnior", team: "Real Madrid", goals: 11, assists: 7, matches: 19, minutesPerGoal: 128 },
+    { position: 5, player: "Artem Dovbyk", team: "Girona", goals: 11, assists: 4, matches: 20, minutesPerGoal: 145 },
+  ],
+  "bundesliga": [
+    { position: 1, player: "Harry Kane", team: "Bayern Munich", goals: 22, assists: 7, matches: 19, minutesPerGoal: 71 },
+    { position: 2, player: "Serhou Guirassy", team: "Stuttgart", goals: 15, assists: 2, matches: 16, minutesPerGoal: 85 },
+    { position: 3, player: "Loïs Openda", team: "RB Leipzig", goals: 13, assists: 4, matches: 19, minutesPerGoal: 118 },
+    { position: 4, player: "Victor Boniface", team: "Leverkusen", goals: 12, assists: 5, matches: 17, minutesPerGoal: 108 },
+    { position: 5, player: "Florian Wirtz", team: "Leverkusen", goals: 10, assists: 11, matches: 19, minutesPerGoal: 156 },
   ],
 };
