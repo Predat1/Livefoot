@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Download, Check, Smartphone, Share, Plus, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
+import livefootLogo from "@/assets/livefoot-logo.png";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -58,11 +59,8 @@ const Install = () => {
         <div className="mx-auto max-w-2xl text-center">
           {/* Hero */}
           <div className="mb-8 flex justify-center">
-            <div className="relative flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-3xl gradient-primary shadow-2xl shadow-primary/40">
-              <svg viewBox="0 0 24 24" className="h-12 w-12 sm:h-16 sm:w-16 fill-primary-foreground">
-                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-                <polygon points="12,6 13.5,10 18,10 14.5,13 16,18 12,15 8,18 9.5,13 6,10 10.5,10" fill="currentColor" />
-              </svg>
+            <div className="relative flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-3xl overflow-hidden shadow-2xl shadow-primary/40">
+              <img src={livefootLogo} alt="LiveFoot logo" className="h-full w-full object-cover" />
             </div>
           </div>
 
