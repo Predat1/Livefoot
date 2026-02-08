@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
+import livefootLogo from "@/assets/livefoot-logo.png";
 
 const Header = () => {
   const location = useLocation();
@@ -34,11 +35,8 @@ const Header = () => {
           {/* Logo */}
           <div className="flex items-center gap-4 sm:gap-10">
             <Link to="/" className="group flex items-center gap-2 sm:gap-3">
-              <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl gradient-primary shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110">
-                <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-6 sm:w-6 fill-primary-foreground">
-                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-                  <polygon points="12,6 13.5,10 18,10 14.5,13 16,18 12,15 8,18 9.5,13 6,10 10.5,10" fill="currentColor" />
-                </svg>
+              <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl overflow-hidden shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110">
+                <img src={livefootLogo} alt="LiveFoot logo" className="h-full w-full object-cover" />
               </div>
               <div className="flex flex-col">
                 <span className="text-base sm:text-xl font-black tracking-tight">LIVEFOOT</span>
