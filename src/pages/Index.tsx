@@ -99,7 +99,7 @@ const Index = () => {
                 <polygon points="12,6 13.5,10 18,10 14.5,13 16,18 12,15 8,18 9.5,13 6,10 10.5,10" fill="currentColor" />
               </svg>
             </div>
-            <span className="text-xl sm:text-2xl font-black text-foreground tracking-tight">BESOCCER</span>
+            <span className="text-xl sm:text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto px-4">
             Your ultimate destination for live scores, results, fixtures, tables, statistics and football news.
@@ -116,7 +116,7 @@ const Index = () => {
             ))}
           </div>
           <p className="mt-6 sm:mt-8 text-[10px] sm:text-xs text-muted-foreground/60">
-            © 2024 BeSoccer. All rights reserved.
+            © 2024 LiveFoot. All rights reserved.
           </p>
         </div>
       </footer>

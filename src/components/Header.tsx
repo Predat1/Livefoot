@@ -41,7 +41,7 @@ const Header = () => {
                 </svg>
               </div>
               <div className="flex flex-col">
-                <span className="text-base sm:text-xl font-black tracking-tight">BESOCCER</span>
+                <span className="text-base sm:text-xl font-black tracking-tight">LIVEFOOT</span>
                 <span className="hidden sm:block text-[10px] font-medium text-header-foreground/60 tracking-widest">LIVE SCORES</span>
               </div>
             </Link>

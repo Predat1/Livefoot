@@ -67,7 +67,7 @@ const Install = () => {
           </div>
 
           <h1 className="mb-4 text-3xl sm:text-4xl font-black text-foreground">
-            Install BeSoccer
+            Install LiveFoot
           </h1>
           
           <p className="mb-8 text-base sm:text-lg text-muted-foreground">
@@ -82,7 +82,7 @@ const Install = () => {
               </div>
               <p className="text-lg font-semibold text-primary">App Installed!</p>
               <p className="text-sm text-muted-foreground">
-                You can now access BeSoccer from your home screen.
+                You can now access LiveFoot from your home screen.
               </p>
             </div>
           ) : (
