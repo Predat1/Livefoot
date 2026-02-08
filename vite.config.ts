@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
       manifest: {
-        name: "BeSoccer - Live Soccer Scores",
-        short_name: "BeSoccer",
+        name: "LiveFoot - Live Soccer Scores",
+        short_name: "LiveFoot",
         description: "Follow all today's live soccer scores, results, fixtures and tables from leagues worldwide.",
         theme_color: "#22c55e",
         background_color: "#0f172a",
