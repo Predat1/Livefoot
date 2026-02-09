@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { mockCompetitions, standingsData, topScorers } from "@/data/competitionsData";
+import { mockPlayers } from "@/data/playersData";
 import { Trophy, Users, Target, ChevronRight, ChevronDown, ArrowUp, ArrowDown, Minus, Calendar, Star, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +23,8 @@ const Competitions = () => {
   const getStandings = (id: string) => standingsData[id] || [];
   const getTopScorers = (id: string) => topScorers[id] || [];
 
+  const getPlayerPhoto = (name: string) => mockPlayers.find((p) => p.name === name)?.photoUrl;
+
   const getTrendIcon = (trend: "up" | "down" | "same") => {
     switch (trend) {
       case "up": return <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />;
@@ -36,6 +40,7 @@ const Competitions = () => {
 
   return (
     <Layout>
+      <SEOHead title="Football Competitions" description="Explore leagues, cups and tournaments from around the world - standings, top scorers and more." />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
@@ -161,7 +166,7 @@ const Competitions = () => {
                           {getTopScorers(competition.id).map((scorer, idx) => (
                             <div key={scorer.player} className={cn("flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl transition-colors", idx === 0 ? "bg-primary/10" : "bg-muted/30 hover:bg-muted/50")}>
                               <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-lg", idx === 0 ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{scorer.position}</div>
-                              <PlayerAvatar name={scorer.player} size="sm" />
+                              <PlayerAvatar name={scorer.player} photoUrl={getPlayerPhoto(scorer.player)} size="sm" />
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-bold text-sm sm:text-base text-foreground truncate">{scorer.player}</h4>
                                 <div className="flex items-center gap-1.5">

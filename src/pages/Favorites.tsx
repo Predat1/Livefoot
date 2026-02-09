@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { useFavorites } from "@/hooks/useFavorites";
 import { mockTeams } from "@/data/teamsData";
 import { mockPlayers } from "@/data/playersData";
@@ -20,6 +21,7 @@ const Favorites = () => {
 
   return (
     <Layout>
+      <SEOHead title="My Favorites" description="Your saved teams, players and competitions." />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
@@ -78,7 +80,7 @@ const Favorites = () => {
                   {favoritePlayers.map((player) => (
                     <div key={player.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                       <Link to={`/players/${player.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                        <PlayerAvatar name={player.name} size="sm" />
+                        <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" />
                         <div className="min-w-0">
                           <h4 className="font-bold text-sm text-foreground truncate">{player.name}</h4>
                           <p className="text-xs text-muted-foreground">{player.team} • {player.position}</p>

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { mockNews, newsCategories } from "@/data/newsData";
 import { Clock, Calendar, ArrowRight, TrendingUp, Eye, User, Search, Flame } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,10 @@ const News = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title="Football News - Latest Headlines"
+        description="Stay updated with the latest football news, transfer rumours, match reports and analysis from around the world."
+      />
       <div className="container py-4 sm:py-8">
         {/* Hero Section */}
         <div className="mb-6 sm:mb-8">
@@ -50,15 +56,16 @@ const News = () => {
               <span className="text-xs sm:text-sm font-bold">Trending</span>
             </div>
             {trendingNews.slice(0, 4).map((news, index) => (
-              <button
+              <Link
                 key={news.id}
+                to={`/news/${news.id}`}
                 className="flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-muted/50 hover:bg-muted transition-colors group"
               >
                 <span className="text-[10px] sm:text-xs font-bold text-primary">#{index + 1}</span>
                 <span className="text-[10px] sm:text-xs text-foreground line-clamp-1 max-w-[120px] sm:max-w-[200px] group-hover:text-primary transition-colors">
                   {news.title}
                 </span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -83,7 +90,7 @@ const News = () => {
 
         {/* Featured Article */}
         {filteredNews.length > 0 && (
-          <div className="mb-6 sm:mb-8 group cursor-pointer">
+          <Link to={`/news/${filteredNews[0].id}`} className="mb-6 sm:mb-8 group block">
             <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-lg hover-lift">
               <div className="grid md:grid-cols-2">
                 <div className="relative h-48 sm:h-64 md:h-auto overflow-hidden">
@@ -132,15 +139,16 @@ const News = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         )}
 
         {/* News Grid */}
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredNews.slice(1).map((news, index) => (
-            <article
+            <Link
               key={news.id}
-              className="group cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border/50 hover-lift animate-fade-in"
+              to={`/news/${news.id}`}
+              className="group block overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border/50 hover-lift animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="relative h-36 sm:h-48 overflow-hidden">
@@ -178,7 +186,7 @@ const News = () => {
                   <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
 

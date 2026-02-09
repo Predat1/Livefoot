@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { standingsData, mockCompetitions } from "@/data/competitionsData";
 import { Trophy, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ const Standings = () => {
 
   return (
     <Layout>
+      <SEOHead title="League Standings & Tables" description="View league tables, rankings and standings for Premier League, La Liga, Serie A, Bundesliga and more." />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">

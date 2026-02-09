@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { mockTeams } from "@/data/teamsData";
 import { mockPlayers } from "@/data/playersData";
 import { ArrowLeft, MapPin, Users, Trophy, Calendar, Star, Target, Shirt, TrendingUp, BarChart3 } from "lucide-react";
@@ -121,6 +122,18 @@ const TeamDetail = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title={`${team.name} - Squad, Results & Stats`}
+        description={`${team.name} - ${team.league}, ${team.country}. Manager: ${team.manager}. Stadium: ${team.stadium}.`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SportsTeam",
+          name: team.name,
+          sport: "Football",
+          location: { "@type": "Place", name: team.stadium },
+          coach: { "@type": "Person", name: team.manager },
+        }}
+      />
       <div className="container py-4 sm:py-8">
         <Link to="/teams" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors text-sm">
           <ArrowLeft className="h-4 w-4" />

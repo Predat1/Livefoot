@@ -1,10 +1,18 @@
 import { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import Header from "./Header";
 import livefootLogo from "@/assets/livefoot-logo.png";
 
 interface LayoutProps {
   children: ReactNode;
 }
+
+const footerLinks = [
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+];
 
 const Layout = ({ children }: LayoutProps) => {
   return (
@@ -25,14 +33,14 @@ const Layout = ({ children }: LayoutProps) => {
             Your ultimate destination for live scores, results, fixtures, tables, statistics and football news.
           </p>
           <div className="mt-4 sm:mt-6 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
-            {["About", "Contact", "Privacy", "Terms"].map((link) => (
-              <a 
-                key={link}
-                href="#" 
+            {footerLinks.map((link) => (
+              <Link
+                key={link.label}
+                to={link.href}
                 className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
-                {link}
-              </a>
+                {link.label}
+              </Link>
             ))}
           </div>
           <p className="mt-6 sm:mt-8 text-[10px] sm:text-xs text-muted-foreground/60">
