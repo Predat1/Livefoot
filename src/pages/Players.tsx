@@ -85,7 +85,7 @@ const Players = () => {
                   <CountryFlag country={player.country} size="sm" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <PlayerAvatar name={player.name} size="md" className="!shadow-none !bg-white/20" />
+                  <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="md" className="!shadow-none !bg-white/20" />
                   <div className="text-right">
                     <div className="text-lg sm:text-2xl font-black">{player.rating}</div>
                     <div className="text-[10px] sm:text-xs opacity-80">Rating</div>

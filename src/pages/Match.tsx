@@ -8,6 +8,168 @@ import TeamLogo from "@/components/TeamLogo";
 import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
 
+type LineupPlayer = { name: string; number: number; pos: string };
+
+const teamLineups: Record<string, LineupPlayer[]> = {
+  "Manchester City": [
+    { name: "Ederson", number: 31, pos: "GK" },
+    { name: "Kyle Walker", number: 2, pos: "DEF" },
+    { name: "Rúben Dias", number: 3, pos: "DEF" },
+    { name: "Nathan Aké", number: 6, pos: "DEF" },
+    { name: "João Cancelo", number: 7, pos: "DEF" },
+    { name: "Rodri", number: 16, pos: "MID" },
+    { name: "Kevin De Bruyne", number: 17, pos: "MID" },
+    { name: "Bernardo Silva", number: 20, pos: "MID" },
+    { name: "Phil Foden", number: 47, pos: "FWD" },
+    { name: "Erling Haaland", number: 9, pos: "FWD" },
+    { name: "Jack Grealish", number: 10, pos: "FWD" },
+  ],
+  "Liverpool": [
+    { name: "Alisson Becker", number: 1, pos: "GK" },
+    { name: "Trent Alexander-Arnold", number: 66, pos: "DEF" },
+    { name: "Virgil van Dijk", number: 4, pos: "DEF" },
+    { name: "Ibrahima Konaté", number: 5, pos: "DEF" },
+    { name: "Andrew Robertson", number: 26, pos: "DEF" },
+    { name: "Alexis Mac Allister", number: 10, pos: "MID" },
+    { name: "Dominik Szoboszlai", number: 8, pos: "MID" },
+    { name: "Curtis Jones", number: 17, pos: "MID" },
+    { name: "Mohamed Salah", number: 11, pos: "FWD" },
+    { name: "Darwin Núñez", number: 9, pos: "FWD" },
+    { name: "Luis Díaz", number: 7, pos: "FWD" },
+  ],
+  "Arsenal": [
+    { name: "David Raya", number: 22, pos: "GK" },
+    { name: "Ben White", number: 4, pos: "DEF" },
+    { name: "William Saliba", number: 2, pos: "DEF" },
+    { name: "Gabriel Magalhães", number: 6, pos: "DEF" },
+    { name: "Oleksandr Zinchenko", number: 35, pos: "DEF" },
+    { name: "Declan Rice", number: 41, pos: "MID" },
+    { name: "Martin Ødegaard", number: 8, pos: "MID" },
+    { name: "Kai Havertz", number: 29, pos: "MID" },
+    { name: "Bukayo Saka", number: 7, pos: "FWD" },
+    { name: "Gabriel Jesus", number: 9, pos: "FWD" },
+    { name: "Leandro Trossard", number: 19, pos: "FWD" },
+  ],
+  "Real Madrid": [
+    { name: "Thibaut Courtois", number: 1, pos: "GK" },
+    { name: "Dani Carvajal", number: 2, pos: "DEF" },
+    { name: "Éder Militão", number: 3, pos: "DEF" },
+    { name: "Antonio Rüdiger", number: 22, pos: "DEF" },
+    { name: "Ferland Mendy", number: 23, pos: "DEF" },
+    { name: "Toni Kroos", number: 8, pos: "MID" },
+    { name: "Eduardo Camavinga", number: 12, pos: "MID" },
+    { name: "Jude Bellingham", number: 5, pos: "MID" },
+    { name: "Vinícius Júnior", number: 7, pos: "FWD" },
+    { name: "Rodrygo", number: 11, pos: "FWD" },
+    { name: "Joselu", number: 14, pos: "FWD" },
+  ],
+  "FC Barcelona": [
+    { name: "Marc-André ter Stegen", number: 1, pos: "GK" },
+    { name: "Jules Koundé", number: 23, pos: "DEF" },
+    { name: "Ronald Araújo", number: 4, pos: "DEF" },
+    { name: "Andreas Christensen", number: 15, pos: "DEF" },
+    { name: "Alejandro Balde", number: 3, pos: "DEF" },
+    { name: "Frenkie de Jong", number: 21, pos: "MID" },
+    { name: "Pedri", number: 8, pos: "MID" },
+    { name: "Gavi", number: 6, pos: "MID" },
+    { name: "Lamine Yamal", number: 19, pos: "FWD" },
+    { name: "Robert Lewandowski", number: 9, pos: "FWD" },
+    { name: "Raphinha", number: 11, pos: "FWD" },
+  ],
+  "Bayern Munich": [
+    { name: "Manuel Neuer", number: 1, pos: "GK" },
+    { name: "Joshua Kimmich", number: 6, pos: "DEF" },
+    { name: "Dayot Upamecano", number: 2, pos: "DEF" },
+    { name: "Matthijs de Ligt", number: 4, pos: "DEF" },
+    { name: "Alphonso Davies", number: 19, pos: "DEF" },
+    { name: "Leon Goretzka", number: 8, pos: "MID" },
+    { name: "Jamal Musiala", number: 42, pos: "MID" },
+    { name: "Leroy Sané", number: 10, pos: "MID" },
+    { name: "Serge Gnabry", number: 7, pos: "FWD" },
+    { name: "Harry Kane", number: 9, pos: "FWD" },
+    { name: "Kingsley Coman", number: 11, pos: "FWD" },
+  ],
+  "Paris Saint-Germain": [
+    { name: "Gianluigi Donnarumma", number: 99, pos: "GK" },
+    { name: "Achraf Hakimi", number: 2, pos: "DEF" },
+    { name: "Marquinhos", number: 5, pos: "DEF" },
+    { name: "Lucas Hernández", number: 21, pos: "DEF" },
+    { name: "Nuno Mendes", number: 25, pos: "DEF" },
+    { name: "Vitinha", number: 17, pos: "MID" },
+    { name: "Warren Zaïre-Emery", number: 33, pos: "MID" },
+    { name: "Ousmane Dembélé", number: 10, pos: "MID" },
+    { name: "Kylian Mbappé", number: 7, pos: "FWD" },
+    { name: "Gonçalo Ramos", number: 9, pos: "FWD" },
+    { name: "Bradley Barcola", number: 29, pos: "FWD" },
+  ],
+  "Inter Milan": [
+    { name: "Yann Sommer", number: 1, pos: "GK" },
+    { name: "Matteo Darmian", number: 36, pos: "DEF" },
+    { name: "Francesco Acerbi", number: 15, pos: "DEF" },
+    { name: "Alessandro Bastoni", number: 95, pos: "DEF" },
+    { name: "Denzel Dumfries", number: 2, pos: "DEF" },
+    { name: "Nicolò Barella", number: 23, pos: "MID" },
+    { name: "Hakan Çalhanoğlu", number: 20, pos: "MID" },
+    { name: "Henrikh Mkhitaryan", number: 22, pos: "MID" },
+    { name: "Lautaro Martínez", number: 10, pos: "FWD" },
+    { name: "Marcus Thuram", number: 9, pos: "FWD" },
+    { name: "Federico Dimarco", number: 32, pos: "FWD" },
+  ],
+  "Chelsea": [
+    { name: "Robert Sánchez", number: 1, pos: "GK" },
+    { name: "Reece James", number: 24, pos: "DEF" },
+    { name: "Thiago Silva", number: 6, pos: "DEF" },
+    { name: "Levi Colwill", number: 26, pos: "DEF" },
+    { name: "Marc Cucurella", number: 3, pos: "DEF" },
+    { name: "Enzo Fernández", number: 8, pos: "MID" },
+    { name: "Moisés Caicedo", number: 25, pos: "MID" },
+    { name: "Cole Palmer", number: 20, pos: "MID" },
+    { name: "Raheem Sterling", number: 7, pos: "FWD" },
+    { name: "Nicolas Jackson", number: 15, pos: "FWD" },
+    { name: "Mykhailo Mudryk", number: 10, pos: "FWD" },
+  ],
+  "Manchester United": [
+    { name: "André Onana", number: 24, pos: "GK" },
+    { name: "Diogo Dalot", number: 20, pos: "DEF" },
+    { name: "Raphaël Varane", number: 19, pos: "DEF" },
+    { name: "Lisandro Martínez", number: 6, pos: "DEF" },
+    { name: "Luke Shaw", number: 23, pos: "DEF" },
+    { name: "Casemiro", number: 18, pos: "MID" },
+    { name: "Bruno Fernandes", number: 8, pos: "MID" },
+    { name: "Mason Mount", number: 7, pos: "MID" },
+    { name: "Marcus Rashford", number: 10, pos: "FWD" },
+    { name: "Rasmus Højlund", number: 11, pos: "FWD" },
+    { name: "Alejandro Garnacho", number: 17, pos: "FWD" },
+  ],
+  "Juventus": [
+    { name: "Wojciech Szczęsny", number: 1, pos: "GK" },
+    { name: "Danilo", number: 6, pos: "DEF" },
+    { name: "Gleison Bremer", number: 3, pos: "DEF" },
+    { name: "Federico Gatti", number: 4, pos: "DEF" },
+    { name: "Andrea Cambiaso", number: 27, pos: "DEF" },
+    { name: "Manuel Locatelli", number: 5, pos: "MID" },
+    { name: "Adrien Rabiot", number: 25, pos: "MID" },
+    { name: "Filip Kostić", number: 17, pos: "MID" },
+    { name: "Federico Chiesa", number: 7, pos: "FWD" },
+    { name: "Dušan Vlahović", number: 9, pos: "FWD" },
+    { name: "Kenan Yıldız", number: 10, pos: "FWD" },
+  ],
+};
+
+const defaultLineup: LineupPlayer[] = [
+  { name: "Goalkeeper", number: 1, pos: "GK" },
+  { name: "Right Back", number: 2, pos: "DEF" },
+  { name: "Center Back", number: 4, pos: "DEF" },
+  { name: "Center Back", number: 5, pos: "DEF" },
+  { name: "Left Back", number: 3, pos: "DEF" },
+  { name: "Central Mid", number: 6, pos: "MID" },
+  { name: "Central Mid", number: 8, pos: "MID" },
+  { name: "Attacking Mid", number: 10, pos: "MID" },
+  { name: "Right Wing", number: 7, pos: "FWD" },
+  { name: "Striker", number: 9, pos: "FWD" },
+  { name: "Left Wing", number: 11, pos: "FWD" },
+];
+
 const Match = () => {
   const { matchId } = useParams();
 
@@ -194,23 +356,26 @@ const Match = () => {
                 </div>
                 <div className="p-4 sm:p-6">
                   <div className="grid grid-cols-2 gap-4 sm:gap-8">
-                    {[{ team: match.homeTeam }, { team: match.awayTeam }].map(({ team }, tIdx) => (
-                      <div key={tIdx}>
-                        <h4 className="font-bold text-sm sm:text-base text-foreground mb-3 sm:mb-4 flex items-center gap-2">
-                          <TeamLogo teamName={team.name} size="xs" />
-                          {team.name}
-                        </h4>
-                        <div className="space-y-1.5 sm:space-y-2">
-                          {["Goalkeeper", "Defender", "Defender", "Defender", "Defender", "Midfielder", "Midfielder", "Midfielder", "Forward", "Forward", "Forward"].map((position, i) => (
-                            <div key={i} className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/30">
-                              <span className="w-5 sm:w-6 text-center text-[10px] sm:text-xs font-bold text-muted-foreground">{i + 1}</span>
-                              <span className="text-xs sm:text-sm text-foreground">Player {i + 1}</span>
-                              <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto">{position.slice(0, 3)}</span>
-                            </div>
-                          ))}
+                    {[{ team: match.homeTeam }, { team: match.awayTeam }].map(({ team }, tIdx) => {
+                      const lineup = teamLineups[team.name] || defaultLineup;
+                      return (
+                        <div key={tIdx}>
+                          <h4 className="font-bold text-sm sm:text-base text-foreground mb-3 sm:mb-4 flex items-center gap-2">
+                            <TeamLogo teamName={team.name} size="xs" />
+                            {team.name}
+                          </h4>
+                          <div className="space-y-1.5 sm:space-y-2">
+                            {lineup.map((player, i) => (
+                              <div key={i} className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/30">
+                                <span className="w-5 sm:w-6 text-center text-[10px] sm:text-xs font-bold text-muted-foreground">{player.number}</span>
+                                <span className="text-xs sm:text-sm text-foreground">{player.name}</span>
+                                <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto">{player.pos}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>

@@ -46,7 +46,7 @@ const PlayerDetail = () => {
         <div className="rounded-2xl bg-card border border-border/50 overflow-hidden mb-6">
           <div className="gradient-primary p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-              <PlayerAvatar name={player.name} size="xl" className="!bg-white/20" />
+              <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="xl" className="!bg-white/20" />
               <div className="text-center sm:text-left flex-1 text-primary-foreground">
                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                   <CountryFlag country={player.country} size="md" />
