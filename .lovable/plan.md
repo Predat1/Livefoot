@@ -1,82 +1,87 @@
 
-# Corrections et ameliorations identifiees apres inspection
 
-## Resume
+# Rendre le DatePicker entierement fonctionnel
 
-L'inspection complete du site revele que **toutes les pages fonctionnent** et que les logos reels se chargent correctement. Cependant, plusieurs problemes de qualite de donnees et quelques anti-patterns doivent etre corriges.
+## Problemes identifies
 
----
+1. **Les filtres "All", "Televised", "Live Now" ne filtrent rien** : ils changent un etat local `activeFilter` mais cette valeur n'est jamais remontee a la page `Index.tsx` pour filtrer les matchs affiches.
 
-## Probleme 1 : Resultats generiques dans TeamDetail
+2. **La selection de date ne filtre rien** : `selectedDate` reste interne au composant, sans effet sur les matchs.
 
-**Fichier** : `src/pages/TeamDetail.tsx`
+3. **Les fleches gauche/droite ne font rien** : aucun `onClick` n'est defini dessus.
 
-Les resultats recents affichent "Team A", "Team B", "Team C"... au lieu de vrais noms d'equipes. Les stats de saison sont generees aleatoirement avec `Math.random()`, ce qui change les chiffres a chaque visite.
+4. **Le bouton calendrier ne fait rien** : pas de popover ni d'action.
 
-**Correction** : Remplacer les donnees generiques par des resultats realistes et des stats fixes calculees a partir des donnees existantes de `mockData.ts`.
+5. **Les compteurs sont en dur (103, 14, 1)** : ils ne refletent pas les vraies donnees.
 
----
-
-## Probleme 2 : Lineups generiques dans Match
-
-**Fichier** : `src/pages/Match.tsx`
-
-L'onglet "Lineups" affiche "Player 1", "Player 2"... avec des positions generiques. Aucun vrai nom de joueur n'apparait.
-
-**Correction** : Generer des lineups realistes a partir des donnees de `playersData.ts` et ajouter des noms de joueurs supplementaires en dur pour completer les effectifs.
+6. **Les matchs n'ont pas de propriete `tv`** : impossible de filtrer par "Televised" sans ajouter ce champ aux donnees.
 
 ---
 
-## Probleme 3 : Photos de joueurs manquantes
+## Corrections prevues
 
-**Fichier** : `src/components/PlayerAvatar.tsx` et toutes les pages qui l'utilisent
+### 1. Ajouter `isTv` aux donnees des matchs (`src/data/mockData.ts`)
 
-Le composant `PlayerAvatar` accepte un `photoUrl` en prop, mais aucune page ne le transmet. Le fallback (initiales dans un cercle vert) est toujours affiche.
+Ajouter un champ `isTv: boolean` sur certains matchs (les grands matchs type Arsenal-Chelsea, Real Madrid-Barcelona, etc.) pour que le filtre "Televised" ait du sens.
 
-**Correction** : Ajouter des `photoUrl` dans `playersData.ts` pour chaque joueur et passer cette prop partout ou `PlayerAvatar` est utilise (Players.tsx, PlayerDetail.tsx, TeamDetail.tsx, Transfers.tsx, Competitions.tsx).
+### 2. Refactorer le DatePicker pour communiquer avec Index
+
+Transformer `DatePicker` pour qu'il accepte des callbacks en props :
+- `onDateChange(date: Date)` : informe Index de la date selectionnee
+- `onFilterChange(filter: string)` : informe Index du filtre actif
+- `matchCounts: { all: number, tv: number, live: number }` : compteurs reels calcules par Index
+
+### 3. Rendre les fleches fonctionnelles
+
+Les fleches decaleront la fenetre de 7 jours affichee (avancer ou reculer d'une semaine).
+
+### 4. Ajouter le calendrier popover
+
+Le bouton calendrier ouvrira un vrai `Calendar` (composant Shadcn existant) dans un `Popover` pour choisir n'importe quelle date.
+
+### 5. Filtrer les matchs dans Index.tsx
+
+Ajouter la logique de filtrage dans `Index.tsx` :
+- **All** : affiche tous les matchs
+- **Televised** : affiche uniquement les matchs avec `isTv: true`
+- **Live Now** : affiche uniquement les matchs avec `status: "live"`
+
+Les compteurs seront calcules dynamiquement a partir des donnees reelles.
+
+### 6. Afficher le calendrier aussi sur mobile
+
+Rendre le bouton calendrier visible sur mobile (actuellement masque par `hidden sm:flex`).
 
 ---
 
-## Probleme 4 : Bug anti-pattern React dans Search.tsx
-
-**Fichier** : `src/pages/Search.tsx`
-
-La ligne `useState(() => { if (initialQuery) setQuery(initialQuery); });` est un mauvais usage de `useState` comme callback. Cela devrait utiliser `useEffect`.
-
-**Correction** : Remplacer par `useEffect(() => { if (initialQuery) setQuery(initialQuery); }, []);`.
-
----
-
-## Probleme 5 : Donnees mock enrichies mais incompletes
-
-Certaines proprietes dans les fichiers de donnees ont ete planifiees mais pas entierement exploitees :
-- `mockData.ts` : Les emojis `logo` et `flag` sont encore presents (le mapping centralise les remplace visuellement, mais les donnees sources sont obsoletes)
-- `newsData.ts` : Les articles de news ne sont pas cliquables vers une page de detail individuelle
-
-**Correction** : Nettoyer les emojis inutiles des donnees sources et ajouter une navigation article par article.
-
----
-
-## Details techniques des modifications
-
-### Fichiers modifies
+## Fichiers modifies
 
 | Fichier | Changement |
 |---------|-----------|
-| `src/pages/TeamDetail.tsx` | Remplacer stats aleatoires par des valeurs fixes, remplacer resultats generiques par de vrais noms d'adversaires |
-| `src/pages/Match.tsx` | Generer des lineups avec de vrais noms de joueurs a partir d'un mapping pre-defini |
-| `src/data/playersData.ts` | Ajouter `photoUrl` pour chaque joueur (Unsplash sport photos ou placeholders realistes) |
-| `src/pages/Players.tsx` | Passer `photoUrl` a `PlayerAvatar` |
-| `src/pages/PlayerDetail.tsx` | Passer `photoUrl` a `PlayerAvatar` |
-| `src/pages/Competitions.tsx` | Passer `photoUrl` aux `PlayerAvatar` dans le top scorers |
-| `src/pages/Transfers.tsx` | Passer `photoUrl` derive du nom aux `PlayerAvatar` |
-| `src/pages/TeamDetail.tsx` | Passer `photoUrl` aux `PlayerAvatar` dans la squad |
-| `src/pages/Search.tsx` | Corriger l'anti-pattern `useState` vers `useEffect` |
+| `src/data/mockData.ts` | Ajout de `isTv: true` sur ~6 matchs majeurs |
+| `src/components/DatePicker.tsx` | Refactoring complet : props callbacks, fleches fonctionnelles, popover calendrier, compteurs dynamiques |
+| `src/pages/Index.tsx` | Logique de filtrage des matchs par filtre actif, calcul des compteurs, passage des props au DatePicker |
 
-### Strategie pour les photos de joueurs
+---
 
-Comme il n'existe pas d'API publique gratuite pour les photos de joueurs, utiliser des images placeholder de haute qualite depuis Unsplash (portraits sport) ou un service de placeholder avatar. Le composant `PlayerAvatar` continuera d'afficher le fallback en cas d'echec de chargement.
+## Details techniques
 
-### Aucune nouvelle dependance requise
+### DatePicker - nouvelles props
+```
+interface DatePickerProps {
+  onDateChange?: (date: Date) => void;
+  onFilterChange?: (filter: string) => void;
+  matchCounts?: { all: number; tv: number; live: number };
+}
+```
 
-Toutes les corrections utilisent les outils deja en place.
+### Index.tsx - logique de filtrage
+- Calcul des compteurs `all`, `tv`, `live` a partir de `mockLeagues`
+- Filtrage des leagues/matchs selon le filtre actif
+- Les leagues vides apres filtrage sont masquees
+
+### Calendrier popover
+- Utilise les composants `Popover` + `Calendar` deja installes dans le projet
+- Ajout de `pointer-events-auto` sur le Calendar pour l'interactivite
+- Selection d'une date dans le calendrier met a jour la date selectionnee dans la barre horizontale
+
