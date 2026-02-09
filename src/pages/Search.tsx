@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { Search as SearchIcon, Trophy, Users, User, Newspaper } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSearch, SearchResult } from "@/hooks/useSearch";
@@ -42,6 +43,7 @@ const SearchPage = () => {
 
   return (
     <Layout>
+      <SEOHead title={query ? `Search: ${query}` : "Search"} description="Search for teams, players, competitions and football news on LiveFoot." />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">

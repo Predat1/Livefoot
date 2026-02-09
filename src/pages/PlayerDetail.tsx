@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { mockPlayers } from "@/data/playersData";
 import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
@@ -36,6 +37,18 @@ const PlayerDetail = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title={`${player.name} - Stats & Profile`}
+        description={`${player.name} - ${player.position} for ${player.team}. ${player.goals} goals, ${player.assists} assists in ${player.appearances} appearances. Rating: ${player.rating}.`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Person",
+          name: player.name,
+          nationality: player.nationality,
+          jobTitle: `Professional Football Player - ${player.position}`,
+          memberOf: { "@type": "SportsTeam", name: player.team },
+        }}
+      />
       <div className="container py-4 sm:py-8">
         <Link to="/players" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors text-sm">
           <ArrowLeft className="h-4 w-4" />

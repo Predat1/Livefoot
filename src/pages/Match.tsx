@@ -1,7 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { mockLeagues } from "@/data/mockData";
-import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2 } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeamLogo from "@/components/TeamLogo";
@@ -156,6 +157,22 @@ const teamLineups: Record<string, LineupPlayer[]> = {
   ],
 };
 
+// Mock H2H data
+const h2hData: Record<string, { homeWins: number; draws: number; awayWins: number; lastMeetings: { date: string; homeScore: number; awayScore: number; competition: string }[] }> = {};
+
+const generateH2H = (home: string, away: string) => ({
+  homeWins: Math.floor(Math.random() * 8) + 2,
+  draws: Math.floor(Math.random() * 5) + 1,
+  awayWins: Math.floor(Math.random() * 8) + 2,
+  lastMeetings: [
+    { date: "Oct 2023", homeScore: 2, awayScore: 1, competition: "League" },
+    { date: "Apr 2023", homeScore: 0, awayScore: 0, competition: "League" },
+    { date: "Dec 2022", homeScore: 1, awayScore: 3, competition: "Cup" },
+    { date: "Aug 2022", homeScore: 2, awayScore: 2, competition: "League" },
+    { date: "Mar 2022", homeScore: 1, awayScore: 0, competition: "League" },
+  ],
+});
+
 const defaultLineup: LineupPlayer[] = [
   { name: "Goalkeeper", number: 1, pos: "GK" },
   { name: "Right Back", number: 2, pos: "DEF" },
@@ -205,8 +222,36 @@ const Match = () => {
     }
   };
 
+  const h2h = generateH2H(match.homeTeam.name, match.awayTeam.name);
+
+  // Generate commentary from events
+  const commentary = events
+    .sort((a, b) => b.minute - a.minute)
+    .map((event) => {
+      const team = event.team === "home" ? match.homeTeam.name : match.awayTeam.name;
+      let text = "";
+      if (event.type === "goal") text = `⚽ GOAL! ${event.player} scores for ${team}!${event.assist ? ` Assisted by ${event.assist}.` : ""}`;
+      else if (event.type === "yellow") text = `🟨 Yellow card shown to ${event.player} (${team}).`;
+      else if (event.type === "red") text = `🟥 Red card! ${event.player} (${team}) is sent off!`;
+      else if (event.type === "substitution") text = `🔄 Substitution for ${team}: ${event.player}.`;
+      else text = `${event.player} (${team}).`;
+      return { minute: event.minute, text };
+    });
+
   return (
     <Layout>
+      <SEOHead
+        title={`${match.homeTeam.name} vs ${match.awayTeam.name} - ${isLive ? "Live Score" : isFinished ? "Result" : "Preview"}`}
+        description={`${match.homeTeam.name} vs ${match.awayTeam.name} - ${match.league.name}. ${isFinished ? `Final score: ${match.homeTeam.score}-${match.awayTeam.score}` : isLive ? `Live: ${match.homeTeam.score}-${match.awayTeam.score} (${match.minute}')` : `Kickoff: ${match.time}`}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SportsEvent",
+          name: `${match.homeTeam.name} vs ${match.awayTeam.name}`,
+          homeTeam: { "@type": "SportsTeam", name: match.homeTeam.name },
+          awayTeam: { "@type": "SportsTeam", name: match.awayTeam.name },
+          location: { "@type": "Place", name: match.stadium },
+        }}
+      />
       <div className="container py-4 sm:py-8">
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors text-sm">
           <ArrowLeft className="h-4 w-4" />
@@ -268,10 +313,12 @@ const Match = () => {
 
         {hasStats ? (
           <Tabs defaultValue="events" className="w-full">
-            <TabsList className="w-full grid grid-cols-3 bg-card border border-border/50 rounded-xl p-1 mb-4">
+            <TabsList className="w-full grid grid-cols-5 bg-card border border-border/50 rounded-xl p-1 mb-4">
               <TabsTrigger value="events" className="rounded-lg text-xs sm:text-sm">Events</TabsTrigger>
-              <TabsTrigger value="stats" className="rounded-lg text-xs sm:text-sm">Statistics</TabsTrigger>
+              <TabsTrigger value="stats" className="rounded-lg text-xs sm:text-sm">Stats</TabsTrigger>
               <TabsTrigger value="lineups" className="rounded-lg text-xs sm:text-sm">Lineups</TabsTrigger>
+              <TabsTrigger value="h2h" className="rounded-lg text-xs sm:text-sm">H2H</TabsTrigger>
+              <TabsTrigger value="commentary" className="rounded-lg text-xs sm:text-sm">Live</TabsTrigger>
             </TabsList>
 
             <TabsContent value="events" className="mt-0">
@@ -377,6 +424,88 @@ const Match = () => {
                       );
                     })}
                   </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* H2H Tab */}
+            <TabsContent value="h2h" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border flex items-center gap-2">
+                  <Swords className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Head to Head</h3>
+                </div>
+                <div className="p-4 sm:p-6">
+                  {/* Overall Record */}
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="text-center p-3 rounded-xl bg-primary/10">
+                      <p className="text-2xl sm:text-3xl font-black text-primary">{h2h.homeWins}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">{match.homeTeam.name} Wins</p>
+                    </div>
+                    <div className="text-center p-3 rounded-xl bg-muted/30">
+                      <p className="text-2xl sm:text-3xl font-black text-foreground">{h2h.draws}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Draws</p>
+                    </div>
+                    <div className="text-center p-3 rounded-xl bg-primary/10">
+                      <p className="text-2xl sm:text-3xl font-black text-primary">{h2h.awayWins}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">{match.awayTeam.name} Wins</p>
+                    </div>
+                  </div>
+
+                  {/* Last Meetings */}
+                  <h4 className="font-bold text-sm text-foreground mb-3">Last 5 Meetings</h4>
+                  <div className="space-y-2">
+                    {h2h.lastMeetings.map((meeting, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+                        <span className="text-xs text-muted-foreground w-20">{meeting.date}</span>
+                        <div className="flex items-center gap-3 flex-1 justify-center">
+                          <span className="text-xs sm:text-sm font-medium text-foreground text-right flex-1">{match.homeTeam.name}</span>
+                          <span className={cn(
+                            "px-2 py-1 rounded-md text-xs font-bold",
+                            meeting.homeScore > meeting.awayScore ? "bg-primary/10 text-primary" :
+                            meeting.homeScore < meeting.awayScore ? "bg-destructive/10 text-destructive" :
+                            "bg-muted text-muted-foreground"
+                          )}>
+                            {meeting.homeScore} - {meeting.awayScore}
+                          </span>
+                          <span className="text-xs sm:text-sm font-medium text-foreground text-left flex-1">{match.awayTeam.name}</span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground w-12 text-right">{meeting.competition}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Commentary Tab */}
+            <TabsContent value="commentary" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Live Commentary</h3>
+                  {isLive && (
+                    <span className="ml-auto flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-live live-pulse" />
+                      <span className="text-xs font-bold text-live">LIVE</span>
+                    </span>
+                  )}
+                </div>
+                <div className="p-4 sm:p-6">
+                  {commentary.length > 0 ? (
+                    <div className="space-y-3">
+                      {commentary.map((entry, i) => (
+                        <div key={i} className="flex gap-3 p-3 rounded-xl bg-muted/30">
+                          <span className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-xs text-primary">
+                            {entry.minute}'
+                          </span>
+                          <p className="text-xs sm:text-sm text-foreground leading-relaxed pt-2">{entry.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">No commentary available yet.</p>
+                  )}
                 </div>
               </div>
             </TabsContent>

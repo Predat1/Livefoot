@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import Layout from "@/components/Layout";
 import { mockPlayers, positions } from "@/data/playersData";
 import { Search, Star, Target, TrendingUp, User, Shirt, Ruler, Weight } from "lucide-react";
@@ -33,6 +34,7 @@ const Players = () => {
 
   return (
     <Layout>
+      <SEOHead title="Football Players" description="Discover top footballers, their statistics, goals, assists, ratings and market values." />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">

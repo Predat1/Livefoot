@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import News from "./pages/News";
+import NewsDetail from "./pages/NewsDetail";
 import Competitions from "./pages/Competitions";
 import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
@@ -17,6 +18,10 @@ import Install from "./pages/Install";
 import Standings from "./pages/Standings";
 import Favorites from "./pages/Favorites";
 import SearchPage from "./pages/Search";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +36,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/news" element={<News />} />
+            <Route path="/news/:newsId" element={<NewsDetail />} />
             <Route path="/competitions" element={<Competitions />} />
             <Route path="/standings" element={<Standings />} />
             <Route path="/teams" element={<Teams />} />
@@ -41,6 +47,10 @@ const App = () => (
             <Route path="/match/:matchId" element={<Match />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/install" element={<Install />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

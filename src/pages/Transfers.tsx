@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
 import { mockTransfers, transferFilters } from "@/data/transfersData";
 import { ArrowRight, Calendar, CheckCircle, HelpCircle, RotateCw, Search, TrendingUp, BadgeCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ const Transfers = () => {
 
   return (
     <Layout>
+      <SEOHead title="Transfer News & Rumours" description="Latest football transfer news, official deals, rumours and loan moves from top European clubs." />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
