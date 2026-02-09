@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Search as SearchIcon, Trophy, Users, User, Newspaper } from "lucide-react";
@@ -13,9 +13,9 @@ const SearchPage = () => {
   const initialQuery = searchParams.get("q") || "";
   const { query, setQuery, results } = useSearch();
 
-  useState(() => {
+  useEffect(() => {
     if (initialQuery) setQuery(initialQuery);
-  });
+  }, []);
 
   const getIcon = (type: string) => {
     switch (type) {

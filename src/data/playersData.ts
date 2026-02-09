@@ -24,6 +24,7 @@ export const mockPlayers = [
     weight: "88 kg",
     foot: "Left",
     jersey: 9,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/418560-1695029230.jpg",
   },
   {
     id: "mbappe",
@@ -50,6 +51,7 @@ export const mockPlayers = [
     weight: "73 kg",
     foot: "Right",
     jersey: 7,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/342229-1682683695.jpg",
   },
   {
     id: "bellingham",
@@ -76,6 +78,7 @@ export const mockPlayers = [
     weight: "75 kg",
     foot: "Right",
     jersey: 5,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/581678-1694609446.jpg",
   },
   {
     id: "vinicius",
@@ -102,6 +105,7 @@ export const mockPlayers = [
     weight: "73 kg",
     foot: "Right",
     jersey: 7,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/371998-1694609667.jpg",
   },
   {
     id: "salah",
@@ -128,6 +132,7 @@ export const mockPlayers = [
     weight: "71 kg",
     foot: "Left",
     jersey: 11,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/148455-1694609541.jpg",
   },
   {
     id: "saka",
@@ -154,6 +159,7 @@ export const mockPlayers = [
     weight: "72 kg",
     foot: "Left",
     jersey: 7,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/433177-1695030562.jpg",
   },
   {
     id: "rodri",
@@ -180,6 +186,7 @@ export const mockPlayers = [
     weight: "82 kg",
     foot: "Right",
     jersey: 16,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/357565-1695029721.jpg",
   },
   {
     id: "kane",
@@ -206,6 +213,7 @@ export const mockPlayers = [
     weight: "86 kg",
     foot: "Right",
     jersey: 9,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/132098-1694590413.jpg",
   },
   {
     id: "osimhen",
@@ -232,6 +240,7 @@ export const mockPlayers = [
     weight: "78 kg",
     foot: "Right",
     jersey: 9,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/401923-1694590560.jpg",
   },
   {
     id: "de-bruyne",
@@ -258,6 +267,7 @@ export const mockPlayers = [
     weight: "76 kg",
     foot: "Right",
     jersey: 17,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/88755-1694609802.jpg",
   },
   {
     id: "martinez",
@@ -284,6 +294,7 @@ export const mockPlayers = [
     weight: "72 kg",
     foot: "Right",
     jersey: 10,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/406625-1694609878.jpg",
   },
   {
     id: "van-dijk",
@@ -310,6 +321,7 @@ export const mockPlayers = [
     weight: "92 kg",
     foot: "Right",
     jersey: 4,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/139208-1694609946.jpg",
   },
   {
     id: "alisson",
@@ -338,6 +350,7 @@ export const mockPlayers = [
     jersey: 1,
     cleanSheets: 12,
     savePercentage: 78,
+    photoUrl: "https://img.a.transfermarkt.technology/portrait/header/105470-1694609994.jpg",
   },
 ];
 

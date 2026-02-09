@@ -28,23 +28,96 @@ const TeamDetail = () => {
 
   const teamPlayers = mockPlayers.filter((p) => p.team === team.name);
 
-  const seasonStats = {
-    goalsFor: Math.floor(Math.random() * 30) + 25,
-    goalsAgainst: Math.floor(Math.random() * 20) + 10,
-    cleanSheets: Math.floor(Math.random() * 10) + 5,
-    avgPossession: Math.floor(Math.random() * 15) + 50,
-    wins: Math.floor(Math.random() * 10) + 8,
-    draws: Math.floor(Math.random() * 6) + 2,
-    losses: Math.floor(Math.random() * 5) + 1,
+  // Fixed season stats per team based on their standing
+  const teamSeasonStats: Record<string, { goalsFor: number; goalsAgainst: number; cleanSheets: number; avgPossession: number; wins: number; draws: number; losses: number }> = {
+    "Real Madrid": { goalsFor: 52, goalsAgainst: 18, cleanSheets: 12, avgPossession: 62, wins: 16, draws: 3, losses: 2 },
+    "FC Barcelona": { goalsFor: 48, goalsAgainst: 22, cleanSheets: 10, avgPossession: 64, wins: 14, draws: 4, losses: 3 },
+    "Manchester City": { goalsFor: 50, goalsAgainst: 20, cleanSheets: 11, avgPossession: 65, wins: 15, draws: 4, losses: 2 },
+    "Liverpool": { goalsFor: 55, goalsAgainst: 24, cleanSheets: 9, avgPossession: 58, wins: 16, draws: 3, losses: 3 },
+    "Arsenal": { goalsFor: 45, goalsAgainst: 19, cleanSheets: 11, avgPossession: 59, wins: 14, draws: 5, losses: 2 },
+    "Bayern Munich": { goalsFor: 58, goalsAgainst: 22, cleanSheets: 10, avgPossession: 63, wins: 15, draws: 2, losses: 2 },
+    "Paris Saint-Germain": { goalsFor: 46, goalsAgainst: 16, cleanSheets: 13, avgPossession: 61, wins: 15, draws: 3, losses: 1 },
+    "Inter Milan": { goalsFor: 44, goalsAgainst: 15, cleanSheets: 14, avgPossession: 55, wins: 16, draws: 4, losses: 1 },
+    "Juventus": { goalsFor: 35, goalsAgainst: 17, cleanSheets: 12, avgPossession: 54, wins: 12, draws: 6, losses: 3 },
+    "Chelsea": { goalsFor: 38, goalsAgainst: 28, cleanSheets: 7, avgPossession: 57, wins: 11, draws: 5, losses: 5 },
+    "Manchester United": { goalsFor: 32, goalsAgainst: 30, cleanSheets: 6, avgPossession: 52, wins: 10, draws: 4, losses: 7 },
+    "Borussia Dortmund": { goalsFor: 43, goalsAgainst: 26, cleanSheets: 8, avgPossession: 56, wins: 13, draws: 3, losses: 5 },
+    "AC Milan": { goalsFor: 37, goalsAgainst: 23, cleanSheets: 9, avgPossession: 53, wins: 12, draws: 4, losses: 5 },
+    "Atlético Madrid": { goalsFor: 36, goalsAgainst: 20, cleanSheets: 10, avgPossession: 51, wins: 11, draws: 6, losses: 4 },
+    "Napoli": { goalsFor: 40, goalsAgainst: 21, cleanSheets: 10, avgPossession: 56, wins: 13, draws: 4, losses: 4 },
   };
 
-  const recentResults = [
-    { opponent: "Team A", result: "W", score: "2-0", date: "Jan 20" },
-    { opponent: "Team B", result: "D", score: "1-1", date: "Jan 15" },
-    { opponent: "Team C", result: "W", score: "3-1", date: "Jan 10" },
-    { opponent: "Team D", result: "L", score: "0-2", date: "Jan 5" },
-    { opponent: "Team E", result: "W", score: "4-0", date: "Dec 30" },
+  const seasonStats = teamSeasonStats[team.name] || { goalsFor: 35, goalsAgainst: 25, cleanSheets: 8, avgPossession: 52, wins: 10, draws: 5, losses: 5 };
+
+  // Realistic recent results per team using real opponent names from same league
+  const teamRecentResults: Record<string, { opponent: string; result: string; score: string; date: string }[]> = {
+    "Real Madrid": [
+      { opponent: "FC Barcelona", result: "W", score: "3-2", date: "Jan 20" },
+      { opponent: "Atlético Madrid", result: "D", score: "1-1", date: "Jan 15" },
+      { opponent: "Sevilla", result: "W", score: "2-0", date: "Jan 10" },
+      { opponent: "Real Sociedad", result: "W", score: "3-1", date: "Jan 5" },
+      { opponent: "Valencia", result: "W", score: "4-1", date: "Dec 30" },
+    ],
+    "FC Barcelona": [
+      { opponent: "Real Madrid", result: "L", score: "2-3", date: "Jan 20" },
+      { opponent: "Villarreal", result: "W", score: "3-0", date: "Jan 15" },
+      { opponent: "Athletic Bilbao", result: "W", score: "2-1", date: "Jan 10" },
+      { opponent: "Celta Vigo", result: "D", score: "2-2", date: "Jan 5" },
+      { opponent: "Getafe", result: "W", score: "4-0", date: "Dec 30" },
+    ],
+    "Manchester City": [
+      { opponent: "Liverpool", result: "D", score: "3-3", date: "Jan 20" },
+      { opponent: "Chelsea", result: "W", score: "2-0", date: "Jan 15" },
+      { opponent: "Arsenal", result: "L", score: "0-1", date: "Jan 10" },
+      { opponent: "Tottenham", result: "W", score: "3-1", date: "Jan 5" },
+      { opponent: "Aston Villa", result: "W", score: "4-0", date: "Dec 30" },
+    ],
+    "Liverpool": [
+      { opponent: "Manchester City", result: "D", score: "3-3", date: "Jan 20" },
+      { opponent: "Arsenal", result: "W", score: "2-1", date: "Jan 15" },
+      { opponent: "Newcastle", result: "W", score: "4-2", date: "Jan 10" },
+      { opponent: "Everton", result: "W", score: "3-0", date: "Jan 5" },
+      { opponent: "Burnley", result: "W", score: "2-0", date: "Dec 30" },
+    ],
+    "Arsenal": [
+      { opponent: "Chelsea", result: "W", score: "2-1", date: "Jan 20" },
+      { opponent: "Liverpool", result: "L", score: "1-2", date: "Jan 15" },
+      { opponent: "Tottenham", result: "W", score: "3-1", date: "Jan 10" },
+      { opponent: "West Ham", result: "W", score: "2-0", date: "Jan 5" },
+      { opponent: "Brighton", result: "D", score: "1-1", date: "Dec 30" },
+    ],
+    "Bayern Munich": [
+      { opponent: "Borussia Dortmund", result: "W", score: "4-1", date: "Jan 20" },
+      { opponent: "RB Leipzig", result: "W", score: "2-0", date: "Jan 15" },
+      { opponent: "Bayer Leverkusen", result: "D", score: "2-2", date: "Jan 10" },
+      { opponent: "Freiburg", result: "W", score: "3-0", date: "Jan 5" },
+      { opponent: "Stuttgart", result: "W", score: "5-1", date: "Dec 30" },
+    ],
+    "Paris Saint-Germain": [
+      { opponent: "Lille", result: "W", score: "2-0", date: "Jan 20" },
+      { opponent: "Marseille", result: "W", score: "3-1", date: "Jan 15" },
+      { opponent: "Monaco", result: "D", score: "1-1", date: "Jan 10" },
+      { opponent: "Lyon", result: "W", score: "4-1", date: "Jan 5" },
+      { opponent: "Nice", result: "W", score: "2-0", date: "Dec 30" },
+    ],
+    "Inter Milan": [
+      { opponent: "Juventus", result: "W", score: "2-0", date: "Jan 20" },
+      { opponent: "AC Milan", result: "W", score: "1-0", date: "Jan 15" },
+      { opponent: "Napoli", result: "D", score: "1-1", date: "Jan 10" },
+      { opponent: "Roma", result: "W", score: "3-1", date: "Jan 5" },
+      { opponent: "Lazio", result: "W", score: "2-0", date: "Dec 30" },
+    ],
+  };
+
+  const defaultResults = [
+    { opponent: team.lastMatch.opponent, result: team.lastMatch.result, score: team.lastMatch.score, date: "Jan 20" },
+    { opponent: "Opponent B", result: "W", score: "2-0", date: "Jan 15" },
+    { opponent: "Opponent C", result: "D", score: "1-1", date: "Jan 10" },
+    { opponent: "Opponent D", result: "W", score: "3-1", date: "Jan 5" },
+    { opponent: "Opponent E", result: "L", score: "0-1", date: "Dec 30" },
   ];
+
+  const recentResults = teamRecentResults[team.name] || defaultResults;
 
   return (
     <Layout>
@@ -177,7 +250,7 @@ const TeamDetail = () => {
                       to={`/players/${player.id}`}
                       className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
                     >
-                      <PlayerAvatar name={player.name} size="sm" />
+                      <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-sm text-foreground truncate">{player.name}</h4>
                         <p className="text-xs text-muted-foreground">{player.position} • #{player.jersey}</p>
