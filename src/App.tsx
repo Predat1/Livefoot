@@ -10,9 +10,13 @@ import Competitions from "./pages/Competitions";
 import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
 import Players from "./pages/Players";
+import PlayerDetail from "./pages/PlayerDetail";
 import Transfers from "./pages/Transfers";
 import Match from "./pages/Match";
 import Install from "./pages/Install";
+import Standings from "./pages/Standings";
+import Favorites from "./pages/Favorites";
+import SearchPage from "./pages/Search";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,11 +32,15 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/news" element={<News />} />
             <Route path="/competitions" element={<Competitions />} />
+            <Route path="/standings" element={<Standings />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:teamId" element={<TeamDetail />} />
             <Route path="/players" element={<Players />} />
+            <Route path="/players/:playerId" element={<PlayerDetail />} />
             <Route path="/transfers" element={<Transfers />} />
             <Route path="/match/:matchId" element={<Match />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/install" element={<Install />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
