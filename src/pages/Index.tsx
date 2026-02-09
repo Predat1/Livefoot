@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Header from "@/components/Header";
 import DatePicker from "@/components/DatePicker";
 import LeagueSection from "@/components/LeagueSection";
@@ -12,11 +12,44 @@ import livefootLogo from "@/assets/livefoot-logo.png";
 
 const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  // Compute match counts from all leagues
+  const matchCounts = useMemo(() => {
+    let all = 0;
+    let tv = 0;
+    let live = 0;
+    for (const league of mockLeagues) {
+      for (const match of league.matches) {
+        all++;
+        if ((match as any).isTv) tv++;
+        if (match.status === "live") live++;
+      }
+    }
+    return { all, tv, live };
+  }, []);
+
+  // Filter leagues based on active filter
+  const filteredLeagues = useMemo(() => {
+    if (activeFilter === "all") return mockLeagues;
+
+    return mockLeagues
+      .map((league) => ({
+        ...league,
+        matches: league.matches.filter((match) => {
+          if (activeFilter === "tv") return (match as any).isTv === true;
+          if (activeFilter === "live") return match.status === "live";
+          return true;
+        }),
+      }))
+      .filter((league) => league.matches.length > 0);
+  }, [activeFilter]);
 
   const stats = [
-    { icon: Trophy, label: "Competitions", value: "156" },
-    { icon: TrendingUp, label: "Live", value: "12" },
-    { icon: Zap, label: "Goals", value: "87" },
+    { icon: Trophy, label: "Competitions", value: String(mockLeagues.length) },
+    { icon: TrendingUp, label: "Live", value: String(matchCounts.live) },
+    { icon: Zap, label: "Goals", value: String(mockLeagues.reduce((acc, l) => acc + l.matches.reduce((a, m) => a + ((m as any).events?.filter((e: any) => e.type === "goal").length ?? 0), 0), 0)) },
   ];
 
   const handleRefresh = useCallback(async () => {
@@ -29,7 +62,7 @@ const Index = () => {
   });
 
   const { items: visibleLeagues, hasMore, isLoading, loadMoreRef } = useInfiniteScroll({
-    initialItems: mockLeagues,
+    initialItems: filteredLeagues,
     itemsPerPage: 3,
   });
 
@@ -42,7 +75,13 @@ const Index = () => {
       />
       
       <Header />
-      <DatePicker />
+      <DatePicker
+        selectedDate={selectedDate}
+        activeFilter={activeFilter}
+        onDateChange={setSelectedDate}
+        onFilterChange={setActiveFilter}
+        matchCounts={matchCounts}
+      />
 
       <main className="container py-4 sm:py-8">
         {/* Stats bar */}
@@ -68,7 +107,9 @@ const Index = () => {
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
-            <h2 className="text-base sm:text-lg font-bold text-foreground">Today's Matches</h2>
+            <h2 className="text-base sm:text-lg font-bold text-foreground">
+              {activeFilter === "live" ? "Live Matches" : activeFilter === "tv" ? "Televised Matches" : "Today's Matches"}
+            </h2>
           </div>
           <button className="flex items-center gap-2 rounded-lg sm:rounded-xl bg-muted/50 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300">
             View All
@@ -77,9 +118,15 @@ const Index = () => {
 
         {/* Leagues */}
         <div className="space-y-3 sm:space-y-4">
-          {visibleLeagues.map((league, index) => (
-            <LeagueSection key={league.id} league={league} index={index} />
-          ))}
+          {visibleLeagues.length > 0 ? (
+            visibleLeagues.map((league, index) => (
+              <LeagueSection key={league.id} league={league} index={index} />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-muted-foreground text-sm">No matches found for this filter.</p>
+            </div>
+          )}
         </div>
 
         {/* Infinite Scroll Loader */}
