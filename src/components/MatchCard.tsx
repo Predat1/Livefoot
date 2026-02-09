@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Star, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import TeamLogo from "./TeamLogo";
 
 interface Team {
   name: string;
@@ -26,7 +27,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
   const isFinished = match.status === "finished";
 
   return (
-    <Link 
+    <Link
       to={`/match/${match.id}`}
       className="group relative flex items-center justify-between px-2 sm:px-4 py-3 sm:py-4 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
     >
@@ -36,7 +37,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
       )}
 
       {/* Favorite button - hidden on mobile */}
-      <button 
+      <button
         onClick={(e) => e.preventDefault()}
         className="mr-2 sm:mr-3 text-muted-foreground/40 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-primary hover:scale-110"
       >
@@ -45,27 +46,19 @@ const MatchCard = ({ match }: MatchCardProps) => {
 
       {/* Home Team */}
       <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
-        <span className={cn(
-          "text-xs sm:text-sm font-semibold transition-colors truncate text-right",
-          isFinished && match.homeTeam.score! > match.awayTeam.score! 
-            ? "text-foreground" 
-            : isFinished 
-              ? "text-muted-foreground" 
-              : "text-foreground"
-        )}>
+        <span
+          className={cn(
+            "text-xs sm:text-sm font-semibold transition-colors truncate text-right",
+            isFinished && match.homeTeam.score! > match.awayTeam.score!
+              ? "text-foreground"
+              : isFinished
+                ? "text-muted-foreground"
+                : "text-foreground"
+          )}
+        >
           {match.homeTeam.name}
         </span>
-        <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-md sm:rounded-lg bg-muted/80 shadow-sm transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
-          {match.homeTeam.logo ? (
-            <img
-              src={match.homeTeam.logo}
-              alt={match.homeTeam.name}
-              className="h-4 w-4 sm:h-6 sm:w-6 object-contain"
-            />
-          ) : (
-            <div className="h-3.5 w-3.5 sm:h-5 sm:w-5 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
-          )}
-        </div>
+        <TeamLogo teamName={match.homeTeam.name} size="sm" />
       </div>
 
       {/* Score / Time */}
@@ -118,25 +111,17 @@ const MatchCard = ({ match }: MatchCardProps) => {
 
       {/* Away Team */}
       <div className="flex flex-1 items-center gap-1.5 sm:gap-3 min-w-0">
-        <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-md sm:rounded-lg bg-muted/80 shadow-sm transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
-          {match.awayTeam.logo ? (
-            <img
-              src={match.awayTeam.logo}
-              alt={match.awayTeam.name}
-              className="h-4 w-4 sm:h-6 sm:w-6 object-contain"
-            />
-          ) : (
-            <div className="h-3.5 w-3.5 sm:h-5 sm:w-5 rounded-full bg-gradient-to-br from-accent/40 to-accent/20" />
+        <TeamLogo teamName={match.awayTeam.name} size="sm" />
+        <span
+          className={cn(
+            "text-xs sm:text-sm font-semibold transition-colors truncate",
+            isFinished && match.awayTeam.score! > match.homeTeam.score!
+              ? "text-foreground"
+              : isFinished
+                ? "text-muted-foreground"
+                : "text-foreground"
           )}
-        </div>
-        <span className={cn(
-          "text-xs sm:text-sm font-semibold transition-colors truncate",
-          isFinished && match.awayTeam.score! > match.homeTeam.score! 
-            ? "text-foreground" 
-            : isFinished 
-              ? "text-muted-foreground" 
-              : "text-foreground"
-        )}>
+        >
           {match.awayTeam.name}
         </span>
       </div>

@@ -1,6 +1,8 @@
 import { ChevronDown, Star } from "lucide-react";
 import { useState } from "react";
 import MatchCard from "./MatchCard";
+import LeagueLogo from "./LeagueLogo";
+import CountryFlag from "./CountryFlag";
 import { cn } from "@/lib/utils";
 
 interface Team {
@@ -34,34 +36,23 @@ interface LeagueSectionProps {
 const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const getFlagEmoji = (country: string) => {
-    const flags: Record<string, string> = {
-      England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-      Spain: "🇪🇸",
-      Italy: "🇮🇹",
-      Germany: "🇩🇪",
-      France: "🇫🇷",
-      Argentina: "🇦🇷",
-      Portugal: "🇵🇹",
-      Netherlands: "🇳🇱",
-    };
-    return flags[country] || "⚽";
-  };
-
-  const hasLiveMatch = league.matches.some(m => m.status === "live");
+  const hasLiveMatch = league.matches.some((m) => m.status === "live");
 
   return (
-    <div 
+    <div
       className="mb-3 sm:mb-4 overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-sm hover-lift card-shine animate-slide-up border border-border/50"
       style={{ animationDelay: `${index * 100}ms` }}
     >
       {/* League Header */}
-      <button 
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between bg-league-header px-3 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-muted/50 group"
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <span className="text-xl sm:text-2xl drop-shadow-sm flex-shrink-0">{getFlagEmoji(league.country)}</span>
+          <div className="flex items-center gap-1.5">
+            <CountryFlag country={league.country} size="md" />
+            <LeagueLogo leagueId={league.id} leagueName={league.name} size="sm" />
+          </div>
           <div className="flex flex-col items-start min-w-0">
             <span className="text-xs sm:text-sm font-bold uppercase tracking-wide text-foreground truncate max-w-[150px] sm:max-w-none">
               {league.name}
@@ -78,28 +69,30 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
           )}
         </div>
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-          <button 
+          <button
             className="text-muted-foreground/50 hover:text-primary transition-colors p-1 hidden sm:block opacity-0 group-hover:opacity-100"
             onClick={(e) => e.stopPropagation()}
           >
             <Star className="h-4 w-4" />
           </button>
-          <ChevronDown 
+          <ChevronDown
             className={cn(
               "h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground transition-transform duration-300",
               !isExpanded && "-rotate-90"
-            )} 
+            )}
           />
         </div>
       </button>
 
       {/* Matches */}
-      <div className={cn(
-        "transition-all duration-300 overflow-hidden",
-        isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-      )}>
+      <div
+        className={cn(
+          "transition-all duration-300 overflow-hidden",
+          isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
         {league.matches.map((match, matchIndex) => (
-          <div 
+          <div
             key={match.id}
             className="animate-fade-in"
             style={{ animationDelay: `${matchIndex * 50}ms` }}
