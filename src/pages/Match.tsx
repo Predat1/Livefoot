@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { mockLeagues } from "@/data/mockData";
-import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, Swords, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, Swords, LayoutGrid, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeamLogo from "@/components/TeamLogo";
@@ -314,13 +314,14 @@ const Match = () => {
 
         {hasStats ? (
           <Tabs defaultValue="events" className="w-full">
-            <TabsList className="w-full grid grid-cols-6 bg-card border border-border/50 rounded-xl p-1 mb-4">
-              <TabsTrigger value="events" className="rounded-lg text-[10px] sm:text-sm px-1">Events</TabsTrigger>
-              <TabsTrigger value="stats" className="rounded-lg text-[10px] sm:text-sm px-1">Stats</TabsTrigger>
-              <TabsTrigger value="lineups" className="rounded-lg text-[10px] sm:text-sm px-1">Lineups</TabsTrigger>
-              <TabsTrigger value="formation" className="rounded-lg text-[10px] sm:text-sm px-1">Field</TabsTrigger>
-              <TabsTrigger value="h2h" className="rounded-lg text-[10px] sm:text-sm px-1">H2H</TabsTrigger>
-              <TabsTrigger value="commentary" className="rounded-lg text-[10px] sm:text-sm px-1">Live</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-7 bg-card border border-border/50 rounded-xl p-1 mb-4">
+              <TabsTrigger value="events" className="rounded-lg text-[10px] sm:text-sm px-0.5">Events</TabsTrigger>
+              <TabsTrigger value="stats" className="rounded-lg text-[10px] sm:text-sm px-0.5">Stats</TabsTrigger>
+              <TabsTrigger value="lineups" className="rounded-lg text-[10px] sm:text-sm px-0.5">Lineups</TabsTrigger>
+              <TabsTrigger value="formation" className="rounded-lg text-[10px] sm:text-sm px-0.5">Field</TabsTrigger>
+              <TabsTrigger value="odds" className="rounded-lg text-[10px] sm:text-sm px-0.5">Odds</TabsTrigger>
+              <TabsTrigger value="h2h" className="rounded-lg text-[10px] sm:text-sm px-0.5">H2H</TabsTrigger>
+              <TabsTrigger value="commentary" className="rounded-lg text-[10px] sm:text-sm px-0.5">Live</TabsTrigger>
             </TabsList>
 
             <TabsContent value="events" className="mt-0">
@@ -446,6 +447,177 @@ const Match = () => {
                   />
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Odds Tab */}
+            <TabsContent value="odds" className="mt-0">
+              {(() => {
+                // Generate deterministic odds from team names
+                const seed = (match.homeTeam.name.length * 7 + match.awayTeam.name.length * 13) % 100;
+                const homeWin = (1.5 + (seed % 30) / 20).toFixed(2);
+                const draw    = (2.8 + (seed % 15) / 20).toFixed(2);
+                const awayWin = (2.0 + ((seed + 17) % 35) / 20).toFixed(2);
+                const bttsYes = (1.6 + (seed % 20) / 25).toFixed(2);
+                const bttsNo  = (2.1 + (seed % 18) / 25).toFixed(2);
+                const over    = (1.7 + (seed % 22) / 25).toFixed(2);
+                const under   = (2.0 + (seed % 18) / 25).toFixed(2);
+
+                const bookmakers = [
+                  { name: "William Hill", logo: "WH", homeWin, draw, awayWin, bttsYes, bttsNo, over, under },
+                  {
+                    name: "Betclic",      logo: "BC",
+                    homeWin: (parseFloat(homeWin) + 0.05).toFixed(2),
+                    draw:    (parseFloat(draw)    - 0.05).toFixed(2),
+                    awayWin: (parseFloat(awayWin) + 0.10).toFixed(2),
+                    bttsYes: (parseFloat(bttsYes) + 0.05).toFixed(2),
+                    bttsNo:  (parseFloat(bttsNo)  - 0.03).toFixed(2),
+                    over:    (parseFloat(over)    + 0.04).toFixed(2),
+                    under:   (parseFloat(under)   - 0.05).toFixed(2),
+                  },
+                  {
+                    name: "Unibet",       logo: "UB",
+                    homeWin: (parseFloat(homeWin) - 0.03).toFixed(2),
+                    draw:    (parseFloat(draw)    + 0.08).toFixed(2),
+                    awayWin: (parseFloat(awayWin) - 0.05).toFixed(2),
+                    bttsYes: (parseFloat(bttsYes) - 0.04).toFixed(2),
+                    bttsNo:  (parseFloat(bttsNo)  + 0.06).toFixed(2),
+                    over:    (parseFloat(over)    - 0.06).toFixed(2),
+                    under:   (parseFloat(under)   + 0.08).toFixed(2),
+                  },
+                  {
+                    name: "Bet365",       logo: "B3",
+                    homeWin: (parseFloat(homeWin) + 0.10).toFixed(2),
+                    draw:    (parseFloat(draw)    + 0.03).toFixed(2),
+                    awayWin: (parseFloat(awayWin) + 0.05).toFixed(2),
+                    bttsYes: (parseFloat(bttsYes) + 0.08).toFixed(2),
+                    bttsNo:  (parseFloat(bttsNo)  - 0.06).toFixed(2),
+                    over:    (parseFloat(over)    + 0.09).toFixed(2),
+                    under:   (parseFloat(under)   + 0.04).toFixed(2),
+                  },
+                  {
+                    name: "PMU",          logo: "PM",
+                    homeWin: (parseFloat(homeWin) - 0.06).toFixed(2),
+                    draw:    (parseFloat(draw)    - 0.08).toFixed(2),
+                    awayWin: (parseFloat(awayWin) + 0.02).toFixed(2),
+                    bttsYes: (parseFloat(bttsYes) - 0.02).toFixed(2),
+                    bttsNo:  (parseFloat(bttsNo)  + 0.03).toFixed(2),
+                    over:    (parseFloat(over)    - 0.03).toFixed(2),
+                    under:   (parseFloat(under)   - 0.02).toFixed(2),
+                  },
+                ];
+
+                // Find best odds per column
+                const bestHome    = Math.max(...bookmakers.map(b => parseFloat(b.homeWin)));
+                const bestDraw    = Math.max(...bookmakers.map(b => parseFloat(b.draw)));
+                const bestAway    = Math.max(...bookmakers.map(b => parseFloat(b.awayWin)));
+                const bestBttsY   = Math.max(...bookmakers.map(b => parseFloat(b.bttsYes)));
+                const bestBttsN   = Math.max(...bookmakers.map(b => parseFloat(b.bttsNo)));
+                const bestOver    = Math.max(...bookmakers.map(b => parseFloat(b.over)));
+                const bestUnder   = Math.max(...bookmakers.map(b => parseFloat(b.under)));
+
+                const OddCell = ({ val, best }: { val: string; best: number }) => (
+                  <div className={cn(
+                    "text-center px-2 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-colors",
+                    parseFloat(val) === best
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "text-foreground"
+                  )}>
+                    {val}
+                  </div>
+                );
+
+                return (
+                  <div className="space-y-4">
+                    {/* Disclaimer */}
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 text-[10px] sm:text-xs text-muted-foreground">
+                      <TrendingUp className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
+                      Odds are indicative and for informational purposes only. Best odds highlighted in green.
+                    </div>
+
+                    {/* 1X2 Market */}
+                    <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                      <div className="bg-league-header px-4 sm:px-5 py-2.5 border-b border-border flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        <h3 className="font-bold text-sm text-foreground">Match Result — 1 X 2</h3>
+                      </div>
+                      <div className="p-3 sm:p-4">
+                        {/* Header */}
+                        <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2 mb-2 px-1">
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Bookmaker</div>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center">{match.homeTeam.name.split(" ").slice(-1)[0]}</div>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center">Draw</div>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center">{match.awayTeam.name.split(" ").slice(-1)[0]}</div>
+                        </div>
+                        <div className="space-y-1.5">
+                          {bookmakers.map((bk) => (
+                            <div key={bk.name} className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2 items-center bg-muted/20 rounded-lg px-1 py-1">
+                              <div className="flex items-center gap-2">
+                                <span className="flex h-6 w-8 items-center justify-center rounded-md bg-muted text-[9px] font-black text-foreground shrink-0">{bk.logo}</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-foreground truncate">{bk.name}</span>
+                              </div>
+                              <OddCell val={bk.homeWin} best={bestHome} />
+                              <OddCell val={bk.draw}    best={bestDraw} />
+                              <OddCell val={bk.awayWin} best={bestAway} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Both Teams Score */}
+                    <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                      <div className="bg-league-header px-4 sm:px-5 py-2.5 border-b border-border">
+                        <h3 className="font-bold text-sm text-foreground">Both Teams to Score</h3>
+                      </div>
+                      <div className="p-3 sm:p-4">
+                        <div className="grid grid-cols-[1fr_1fr_1fr] gap-2 mb-2 px-1">
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Bookmaker</div>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center">Yes</div>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center">No</div>
+                        </div>
+                        <div className="space-y-1.5">
+                          {bookmakers.map((bk) => (
+                            <div key={bk.name} className="grid grid-cols-[1fr_1fr_1fr] gap-2 items-center bg-muted/20 rounded-lg px-1 py-1">
+                              <div className="flex items-center gap-2">
+                                <span className="flex h-6 w-8 items-center justify-center rounded-md bg-muted text-[9px] font-black text-foreground shrink-0">{bk.logo}</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-foreground truncate">{bk.name}</span>
+                              </div>
+                              <OddCell val={bk.bttsYes} best={bestBttsY} />
+                              <OddCell val={bk.bttsNo}  best={bestBttsN} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Over/Under 2.5 */}
+                    <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                      <div className="bg-league-header px-4 sm:px-5 py-2.5 border-b border-border">
+                        <h3 className="font-bold text-sm text-foreground">Total Goals — Over / Under 2.5</h3>
+                      </div>
+                      <div className="p-3 sm:p-4">
+                        <div className="grid grid-cols-[1fr_1fr_1fr] gap-2 mb-2 px-1">
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Bookmaker</div>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center">Over 2.5</div>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center">Under 2.5</div>
+                        </div>
+                        <div className="space-y-1.5">
+                          {bookmakers.map((bk) => (
+                            <div key={bk.name} className="grid grid-cols-[1fr_1fr_1fr] gap-2 items-center bg-muted/20 rounded-lg px-1 py-1">
+                              <div className="flex items-center gap-2">
+                                <span className="flex h-6 w-8 items-center justify-center rounded-md bg-muted text-[9px] font-black text-foreground shrink-0">{bk.logo}</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-foreground truncate">{bk.name}</span>
+                              </div>
+                              <OddCell val={bk.over}  best={bestOver} />
+                              <OddCell val={bk.under} best={bestUnder} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </TabsContent>
 
             {/* H2H Tab */}
