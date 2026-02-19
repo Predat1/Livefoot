@@ -1,12 +1,20 @@
-import { Search, Menu, Bell, Star, X, Download, Trophy, Users, Newspaper, ArrowRightLeft } from "lucide-react";
+import { Search, Menu, Bell, Star, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useSearch } from "@/hooks/useSearch";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useAuth } from "@/contexts/AuthContext";
 import livefootLogo from "@/assets/livefoot-logo.png";
 
 const Header = () => {
@@ -16,6 +24,7 @@ const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const { query, setQuery, results } = useSearch();
   const { totalFavorites } = useFavorites();
+  const { user, profile, signOut } = useAuth();
   const searchRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
@@ -52,6 +61,8 @@ const Header = () => {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
 
   return (
     <>
@@ -101,7 +112,6 @@ const Header = () => {
                 onFocus={() => setSearchOpen(true)}
                 className="h-9 sm:h-10 w-[160px] xl:w-[220px] rounded-lg sm:rounded-xl border-header-foreground/10 bg-header-foreground/5 pl-9 sm:pl-10 text-xs sm:text-sm text-header-foreground placeholder:text-header-foreground/40 transition-all duration-300 focus:w-[200px] xl:focus:w-[280px] focus:bg-header-foreground/10 focus-visible:ring-primary"
               />
-              {/* Search Results Dropdown */}
               {searchOpen && results.length > 0 && (
                 <div className="absolute top-full mt-2 left-0 right-0 w-[320px] bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50">
                   {results.map((r) => (
@@ -154,9 +164,38 @@ const Header = () => {
               <span className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-live animate-pulse" />
             </Button>
 
-            <Button className="hidden sm:flex h-9 sm:h-10 rounded-lg sm:rounded-xl gradient-primary font-semibold text-xs sm:text-sm shadow-lg shadow-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/40 hover:scale-105">
-              Login
-            </Button>
+            {/* Auth button - Desktop */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="hidden sm:flex h-9 sm:h-10 gap-2 rounded-lg sm:rounded-xl border border-header-foreground/20 bg-header-foreground/10 text-header-foreground text-xs sm:text-sm font-semibold hover:bg-header-foreground/20">
+                    <UserCircle className="h-4 w-4" />
+                    <span className="max-w-[80px] truncate">{displayName}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/favorites" className="flex items-center gap-2">
+                      <Star className="h-4 w-4" /> My Favorites
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
+                    onClick={signOut}
+                  >
+                    <LogOut className="h-4 w-4" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth" className="hidden sm:block">
+                <Button className="h-9 sm:h-10 rounded-lg sm:rounded-xl gradient-primary font-semibold text-xs sm:text-sm shadow-lg shadow-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Login
+                </Button>
+              </Link>
+            )}
 
             <Button
               variant="ghost"
@@ -207,9 +246,28 @@ const Header = () => {
                 Install App
               </Link>
               <div className="mt-4 pt-4 border-t border-header-foreground/10">
-                <Button className="w-full h-11 rounded-xl gradient-primary font-semibold shadow-lg shadow-primary/30">
-                  Login
-                </Button>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="px-4 py-2 text-sm text-header-foreground/70">
+                      Signed in as <span className="font-semibold text-header-foreground">{displayName}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full h-11 rounded-xl font-semibold gap-2"
+                      onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full h-11 rounded-xl gradient-primary font-semibold shadow-lg shadow-primary/30 gap-2">
+                      <LogIn className="h-4 w-4" />
+                      Login / Sign Up
+                    </Button>
+                  </Link>
+                )}
               </div>
             </nav>
           </div>
