@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeamLogo from "@/components/TeamLogo";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import CountryFlag from "@/components/CountryFlag";
+import ShareButton from "@/components/ShareButton";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 
@@ -135,10 +136,16 @@ const TeamDetail = () => {
         }}
       />
       <div className="container py-4 sm:py-8">
-        <Link to="/teams" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors text-sm">
-          <ArrowLeft className="h-4 w-4" />
-          Back to teams
-        </Link>
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <Link to="/teams" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
+            <ArrowLeft className="h-4 w-4" />
+            Back to teams
+          </Link>
+          <ShareButton
+            title={`${team.name} - ${team.league} | LiveFoot`}
+            text={`Découvrez ${team.name} - ${team.league}, ${team.country} | LiveFoot`}
+          />
+        </div>
 
         {/* Team Header */}
         <div className="rounded-2xl bg-card border border-border/50 overflow-hidden mb-6">

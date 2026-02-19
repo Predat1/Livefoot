@@ -11,6 +11,7 @@ import TeamLogo from "@/components/TeamLogo";
 import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
 import TacticalPitch from "@/components/TacticalPitch";
+import ShareButton from "@/components/ShareButton";
 
 type LineupPlayer = { name: string; number: number; pos: string };
 
@@ -256,10 +257,16 @@ const Match = () => {
         }}
       />
       <div className="container py-4 sm:py-8">
-        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors text-sm">
-          <ArrowLeft className="h-4 w-4" />
-          Back to matches
-        </Link>
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
+            <ArrowLeft className="h-4 w-4" />
+            Back to matches
+          </Link>
+          <ShareButton
+            title={`${match.homeTeam.name} vs ${match.awayTeam.name} | LiveFoot`}
+            text={`${match.homeTeam.name} ${hasStats ? `${match.homeTeam.score}-${match.awayTeam.score}` : "vs"} ${match.awayTeam.name} - ${match.league.name}`}
+          />
+        </div>
 
         {/* Match Header */}
         <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden mb-4 sm:mb-6">
