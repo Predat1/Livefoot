@@ -2,12 +2,13 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { mockLeagues } from "@/data/mockData";
-import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, Swords } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, Swords, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeamLogo from "@/components/TeamLogo";
 import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
+import TacticalPitch from "@/components/TacticalPitch";
 
 type LineupPlayer = { name: string; number: number; pos: string };
 
@@ -313,12 +314,13 @@ const Match = () => {
 
         {hasStats ? (
           <Tabs defaultValue="events" className="w-full">
-            <TabsList className="w-full grid grid-cols-5 bg-card border border-border/50 rounded-xl p-1 mb-4">
-              <TabsTrigger value="events" className="rounded-lg text-xs sm:text-sm">Events</TabsTrigger>
-              <TabsTrigger value="stats" className="rounded-lg text-xs sm:text-sm">Stats</TabsTrigger>
-              <TabsTrigger value="lineups" className="rounded-lg text-xs sm:text-sm">Lineups</TabsTrigger>
-              <TabsTrigger value="h2h" className="rounded-lg text-xs sm:text-sm">H2H</TabsTrigger>
-              <TabsTrigger value="commentary" className="rounded-lg text-xs sm:text-sm">Live</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-6 bg-card border border-border/50 rounded-xl p-1 mb-4">
+              <TabsTrigger value="events" className="rounded-lg text-[10px] sm:text-sm px-1">Events</TabsTrigger>
+              <TabsTrigger value="stats" className="rounded-lg text-[10px] sm:text-sm px-1">Stats</TabsTrigger>
+              <TabsTrigger value="lineups" className="rounded-lg text-[10px] sm:text-sm px-1">Lineups</TabsTrigger>
+              <TabsTrigger value="formation" className="rounded-lg text-[10px] sm:text-sm px-1">Field</TabsTrigger>
+              <TabsTrigger value="h2h" className="rounded-lg text-[10px] sm:text-sm px-1">H2H</TabsTrigger>
+              <TabsTrigger value="commentary" className="rounded-lg text-[10px] sm:text-sm px-1">Live</TabsTrigger>
             </TabsList>
 
             <TabsContent value="events" className="mt-0">
@@ -424,6 +426,24 @@ const Match = () => {
                       );
                     })}
                   </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Formation Tab */}
+            <TabsContent value="formation" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Tactical Formation</h3>
+                </div>
+                <div className="p-4 sm:p-6">
+                  <TacticalPitch
+                    homePlayers={teamLineups[match.homeTeam.name] || defaultLineup}
+                    awayPlayers={teamLineups[match.awayTeam.name] || defaultLineup}
+                    homeTeamName={match.homeTeam.name}
+                    awayTeamName={match.awayTeam.name}
+                  />
                 </div>
               </div>
             </TabsContent>
