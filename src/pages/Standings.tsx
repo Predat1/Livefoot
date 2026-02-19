@@ -3,11 +3,15 @@ import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { standingsData, mockCompetitions } from "@/data/competitionsData";
+import { mockTeams } from "@/data/teamsData";
 import { Trophy, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TeamLogo from "@/components/TeamLogo";
 import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
+
+// Build a map from team name → team id for correct links
+const teamNameToId = Object.fromEntries(mockTeams.map((t) => [t.name, t.id]));
 
 const Standings = () => {
   const leaguesWithStandings = mockCompetitions.filter((c) => standingsData[c.id]);
@@ -105,8 +109,8 @@ const Standings = () => {
                         {team.position}
                       </span>
                     </td>
-                    <td className="px-2 sm:px-4 py-2 sm:py-3">
-                      <Link to={`/teams/${team.team.toLowerCase().replace(/ /g, "-")}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                     <td className="px-2 sm:px-4 py-2 sm:py-3">
+                      <Link to={`/teams/${teamNameToId[team.team] || team.team.toLowerCase().replace(/ /g, "-")}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                         <TeamLogo teamName={team.team} size="xs" className="!h-6 !w-6" />
                         <span className="font-semibold text-xs sm:text-sm text-foreground">{team.team}</span>
                       </Link>

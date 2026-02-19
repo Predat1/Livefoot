@@ -2,6 +2,8 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { mockLeagues } from "@/data/mockData";
+import { mockTeams } from "@/data/teamsData";
+import { mockPlayers } from "@/data/playersData";
 import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, Swords, LayoutGrid, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -277,11 +279,21 @@ const Match = () => {
           </div>
 
           <div className="p-4 sm:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1 text-center">
-                <TeamLogo teamName={match.homeTeam.name} size="xl" className="mx-auto mb-2 sm:mb-3" />
-                <h2 className="text-sm sm:text-xl font-bold text-foreground">{match.homeTeam.name}</h2>
-              </div>
+          <div className="flex items-center justify-between gap-4">
+              {/* Home team - clickable */}
+              {(() => {
+                const homeTeamData = mockTeams.find((t) => t.name === match.homeTeam.name);
+                const homeHref = homeTeamData ? `/teams/${homeTeamData.id}` : null;
+                const content = (
+                  <>
+                    <TeamLogo teamName={match.homeTeam.name} size="xl" className="mx-auto mb-2 sm:mb-3" />
+                    <h2 className="text-sm sm:text-xl font-bold text-foreground">{match.homeTeam.name}</h2>
+                  </>
+                );
+                return homeHref ? (
+                  <Link to={homeHref} className="flex-1 text-center hover:opacity-80 transition-opacity">{content}</Link>
+                ) : <div className="flex-1 text-center">{content}</div>;
+              })()}
 
               <div className="text-center flex-shrink-0">
                 {hasStats ? (
@@ -298,10 +310,20 @@ const Match = () => {
                 )}
               </div>
 
-              <div className="flex-1 text-center">
-                <TeamLogo teamName={match.awayTeam.name} size="xl" className="mx-auto mb-2 sm:mb-3" />
-                <h2 className="text-sm sm:text-xl font-bold text-foreground">{match.awayTeam.name}</h2>
-              </div>
+              {/* Away team - clickable */}
+              {(() => {
+                const awayTeamData = mockTeams.find((t) => t.name === match.awayTeam.name);
+                const awayHref = awayTeamData ? `/teams/${awayTeamData.id}` : null;
+                const content = (
+                  <>
+                    <TeamLogo teamName={match.awayTeam.name} size="xl" className="mx-auto mb-2 sm:mb-3" />
+                    <h2 className="text-sm sm:text-xl font-bold text-foreground">{match.awayTeam.name}</h2>
+                  </>
+                );
+                return awayHref ? (
+                  <Link to={awayHref} className="flex-1 text-center hover:opacity-80 transition-opacity">{content}</Link>
+                ) : <div className="flex-1 text-center">{content}</div>;
+              })()}
             </div>
 
             <div className="mt-4 sm:mt-6 flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-muted-foreground">
@@ -415,13 +437,23 @@ const Match = () => {
                             {team.name}
                           </h4>
                           <div className="space-y-1.5 sm:space-y-2">
-                            {lineup.map((player, i) => (
-                              <div key={i} className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/30">
-                                <span className="w-5 sm:w-6 text-center text-[10px] sm:text-xs font-bold text-muted-foreground">{player.number}</span>
-                                <span className="text-xs sm:text-sm text-foreground">{player.name}</span>
-                                <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto">{player.pos}</span>
-                              </div>
-                            ))}
+                            {lineup.map((player, i) => {
+                                const playerData = mockPlayers.find(
+                                  (p) => p.name === player.name
+                                );
+                                const content = (
+                                  <div key={i} className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                                    <span className="w-5 sm:w-6 text-center text-[10px] sm:text-xs font-bold text-muted-foreground">{player.number}</span>
+                                    <span className="text-xs sm:text-sm text-foreground flex-1">{player.name}</span>
+                                    <span className="text-[10px] sm:text-xs text-muted-foreground">{player.pos}</span>
+                                  </div>
+                                );
+                                return playerData ? (
+                                  <Link key={i} to={`/players/${playerData.id}`}>{content}</Link>
+                                ) : (
+                                  <div key={i}>{content}</div>
+                                );
+                              })}
                           </div>
                         </div>
                       );

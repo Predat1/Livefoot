@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import Header from "./Header";
+import BottomNav from "./BottomNav";
 import livefootLogo from "@/assets/livefoot-logo.png";
 
 interface LayoutProps {
@@ -16,12 +17,12 @@ const footerLinks = [
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 lg:pb-0">
       <Header />
       {children}
       
       {/* Footer */}
-      <footer className="border-t border-border bg-card py-8 sm:py-12 mt-6 sm:mt-8">
+      <footer className="border-t border-border bg-card py-8 sm:py-12 mt-6 sm:mt-8 mb-16 lg:mb-0">
         <div className="container text-center">
           <div className="mb-4 sm:mb-6 flex items-center justify-center gap-2 sm:gap-3">
             <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
@@ -43,11 +44,18 @@ const Layout = ({ children }: LayoutProps) => {
               </Link>
             ))}
           </div>
-          <p className="mt-6 sm:mt-8 text-[10px] sm:text-xs text-muted-foreground/60">
+          {/* Social links */}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">𝕏 Twitter</a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">Instagram</a>
+            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">YouTube</a>
+          </div>
+          <p className="mt-4 sm:mt-6 text-[10px] sm:text-xs text-muted-foreground/60">
             © 2024 LiveFoot. All rights reserved.
           </p>
         </div>
       </footer>
+      <BottomNav />
     </div>
   );
 };
