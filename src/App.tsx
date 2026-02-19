@@ -15,6 +15,7 @@ import Players from "./pages/Players";
 import PlayerDetail from "./pages/PlayerDetail";
 import Transfers from "./pages/Transfers";
 import Match from "./pages/Match";
+import Live from "./pages/Live";
 import Install from "./pages/Install";
 import Standings from "./pages/Standings";
 import Favorites from "./pages/Favorites";
@@ -40,6 +41,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/live" element={<Live />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:newsId" element={<NewsDetail />} />
               <Route path="/competitions" element={<Competitions />} />

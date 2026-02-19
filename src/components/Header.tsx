@@ -1,4 +1,4 @@
-import { Search, Menu, Bell, Star, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle } from "lucide-react";
+import { Search, Menu, Bell, Star, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle, Zap } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const Header = () => {
 
   const navItems = [
     { label: "MATCHES", href: "/" },
+    { label: "LIVE", href: "/live", isLive: true },
     { label: "NEWS", href: "/news" },
     { label: "COMPETITIONS", href: "/competitions" },
     { label: "STANDINGS", href: "/standings" },
@@ -102,12 +103,15 @@ const Header = () => {
                   key={item.label}
                   to={item.href}
                   className={cn(
-                    "relative px-3 xl:px-4 py-2 text-xs xl:text-sm font-semibold transition-all duration-300 hover:text-primary",
+                    "relative px-3 xl:px-4 py-2 text-xs xl:text-sm font-semibold transition-all duration-300 hover:text-primary flex items-center gap-1",
                     isActive(item.href)
                       ? "text-primary"
-                      : "text-header-foreground/70 hover:text-header-foreground"
+                      : (item as any).isLive
+                        ? "text-live hover:text-live"
+                        : "text-header-foreground/70 hover:text-header-foreground"
                   )}
                 >
+                  {(item as any).isLive && <Zap className="h-3 w-3" />}
                   {item.label}
                   {isActive(item.href) && (
                     <span className="absolute -bottom-0.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary" />
@@ -244,12 +248,15 @@ const Header = () => {
                   to={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    "px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300",
+                    "px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2",
                     isActive(item.href)
                       ? "bg-primary/20 text-primary"
-                      : "text-header-foreground/70 hover:bg-header-foreground/10 hover:text-header-foreground"
+                      : (item as any).isLive
+                        ? "text-live hover:bg-live/10"
+                        : "text-header-foreground/70 hover:bg-header-foreground/10 hover:text-header-foreground"
                   )}
                 >
+                  {(item as any).isLive && <Zap className="h-4 w-4" />}
                   {item.label}
                 </Link>
               ))}
