@@ -1,204 +1,136 @@
 
+# Audit complet LiveFoot - Ce qui manque (hors API)
 
-# Audit complet LiveFoot vs BeSoccer / LiveScore - Lacunes et enrichissements
+## Constat general
 
-## Resume de l'audit
-
-Apres inspection detaillee de chaque fichier du projet, voici toutes les lacunes identifiees par rapport aux standards de BeSoccer et LiveScore, regroupees par categorie : pages manquantes, fonctionnalites absentes, SEO incomplet, et problemes de donnees/qualite.
-
----
-
-## 1. SEO - Problemes critiques
-
-Le SEO est actuellement **minimal**. Un seul `<title>` et `<meta description>` statiques dans `index.html` couvrent l'ensemble du site. Aucune page n'a de meta-donnees dynamiques.
-
-### Ce qui manque :
-- **Pas de titres dynamiques par page** : Toutes les pages affichent le meme titre "LiveFoot - Live Soccer Scores & Results" dans l'onglet du navigateur, que l'on soit sur `/players/haaland` ou `/teams/real-madrid`.
-- **Pas de meta description dynamique** : La meme description est utilisee partout.
-- **Pas de sitemap.xml** : Le fichier `robots.txt` existe mais aucun `sitemap.xml` n'est genere.
-- **Pas de balises Open Graph dynamiques** : L'image OG pointe vers un placeholder Lovable generique.
-- **Pas de balises canoniques dynamiques** : Toutes les pages ont la meme URL canonique statique.
-- **Pas de structured data (JSON-LD)** : Aucun schema SportsEvent, SportsTeam, ou Person n'est present.
-- **Pas de breadcrumbs** : Aucune navigation en fil d'Ariane pour le SEO et l'UX.
-
-### Correction prevue :
-- Creer un composant `SEOHead` utilisant `react-helmet-async` (ou la balise native `document.title`) pour gerer dynamiquement le titre, la description, et les meta OG de chaque page.
-- Generer un `sitemap.xml` statique dans `/public`.
-- Ajouter du JSON-LD pour les equipes, joueurs et matchs.
+Le site est bien structuré et couvre les bases. Cependant, apres une inspection fichier par fichier, voici tout ce qui manque pour atteindre le niveau BeSoccer / LiveScore, groupe par priorité et impact utilisateur.
 
 ---
 
-## 2. Pages manquantes vs BeSoccer/LiveScore
+## Priorité 1 - Critique : Backend non connecté au frontend
 
-| Page | BeSoccer/LiveScore | LiveFoot | Statut |
-|------|-------------------|----------|--------|
-| Accueil avec matchs du jour | Oui | Oui | OK |
-| Detail match avec onglets | Oui (6+ onglets) | Partiel (3 onglets) | A enrichir |
-| Detail equipe | Oui | Oui | OK |
-| Detail joueur | Oui | Oui | OK |
-| Classements | Oui | Oui | OK |
-| Competitions | Oui | Oui | OK |
-| Transferts | Oui | Oui | OK |
-| News / Actualites | Oui | Oui | OK |
-| **Detail article news** | Oui | **NON** | Manquant |
-| **Page About** | Oui | **NON** | Manquant |
-| **Page Contact** | Oui | **NON** | Manquant |
-| **Page Privacy Policy** | Oui | **NON** | Manquant |
-| **Page Terms** | Oui | **NON** | Manquant |
-| Favoris | Oui | Oui | OK |
-| Recherche | Oui | Oui | OK |
+### Favoris toujours en localStorage
+La table `favorites` existe dans la base de données Cloud, mais `useFavorites.ts` utilise encore uniquement `localStorage`. Un utilisateur connecté perd ses favoris s'il change d'appareil.
 
-### Detail des pages manquantes :
+**Ce qu'il faut faire :**
+- Modifier `useFavorites.ts` pour lire/écrire dans la table `favorites` quand l'utilisateur est connecté
+- Fusionner les favoris localStorage avec la base au moment de la connexion
+- Sinon le backend ne sert à rien pour cette fonctionnalité
 
-**a) Page Article News (`/news/:newsId`)**
-Les articles de news sont tous non-cliquables. Pas de route `/news/:newsId`. L'utilisateur ne peut pas lire un article en entier.
+### Pas de page Profil utilisateur (`/profile`)
+Le header affiche un menu "My Favorites" mais pas de lien vers un profil. La table `profiles` (avec `display_name`, `username`, `bio`, `avatar_url`, `favorite_team`) existe en base mais aucune page ne permet de la modifier.
 
-**b) Pages legales (About, Contact, Privacy, Terms)**
-Le footer contient des liens "About", "Contact", "Privacy", "Terms" qui pointent tous vers `#` (lien mort).
+**Ce qu'il faut créer :**
+- Page `/profile` avec formulaire d'édition : display name, username, bio, équipe favorite
+- Lien dans le menu dropdown du header vers `/profile`
 
 ---
 
-## 3. Fonctionnalites manquantes par page
+## Priorité 2 - Haute : UX et navigation
 
-### 3.1 Page Match (`/match/:matchId`)
-Manque par rapport a BeSoccer :
-- **Onglet H2H (Head to Head)** : Historique des confrontations entre les 2 equipes
-- **Onglet Commentary** : Commentaire en direct minute par minute
-- **Formation tactique visuelle** : Terrain vert avec les joueurs positionnes (4-3-3, 4-4-2, etc.)
-- **Cotes des bookmakers** : Section odds (meme factice)
-- **Lien vers les pages des equipes** dans l'en-tete du match
+### Pas de notifications push / alertes match
+Le header a une icône `Bell` avec un point rouge, mais elle ne fait rien. Aucun système de notification n'est en place (même local).
 
-### 3.2 Page Index (Accueil)
-Manque :
-- **Section "Top Matches" hero** en haut avec les affiches du jour (comme LiveScore)
-- **Widget "Live Table"** : Mini-classement flottant des leagues principales
-- **Section "Trending News"** en bas de la page d'accueil avec les dernieres actualites
+**Ce qu'il faut ajouter :**
+- Page `/notifications` ou panneau slide-over listant les alertes (buts, fin de match) de ses équipes favorites
+- Ou au minimum, rendre la cloche cliquable et mener vers les matchs des équipes favorites
 
-### 3.3 Page Competitions
-Manque :
-- **Onglet "Fixtures"** dans le panneau deployable de chaque competition (calendrier des prochains matchs)
-- **Onglet "Stats"** (statistiques globales de la ligue)
+### Pas de page "Live" dédiée
+Les sites pros (LiveScore, Sofascore) ont une vue filtrée uniquement sur les matchs en cours, accessible en 1 clic depuis le header ou la navigation mobile. Actuellement il existe un filtre "live" sur la page d'accueil mais pas de route dédiée `/live`.
 
-### 3.4 Page Players
-Manque :
-- **Comparaison de joueurs** : Possibilite de selectionner 2 joueurs et comparer leurs stats cote a cote
+### Navigation mobile insuffisante
+Sur mobile, la barre de navigation est uniquement un menu hamburger. Les sites pros ont une **bottom navigation bar** (barre fixe en bas avec 5 onglets : Matches, News, Competitions, Favorites, Profil). C'est le standard mobile pour les apps de score.
 
-### 3.5 Page News
-Manque :
-- **Navigation vers l'article complet** : Chaque carte d'article devrait etre cliquable et mener a `/news/:id`
-
-### 3.6 Page 404 (NotFound)
-- Tres basique, pas de Layout, pas de logo, pas de liens utiles. Les sites pro ont une 404 enrichie.
+### Pas de comparaison de joueurs
+La page `/players` permet filtres et tri, mais pas de comparer 2 joueurs côte à côte (fonctionnalité présente sur BeSoccer, Sofascore).
 
 ---
 
-## 4. Problemes de donnees et d'affichage
+## Priorité 3 - Moyenne : Contenu des pages existantes
 
-### 4.1 Emojis residuels
-Les fichiers de donnees contiennent encore des emojis (`logo: "emoji"`, `flag: "emoji"`) dans :
-- `mockData.ts` : Chaque equipe a encore `logo: "emoji"`
-- `teamsData.ts` : Le champ `logo` utilise des emojis
-- `competitionsData.ts` : Le champ `logo` utilise des emojis
-- `transfersData.ts` : `fromTeamLogo`, `toTeamLogo` sont des emojis
+### Page TeamDetail - onglet "Fixtures" manquant
+Le panneau de l'équipe a 4 onglets (Overview, Squad, Results, Stats) mais pas de calendrier des prochains matchs de l'équipe (onglet "Fixtures" présent sur BeSoccer).
 
-Ces emojis ne sont pas affiches (les composants `TeamLogo` et `LeagueLogo` utilisent le mapping centralise), mais ils polluent les donnees.
+### Page Competitions - onglet "Fixtures" manquant
+Chaque compétition dépliable montre Standings + Top Scorers, mais pas le calendrier des prochains matchs de la compétition.
 
-### 4.2 Photos de joueurs dans les top scorers
-Dans `Competitions.tsx` (ligne 164), le composant `PlayerAvatar` est utilise pour les top scorers mais **sans `photoUrl`**, donc seules les initiales s'affichent.
+### Page Standings - pas de lien cliquable vers les équipes
+Le nom d'équipe dans le tableau de classement génère un lien vers `/teams/arsenal` par exemple mais avec `.replace(/ /g, "-").toLowerCase()` hardcodé. Des équipes avec des noms spéciaux (Atlético, Borussia Dortmund) peuvent avoir des IDs qui ne correspondent pas aux IDs dans `teamsData.ts`. Certains liens sont donc cassés.
 
-### 4.3 Photos de joueurs dans les transferts
-Dans `Transfers.tsx` (ligne 98), le composant `PlayerAvatar` est utilise sans `photoUrl`.
+### Page Match - onglet "Lineups" non interactif
+Le terrain tactique (onglet "Field") est là, mais dans l'onglet "Lineups" les joueurs ne sont pas cliquables vers leur fiche `/players/:id`.
 
-### 4.4 Photos de joueurs dans les favoris
-Dans `Favorites.tsx` (ligne 81), `PlayerAvatar` est utilise sans `photoUrl`.
+### Page Match - pas de lien vers les pages équipes dans le header du match
+Les logos des équipes dans l'en-tête du match ne sont pas des liens vers `/teams/:teamId`.
 
-### 4.5 Photos de joueurs dans la recherche
-Dans `Search.tsx` (ligne 84), `PlayerAvatar` est utilise sans `photoUrl`.
+### Page PlayerDetail - pas d'historique de saisons
+Sofascore et BeSoccer affichent les stats saison par saison. Actuellement, seule la saison en cours est affichée, sans historique.
 
-### 4.6 Lien LaLiga incoherent
-Dans `mockData.ts`, l'id de la LaLiga est `"laliga"` tandis que dans `competitionsData.ts` c'est `"la-liga"`. Le `leagueLogos` dans `logoUrls.ts` gere les deux, mais le classement de standings utilise `"la-liga"`. Cela peut causer des incoherences dans la navigation Standings.
-
-### 4.7 Standings - ID Champions League
-Il n'y a pas de page classement dediee avec lien vers les equipes pour la Champions League car les noms d'equipes dans standings ne correspondent pas toujours aux IDs dans `teamsData.ts`.
+### Page Teams - filtres par ligue/pays absents
+La page Teams affiche toutes les équipes sans possibilité de filtrer par compétition ou pays.
 
 ---
 
-## 5. Plan d'implementation
+## Priorité 4 - Basse : Qualité et enrichissement
 
-### Phase A : SEO dynamique (priorite haute)
-1. **Installer `react-helmet-async`** (ou utiliser `document.title` nativement)
-2. **Creer `src/components/SEOHead.tsx`** : composant reutilisable acceptant `title`, `description`, `ogImage`
-3. **Ajouter `SEOHead` a chaque page** avec des meta dynamiques :
-   - Index : "LiveFoot - Live Football Scores Today"
-   - Match : "{HomeTeam} vs {AwayTeam} - Live Score | LiveFoot"
-   - Team : "{TeamName} - Squad, Results, Stats | LiveFoot"
-   - Player : "{PlayerName} - Stats & Profile | LiveFoot"
-   - News : "{ArticleTitle} | LiveFoot News"
-   - etc.
-4. **Creer `public/sitemap.xml`** avec toutes les routes connues
-5. **Mettre a jour `robots.txt`** pour referencer le sitemap
-6. **Ajouter JSON-LD** pour les entites majeures (SportsTeam, Person, SportsEvent)
+### Pas de partage social
+Aucun bouton "Share" sur les pages match, joueur, ou équipe pour partager sur Twitter/WhatsApp.
 
-### Phase B : Pages manquantes
-1. **Creer `/news/:newsId`** (page detail article) avec contenu complet, image hero, meta-donnees, articles similaires
-2. **Creer `/about`, `/contact`, `/privacy`, `/terms`** : Pages statiques avec le Layout principal
-3. **Mettre a jour les liens du footer** de `#` vers les vraies routes
-4. **Enrichir la page 404** avec Layout, logo, liens utiles, animation
+### Pas de mode hors-ligne / cache
+L'application est une PWA (avec `vite-plugin-pwa`) mais aucun service worker n'est configuré pour mettre en cache les données. Si l'utilisateur n'a pas de réseau, la page est blanche.
 
-### Phase C : Enrichissement des pages existantes
-1. **Match.tsx** : Ajouter onglets H2H et Commentary, formation tactique visuelle, liens vers les equipes
-2. **Index.tsx** : Ajouter section hero "Top Matches" et section "Trending News" en bas
-3. **Competitions.tsx** : Ajouter onglet "Fixtures" aux competitions
-4. **Players.tsx** : Ajouter fonctionnalite de comparaison de joueurs
+### Pas de raccourci clavier pour la recherche
+Sur les sites pros, appuyer sur `/` ou `Ctrl+K` ouvre la recherche. Ce n'est pas implémenté.
 
-### Phase D : Correction des donnees
-1. **Harmoniser les IDs** : `laliga` -> `la-liga` dans mockData ou ajouter les deux dans les mappings
-2. **Passer `photoUrl` partout** : Competitions top scorers, Transfers, Favorites, Search
-3. **Nettoyer les emojis** dans tous les fichiers de donnees (remplacer par les IDs de `logoUrls.ts`)
+### Pied de page sans réseaux sociaux
+Le footer n'a pas de liens vers Twitter/X, Instagram, YouTube comme les sites pros.
 
 ---
 
-## Details techniques
+## Plan d'implémentation proposé
 
-### Fichiers a creer
-```
-src/components/SEOHead.tsx          -- Composant meta dynamique
-src/pages/NewsDetail.tsx            -- Page detail article
-src/pages/About.tsx                 -- Page a propos
-src/pages/Contact.tsx               -- Page contact  
-src/pages/Privacy.tsx               -- Page confidentialite
-src/pages/Terms.tsx                 -- Page conditions
-public/sitemap.xml                  -- Sitemap statique
-```
+### Phase 1 - Backend réel pour les favoris + Page Profil (impact le plus fort)
+1. Refactorer `useFavorites.ts` : quand user connecté → lecture/écriture Lovable Cloud, sinon localStorage
+2. Créer `src/pages/Profile.tsx` avec formulaire d'édition du profil (display_name, username, bio, favorite_team)
+3. Ajouter la route `/profile` dans `App.tsx`
+4. Ajouter lien "My Profile" dans le dropdown du Header
 
-### Fichiers a modifier
-```
-src/App.tsx                         -- Nouvelles routes (/news/:id, /about, /contact, /privacy, /terms)
-src/components/Layout.tsx           -- Liens footer vers vraies routes
-src/pages/Index.tsx                 -- SEOHead + section hero + trending news
-src/pages/Match.tsx                 -- SEOHead + onglets H2H/Commentary + formation + liens equipes
-src/pages/TeamDetail.tsx            -- SEOHead
-src/pages/PlayerDetail.tsx          -- SEOHead
-src/pages/Players.tsx               -- SEOHead
-src/pages/Teams.tsx                 -- SEOHead
-src/pages/Competitions.tsx          -- SEOHead + photoUrl top scorers
-src/pages/Standings.tsx             -- SEOHead
-src/pages/News.tsx                  -- SEOHead + liens vers /news/:id
-src/pages/Transfers.tsx             -- SEOHead + photoUrl
-src/pages/Favorites.tsx             -- SEOHead + photoUrl
-src/pages/Search.tsx                -- SEOHead + photoUrl
-src/pages/NotFound.tsx              -- Enrichir avec Layout et design
-src/data/mockData.ts                -- Harmoniser ID laliga
-public/robots.txt                   -- Ajouter reference sitemap
-index.html                          -- Mettre a jour meta par defaut
-```
+### Phase 2 - Navigation mobile + Bottom Bar
+1. Créer `src/components/BottomNav.tsx` : barre fixe en bas avec icônes Matches / News / Favoris / Profil
+2. Intégrer dans `Layout.tsx` (visible uniquement sur mobile)
+3. Ajouter padding-bottom au contenu sur mobile pour éviter chevauchement
 
-### Dependance a ajouter
-- `react-helmet-async` pour le SEO dynamique (gestion des meta tags cote client)
+### Phase 3 - Enrichissement des pages existantes
+1. TeamDetail : ajouter onglet "Fixtures" avec les prochains matchs
+2. Competitions : ajouter onglet "Fixtures"
+3. Players : ajouter comparaison côte à côte (sélectionner 2 joueurs, vue comparative)
+4. Match : rendre les noms de joueurs dans l'onglet Lineups cliquables
+5. Match : rendre les logos d'équipes dans le header cliquables vers les pages équipes
+6. Standings : corriger les liens d'équipes (utiliser le vrai teamId depuis teamsData)
+7. Teams : ajouter filtre par ligue/pays
 
-### Estimation
-- Phase A (SEO) : ~15 fichiers modifies
-- Phase B (Pages manquantes) : ~8 fichiers crees/modifies
-- Phase C (Enrichissement) : ~5 fichiers modifies
-- Phase D (Donnees) : ~6 fichiers modifies
+### Phase 4 - Fonctionnalités extras
+1. Cloche de notification → page ou panneau alertes
+2. Boutons Share (Web Share API native)
+3. Raccourci clavier `/` ou `Ctrl+K` pour la recherche
+4. Liens réseaux sociaux dans le footer
 
+---
+
+## Résumé des fichiers à créer/modifier
+
+**Créer :**
+- `src/pages/Profile.tsx`
+- `src/components/BottomNav.tsx`
+
+**Modifier :**
+- `src/hooks/useFavorites.ts` — connecter au backend Cloud
+- `src/components/Layout.tsx` — ajouter BottomNav
+- `src/components/Header.tsx` — ajouter lien Profile dans dropdown
+- `src/App.tsx` — route /profile
+- `src/pages/TeamDetail.tsx` — onglet Fixtures
+- `src/pages/Competitions.tsx` — onglet Fixtures
+- `src/pages/Players.tsx` — comparaison joueurs
+- `src/pages/Match.tsx` — liens joueurs + liens équipes
+- `src/pages/Teams.tsx` — filtres par ligue
+- `src/pages/Standings.tsx` — corriger liens équipes
