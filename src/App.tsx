@@ -24,6 +24,7 @@ import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/transfers" element={<Transfers />} />
               <Route path="/match/:matchId" element={<Match />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />

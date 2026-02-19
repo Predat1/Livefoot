@@ -1,6 +1,6 @@
 import { Search, Menu, Bell, Star, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,6 +51,22 @@ const Header = () => {
       default: return null;
     }
   };
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut: "/" or Ctrl+K opens search
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.key === "/" || (e.ctrlKey && e.key === "k")) && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) {
+      e.preventDefault();
+      searchInputRef.current?.focus();
+      setSearchOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -106,7 +122,8 @@ const Header = () => {
             <div className="relative hidden md:block" ref={searchRef}>
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-header-foreground/40" />
               <Input
-                placeholder="Search..."
+                ref={searchInputRef}
+                placeholder="Search... (press /)"
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
@@ -159,10 +176,12 @@ const Header = () => {
               </Button>
             </Link>
 
-            <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl text-header-foreground/70 hover:bg-header-foreground/10 hover:text-primary">
-              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-live animate-pulse" />
-            </Button>
+            <Link to="/favorites">
+              <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl text-header-foreground/70 hover:bg-header-foreground/10 hover:text-primary">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-live animate-pulse" />
+              </Button>
+            </Link>
 
             {/* Auth button - Desktop */}
             {user ? (
@@ -174,6 +193,11 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2">
+                      <UserCircle className="h-4 w-4" /> My Profile
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/favorites" className="flex items-center gap-2">
                       <Star className="h-4 w-4" /> My Favorites

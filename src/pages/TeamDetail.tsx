@@ -188,9 +188,10 @@ const TeamDetail = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full grid grid-cols-4 bg-card border border-border/50 rounded-xl p-1 mb-4">
+          <TabsList className="w-full grid grid-cols-5 bg-card border border-border/50 rounded-xl p-1 mb-4">
             <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="squad" className="rounded-lg text-xs sm:text-sm">Squad</TabsTrigger>
+            <TabsTrigger value="fixtures" className="rounded-lg text-xs sm:text-sm">Fixtures</TabsTrigger>
             <TabsTrigger value="results" className="rounded-lg text-xs sm:text-sm">Results</TabsTrigger>
             <TabsTrigger value="stats" className="rounded-lg text-xs sm:text-sm">Stats</TabsTrigger>
           </TabsList>
@@ -281,6 +282,38 @@ const TeamDetail = () => {
               ) : (
                 <div className="p-8 text-center text-muted-foreground">No players data available.</div>
               )}
+            </div>
+          </TabsContent>
+
+          {/* Fixtures */}
+          <TabsContent value="fixtures" className="mt-0">
+            <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-foreground">Upcoming Fixtures</h3>
+              </div>
+              <div className="p-4 space-y-2">
+                {[
+                  { opponent: team.nextMatch.opponent, date: team.nextMatch.date, time: team.nextMatch.time, venue: "Home" },
+                  { opponent: "TBD", date: "Feb 10", time: "15:00", venue: "Away" },
+                  { opponent: "TBD", date: "Feb 17", time: "18:30", venue: "Home" },
+                  { opponent: "TBD", date: "Feb 24", time: "20:45", venue: "Away" },
+                  { opponent: "TBD", date: "Mar 3", time: "16:00", venue: "Home" },
+                ].map((fixture, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-md text-[10px] font-bold",
+                        fixture.venue === "Home" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                      )}>
+                        {fixture.venue}
+                      </span>
+                      <span className="font-medium text-sm text-foreground">{fixture.opponent}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{fixture.date} • {fixture.time}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
 

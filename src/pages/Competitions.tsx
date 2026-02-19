@@ -105,6 +105,7 @@ const Competitions = () => {
                       <TabsList className="bg-transparent h-auto p-0 gap-1 sm:gap-2">
                         <TabsTrigger value="standings" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md sm:rounded-lg"><Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />Standings</TabsTrigger>
                         <TabsTrigger value="scorers" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md sm:rounded-lg"><Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />Top Scorers</TabsTrigger>
+                        <TabsTrigger value="fixtures" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md sm:rounded-lg"><Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />Fixtures</TabsTrigger>
                       </TabsList>
                     </div>
 
@@ -190,8 +191,31 @@ const Competitions = () => {
                       ) : (
                         <div className="p-8 text-center text-muted-foreground"><p>No top scorers data available.</p></div>
                       )}
-                    </TabsContent>
-                  </Tabs>
+                      </TabsContent>
+
+                      {/* Fixtures Tab */}
+                      <TabsContent value="fixtures" className="m-0">
+                        <div className="p-3 sm:p-4 space-y-2">
+                          {[
+                            { home: "TBD", away: "TBD", date: "Feb 8", time: "15:00", matchday: competition.currentMatchday + 1 },
+                            { home: "TBD", away: "TBD", date: "Feb 8", time: "17:30", matchday: competition.currentMatchday + 1 },
+                            { home: "TBD", away: "TBD", date: "Feb 9", time: "15:00", matchday: competition.currentMatchday + 1 },
+                            { home: "TBD", away: "TBD", date: "Feb 9", time: "20:45", matchday: competition.currentMatchday + 1 },
+                            { home: "TBD", away: "TBD", date: "Feb 15", time: "15:00", matchday: competition.currentMatchday + 2 },
+                          ].map((f, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+                              <span className="text-[10px] text-muted-foreground w-20">MD {f.matchday}</span>
+                              <div className="flex-1 flex items-center justify-center gap-3">
+                                <span className="text-xs font-semibold text-foreground truncate text-right flex-1">{f.home}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground px-2 py-1 bg-muted rounded-md">vs</span>
+                                <span className="text-xs font-semibold text-foreground truncate flex-1">{f.away}</span>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground w-20 text-right">{f.date} {f.time}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                 </div>
               )}
             </div>
