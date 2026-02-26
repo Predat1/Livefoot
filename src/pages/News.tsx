@@ -203,7 +203,7 @@ const News = () => {
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {filteredNews.slice(1).map((news, index) => (
                 <Link
-                  key={news.id}
+                  key={`${news.id}-${index}`}
                   to={`/news/${news.id}`}
                   className="group block overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border/50 hover-lift animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}

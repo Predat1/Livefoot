@@ -154,9 +154,9 @@ const NewsDetail = () => {
               <h2 className="text-lg sm:text-xl font-bold text-foreground">Related Articles</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              {relatedArticles.map((news) => (
+              {relatedArticles.map((news, idx) => (
                 <Link
-                  key={news.id}
+                  key={`${news.id}-${idx}`}
                   to={`/news/${news.id}`}
                   className="group rounded-xl bg-card border border-border/50 overflow-hidden hover-lift transition-all"
                 >

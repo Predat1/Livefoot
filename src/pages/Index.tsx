@@ -244,7 +244,7 @@ const Index = () => {
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {trendingNews.map((news, index) => (
                 <Link
-                  key={news.id}
+                  key={`${news.id}-${index}`}
                   to={`/news/${news.id}`}
                   className="group rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden hover-lift transition-all animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}

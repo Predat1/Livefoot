@@ -30,7 +30,7 @@ const Live = () => {
   const [activeTab, setActiveTab] = useState<"live" | "map" | "history">("live");
 
   const { data: liveLeagues, refetch } = useLiveFixtures();
-  const { goalHistory, detectGoals, notificationsEnabled, enableNotifications } = useGoalNotifications(liveLeagues, soundEnabled);
+  const { goalHistory, detectGoals, notificationsEnabled, enableNotifications, disableNotifications, isSupported, permissionDenied } = useGoalNotifications(liveLeagues, soundEnabled);
 
   const liveMatches = liveLeagues || [];
   const totalLive = liveMatches.reduce((acc, l) => acc + l.matches.length, 0);
@@ -81,11 +81,22 @@ const Live = () => {
           <div className="flex items-center gap-2">
             {/* Push Notifications toggle */}
             <button
-              onClick={enableNotifications}
-              title={notificationsEnabled ? "Notifications activées" : "Activer les notifications"}
+              onClick={() => notificationsEnabled ? disableNotifications() : enableNotifications()}
+              title={
+                permissionDenied
+                  ? "Notifications bloquées dans les paramètres du navigateur"
+                  : notificationsEnabled
+                  ? "Désactiver les notifications"
+                  : "Activer les notifications de buts"
+              }
+              disabled={permissionDenied}
               className={cn(
                 "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
-                notificationsEnabled ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                permissionDenied
+                  ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
+                  : notificationsEnabled
+                  ? "bg-primary/10 text-primary hover:bg-primary/20"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
             >
               {notificationsEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
