@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      match_predictions: {
+        Row: {
+          away_score: number
+          created_at: string
+          fixture_id: string
+          home_score: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          away_score?: number
+          created_at?: string
+          fixture_id: string
+          home_score?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          away_score?: number
+          created_at?: string
+          fixture_id?: string
+          home_score?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
