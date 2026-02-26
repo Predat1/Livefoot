@@ -6,7 +6,7 @@ import DatePicker from "@/components/DatePicker";
 import LeagueSection from "@/components/LeagueSection";
 import PullToRefreshIndicator from "@/components/PullToRefresh";
 import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
-import { mockNews } from "@/data/newsData";
+import { useFootballNews } from "@/hooks/useFootballNews";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useFixturesByDate } from "@/hooks/useApiFootball";
@@ -70,7 +70,8 @@ const Index = () => {
     itemsPerPage: 3,
   });
 
-  const trendingNews = mockNews.filter((n) => n.trending).slice(0, 4);
+  const { data: newsArticles = [] } = useFootballNews();
+  const trendingNews = newsArticles.filter((n) => n.trending).slice(0, 4);
 
   const footerLinks = [
     { label: "About", href: "/about" },
