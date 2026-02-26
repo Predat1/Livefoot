@@ -1,8 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics } from "@/hooks/useApiFootball";
-import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, LayoutGrid, TrendingUp, Loader2 } from "lucide-react";
+import { useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics, usePredictions, useHeadToHead } from "@/hooks/useApiFootball";
+import { ArrowLeft, Clock, MapPin, Users, Target, User, AlertTriangle, Repeat2, MessageSquare, LayoutGrid, TrendingUp, Loader2, BarChart3, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareButton from "@/components/ShareButton";
@@ -23,6 +23,13 @@ const Match = () => {
   const { data: eventsData } = useFixtureEvents(matchId || "");
   const { data: lineupsData } = useFixtureLineups(matchId || "");
   const { data: statsData } = useFixtureStatistics(matchId || "");
+
+  const fix = fixtureData as any;
+  const homeTeamId = fix?.teams?.home?.id ? String(fix.teams.home.id) : "";
+  const awayTeamId = fix?.teams?.away?.id ? String(fix.teams.away.id) : "";
+
+  const { data: predictionsData } = usePredictions(matchId || "");
+  const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
 
   if (isLoading) {
     return (
@@ -47,7 +54,6 @@ const Match = () => {
     );
   }
 
-  const fix = fixtureData as any;
   const status = mapFixtureStatus(fix.fixture.status.short);
   const isLive = status === "live";
   const isFinished = status === "finished";
@@ -154,11 +160,13 @@ const Match = () => {
         {/* Tabs */}
         {hasStats ? (
           <Tabs defaultValue="events" className="w-full">
-            <TabsList className="w-full grid grid-cols-4 bg-card border border-border/50 rounded-xl p-1 mb-4">
+            <TabsList className="w-full grid grid-cols-6 bg-card border border-border/50 rounded-xl p-1 mb-4">
               <TabsTrigger value="events" className="rounded-lg text-[10px] sm:text-sm">Events</TabsTrigger>
               <TabsTrigger value="stats" className="rounded-lg text-[10px] sm:text-sm">Stats</TabsTrigger>
               <TabsTrigger value="lineups" className="rounded-lg text-[10px] sm:text-sm">Lineups</TabsTrigger>
               <TabsTrigger value="commentary" className="rounded-lg text-[10px] sm:text-sm">Live</TabsTrigger>
+              <TabsTrigger value="predictions" className="rounded-lg text-[10px] sm:text-sm">Prédiction</TabsTrigger>
+              <TabsTrigger value="h2h" className="rounded-lg text-[10px] sm:text-sm">H2H</TabsTrigger>
             </TabsList>
 
             {/* Events */}
@@ -327,37 +335,285 @@ const Match = () => {
                 </div>
               </div>
             </TabsContent>
+
+            {/* Predictions */}
+            <TabsContent value="predictions" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Prédictions</h3>
+                </div>
+                <div className="p-4 sm:p-6">
+                  {predictionsData ? (() => {
+                    const pred = predictionsData as any;
+                    const pct = pred.predictions?.percent;
+                    const advice = pred.predictions?.advice;
+                    const comparison = pred.comparison;
+                    return (
+                      <div className="space-y-6">
+                        {/* Advice */}
+                        {advice && (
+                          <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/20">
+                            <p className="text-xs text-muted-foreground mb-1">Conseil</p>
+                            <p className="text-sm sm:text-base font-bold text-primary">{advice}</p>
+                          </div>
+                        )}
+                        {/* Win percentages */}
+                        {pct && (
+                          <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="rounded-xl bg-muted/30 p-4">
+                              <p className="text-2xl sm:text-3xl font-black text-foreground">{pct.home}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{homeTeam.name}</p>
+                            </div>
+                            <div className="rounded-xl bg-muted/30 p-4">
+                              <p className="text-2xl sm:text-3xl font-black text-muted-foreground">{pct.draw}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Nul</p>
+                            </div>
+                            <div className="rounded-xl bg-muted/30 p-4">
+                              <p className="text-2xl sm:text-3xl font-black text-foreground">{pct.away}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{awayTeam.name}</p>
+                            </div>
+                          </div>
+                        )}
+                        {/* Comparison bars */}
+                        {comparison && (
+                          <div className="space-y-3">
+                            {Object.entries(comparison).map(([key, val]: [string, any]) => {
+                              const homeVal = parseInt(String(val.home).replace("%", "")) || 0;
+                              const awayVal = parseInt(String(val.away).replace("%", "")) || 0;
+                              const total = homeVal + awayVal || 1;
+                              return (
+                                <div key={key}>
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="font-bold text-foreground">{val.home}</span>
+                                    <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
+                                    <span className="font-bold text-foreground">{val.away}</span>
+                                  </div>
+                                  <div className="flex h-2 rounded-full overflow-hidden bg-muted">
+                                    <div className="bg-primary transition-all" style={{ width: `${(homeVal / total) * 100}%` }} />
+                                    <div className="bg-muted-foreground/30 transition-all" style={{ width: `${(awayVal / total) * 100}%` }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })() : (
+                    <div className="text-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Chargement des prédictions...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* H2H */}
+            <TabsContent value="h2h" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border flex items-center gap-2">
+                  <Swords className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Historique des confrontations</h3>
+                </div>
+                <div className="p-4 sm:p-6">
+                  {h2hData && h2hData.length > 0 ? (() => {
+                    const matches = (h2hData as any[]).slice(0, 10);
+                    const homeWins = matches.filter((m: any) => m.teams.home.winner === true && String(m.teams.home.id) === homeTeamId || m.teams.away.winner === true && String(m.teams.away.id) === homeTeamId).length;
+                    const awayWins = matches.filter((m: any) => m.teams.home.winner === true && String(m.teams.home.id) === awayTeamId || m.teams.away.winner === true && String(m.teams.away.id) === awayTeamId).length;
+                    const draws = matches.length - homeWins - awayWins;
+                    return (
+                      <div className="space-y-4">
+                        {/* Summary */}
+                        <div className="grid grid-cols-3 gap-3 text-center">
+                          <div className="rounded-xl bg-primary/10 p-3">
+                            <p className="text-2xl font-black text-primary">{homeWins}</p>
+                            <p className="text-[10px] text-muted-foreground">{homeTeam.name}</p>
+                          </div>
+                          <div className="rounded-xl bg-muted/30 p-3">
+                            <p className="text-2xl font-black text-muted-foreground">{draws}</p>
+                            <p className="text-[10px] text-muted-foreground">Nuls</p>
+                          </div>
+                          <div className="rounded-xl bg-primary/10 p-3">
+                            <p className="text-2xl font-black text-primary">{awayWins}</p>
+                            <p className="text-[10px] text-muted-foreground">{awayTeam.name}</p>
+                          </div>
+                        </div>
+                        {/* Match list */}
+                        <div className="space-y-2">
+                          {matches.map((m: any, i: number) => (
+                            <Link key={i} to={`/match/${m.fixture.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                              <span className="text-[10px] text-muted-foreground w-16">
+                                {new Date(m.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "2-digit" })}
+                              </span>
+                              <div className="flex-1 flex items-center gap-2 justify-center">
+                                <img src={m.teams.home.logo} alt="" className="h-5 w-5 object-contain" />
+                                <span className="text-xs font-medium text-foreground">{m.teams.home.name}</span>
+                                <span className="font-black text-sm text-foreground">{m.goals.home} - {m.goals.away}</span>
+                                <span className="text-xs font-medium text-foreground">{m.teams.away.name}</span>
+                                <img src={m.teams.away.logo} alt="" className="h-5 w-5 object-contain" />
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">Aucun historique de confrontation disponible</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         ) : (
-          /* Scheduled match */
-          <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
-            <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border">
-              <h3 className="font-bold text-sm sm:text-base text-foreground">Match Information</h3>
-            </div>
-            <div className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
-              <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30">
-                <MapPin className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Stadium</p>
-                  <p className="font-medium text-sm text-foreground">{venue?.name || "TBD"}</p>
+          /* Scheduled match - show info + predictions + H2H */
+          <Tabs defaultValue="info" className="w-full">
+            <TabsList className="w-full grid grid-cols-3 bg-card border border-border/50 rounded-xl p-1 mb-4">
+              <TabsTrigger value="info" className="rounded-lg text-[10px] sm:text-sm">Info</TabsTrigger>
+              <TabsTrigger value="predictions" className="rounded-lg text-[10px] sm:text-sm">Prédiction</TabsTrigger>
+              <TabsTrigger value="h2h" className="rounded-lg text-[10px] sm:text-sm">H2H</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="info" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border">
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Match Information</h3>
+                </div>
+                <div className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+                  <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Stadium</p>
+                      <p className="font-medium text-sm text-foreground">{venue?.name || "TBD"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30">
+                    <Clock className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Kickoff</p>
+                      <p className="font-medium text-sm text-foreground">{time}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30">
+                    <User className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Referee</p>
+                      <p className="font-medium text-sm text-foreground">{referee || "TBD"}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30">
-                <Clock className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Kickoff</p>
-                  <p className="font-medium text-sm text-foreground">{time}</p>
+            </TabsContent>
+
+            <TabsContent value="predictions" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Prédictions</h3>
+                </div>
+                <div className="p-4 sm:p-6">
+                  {predictionsData ? (() => {
+                    const pred = predictionsData as any;
+                    const pct = pred.predictions?.percent;
+                    const advice = pred.predictions?.advice;
+                    const comparison = pred.comparison;
+                    return (
+                      <div className="space-y-6">
+                        {advice && (
+                          <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/20">
+                            <p className="text-xs text-muted-foreground mb-1">Conseil</p>
+                            <p className="text-sm sm:text-base font-bold text-primary">{advice}</p>
+                          </div>
+                        )}
+                        {pct && (
+                          <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="rounded-xl bg-muted/30 p-4">
+                              <p className="text-2xl sm:text-3xl font-black text-foreground">{pct.home}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{homeTeam.name}</p>
+                            </div>
+                            <div className="rounded-xl bg-muted/30 p-4">
+                              <p className="text-2xl sm:text-3xl font-black text-muted-foreground">{pct.draw}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Nul</p>
+                            </div>
+                            <div className="rounded-xl bg-muted/30 p-4">
+                              <p className="text-2xl sm:text-3xl font-black text-foreground">{pct.away}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{awayTeam.name}</p>
+                            </div>
+                          </div>
+                        )}
+                        {comparison && (
+                          <div className="space-y-3">
+                            {Object.entries(comparison).map(([key, val]: [string, any]) => {
+                              const homeVal = parseInt(String(val.home).replace("%", "")) || 0;
+                              const awayVal = parseInt(String(val.away).replace("%", "")) || 0;
+                              const total = homeVal + awayVal || 1;
+                              return (
+                                <div key={key}>
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="font-bold text-foreground">{val.home}</span>
+                                    <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
+                                    <span className="font-bold text-foreground">{val.away}</span>
+                                  </div>
+                                  <div className="flex h-2 rounded-full overflow-hidden bg-muted">
+                                    <div className="bg-primary transition-all" style={{ width: `${(homeVal / total) * 100}%` }} />
+                                    <div className="bg-muted-foreground/30 transition-all" style={{ width: `${(awayVal / total) * 100}%` }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })() : (
+                    <div className="text-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Chargement des prédictions...</p>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30">
-                <User className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Referee</p>
-                  <p className="font-medium text-sm text-foreground">{referee || "TBD"}</p>
+            </TabsContent>
+
+            <TabsContent value="h2h" className="mt-0">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-4 sm:px-5 py-2 sm:py-3 border-b border-border flex items-center gap-2">
+                  <Swords className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">Historique des confrontations</h3>
+                </div>
+                <div className="p-4 sm:p-6">
+                  {h2hData && h2hData.length > 0 ? (() => {
+                    const matches = (h2hData as any[]).slice(0, 10);
+                    return (
+                      <div className="space-y-2">
+                        {matches.map((m: any, i: number) => (
+                          <Link key={i} to={`/match/${m.fixture.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                            <span className="text-[10px] text-muted-foreground w-16">
+                              {new Date(m.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "2-digit" })}
+                            </span>
+                            <div className="flex-1 flex items-center gap-2 justify-center">
+                              <img src={m.teams.home.logo} alt="" className="h-5 w-5 object-contain" />
+                              <span className="text-xs font-medium text-foreground">{m.teams.home.name}</span>
+                              <span className="font-black text-sm text-foreground">{m.goals.home} - {m.goals.away}</span>
+                              <span className="text-xs font-medium text-foreground">{m.teams.away.name}</span>
+                              <img src={m.teams.away.logo} alt="" className="h-5 w-5 object-contain" />
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    );
+                  })() : (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">Aucun historique disponible</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </Layout>
