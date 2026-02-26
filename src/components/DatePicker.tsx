@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Tv, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -7,22 +7,35 @@ import { cn } from "@/lib/utils";
 
 interface DatePickerProps {
   onDateChange?: (date: Date) => void;
+  onFilterChange?: (filter: string) => void;
+  matchCounts?: { all: number; tv: number; live: number };
   selectedDate?: Date;
+  activeFilter?: string;
 }
 
 const DatePicker = ({
   onDateChange,
+  onFilterChange,
+  matchCounts = { all: 0, tv: 0, live: 0 },
   selectedDate: controlledDate,
+  activeFilter: controlledFilter,
 }: DatePickerProps) => {
   const [internalDate, setInternalDate] = useState(new Date());
+  const [internalFilter, setInternalFilter] = useState("all");
   const [weekOffset, setWeekOffset] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const selectedDate = controlledDate ?? internalDate;
+  const activeFilter = controlledFilter ?? internalFilter;
 
   const handleDateChange = (date: Date) => {
     setInternalDate(date);
     onDateChange?.(date);
+  };
+
+  const handleFilterChange = (filter: string) => {
+    setInternalFilter(filter);
+    onFilterChange?.(filter);
   };
 
   const generateDates = () => {
@@ -81,6 +94,11 @@ const DatePicker = ({
     return date.toDateString() === selectedDate.toDateString();
   };
 
+  const filters = [
+    { id: "all", label: "All", mobileLabel: "All", count: matchCounts.all, icon: null },
+    { id: "tv", label: "Televised", mobileLabel: "TV", count: matchCounts.tv, icon: Tv },
+    { id: "live", label: "Live Now", mobileLabel: "Live", count: matchCounts.live, icon: Radio, isLive: true },
+  ];
 
   return (
     <div className="bg-card border-b border-border shadow-sm">
@@ -164,6 +182,42 @@ const DatePicker = ({
           </Popover>
         </div>
 
+        {/* Filter tabs */}
+        <div className="mt-4 sm:mt-5 flex items-center justify-center gap-1.5 sm:gap-2">
+          {filters.map((filter) => (
+            <button
+              key={filter.id}
+              onClick={() => handleFilterChange(filter.id)}
+              className={cn(
+                "flex items-center gap-1 sm:gap-2 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300",
+                activeFilter === filter.id
+                  ? filter.isLive 
+                    ? "bg-live text-primary-foreground shadow-lg shadow-live/30"
+                    : "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              {filter.icon && (
+                <filter.icon className={cn(
+                  "h-3 w-3 sm:h-4 sm:w-4",
+                  filter.isLive && activeFilter === filter.id && "animate-pulse"
+                )} />
+              )}
+              <span className="hidden sm:inline">{filter.label}</span>
+              <span className="sm:hidden">{filter.mobileLabel}</span>
+              <span className={cn(
+                "rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-bold",
+                activeFilter === filter.id
+                  ? "bg-white/20"
+                  : filter.isLive 
+                    ? "bg-live/20 text-live"
+                    : "bg-primary/10 text-primary"
+              )}>
+                {filter.count}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
