@@ -204,7 +204,8 @@ export function useTopScorers(leagueId: string, season: string) {
       const res = await getTopScorers(leagueId, season);
       return transformTopScorers(res.response);
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,  // 30min — scorer rankings stable
+    gcTime: 60 * 60 * 1000,
     enabled: !!leagueId && !!season,
   });
 }
@@ -338,7 +339,8 @@ export function useTeamsByLeague(leagueId: string, season: string) {
           : null,
       }));
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,  // 30min — team rosters stable within session
+    gcTime: 60 * 60 * 1000,     // keep 1h in memory
     enabled: !!leagueId && !!season,
   });
 }
@@ -512,7 +514,8 @@ export function useTrendingLeagues() {
           : "2024",
       }));
     },
-    staleTime: 60 * 60 * 1000,
+    staleTime: 2 * 60 * 60 * 1000, // 2h — leagues rarely change
+    gcTime: 4 * 60 * 60 * 1000,    // keep in memory 4h
   });
 }
 
