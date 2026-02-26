@@ -13,6 +13,7 @@ import { useFixturesByDate } from "@/hooks/useApiFootball";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff } from "lucide-react";
 import livefootLogo from "@/assets/livefoot-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
+import FavoritesFeed from "@/components/FavoritesFeed";
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -134,6 +135,9 @@ const Index = () => {
             </div>
           ))}
         </div>
+
+        {/* Favorites Feed */}
+        <FavoritesFeed leagues={leagues} isLoading={isLoading} />
 
         {/* Section Header */}
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
