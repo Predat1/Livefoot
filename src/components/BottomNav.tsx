@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Newspaper, Trophy, Star, UserCircle, Zap } from "lucide-react";
+import { Home, Newspaper, Trophy, Star, UserCircle, Zap, Medal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,10 +8,9 @@ import { useLiveFixtures } from "@/hooks/useApiFootball";
 const navItems = [
   { href: "/", icon: Home, label: "Matchs" },
   { href: "/live", icon: Zap, label: "Live", isLive: true },
-  { href: "/news", icon: Newspaper, label: "News" },
+  { href: "/rankings", icon: Medal, label: "Classement" },
   { href: "/competitions", icon: Trophy, label: "Coupes" },
   { href: "/favorites", icon: Star, label: "Favoris" },
-  { href: "/profile", icon: UserCircle, label: "Profil" },
 ];
 
 const BottomNav = () => {
