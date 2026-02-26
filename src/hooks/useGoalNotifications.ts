@@ -35,6 +35,15 @@ function playGoalSound() {
   } catch {}
 }
 
+async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) return null;
+  try {
+    return await navigator.serviceWorker.ready;
+  } catch {
+    return null;
+  }
+}
+
 async function requestNotificationPermission(): Promise<boolean> {
   if (!("Notification" in window)) return false;
   if (Notification.permission === "granted") return true;
@@ -43,11 +52,33 @@ async function requestNotificationPermission(): Promise<boolean> {
   return result === "granted";
 }
 
-function sendBrowserNotification(goal: GoalNotification) {
+async function sendPushNotification(goal: GoalNotification) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+  const title = `⚽ GOAL! ${goal.homeTeam} ${goal.homeScore} - ${goal.awayScore} ${goal.awayTeam}`;
+  const body = `${goal.minute}' · ${goal.league}`;
+
+  // Try Service Worker notification first (works in background)
+  const registration = await getServiceWorkerRegistration();
+  if (registration) {
+    try {
+      await registration.showNotification(title, {
+        body,
+        icon: "/pwa-192x192.png",
+        badge: "/pwa-192x192.png",
+        tag: goal.id,
+        data: { url: `/match/${goal.matchId}` },
+        requireInteraction: false,
+        silent: false,
+      } as NotificationOptions);
+      return;
+    } catch {}
+  }
+
+  // Fallback to basic Notification API
   try {
-    new Notification(`⚽ GOAL! ${goal.homeTeam} ${goal.homeScore} - ${goal.awayScore} ${goal.awayTeam}`, {
-      body: `${goal.minute}' · ${goal.league}`,
+    new Notification(title, {
+      body,
       icon: "/pwa-192x192.png",
       badge: "/pwa-192x192.png",
       tag: goal.id,
@@ -75,7 +106,6 @@ export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soun
       league.matches.forEach((match) => {
         const total = (match.homeTeam.score ?? 0) + (match.awayTeam.score ?? 0);
         prevGoalsRef.current[match.id] = total;
-        // Seed history with current scores
         if (total > 0) {
           initial.push({
             id: `${match.id}-init`,
@@ -115,7 +145,7 @@ export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soun
             matchId: match.id,
           };
           setGoalHistory((prev) => [newGoal, ...prev].slice(0, 50));
-          if (notificationsEnabled) sendBrowserNotification(newGoal);
+          if (notificationsEnabled) sendPushNotification(newGoal);
         }
         prevGoalsRef.current[key] = currentTotal;
       });
@@ -128,5 +158,17 @@ export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soun
     return granted;
   }, []);
 
-  return { goalHistory, detectGoals, notificationsEnabled, enableNotifications };
+  const disableNotifications = useCallback(() => {
+    setNotificationsEnabled(false);
+  }, []);
+
+  return {
+    goalHistory,
+    detectGoals,
+    notificationsEnabled,
+    enableNotifications,
+    disableNotifications,
+    isSupported: typeof window !== "undefined" && "Notification" in window,
+    permissionDenied: typeof window !== "undefined" && "Notification" in window && Notification.permission === "denied",
+  };
 }
