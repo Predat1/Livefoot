@@ -120,6 +120,21 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
+
+  /* Smooth theme transition on all elements */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, box-shadow;
+    transition-duration: 400ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Exclude elements where transition causes jank */
+  input, textarea, select, button,
+  [class*="animate-"], [class*="transition-"] {
+    transition-property: none;
+  }
 }
 
 @layer utilities {
