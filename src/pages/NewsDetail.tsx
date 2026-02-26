@@ -2,7 +2,8 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { mockNews } from "@/data/newsData";
-import { ArrowLeft, Calendar, Clock, User, Eye, Share2, Flame } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Eye, Flame } from "lucide-react";
+import ShareButton from "@/components/ShareButton";
 import { Badge } from "@/components/ui/badge";
 
 const NewsDetail = () => {
@@ -113,10 +114,8 @@ const NewsDetail = () => {
 
           {/* Share */}
           <div className="mt-8 pt-6 border-t border-border/50 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Share this article</span>
-            <button className="flex items-center gap-2 rounded-lg bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-              <Share2 className="h-4 w-4" /> Share
-            </button>
+            <span className="text-sm text-muted-foreground">Partager cet article</span>
+            <ShareButton title={article.title} text={article.summary} url={`/news/${article.id}`} />
           </div>
         </div>
 
