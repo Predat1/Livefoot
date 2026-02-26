@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import Layout from "@/components/Layout";
 import { mockPlayers, positions } from "@/data/playersData";
-import { Search, Star, Target, TrendingUp, X, GitCompare, ChevronDown, ChevronUp, Trophy, Activity } from "lucide-react";
+import { useTopScorers } from "@/hooks/useApiFootball";
+import { Search, Star, Target, TrendingUp, X, GitCompare, ChevronDown, ChevronUp, Trophy, Activity, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import PlayerAvatar from "@/components/PlayerAvatar";
 import CountryFlag from "@/components/CountryFlag";
 import TeamLogo from "@/components/TeamLogo";
 import { useFavorites } from "@/hooks/useFavorites";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const STAT_ROWS = [
   { label: "⚽ Buts",          key: "goals"         as const, unit: "" },
@@ -25,15 +27,31 @@ const STAT_ROWS = [
   { label: "🗓️ Âge",           key: "age"           as const, unit: "", lowerIsBetter: true },
 ];
 
+const LEAGUES = [
+  { id: "39", name: "Premier League", country: "England" },
+  { id: "140", name: "La Liga", country: "Spain" },
+  { id: "135", name: "Serie A", country: "Italy" },
+  { id: "78", name: "Bundesliga", country: "Germany" },
+  { id: "61", name: "Ligue 1", country: "France" },
+];
+
+const currentSeason = "2024";
+
 const Players = () => {
   const [activePosition, setActivePosition] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"goals" | "rating" | "value" | "assists">("goals");
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [selectedLeague, setSelectedLeague] = useState("39");
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const filteredPlayers = mockPlayers
+  const { data: apiPlayers, isLoading: isLoadingApi } = useTopScorers(selectedLeague, currentSeason);
+
+  // Use API data if available, else fallback to mock
+  const allPlayers = apiPlayers && apiPlayers.length > 0 ? apiPlayers : mockPlayers;
+
+  const filteredPlayers = useMemo(() => allPlayers
     .filter((p) => activePosition === "All" || p.position === activePosition)
     .filter((p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -44,8 +62,8 @@ const Players = () => {
       if (sortBy === "goals")   return b.goals - a.goals;
       if (sortBy === "rating")  return b.rating - a.rating;
       if (sortBy === "assists") return b.assists - a.assists;
-      return parseInt(b.marketValue.replace(/[^0-9]/g, "")) - parseInt(a.marketValue.replace(/[^0-9]/g, ""));
-    });
+      return parseInt(String(b.marketValue).replace(/[^0-9]/g, "") || "0") - parseInt(String(a.marketValue).replace(/[^0-9]/g, "") || "0");
+    }), [allPlayers, activePosition, searchQuery, sortBy]);
 
   const toggleCompare = (id: string) => {
     setCompareIds((prev) => {
@@ -55,7 +73,7 @@ const Players = () => {
     });
   };
 
-  const comparePlayers = compareIds.map((id) => mockPlayers.find((p) => p.id === id)).filter(Boolean) as typeof mockPlayers;
+  const comparePlayers = compareIds.map((id) => allPlayers.find((p) => p.id === id)).filter(Boolean) as typeof allPlayers;
 
   useEffect(() => {
     if (compareIds.length === 2) setCompareOpen(true);
@@ -87,6 +105,32 @@ const Players = () => {
 
         {/* Filters */}
         <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
+          {/* League selector */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">League:</span>
+            {LEAGUES.map((league) => (
+              <button
+                key={league.id}
+                onClick={() => { setSelectedLeague(league.id); setCompareIds([]); setCompareOpen(false); }}
+                className={cn(
+                  "flex items-center gap-1 rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-all whitespace-nowrap",
+                  selectedLeague === league.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {league.name}
+              </button>
+            ))}
+          </div>
+
+          {isLoadingApi && (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading players...
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="relative flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

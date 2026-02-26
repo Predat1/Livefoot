@@ -58,7 +58,11 @@ const MatchCard = ({ match }: MatchCardProps) => {
         >
           {match.homeTeam.name}
         </span>
-        <TeamLogo teamName={match.homeTeam.name} size="sm" />
+        {match.homeTeam.logo?.startsWith("http") ? (
+          <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain flex-shrink-0" />
+        ) : (
+          <TeamLogo teamName={match.homeTeam.name} size="sm" />
+        )}
       </div>
 
       {/* Score / Time */}
@@ -111,7 +115,11 @@ const MatchCard = ({ match }: MatchCardProps) => {
 
       {/* Away Team */}
       <div className="flex flex-1 items-center gap-1.5 sm:gap-3 min-w-0">
-        <TeamLogo teamName={match.awayTeam.name} size="sm" />
+        {match.awayTeam.logo?.startsWith("http") ? (
+          <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain flex-shrink-0" />
+        ) : (
+          <TeamLogo teamName={match.awayTeam.name} size="sm" />
+        )}
         <span
           className={cn(
             "text-sm sm:text-base font-semibold transition-colors truncate",

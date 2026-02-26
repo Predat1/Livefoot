@@ -6,23 +6,27 @@ import DatePicker from "@/components/DatePicker";
 import LeagueSection from "@/components/LeagueSection";
 import PullToRefreshIndicator from "@/components/PullToRefresh";
 import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
-import { mockLeagues } from "@/data/mockData";
 import { mockNews } from "@/data/newsData";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame } from "lucide-react";
+import { useFixturesByDate } from "@/hooks/useApiFootball";
+import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff } from "lucide-react";
 import livefootLogo from "@/assets/livefoot-logo.png";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
-  const [refreshKey, setRefreshKey] = useState(0);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState("all");
+
+  const { data: apiLeagues, isLoading, isError, refetch } = useFixturesByDate(selectedDate);
+
+  const leagues = apiLeagues || [];
 
   const matchCounts = useMemo(() => {
     let all = 0;
     let tv = 0;
     let live = 0;
-    for (const league of mockLeagues) {
+    for (const league of leagues) {
       for (const match of league.matches) {
         all++;
         if ((match as any).isTv) tv++;
@@ -30,11 +34,11 @@ const Index = () => {
       }
     }
     return { all, tv, live };
-  }, []);
+  }, [leagues]);
 
   const filteredLeagues = useMemo(() => {
-    if (activeFilter === "all") return mockLeagues;
-    return mockLeagues
+    if (activeFilter === "all") return leagues;
+    return leagues
       .map((league) => ({
         ...league,
         matches: league.matches.filter((match) => {
@@ -44,24 +48,23 @@ const Index = () => {
         }),
       }))
       .filter((league) => league.matches.length > 0);
-  }, [activeFilter]);
+  }, [activeFilter, leagues]);
 
   const stats = [
-    { icon: Trophy, label: "Competitions", value: String(mockLeagues.length) },
+    { icon: Trophy, label: "Competitions", value: String(leagues.length) },
     { icon: TrendingUp, label: "Live", value: String(matchCounts.live) },
-    { icon: Zap, label: "Goals", value: String(mockLeagues.reduce((acc, l) => acc + l.matches.reduce((a, m) => a + ((m as any).events?.filter((e: any) => e.type === "goal").length ?? 0), 0), 0)) },
+    { icon: Zap, label: "Matches", value: String(matchCounts.all) },
   ];
 
   const handleRefresh = useCallback(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setRefreshKey((prev) => prev + 1);
-  }, []);
+    await refetch();
+  }, [refetch]);
 
   const { containerRef, pullDistance, isRefreshing, progress } = usePullToRefresh({
     onRefresh: handleRefresh,
   });
 
-  const { items: visibleLeagues, hasMore, isLoading, loadMoreRef } = useInfiniteScroll({
+  const { items: visibleLeagues, hasMore, isLoading: isLoadingMore, loadMoreRef } = useInfiniteScroll({
     initialItems: filteredLeagues,
     itemsPerPage: 3,
   });
@@ -76,7 +79,7 @@ const Index = () => {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-background relative" key={refreshKey}>
+    <div ref={containerRef} className="min-h-screen bg-background relative">
       <SEOHead
         title="LiveFoot - Live Football Scores Today"
         description="Follow all today's live football scores, results, fixtures and tables from Premier League, La Liga, Serie A, Bundesliga and more."
@@ -121,7 +124,11 @@ const Index = () => {
                 <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div className="text-center sm:text-left">
-                <p className="text-lg sm:text-2xl font-black text-foreground">{stat.value}</p>
+                {isLoading ? (
+                  <Skeleton className="h-6 w-8 mx-auto sm:mx-0" />
+                ) : (
+                  <p className="text-lg sm:text-2xl font-black text-foreground">{stat.value}</p>
+                )}
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
               </div>
             </div>
@@ -136,30 +143,82 @@ const Index = () => {
               {activeFilter === "live" ? "Live Matches" : activeFilter === "tv" ? "Televised Matches" : "Today's Matches"}
             </h2>
           </div>
-          <button className="flex items-center gap-2 rounded-lg sm:rounded-xl bg-muted/50 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300">
-            View All
-          </button>
-        </div>
-
-        {/* Leagues */}
-        <div className="space-y-3 sm:space-y-4">
-          {visibleLeagues.length > 0 ? (
-            visibleLeagues.map((league, index) => (
-              <LeagueSection key={league.id} league={league} index={index} />
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-muted-foreground text-sm">No matches found for this filter.</p>
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Loading...
             </div>
           )}
         </div>
 
+        {/* Loading skeleton */}
+        {isLoading && (
+          <div className="space-y-3 sm:space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="px-4 py-3 bg-league-header flex items-center gap-3">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-5 w-32" />
+                </div>
+                {[1, 2].map((j) => (
+                  <div key={j} className="flex items-center justify-between px-5 py-5 border-b border-border/50">
+                    <div className="flex flex-1 items-center justify-end gap-3">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                    </div>
+                    <div className="mx-6">
+                      <Skeleton className="h-8 w-20 rounded-lg" />
+                    </div>
+                    <div className="flex flex-1 items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error state */}
+        {isError && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl bg-card border border-border/50">
+            <WifiOff className="h-10 w-10 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground text-sm mb-3">Unable to load matches. Please try again.</p>
+            <button
+              onClick={() => refetch()}
+              className="rounded-lg gradient-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Leagues */}
+        {!isLoading && !isError && (
+          <div className="space-y-3 sm:space-y-4">
+            {visibleLeagues.length > 0 ? (
+              visibleLeagues.map((league, index) => (
+                <LeagueSection key={league.id} league={league} index={index} />
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-muted-foreground text-sm">
+                  {matchCounts.all === 0 ? "No matches scheduled for this date." : "No matches found for this filter."}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Infinite Scroll Loader */}
-        <InfiniteScrollLoader
-          ref={loadMoreRef}
-          isLoading={isLoading}
-          hasMore={hasMore}
-        />
+        {!isLoading && !isError && (
+          <InfiniteScrollLoader
+            ref={loadMoreRef}
+            isLoading={isLoadingMore}
+            hasMore={hasMore}
+          />
+        )}
 
         {/* Trending News Section */}
         {trendingNews.length > 0 && (
