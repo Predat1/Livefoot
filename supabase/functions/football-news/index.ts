@@ -21,6 +21,31 @@ const RSS_FEEDS = [
     source: "GOAL",
     category: "News",
   },
+  {
+    url: "https://www.skysports.com/rss/12040",
+    source: "Sky Sports",
+    category: "News",
+  },
+  {
+    url: "https://www.lequipe.fr/rss/actu_rss_Football.xml",
+    source: "L'Équipe",
+    category: "News",
+  },
+  {
+    url: "https://e00-marca.uecdn.es/rss/en/football.xml",
+    source: "Marca",
+    category: "La Liga",
+  },
+  {
+    url: "https://www.football-italia.net/feed",
+    source: "Football Italia",
+    category: "Serie A",
+  },
+  {
+    url: "https://sportbild.bild.de/rss/vw-fussball.xml",
+    source: "Sport Bild",
+    category: "Bundesliga",
+  },
 ];
 
 interface NewsArticle {
