@@ -702,3 +702,48 @@ export function useTeamForm(teamId: string) {
     enabled: !!teamId,
   });
 }
+
+// ─── Fixture Player Ratings ─────────────────────────────────
+
+export function useFixturePlayers(fixtureId: string) {
+  return useQuery({
+    queryKey: ["fixture-players", fixtureId],
+    queryFn: async () => {
+      const { getFixturePlayers } = await import("@/services/apiFootball");
+      const res = await getFixturePlayers(fixtureId);
+      return (res.response || []) as any[];
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
+
+// ─── Odds ────────────────────────────────────────────────────
+
+export function useFixtureOdds(fixtureId: string) {
+  return useQuery({
+    queryKey: ["fixture-odds", fixtureId],
+    queryFn: async () => {
+      const { getOdds } = await import("@/services/apiFootball");
+      const res = await getOdds({ fixture: fixtureId });
+      return (res.response || []) as any[];
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
+
+// ─── Injuries ────────────────────────────────────────────────
+
+export function useFixtureInjuries(fixtureId: string) {
+  return useQuery({
+    queryKey: ["fixture-injuries", fixtureId],
+    queryFn: async () => {
+      const { getInjuries } = await import("@/services/apiFootball");
+      const res = await getInjuries({ fixture: fixtureId });
+      return (res.response || []) as any[];
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
