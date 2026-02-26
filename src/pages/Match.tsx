@@ -4,10 +4,12 @@ import SEOHead from "@/components/SEOHead";
 import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   usePredictions, useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
+  useTeamForm,
 } from "@/hooks/useApiFootball";
 import {
-  ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2, MessageSquare,
+  ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
   Loader2, BarChart3, Swords, Star, DollarSign, HeartPulse, Users as UsersIcon,
+  TrendingUp, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +38,30 @@ function ratingBg(r: number) {
   if (r >= 7) return "bg-primary/10";
   if (r >= 6) return "bg-amber-500/10";
   return "bg-destructive/10";
+}
+
+// ─── Form Widget (inline) ─────────────────────────────────────
+function TeamFormInline({ teamId, teamName }: { teamId: string; teamName: string }) {
+  const { data: formData } = useTeamForm(teamId);
+  if (!formData || formData.length === 0) return null;
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-[10px] text-muted-foreground mr-1">{teamName.slice(0, 12)}</span>
+      {formData.slice(0, 5).map((m, i) => (
+        <span
+          key={i}
+          className={cn(
+            "h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-black",
+            m.result === "W" && "bg-emerald-500/20 text-emerald-500",
+            m.result === "D" && "bg-amber-500/20 text-amber-500",
+            m.result === "L" && "bg-destructive/20 text-destructive"
+          )}
+        >
+          {m.result}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 const Match = () => {
@@ -111,7 +137,6 @@ const Match = () => {
     }
   };
 
-  // Build tactical pitch data from lineups
   const tacticalData = lineups.length >= 2 ? {
     home: (lineups[0].startXI || []).map((item: any) => ({
       name: item.player?.name || "",
@@ -125,13 +150,14 @@ const Match = () => {
     })),
   } : null;
 
-  // ─── Tabs for live/finished matches ────────────────────────
+  // ─── Tabs ────────────────────────────────────────────────────
   const renderTabs = () => {
     const tabItems = [
       { value: "events", label: "Events" },
       { value: "stats", label: "Stats" },
       { value: "lineups", label: "Compos" },
       ...(hasStats ? [{ value: "ratings", label: "Notes" }] : []),
+      { value: "form", label: "Forme" },
       { value: "predictions", label: "Prédiction" },
       { value: "h2h", label: "H2H" },
       { value: "community", label: "Pronostics" },
@@ -231,7 +257,6 @@ const Match = () => {
 
         {/* Lineups + Tactical Pitch */}
         <TabsContent value="lineups" className="mt-0 space-y-4">
-          {/* Tactical Pitch */}
           {tacticalData && (
             <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
               <div className="bg-league-header px-4 py-2.5 border-b border-border">
@@ -248,7 +273,6 @@ const Match = () => {
             </div>
           )}
 
-          {/* Player list */}
           <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="bg-league-header px-4 py-2.5 border-b border-border">
               <h3 className="font-bold text-sm text-foreground">Lineups</h3>
@@ -325,6 +349,11 @@ const Match = () => {
                               const rating = parseFloat(p.statistics?.[0]?.games?.rating) || 0;
                               const goals = p.statistics?.[0]?.goals?.total || 0;
                               const assists = p.statistics?.[0]?.goals?.assists || 0;
+                              const shots = p.statistics?.[0]?.shots?.total || 0;
+                              const passes = p.statistics?.[0]?.passes?.total || 0;
+                              const passAcc = p.statistics?.[0]?.passes?.accuracy;
+                              const duelsWon = p.statistics?.[0]?.duels?.won || 0;
+                              const duelsTotal = p.statistics?.[0]?.duels?.total || 0;
                               return (
                                 <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
                                   {p.player?.photo && (
@@ -334,9 +363,12 @@ const Match = () => {
                                     <Link to={`/players/${p.player?.id}`} className="text-xs font-medium text-foreground hover:text-primary transition-colors truncate block">
                                       {p.player?.name}
                                     </Link>
-                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
                                       {goals > 0 && <span>⚽ {goals}</span>}
                                       {assists > 0 && <span>🅰️ {assists}</span>}
+                                      {shots > 0 && <span>🎯 {shots} tirs</span>}
+                                      {passes > 0 && <span>📤 {passes} passes{passAcc ? ` (${passAcc}%)` : ""}</span>}
+                                      {duelsTotal > 0 && <span>💪 {duelsWon}/{duelsTotal}</span>}
                                     </div>
                                   </div>
                                   {rating > 0 && (
@@ -358,6 +390,22 @@ const Match = () => {
             </div>
           </TabsContent>
         )}
+
+        {/* Team Form */}
+        <TabsContent value="form" className="mt-0">
+          <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+            <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <h3 className="font-bold text-sm text-foreground">Forme Récente</h3>
+            </div>
+            <div className="p-4 sm:p-6 space-y-6">
+              {[{ id: homeTeamId, name: homeTeam.name, logo: homeTeam.logo },
+                { id: awayTeamId, name: awayTeam.name, logo: awayTeam.logo }].map((team) => (
+                <TeamFormSection key={team.id} teamId={team.id} teamName={team.name} teamLogo={team.logo} />
+              ))}
+            </div>
+          </div>
+        </TabsContent>
 
         {/* Predictions */}
         <TabsContent value="predictions" className="mt-0">
@@ -557,50 +605,30 @@ const Match = () => {
               </div>
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Home injuries */}
-                  <div>
-                    <h4 className="font-bold text-xs text-foreground mb-2 flex items-center gap-2">
-                      {homeTeam.logo && <img src={homeTeam.logo} alt="" className="h-4 w-4 object-contain" />}
-                      {homeTeam.name}
-                    </h4>
-                    <div className="space-y-1.5">
-                      {injuries.filter((inj: any) => String(inj.team?.id) === homeTeamId).map((inj: any, i: number) => (
-                        <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-destructive/5">
-                          {inj.player?.photo && <img src={inj.player.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
-                          <div className="flex-1">
-                            <p className="text-xs font-medium text-foreground">{inj.player?.name}</p>
-                            <p className="text-[10px] text-destructive">{inj.player?.reason || "Injured"}</p>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{inj.player?.type}</span>
-                        </div>
-                      ))}
-                      {injuries.filter((inj: any) => String(inj.team?.id) === homeTeamId).length === 0 && (
-                        <p className="text-xs text-muted-foreground">Aucune blessure signalée</p>
-                      )}
+                  {[{ teamId: homeTeamId, team: homeTeam }, { teamId: awayTeamId, team: awayTeam }].map(({ teamId: tId, team }) => (
+                    <div key={tId}>
+                      <h4 className="font-bold text-xs text-foreground mb-2 flex items-center gap-2">
+                        {team.logo && <img src={team.logo} alt="" className="h-4 w-4 object-contain" />}
+                        {team.name}
+                      </h4>
+                      <div className="space-y-1.5">
+                        {injuries.filter((inj: any) => String(inj.team?.id) === tId).length > 0 ? (
+                          injuries.filter((inj: any) => String(inj.team?.id) === tId).map((inj: any, i: number) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-destructive/5">
+                              {inj.player?.photo && <img src={inj.player.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-foreground">{inj.player?.name}</p>
+                                <p className="text-[10px] text-destructive">{inj.player?.reason || "Injured"}</p>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground">{inj.player?.type}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-muted-foreground">Aucune blessure signalée</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  {/* Away injuries */}
-                  <div>
-                    <h4 className="font-bold text-xs text-foreground mb-2 flex items-center gap-2">
-                      {awayTeam.logo && <img src={awayTeam.logo} alt="" className="h-4 w-4 object-contain" />}
-                      {awayTeam.name}
-                    </h4>
-                    <div className="space-y-1.5">
-                      {injuries.filter((inj: any) => String(inj.team?.id) === awayTeamId).map((inj: any, i: number) => (
-                        <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-destructive/5">
-                          {inj.player?.photo && <img src={inj.player.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
-                          <div className="flex-1">
-                            <p className="text-xs font-medium text-foreground">{inj.player?.name}</p>
-                            <p className="text-[10px] text-destructive">{inj.player?.reason || "Injured"}</p>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{inj.player?.type}</span>
-                        </div>
-                      ))}
-                      {injuries.filter((inj: any) => String(inj.team?.id) === awayTeamId).length === 0 && (
-                        <p className="text-xs text-muted-foreground">Aucune blessure signalée</p>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -669,6 +697,14 @@ const Match = () => {
               </Link>
             </div>
 
+            {/* Recent form badges under score */}
+            {homeTeamId && awayTeamId && (
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <TeamFormInline teamId={homeTeamId} teamName={homeTeam.name} />
+                <TeamFormInline teamId={awayTeamId} teamName={awayTeam.name} />
+              </div>
+            )}
+
             <div className="mt-4 sm:mt-6 flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-muted-foreground flex-wrap">
               {venue?.name && <div className="flex items-center gap-1"><MapPin className="h-3 w-3" /><span>{venue.name}</span></div>}
               {referee && <div className="flex items-center gap-1"><User className="h-3 w-3" /><span>{referee}</span></div>}
@@ -682,5 +718,89 @@ const Match = () => {
     </Layout>
   );
 };
+
+// ─── Team Form Section (detailed) ─────────────────────────────
+function TeamFormSection({ teamId, teamName, teamLogo }: { teamId: string; teamName: string; teamLogo?: string }) {
+  const { data: formData } = useTeamForm(teamId);
+  if (!formData || formData.length === 0) {
+    return (
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          {teamLogo && <img src={teamLogo} alt="" className="h-5 w-5 object-contain" />}
+          <span className="text-sm font-bold text-foreground">{teamName}</span>
+        </div>
+        <p className="text-xs text-muted-foreground">Données non disponibles</p>
+      </div>
+    );
+  }
+
+  const wins = formData.filter(m => m.result === "W").length;
+  const draws = formData.filter(m => m.result === "D").length;
+  const losses = formData.filter(m => m.result === "L").length;
+  const goalsFor = formData.reduce((s, m) => s + m.goalsFor, 0);
+  const goalsAgainst = formData.reduce((s, m) => s + m.goalsAgainst, 0);
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        {teamLogo && <img src={teamLogo} alt="" className="h-5 w-5 object-contain" />}
+        <span className="text-sm font-bold text-foreground">{teamName}</span>
+        <div className="ml-auto flex items-center gap-1">
+          {formData.map((m, i) => (
+            <span
+              key={i}
+              className={cn(
+                "h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black",
+                m.result === "W" && "bg-emerald-500/20 text-emerald-500",
+                m.result === "D" && "bg-amber-500/20 text-amber-500",
+                m.result === "L" && "bg-destructive/20 text-destructive"
+              )}
+            >
+              {m.result}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2 mb-3">
+        <div className="rounded-lg bg-muted/30 p-2 text-center">
+          <p className="text-lg font-black text-emerald-500">{wins}</p>
+          <p className="text-[9px] text-muted-foreground">Victoires</p>
+        </div>
+        <div className="rounded-lg bg-muted/30 p-2 text-center">
+          <p className="text-lg font-black text-amber-500">{draws}</p>
+          <p className="text-[9px] text-muted-foreground">Nuls</p>
+        </div>
+        <div className="rounded-lg bg-muted/30 p-2 text-center">
+          <p className="text-lg font-black text-destructive">{losses}</p>
+          <p className="text-[9px] text-muted-foreground">Défaites</p>
+        </div>
+        <div className="rounded-lg bg-muted/30 p-2 text-center">
+          <p className="text-lg font-black text-foreground">{goalsFor}-{goalsAgainst}</p>
+          <p className="text-[9px] text-muted-foreground">Buts</p>
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        {formData.map((m, i) => (
+          <Link key={i} to={`/match/${m.id}`} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors">
+            <span className={cn(
+              "h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0",
+              m.result === "W" && "bg-emerald-500/20 text-emerald-500",
+              m.result === "D" && "bg-amber-500/20 text-amber-500",
+              m.result === "L" && "bg-destructive/20 text-destructive"
+            )}>
+              {m.result}
+            </span>
+            <span className="text-[10px] text-muted-foreground w-12">{m.date}</span>
+            <img src={m.opponentLogo} alt="" className="h-4 w-4 object-contain" />
+            <span className="text-xs text-foreground flex-1 truncate">vs {m.opponent}</span>
+            <span className="text-xs font-black text-foreground">{m.goalsFor}-{m.goalsAgainst}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default Match;
