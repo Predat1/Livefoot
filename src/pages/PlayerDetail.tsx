@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { mockPlayers } from "@/data/playersData";
-import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar, ChevronDown, ChevronUp, Timer, Footprints, Crosshair, Shield, Zap } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import TeamLogo from "@/components/TeamLogo";
 import CountryFlag from "@/components/CountryFlag";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
 import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Generate deterministic season history per player
 const generateSeasonHistory = (player: ReturnType<typeof mockPlayers.find> & object) => {
@@ -25,6 +26,66 @@ const generateSeasonHistory = (player: ReturnType<typeof mockPlayers.find> & obj
   ];
   return seasons;
 };
+
+// Generate detailed stats deterministically
+const generateDetailedStats = (player: NonNullable<ReturnType<typeof mockPlayers.find>>) => {
+  const seed = player.name.length + player.age;
+  const per90 = (val: number) => Math.round((val / (player.minutesPlayed / 90)) * 100) / 100;
+  const goalsP90 = per90(player.goals);
+  const assistsP90 = per90(player.assists);
+  const isGK = player.position === "Goalkeeper";
+  const isDef = player.position === "Defender";
+  const isMid = player.position === "Midfielder";
+
+  return {
+    // Attacking
+    goalsP90,
+    assistsP90,
+    goalContributions: player.goals + player.assists,
+    keyPasses: Math.max(1, Math.round(player.assists * 2.3 + (seed % 8))),
+    keyPassesP90: Math.round(Math.max(0.5, (player.assists * 2.3 + (seed % 8)) / (player.minutesPlayed / 90)) * 100) / 100,
+    chancesCreated: Math.max(2, Math.round(player.assists * 3.1 + (seed % 12))),
+    conversionRate: player.goals > 0 ? Math.round((player.goals / (player.shotsPerGame * player.appearances)) * 100) : 0,
+    bigChancesMissed: Math.max(0, Math.round(player.goals * 0.3 + (seed % 4))),
+    penaltyGoals: Math.max(0, Math.round((seed % 3) === 0 ? player.goals * 0.15 : 0)),
+
+    // Defensive
+    tackles: isDef ? Math.round(2.5 * player.appearances + (seed % 15)) : isMid ? Math.round(1.5 * player.appearances + (seed % 10)) : Math.round(0.5 * player.appearances + (seed % 5)),
+    tacklesP90: 0,
+    interceptions: isDef ? Math.round(1.8 * player.appearances + (seed % 12)) : isMid ? Math.round(1.0 * player.appearances + (seed % 8)) : Math.round(0.3 * player.appearances + (seed % 3)),
+    clearances: isDef ? Math.round(3.5 * player.appearances + (seed % 20)) : Math.round(0.5 * player.appearances + (seed % 5)),
+    blockedShots: isDef ? Math.round(1.2 * player.appearances + (seed % 8)) : Math.round(0.3 * player.appearances + (seed % 3)),
+    aerialWon: Math.round(player.duelsWon * 0.4 + (seed % 10)),
+
+    // Passing
+    totalPasses: Math.round((player.minutesPlayed / 90) * (40 + (seed % 30))),
+    passesP90: 0,
+    longBalls: Math.round((player.minutesPlayed / 90) * (2 + (seed % 5))),
+    crossesP90: isMid || !isDef ? Math.round((1.5 + (seed % 3)) * 10) / 10 : Math.round((0.5 + (seed % 2)) * 10) / 10,
+    throughBalls: Math.round(player.assists * 0.8 + (seed % 6)),
+
+    // GK specific
+    cleanSheets: isGK ? (player as any).cleanSheets || Math.round(player.appearances * 0.35 + (seed % 5)) : undefined,
+    savePercentage: isGK ? (player as any).savePercentage || (70 + (seed % 15)) : undefined,
+    saves: isGK ? Math.round(player.appearances * 3.2 + (seed % 15)) : undefined,
+    goalsConceded: isGK ? Math.round(player.appearances * 0.9 + (seed % 8)) : undefined,
+
+    // Physical
+    distanceCovered: Math.round((player.minutesPlayed / 90) * (10.2 + (seed % 3) * 0.3) * 10) / 10,
+    sprints: Math.round((player.minutesPlayed / 90) * (15 + (seed % 12))),
+    foulsDrawn: Math.round(player.appearances * (1.2 + (seed % 5) * 0.2)),
+    foulsCommitted: Math.round(player.appearances * (0.8 + (seed % 4) * 0.15)),
+    offsides: player.position === "Forward" ? Math.round(player.appearances * (0.8 + (seed % 3) * 0.2)) : Math.round(player.appearances * 0.1),
+  };
+};
+
+const StatCard = ({ label, value, icon: Icon, highlight = false }: { label: string; value: string | number; icon?: any; highlight?: boolean }) => (
+  <div className="p-3 sm:p-4 rounded-xl bg-muted/30 text-center">
+    {Icon && <Icon className={cn("h-4 w-4 mx-auto mb-1", highlight ? "text-primary" : "text-muted-foreground")} />}
+    <div className={cn("text-xl sm:text-2xl font-black", highlight ? "text-primary" : "text-foreground")}>{value}</div>
+    <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{label}</div>
+  </div>
+);
 
 const PlayerDetail = () => {
   const { playerId } = useParams();
@@ -54,6 +115,8 @@ const PlayerDetail = () => {
 
   const seasonHistory = generateSeasonHistory(player);
   const visibleSeasons = showAllSeasons ? seasonHistory : seasonHistory.slice(0, 3);
+  const detailedStats = generateDetailedStats(player);
+  const isGK = player.position === "Goalkeeper";
 
   return (
     <Layout>
@@ -139,77 +202,151 @@ const PlayerDetail = () => {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-          {/* Season Stats */}
-          <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
-            <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
-              <Target className="h-4 w-4 text-primary" />
-              <h3 className="font-bold text-foreground">Season Statistics</h3>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="text-3xl font-black text-primary">{player.goals}</div>
-                  <div className="text-xs text-muted-foreground">Goals</div>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="text-3xl font-black text-foreground">{player.assists}</div>
-                  <div className="text-xs text-muted-foreground">Assists</div>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="text-2xl font-black text-foreground">{player.appearances}</div>
-                  <div className="text-xs text-muted-foreground">Appearances</div>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="text-2xl font-black text-foreground">{player.minutesPlayed}'</div>
-                  <div className="text-xs text-muted-foreground">Minutes</div>
-                </div>
-              </div>
+        {/* Detailed Stats Tabs */}
+        <Tabs defaultValue="overview" className="w-full mb-6">
+          <TabsList className="w-full grid grid-cols-4 bg-card border border-border/50 rounded-xl p-1 mb-4">
+            <TabsTrigger value="overview" className="rounded-lg text-[10px] sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="attacking" className="rounded-lg text-[10px] sm:text-sm">{isGK ? "GK Stats" : "Attack"}</TabsTrigger>
+            <TabsTrigger value="defensive" className="rounded-lg text-[10px] sm:text-sm">Defense</TabsTrigger>
+            <TabsTrigger value="passing" className="rounded-lg text-[10px] sm:text-sm">Passing</TabsTrigger>
+          </TabsList>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="text-xl font-black text-foreground">{player.shotsPerGame}</div>
-                  <div className="text-xs text-muted-foreground">Shots/Game</div>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="mt-0">
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Season Stats */}
+              <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-foreground">Season Statistics</h3>
                 </div>
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="text-xl font-black text-foreground">{player.passAccuracy}%</div>
-                  <div className="text-xs text-muted-foreground">Pass Accuracy</div>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="text-xl font-black text-foreground">{player.duelsWon}%</div>
-                  <div className="text-xs text-muted-foreground">Duels Won</div>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="w-3 h-3 rounded bg-yellow-500"></span>
-                    <span className="font-bold">{player.yellowCards}</span>
-                    <span className="w-3 h-3 rounded bg-destructive"></span>
-                    <span className="font-bold">{player.redCards}</span>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <StatCard label="Goals" value={player.goals} icon={Target} highlight />
+                    <StatCard label="Assists" value={player.assists} icon={Footprints} />
+                    <StatCard label="Appearances" value={player.appearances} icon={Shirt} />
+                    <StatCard label="Minutes" value={`${player.minutesPlayed}'`} icon={Timer} />
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">Cards</div>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <StatCard label="Goals/90" value={detailedStats.goalsP90} highlight />
+                    <StatCard label="Assists/90" value={detailedStats.assistsP90} />
+                    <StatCard label="Goal Contributions" value={detailedStats.goalContributions} highlight />
+                    <div className="p-3 sm:p-4 rounded-xl bg-muted/30 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="w-3.5 h-4 rounded bg-yellow-500"></span>
+                        <span className="font-black text-xl text-foreground">{player.yellowCards}</span>
+                        <span className="w-3.5 h-4 rounded bg-destructive"></span>
+                        <span className="font-black text-xl text-foreground">{player.redCards}</span>
+                      </div>
+                      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">Cards</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Radar Chart */}
+              <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
+                  <Star className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-foreground">Skills Radar</h3>
+                </div>
+                <div className="p-4">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RadarChart data={radarData}>
+                      <PolarGrid stroke="hsl(var(--border))" />
+                      <PolarAngleAxis dataKey="skill" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar name="Skills" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} strokeWidth={2} />
+                    </RadarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
-          </div>
+          </TabsContent>
 
-          {/* Radar Chart */}
-          <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
-            <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
-              <Star className="h-4 w-4 text-primary" />
-              <h3 className="font-bold text-foreground">Skills Radar</h3>
+          {/* Attacking / GK Tab */}
+          <TabsContent value="attacking" className="mt-0">
+            <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
+                <Crosshair className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-foreground">{isGK ? "Goalkeeper Statistics" : "Attacking Statistics"}</h3>
+              </div>
+              <div className="p-4">
+                {isGK ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <StatCard label="Clean Sheets" value={detailedStats.cleanSheets ?? 0} highlight />
+                    <StatCard label="Save %" value={`${detailedStats.savePercentage ?? 0}%`} highlight />
+                    <StatCard label="Total Saves" value={detailedStats.saves ?? 0} />
+                    <StatCard label="Goals Conceded" value={detailedStats.goalsConceded ?? 0} />
+                    <StatCard label="Appearances" value={player.appearances} />
+                    <StatCard label="Minutes" value={`${player.minutesPlayed}'`} />
+                    <StatCard label="Pass Accuracy" value={`${player.passAccuracy}%`} />
+                    <StatCard label="Duels Won" value={`${player.duelsWon}%`} />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <StatCard label="Goals" value={player.goals} highlight />
+                    <StatCard label="Goals/90" value={detailedStats.goalsP90} highlight />
+                    <StatCard label="Assists" value={player.assists} />
+                    <StatCard label="Assists/90" value={detailedStats.assistsP90} />
+                    <StatCard label="Shots/Game" value={player.shotsPerGame} />
+                    <StatCard label="Conversion Rate" value={`${detailedStats.conversionRate}%`} highlight />
+                    <StatCard label="Key Passes" value={detailedStats.keyPasses} />
+                    <StatCard label="Key Passes/90" value={detailedStats.keyPassesP90} />
+                    <StatCard label="Chances Created" value={detailedStats.chancesCreated} />
+                    <StatCard label="Big Chances Missed" value={detailedStats.bigChancesMissed} />
+                    <StatCard label="Penalty Goals" value={detailedStats.penaltyGoals} />
+                    <StatCard label="Offsides" value={detailedStats.offsides} />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="p-4">
-              <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis dataKey="skill" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar name="Skills" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} strokeWidth={2} />
-                </RadarChart>
-              </ResponsiveContainer>
+          </TabsContent>
+
+          {/* Defensive Tab */}
+          <TabsContent value="defensive" className="mt-0">
+            <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-foreground">Defensive Statistics</h3>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <StatCard label="Tackles" value={detailedStats.tackles} highlight />
+                  <StatCard label="Interceptions" value={detailedStats.interceptions} />
+                  <StatCard label="Clearances" value={detailedStats.clearances} />
+                  <StatCard label="Blocked Shots" value={detailedStats.blockedShots} />
+                  <StatCard label="Aerial Duels Won" value={detailedStats.aerialWon} />
+                  <StatCard label="Duels Won" value={`${player.duelsWon}%`} highlight />
+                  <StatCard label="Fouls Drawn" value={detailedStats.foulsDrawn} />
+                  <StatCard label="Fouls Committed" value={detailedStats.foulsCommitted} />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+
+          {/* Passing Tab */}
+          <TabsContent value="passing" className="mt-0">
+            <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-foreground">Passing Statistics</h3>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <StatCard label="Pass Accuracy" value={`${player.passAccuracy}%`} highlight />
+                  <StatCard label="Total Passes" value={detailedStats.totalPasses} />
+                  <StatCard label="Key Passes" value={detailedStats.keyPasses} highlight />
+                  <StatCard label="Through Balls" value={detailedStats.throughBalls} />
+                  <StatCard label="Long Balls" value={detailedStats.longBalls} />
+                  <StatCard label="Crosses/90" value={detailedStats.crossesP90} />
+                  <StatCard label="Chances Created" value={detailedStats.chancesCreated} />
+                  <StatCard label="Assists" value={player.assists} highlight />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Season History Table */}
         <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">

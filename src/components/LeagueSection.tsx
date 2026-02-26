@@ -54,10 +54,10 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
             <LeagueLogo leagueId={league.id} leagueName={league.name} size="sm" />
           </div>
           <div className="flex flex-col items-start min-w-0">
-            <span className="text-xs sm:text-sm font-bold uppercase tracking-wide text-foreground truncate max-w-[150px] sm:max-w-none">
+            <span className="text-sm sm:text-base font-bold uppercase tracking-wide text-foreground truncate max-w-[150px] sm:max-w-none">
               {league.name}
             </span>
-            <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium">
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">
               {league.matches.length} matches
             </span>
           </div>
