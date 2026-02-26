@@ -29,7 +29,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
   return (
     <Link
       to={`/match/${match.id}`}
-      className="group relative flex items-center justify-between px-2 sm:px-4 py-3 sm:py-4 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
+      className="group relative flex items-center justify-between px-3 sm:px-5 py-4 sm:py-5 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
     >
       {/* Live indicator bar */}
       {isLive && (
@@ -48,7 +48,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
       <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
         <span
           className={cn(
-            "text-xs sm:text-sm font-semibold transition-colors truncate text-right",
+            "text-sm sm:text-base font-semibold transition-colors truncate text-right",
             isFinished && match.homeTeam.score! > match.awayTeam.score!
               ? "text-foreground"
               : isFinished
@@ -62,12 +62,12 @@ const MatchCard = ({ match }: MatchCardProps) => {
       </div>
 
       {/* Score / Time */}
-      <div className="mx-2 sm:mx-5 flex min-w-[70px] sm:min-w-[100px] flex-col items-center flex-shrink-0">
+      <div className="mx-3 sm:mx-6 flex min-w-[80px] sm:min-w-[110px] flex-col items-center flex-shrink-0">
         {isLive || isFinished ? (
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             <span
               className={cn(
-                "min-w-[24px] sm:min-w-[32px] rounded-md sm:rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 text-center text-sm sm:text-base font-black shadow-sm transition-all duration-300",
+                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm transition-all duration-300",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
                   : "bg-score-bg text-primary-foreground"
@@ -75,10 +75,10 @@ const MatchCard = ({ match }: MatchCardProps) => {
             >
               {match.homeTeam.score}
             </span>
-            <span className="text-sm sm:text-lg font-bold text-muted-foreground">-</span>
+            <span className="text-base sm:text-xl font-bold text-muted-foreground">-</span>
             <span
               className={cn(
-                "min-w-[24px] sm:min-w-[32px] rounded-md sm:rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 text-center text-sm sm:text-base font-black shadow-sm transition-all duration-300",
+                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm transition-all duration-300",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
                   : "bg-score-bg text-primary-foreground"
@@ -88,8 +88,8 @@ const MatchCard = ({ match }: MatchCardProps) => {
             </span>
           </div>
         ) : (
-          <div className="rounded-md sm:rounded-lg bg-primary/10 px-2 sm:px-4 py-1 sm:py-1.5">
-            <span className="text-xs sm:text-base font-bold text-primary">
+          <div className="rounded-md sm:rounded-lg bg-primary/10 px-3 sm:px-5 py-1.5 sm:py-2">
+            <span className="text-sm sm:text-lg font-bold text-primary">
               {match.time}
             </span>
           </div>
@@ -114,7 +114,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
         <TeamLogo teamName={match.awayTeam.name} size="sm" />
         <span
           className={cn(
-            "text-xs sm:text-sm font-semibold transition-colors truncate",
+            "text-sm sm:text-base font-semibold transition-colors truncate",
             isFinished && match.awayTeam.score! > match.homeTeam.score!
               ? "text-foreground"
               : isFinished
