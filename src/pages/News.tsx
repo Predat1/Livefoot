@@ -9,8 +9,11 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const NEWS_SOURCES = ["All", "ESPN", "BBC Sport", "GOAL", "Sky Sports", "L'Équipe", "Marca", "Football Italia", "Sport Bild"];
+
 const News = () => {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [activeSource, setActiveSource] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: articles = [], isLoading, isError } = useFootballNews();
@@ -18,12 +21,16 @@ const News = () => {
 
   const filteredNews = articles
     .filter(news => activeCategory === "All" || news.category === activeCategory)
+    .filter(news => activeSource === "All" || news.source === activeSource)
     .filter(news =>
       news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       news.summary.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
   const trendingNews = articles.filter(news => news.trending);
+
+  // Get available sources from actual data
+  const availableSources = ["All", ...new Set(articles.map(a => a.source))];
 
   return (
     <Layout>
@@ -112,6 +119,27 @@ const News = () => {
                   {category}
                 </button>
               ))}
+            </div>
+
+            {/* Source Filter */}
+            <div className="mb-6 sm:mb-8">
+              <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 ml-1">Source</p>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                {availableSources.map((source) => (
+                  <button
+                    key={source}
+                    onClick={() => setActiveSource(source)}
+                    className={cn(
+                      "rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold transition-all duration-300 border",
+                      activeSource === source
+                        ? "border-primary bg-primary/10 text-primary shadow-sm"
+                        : "border-border/50 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                    )}
+                  >
+                    {source}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Featured Article */}
