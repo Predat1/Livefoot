@@ -1,136 +1,54 @@
 
-# Audit complet LiveFoot - Ce qui manque (hors API)
 
-## Constat general
+# Amélioration de la page Match
 
-Le site est bien structuré et couvre les bases. Cependant, apres une inspection fichier par fichier, voici tout ce qui manque pour atteindre le niveau BeSoccer / LiveScore, groupe par priorité et impact utilisateur.
+## Aperçu
+Enrichir la page Match avec 5 améliorations majeures pour atteindre le niveau des apps professionnelles (FlashScore, FotMob).
 
----
+## Changements prévus
 
-## Priorité 1 - Critique : Backend non connecté au frontend
+### 1. Onglets H2H, Odds et Lineups pour les matchs programmés
+Actuellement, les matchs "scheduled" n'affichent qu'un bloc "Match Information" statique sans onglets. On va remplacer ce bloc par un système d'onglets avec :
+- **Info** : stadium, capacité, arbitre (contenu actuel)
+- **Lineups** : compositions probables (lineup existante ou par défaut)
+- **H2H** : face-à-face (réutilise le composant H2H existant)
+- **Odds** : cotes des bookmakers (réutilise le composant Odds existant)
 
-### Favoris toujours en localStorage
-La table `favorites` existe dans la base de données Cloud, mais `useFavorites.ts` utilise encore uniquement `localStorage`. Un utilisateur connecté perd ses favoris s'il change d'appareil.
+### 2. Forme récente des 2 équipes (5 derniers matchs W/D/L)
+Ajout d'un bandeau sous le header du match (visible pour tous les statuts) affichant :
+- 5 pastilles colorées par équipe : Vert (V), Gris (N), Rouge (D)
+- Position actuelle au classement (ex: "3rd in Premier League")
+- Données mock générées de façon déterministe à partir du nom d'équipe
 
-**Ce qu'il faut faire :**
-- Modifier `useFavorites.ts` pour lire/écrire dans la table `favorites` quand l'utilisateur est connecté
-- Fusionner les favoris localStorage avec la base au moment de la connexion
-- Sinon le backend ne sert à rien pour cette fonctionnalité
+### 3. Contexte classement
+Intégré avec la forme récente : affichage de la position au classement sous les pastilles W/D/L de chaque équipe.
 
-### Pas de page Profil utilisateur (`/profile`)
-Le header affiche un menu "My Favorites" mais pas de lien vers un profil. La table `profiles` (avec `display_name`, `username`, `bio`, `avatar_url`, `favorite_team`) existe en base mais aucune page ne permet de la modifier.
+### 4. Banc des remplaçants dans l'onglet Lineups
+Ajout d'un dictionnaire `teamBench` avec 5-7 remplaçants par équipe connue. Affichage en dessous du XI titulaire avec un séparateur "Substitutes" et un style légèrement différent (opacité réduite).
 
-**Ce qu'il faut créer :**
-- Page `/profile` avec formulaire d'édition : display name, username, bio, équipe favorite
-- Lien dans le menu dropdown du header vers `/profile`
-
----
-
-## Priorité 2 - Haute : UX et navigation
-
-### Pas de notifications push / alertes match
-Le header a une icône `Bell` avec un point rouge, mais elle ne fait rien. Aucun système de notification n'est en place (même local).
-
-**Ce qu'il faut ajouter :**
-- Page `/notifications` ou panneau slide-over listant les alertes (buts, fin de match) de ses équipes favorites
-- Ou au minimum, rendre la cloche cliquable et mener vers les matchs des équipes favorites
-
-### Pas de page "Live" dédiée
-Les sites pros (LiveScore, Sofascore) ont une vue filtrée uniquement sur les matchs en cours, accessible en 1 clic depuis le header ou la navigation mobile. Actuellement il existe un filtre "live" sur la page d'accueil mais pas de route dédiée `/live`.
-
-### Navigation mobile insuffisante
-Sur mobile, la barre de navigation est uniquement un menu hamburger. Les sites pros ont une **bottom navigation bar** (barre fixe en bas avec 5 onglets : Matches, News, Competitions, Favorites, Profil). C'est le standard mobile pour les apps de score.
-
-### Pas de comparaison de joueurs
-La page `/players` permet filtres et tri, mais pas de comparer 2 joueurs côte à côte (fonctionnalité présente sur BeSoccer, Sofascore).
+### 5. Notes des joueurs pour les matchs terminés
+Pour les matchs "finished" uniquement, chaque joueur dans l'onglet Lineups reçoit une note sur 10 (générée de façon déterministe). Code couleur :
+- 8-10 : vert (excellente performance)
+- 6-7.9 : jaune/neutre
+- Moins de 6 : rouge/orange
 
 ---
 
-## Priorité 3 - Moyenne : Contenu des pages existantes
+## Détails techniques
 
-### Page TeamDetail - onglet "Fixtures" manquant
-Le panneau de l'équipe a 4 onglets (Overview, Squad, Results, Stats) mais pas de calendrier des prochains matchs de l'équipe (onglet "Fixtures" présent sur BeSoccer).
+### Fichier modifié : `src/pages/Match.tsx`
 
-### Page Competitions - onglet "Fixtures" manquant
-Chaque compétition dépliable montre Standings + Top Scorers, mais pas le calendrier des prochains matchs de la compétition.
+**Nouvelles données mock :**
+- `teamBench: Record<string, LineupPlayer[]>` -- 5-7 remplaçants par équipe
+- `generateForm(teamName)` -- retourne un tableau de 5 résultats W/D/L déterministes
+- `getLeaguePosition(teamName)` -- retourne une position au classement (1-20)
+- `generateRating(playerName, matchId)` -- retourne une note 5.0-9.5 déterministe
 
-### Page Standings - pas de lien cliquable vers les équipes
-Le nom d'équipe dans le tableau de classement génère un lien vers `/teams/arsenal` par exemple mais avec `.replace(/ /g, "-").toLowerCase()` hardcodé. Des équipes avec des noms spéciaux (Atlético, Borussia Dortmund) peuvent avoir des IDs qui ne correspondent pas aux IDs dans `teamsData.ts`. Certains liens sont donc cassés.
+**Modifications structurelles :**
+1. Ajout du bandeau "Forme récente + Classement" entre le header du match et les onglets (pour tous les statuts)
+2. Transformation du bloc `else` (scheduled) en `Tabs` avec 4 onglets : Info, Lineups, H2H, Odds
+3. Ajout de la section "Substitutes" dans le `TabsContent value="lineups"` existant
+4. Ajout d'un badge note à droite de chaque joueur dans Lineups quand `isFinished`
 
-### Page Match - onglet "Lineups" non interactif
-Le terrain tactique (onglet "Field") est là, mais dans l'onglet "Lineups" les joueurs ne sont pas cliquables vers leur fiche `/players/:id`.
+Aucun nouveau fichier ni nouvelle dépendance requis.
 
-### Page Match - pas de lien vers les pages équipes dans le header du match
-Les logos des équipes dans l'en-tête du match ne sont pas des liens vers `/teams/:teamId`.
-
-### Page PlayerDetail - pas d'historique de saisons
-Sofascore et BeSoccer affichent les stats saison par saison. Actuellement, seule la saison en cours est affichée, sans historique.
-
-### Page Teams - filtres par ligue/pays absents
-La page Teams affiche toutes les équipes sans possibilité de filtrer par compétition ou pays.
-
----
-
-## Priorité 4 - Basse : Qualité et enrichissement
-
-### Pas de partage social
-Aucun bouton "Share" sur les pages match, joueur, ou équipe pour partager sur Twitter/WhatsApp.
-
-### Pas de mode hors-ligne / cache
-L'application est une PWA (avec `vite-plugin-pwa`) mais aucun service worker n'est configuré pour mettre en cache les données. Si l'utilisateur n'a pas de réseau, la page est blanche.
-
-### Pas de raccourci clavier pour la recherche
-Sur les sites pros, appuyer sur `/` ou `Ctrl+K` ouvre la recherche. Ce n'est pas implémenté.
-
-### Pied de page sans réseaux sociaux
-Le footer n'a pas de liens vers Twitter/X, Instagram, YouTube comme les sites pros.
-
----
-
-## Plan d'implémentation proposé
-
-### Phase 1 - Backend réel pour les favoris + Page Profil (impact le plus fort)
-1. Refactorer `useFavorites.ts` : quand user connecté → lecture/écriture Lovable Cloud, sinon localStorage
-2. Créer `src/pages/Profile.tsx` avec formulaire d'édition du profil (display_name, username, bio, favorite_team)
-3. Ajouter la route `/profile` dans `App.tsx`
-4. Ajouter lien "My Profile" dans le dropdown du Header
-
-### Phase 2 - Navigation mobile + Bottom Bar
-1. Créer `src/components/BottomNav.tsx` : barre fixe en bas avec icônes Matches / News / Favoris / Profil
-2. Intégrer dans `Layout.tsx` (visible uniquement sur mobile)
-3. Ajouter padding-bottom au contenu sur mobile pour éviter chevauchement
-
-### Phase 3 - Enrichissement des pages existantes
-1. TeamDetail : ajouter onglet "Fixtures" avec les prochains matchs
-2. Competitions : ajouter onglet "Fixtures"
-3. Players : ajouter comparaison côte à côte (sélectionner 2 joueurs, vue comparative)
-4. Match : rendre les noms de joueurs dans l'onglet Lineups cliquables
-5. Match : rendre les logos d'équipes dans le header cliquables vers les pages équipes
-6. Standings : corriger les liens d'équipes (utiliser le vrai teamId depuis teamsData)
-7. Teams : ajouter filtre par ligue/pays
-
-### Phase 4 - Fonctionnalités extras
-1. Cloche de notification → page ou panneau alertes
-2. Boutons Share (Web Share API native)
-3. Raccourci clavier `/` ou `Ctrl+K` pour la recherche
-4. Liens réseaux sociaux dans le footer
-
----
-
-## Résumé des fichiers à créer/modifier
-
-**Créer :**
-- `src/pages/Profile.tsx`
-- `src/components/BottomNav.tsx`
-
-**Modifier :**
-- `src/hooks/useFavorites.ts` — connecter au backend Cloud
-- `src/components/Layout.tsx` — ajouter BottomNav
-- `src/components/Header.tsx` — ajouter lien Profile dans dropdown
-- `src/App.tsx` — route /profile
-- `src/pages/TeamDetail.tsx` — onglet Fixtures
-- `src/pages/Competitions.tsx` — onglet Fixtures
-- `src/pages/Players.tsx` — comparaison joueurs
-- `src/pages/Match.tsx` — liens joueurs + liens équipes
-- `src/pages/Teams.tsx` — filtres par ligue
-- `src/pages/Standings.tsx` — corriger liens équipes
