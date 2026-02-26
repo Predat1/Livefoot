@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getFixtures, getLiveFixtures, getTopScorers, getTopAssists } from "@/services/apiFootball";
+import { getFixtures, getLiveFixtures, getTopScorers, getTopAssists, getStandings, getFixtureById, getFixtureEvents, getFixtureLineups, getFixtureStatistics, getHeadToHead, getLeagues } from "@/services/apiFootball";
 import { format } from "date-fns";
 
 // ─── Types matching existing component interfaces ─────────────
@@ -214,5 +214,99 @@ export function useTopAssists(leagueId: string, season: string) {
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!leagueId && !!season,
+  });
+}
+
+// ─── Standings ────────────────────────────────────────────────
+
+export interface StandingTeam {
+  rank: number;
+  team: { id: number; name: string; logo: string };
+  points: number;
+  goalsDiff: number;
+  played: number;
+  win: number;
+  draw: number;
+  lose: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  form: string;
+}
+
+export function useStandings(leagueId: string, season: string) {
+  return useQuery({
+    queryKey: ["standings", leagueId, season],
+    queryFn: async () => {
+      const res = await getStandings(leagueId, season);
+      if (!res.response || res.response.length === 0) return [];
+      const leagueData = (res.response[0] as any)?.league;
+      if (!leagueData?.standings?.[0]) return [];
+      return leagueData.standings[0] as StandingTeam[];
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!leagueId && !!season,
+  });
+}
+
+// ─── Single Fixture ───────────────────────────────────────────
+
+export function useFixtureDetail(fixtureId: string) {
+  return useQuery({
+    queryKey: ["fixture", fixtureId],
+    queryFn: async () => {
+      const res = await getFixtureById(fixtureId);
+      if (!res.response || res.response.length === 0) return null;
+      return res.response[0];
+    },
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
+
+export function useFixtureEvents(fixtureId: string) {
+  return useQuery({
+    queryKey: ["fixture-events", fixtureId],
+    queryFn: async () => {
+      const res = await getFixtureEvents(fixtureId);
+      return res.response || [];
+    },
+    staleTime: 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
+
+export function useFixtureLineups(fixtureId: string) {
+  return useQuery({
+    queryKey: ["fixture-lineups", fixtureId],
+    queryFn: async () => {
+      const res = await getFixtureLineups(fixtureId);
+      return res.response || [];
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
+
+export function useFixtureStatistics(fixtureId: string) {
+  return useQuery({
+    queryKey: ["fixture-statistics", fixtureId],
+    queryFn: async () => {
+      const res = await getFixtureStatistics(fixtureId);
+      return res.response || [];
+    },
+    staleTime: 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
+
+export function useAvailableLeagues() {
+  return useQuery({
+    queryKey: ["leagues"],
+    queryFn: async () => {
+      const res = await getLeagues({ current: "true" });
+      return res.response || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
 }

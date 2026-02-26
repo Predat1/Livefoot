@@ -17,13 +17,18 @@ export const useInfiniteScroll = <T,>({
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
+  // React to changes in initialItems (async data loading)
+  useEffect(() => {
+    setItems(initialItems.slice(0, itemsPerPage));
+    setHasMore(initialItems.length > itemsPerPage);
+  }, [initialItems, itemsPerPage]);
+
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
 
     setIsLoading(true);
     
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     const currentLength = items.length;
     const nextItems = loadMoreItems 
