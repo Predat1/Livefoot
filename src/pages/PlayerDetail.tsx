@@ -217,7 +217,7 @@ const PlayerDetail = () => {
             <Calendar className="h-4 w-4 text-primary" />
             <h3 className="font-bold text-foreground">Historique de saisons</h3>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
