@@ -111,7 +111,7 @@ const Competitions = () => {
 
                     <TabsContent value="standings" className="m-0">
                       {getStandings(competition.id).length > 0 ? (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto scrollbar-hide">
                           <table className="w-full min-w-[500px]">
                             <thead>
                               <tr className="border-b border-border text-[10px] sm:text-xs text-muted-foreground">
