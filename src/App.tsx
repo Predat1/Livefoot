@@ -26,6 +26,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Rankings from "./pages/Rankings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/teams/:teamId" element={<TeamDetail />} />
               <Route path="/players" element={<Players />} />
               <Route path="/players/:playerId" element={<PlayerDetail />} />
+              <Route path="/rankings" element={<Rankings />} />
               <Route path="/transfers" element={<Transfers />} />
               <Route path="/match/:matchId" element={<Match />} />
               <Route path="/favorites" element={<Favorites />} />
