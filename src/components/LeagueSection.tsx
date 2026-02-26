@@ -25,6 +25,8 @@ interface League {
   name: string;
   country: string;
   countryFlag?: string;
+  flag?: string;
+  logo?: string;
   matches: Match[];
 }
 
@@ -50,8 +52,16 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5">
-            <CountryFlag country={league.country} size="md" />
-            <LeagueLogo leagueId={league.id} leagueName={league.name} size="sm" />
+            {league.flag ? (
+              <img src={league.flag} alt={league.country} className="h-5 w-7 rounded-sm object-cover shadow-sm" />
+            ) : (
+              <CountryFlag country={league.country} size="md" />
+            )}
+            {league.logo ? (
+              <img src={league.logo} alt={league.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
+            ) : (
+              <LeagueLogo leagueId={league.id} leagueName={league.name} size="sm" />
+            )}
           </div>
           <div className="flex flex-col items-start min-w-0">
             <span className="text-sm sm:text-base font-bold uppercase tracking-wide text-foreground truncate max-w-[150px] sm:max-w-none">
