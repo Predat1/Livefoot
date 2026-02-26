@@ -21,36 +21,35 @@ const Layout = ({ children }: LayoutProps) => {
       <Header />
       {children}
       
-      {/* Footer */}
-      <footer className="border-t border-border bg-card py-8 sm:py-12 mt-6 sm:mt-8 mb-16 lg:mb-0">
+      {/* Footer - hidden on mobile */}
+      <footer className="hidden lg:block border-t border-border bg-card py-8 sm:py-12 mt-6 sm:mt-8">
         <div className="container text-center">
-          <div className="mb-4 sm:mb-6 flex items-center justify-center gap-2 sm:gap-3">
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
+          <div className="mb-6 flex items-center justify-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
               <img src={livefootLogo} alt="LiveFoot logo" className="h-full w-full object-cover" />
             </div>
-            <span className="text-xl sm:text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
+            <span className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto px-4">
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Your ultimate destination for live scores, results, fixtures, tables, statistics and football news.
           </p>
-          <div className="mt-4 sm:mt-6 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
+          <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
             {footerLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
             ))}
           </div>
-          {/* Social links */}
           <div className="mt-4 flex items-center justify-center gap-4">
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">𝕏 Twitter</a>
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">Instagram</a>
             <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">YouTube</a>
           </div>
-          <p className="mt-4 sm:mt-6 text-[10px] sm:text-xs text-muted-foreground/60">
+          <p className="mt-6 text-xs text-muted-foreground/60">
             © 2024 LiveFoot. All rights reserved.
           </p>
         </div>
