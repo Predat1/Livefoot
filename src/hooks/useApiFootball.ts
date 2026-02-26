@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getFixtures, getLiveFixtures, getTopScorers, getTopAssists, getStandings, getFixtureById, getFixtureEvents, getFixtureLineups, getFixtureStatistics, getHeadToHead, getLeagues } from "@/services/apiFootball";
+import {
+  getFixtures, getLiveFixtures, getTopScorers, getTopAssists,
+  getStandings, getFixtureById, getFixtureEvents, getFixtureLineups,
+  getFixtureStatistics, getHeadToHead, getLeagues, getTeams, getTeamById,
+  getTeamSquad, getTeamStatistics, getTransfers,
+} from "@/services/apiFootball";
 import { format } from "date-fns";
 
 // ─── Types matching existing component interfaces ─────────────
@@ -120,7 +125,6 @@ function transformFixturesToLeagues(fixtures: any[]): LeagueData[] {
     leagueMap.get(leagueId)!.matches.push(match);
   }
 
-  // Sort leagues: ones with live matches first, then by number of matches
   return Array.from(leagueMap.values()).sort((a, b) => {
     const aLive = a.matches.some((m) => m.status === "live") ? 1 : 0;
     const bLive = b.matches.some((m) => m.status === "live") ? 1 : 0;
@@ -132,7 +136,7 @@ function transformFixturesToLeagues(fixtures: any[]): LeagueData[] {
 function transformTopScorers(scorers: any[]): PlayerData[] {
   return scorers.map((item) => {
     const p = item.player;
-    const s = item.statistics[0]; // First league stats
+    const s = item.statistics[0];
     return {
       id: String(p.id),
       name: p.name,
@@ -176,8 +180,8 @@ export function useFixturesByDate(date: Date) {
       const res = await getFixtures({ date: dateStr });
       return transformFixturesToLeagues(res.response);
     },
-    staleTime: 60 * 1000, // 1 min
-    refetchInterval: 60 * 1000, // Auto-refresh every minute
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
   });
 }
 
@@ -308,5 +312,221 @@ export function useAvailableLeagues() {
       return res.response || [];
     },
     staleTime: 60 * 60 * 1000,
+  });
+}
+
+// ─── Teams ────────────────────────────────────────────────────
+
+export function useTeamsByLeague(leagueId: string, season: string) {
+  return useQuery({
+    queryKey: ["teams", leagueId, season],
+    queryFn: async () => {
+      const res = await getTeams({ league: leagueId, season });
+      return (res.response || []).map((item: any) => ({
+        id: String(item.team.id),
+        name: item.team.name,
+        logo: item.team.logo,
+        country: item.team.country,
+        founded: item.team.founded,
+        venue: item.venue
+          ? {
+              name: item.venue.name,
+              city: item.venue.city,
+              capacity: item.venue.capacity,
+              image: item.venue.image,
+            }
+          : null,
+      }));
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!leagueId && !!season,
+  });
+}
+
+export interface ApiTeamInfo {
+  id: string;
+  name: string;
+  logo: string;
+  country: string;
+  founded: number;
+  venue: { name: string; city: string; capacity: number; image: string } | null;
+}
+
+export function useTeamDetail(teamId: string) {
+  return useQuery({
+    queryKey: ["team", teamId],
+    queryFn: async () => {
+      const res = await getTeamById(teamId);
+      if (!res.response || res.response.length === 0) return null;
+      const item = res.response[0] as any;
+      return {
+        id: String(item.team.id),
+        name: item.team.name,
+        logo: item.team.logo,
+        country: item.team.country,
+        founded: item.team.founded,
+        venue: item.venue
+          ? {
+              name: item.venue.name,
+              city: item.venue.city,
+              capacity: item.venue.capacity,
+              image: item.venue.image,
+            }
+          : null,
+      } as ApiTeamInfo;
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!teamId,
+  });
+}
+
+export function useTeamSquad(teamId: string) {
+  return useQuery({
+    queryKey: ["team-squad", teamId],
+    queryFn: async () => {
+      const res = await getTeamSquad(teamId);
+      if (!res.response || res.response.length === 0) return [];
+      const squad = (res.response[0] as any)?.players || [];
+      return squad.map((p: any) => ({
+        id: String(p.id),
+        name: p.name,
+        age: p.age,
+        number: p.number,
+        position: p.position,
+        photo: p.photo,
+      }));
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!teamId,
+  });
+}
+
+export function useTeamFixtures(teamId: string, season: string) {
+  return useQuery({
+    queryKey: ["team-fixtures", teamId, season],
+    queryFn: async () => {
+      const res = await getFixtures({ team: teamId, season, last: "10" });
+      return (res.response || []).map((fix: any) => ({
+        id: String(fix.fixture.id),
+        date: new Date(fix.fixture.date).toLocaleDateString("en-GB", { month: "short", day: "numeric" }),
+        time: new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+        homeTeam: { name: fix.teams.home.name, logo: fix.teams.home.logo },
+        awayTeam: { name: fix.teams.away.name, logo: fix.teams.away.logo },
+        homeScore: fix.goals.home,
+        awayScore: fix.goals.away,
+        status: mapFixtureStatus(fix.fixture.status.short),
+        league: fix.league.name,
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!teamId,
+  });
+}
+
+export function useTeamNextFixtures(teamId: string) {
+  return useQuery({
+    queryKey: ["team-next-fixtures", teamId],
+    queryFn: async () => {
+      const res = await getFixtures({ team: teamId, next: "5" });
+      return (res.response || []).map((fix: any) => ({
+        id: String(fix.fixture.id),
+        date: new Date(fix.fixture.date).toLocaleDateString("en-GB", { month: "short", day: "numeric" }),
+        time: new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+        homeTeam: { name: fix.teams.home.name, logo: fix.teams.home.logo },
+        awayTeam: { name: fix.teams.away.name, logo: fix.teams.away.logo },
+        league: fix.league.name,
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!teamId,
+  });
+}
+
+// ─── Transfers ────────────────────────────────────────────────
+
+export interface ApiTransfer {
+  player: { id: number; name: string };
+  update: string;
+  transfers: {
+    date: string;
+    type: string;
+    teams: {
+      in: { id: number; name: string; logo: string };
+      out: { id: number; name: string; logo: string };
+    };
+  }[];
+}
+
+export function useTransfersByTeam(teamId: string) {
+  return useQuery({
+    queryKey: ["transfers", teamId],
+    queryFn: async () => {
+      const res = await getTransfers({ team: teamId });
+      return (res.response || []) as ApiTransfer[];
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!teamId,
+  });
+}
+
+// ─── Competitions (trending leagues) ──────────────────────────
+
+// Top trending league IDs (most followed globally)
+export const TRENDING_LEAGUE_IDS = ["39", "140", "135", "78", "61", "2", "3", "848", "94", "88"];
+
+export function useTrendingLeagues() {
+  return useQuery({
+    queryKey: ["trending-leagues"],
+    queryFn: async () => {
+      // Fetch all current leagues
+      const res = await getLeagues({ current: "true", type: "league" });
+      const all = (res.response || []) as any[];
+      
+      // Prioritize trending leagues first, then sort rest by country popularity
+      const trendingSet = new Set(TRENDING_LEAGUE_IDS);
+      const trending: any[] = [];
+      const others: any[] = [];
+      
+      for (const item of all) {
+        if (trendingSet.has(String(item.league.id))) {
+          trending.push(item);
+        } else {
+          others.push(item);
+        }
+      }
+      
+      // Sort trending by their order in TRENDING_LEAGUE_IDS
+      trending.sort((a, b) => {
+        return TRENDING_LEAGUE_IDS.indexOf(String(a.league.id)) - TRENDING_LEAGUE_IDS.indexOf(String(b.league.id));
+      });
+      
+      return [...trending, ...others.slice(0, 20)].map((item: any) => ({
+        id: String(item.league.id),
+        name: item.league.name,
+        logo: item.league.logo,
+        type: item.league.type,
+        country: item.country?.name || "",
+        countryFlag: item.country?.flag || "",
+        season: item.seasons?.[item.seasons.length - 1]?.year
+          ? String(item.seasons[item.seasons.length - 1].year)
+          : "2024",
+      }));
+    },
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+// ─── Head to Head ────────────────────────────────────────────
+
+export function useHeadToHead(homeId: string, awayId: string) {
+  const h2h = `${homeId}-${awayId}`;
+  return useQuery({
+    queryKey: ["h2h", h2h],
+    queryFn: async () => {
+      const res = await getHeadToHead(h2h);
+      return res.response || [];
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!homeId && !!awayId,
   });
 }

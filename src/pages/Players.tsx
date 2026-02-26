@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import Layout from "@/components/Layout";
-import { mockPlayers, positions } from "@/data/playersData";
+import { positions } from "@/data/playersData";
 import { useTopScorers } from "@/hooks/useApiFootball";
 import { Search, Star, Target, TrendingUp, X, GitCompare, ChevronDown, ChevronUp, Trophy, Activity, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -48,8 +48,7 @@ const Players = () => {
 
   const { data: apiPlayers, isLoading: isLoadingApi } = useTopScorers(selectedLeague, currentSeason);
 
-  // Use API data if available, else fallback to mock
-  const allPlayers = apiPlayers && apiPlayers.length > 0 ? apiPlayers : mockPlayers;
+  const allPlayers = apiPlayers || [];
 
   const filteredPlayers = useMemo(() => allPlayers
     .filter((p) => activePosition === "All" || p.position === activePosition)
