@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { mockLeagues } from "@/data/mockData";
-import { Zap, RefreshCw, Clock, Volume2, VolumeX, History, Globe } from "lucide-react";
+import { useLiveFixtures } from "@/hooks/useApiFootball";
+import { Zap, RefreshCw, Clock, Volume2, VolumeX, History, Globe, Loader2 } from "lucide-react";
 import TeamLogo from "@/components/TeamLogo";
 import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
@@ -61,7 +61,6 @@ type GoalEvent = {
 
 const Live = () => {
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -69,12 +68,8 @@ const Live = () => {
   const [goalHistory, setGoalHistory] = useState<GoalEvent[]>([]);
   const prevGoalsRef = useRef<Record<string, number>>({});
 
-  const liveMatches = mockLeagues
-    .map((league) => ({
-      ...league,
-      matches: league.matches.filter((m) => m.status === "live"),
-    }))
-    .filter((league) => league.matches.length > 0);
+  const { data: liveLeagues, refetch } = useLiveFixtures();
+  const liveMatches = liveLeagues || [];
 
   const totalLive = liveMatches.reduce((acc, l) => acc + l.matches.length, 0);
 
@@ -147,13 +142,12 @@ const Live = () => {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await new Promise((r) => setTimeout(r, 800));
+    await refetch();
     detectGoals();
-    setRefreshKey((k) => k + 1);
     setLastRefreshed(new Date());
     setCountdown(REFRESH_INTERVAL);
     setIsRefreshing(false);
-  }, [detectGoals]);
+  }, [detectGoals, refetch]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -185,7 +179,7 @@ const Live = () => {
         description="Tous les matchs de football en direct. Scores en temps réel, buts, cartons et statistiques."
       />
 
-      <div className="container py-4 sm:py-8" key={refreshKey}>
+      <div className="container py-4 sm:py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -409,7 +403,7 @@ const Live = () => {
                         fontSize="8"
                         fontWeight="bold"
                         fill="white"
-                      >{data.count}</text>
+                      >{(data as any).count}</text>
                       {/* Country label */}
                       <text
                         x={coords.x} y={coords.y + 24}
@@ -427,13 +421,13 @@ const Live = () => {
 
             {/* Country list */}
             <div className="p-4 space-y-2">
-              {Object.entries(matchesByCountry).map(([country, data]) => (
+              {Object.entries(matchesByCountry).map(([country, data]: [string, any]) => (
                 <div key={country} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                   <span className="h-2.5 w-2.5 rounded-full bg-live animate-pulse flex-shrink-0" />
                   <CountryFlag country={country} size="sm" />
                   <span className="font-semibold text-sm text-foreground flex-1">{country}</span>
                   <div className="flex items-center gap-2">
-                    {data.leagues.map((l) => (
+                    {data.leagues.map((l: string) => (
                       <span key={l} className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{l}</span>
                     ))}
                   </div>
