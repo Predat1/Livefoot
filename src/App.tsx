@@ -41,7 +41,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 2 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
+      gcTime: 30 * 60 * 1000, // keep unused data 30min (Explorer benefits)
       retry: 1,
       refetchOnWindowFocus: false,
     },
