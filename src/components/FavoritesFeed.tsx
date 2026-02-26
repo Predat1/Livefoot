@@ -5,6 +5,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { LeagueData } from "@/hooks/useApiFootball";
 import MatchCard from "./MatchCard";
+import TeamFormWidget from "./TeamFormWidget";
 
 interface FavoritesFeedProps {
   leagues: LeagueData[];
@@ -131,23 +132,39 @@ const FavoritesFeed = ({ leagues, isLoading }: FavoritesFeedProps) => {
           Favoris <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
-      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden shadow-sm">
-        {favoriteMatches.map(({ match, leagueName, leagueLogo }, i) => (
-          <div key={match.id}>
-            {(i === 0 || favoriteMatches[i - 1].leagueName !== leagueName) && (
-              <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-muted/30 border-b border-border/30">
-                {leagueLogo && (
-                  <img src={leagueLogo} alt={leagueName} className="h-4 w-4 object-contain" />
-                )}
-                <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {leagueName}
-                </span>
-              </div>
-            )}
-            <MatchCard match={match} />
-          </div>
-        ))}
-      </div>
+      {/* Team Form Widgets */}
+      {favorites.teams.length > 0 && (
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-4">
+          {favorites.teams.slice(0, 6).map((teamId) => (
+            <TeamFormWidget
+              key={teamId}
+              teamId={teamId}
+              teamName={teamId}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Favorite matches */}
+      {favoriteMatches.length > 0 && (
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden shadow-sm">
+          {favoriteMatches.map(({ match, leagueName, leagueLogo }, i) => (
+            <div key={match.id}>
+              {(i === 0 || favoriteMatches[i - 1].leagueName !== leagueName) && (
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-muted/30 border-b border-border/30">
+                  {leagueLogo && (
+                    <img src={leagueLogo} alt={leagueName} className="h-4 w-4 object-contain" />
+                  )}
+                  <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    {leagueName}
+                  </span>
+                </div>
+              )}
+              <MatchCard match={match} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 };
