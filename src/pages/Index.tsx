@@ -300,7 +300,7 @@ const Index = () => {
             ))}
           </div>
           <p className="mt-6 text-xs text-muted-foreground/60">
-            © 2024 LiveFoot. All rights reserved.
+            © {new Date().getFullYear()} LiveFoot. All rights reserved.
           </p>
         </div>
       </footer>
