@@ -35,6 +35,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Rankings = lazy(() => import("./pages/Rankings"));
 const PredictionsDashboard = lazy(() => import("./pages/PredictionsDashboard"));
+const Explorer = lazy(() => import("./pages/Explorer"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,6 +87,7 @@ const App = () => (
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/install" element={<Install />} />
+                <Route path="/explorer" element={<Explorer />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

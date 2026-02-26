@@ -1,4 +1,4 @@
-import { Search, Menu, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle, Zap, Star, ChevronDown, Grid3X3 } from "lucide-react";
+import { Search, Menu, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle, Zap, Star, ChevronDown, Grid3X3, Globe } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ const Header = () => {
     { label: "Rankings", href: "/rankings", icon: Trophy },
     { label: "Pronostics", href: "/predictions", icon: Trophy },
     { label: "Favoris", href: "/favorites", icon: Star },
+    { label: "Explorer", href: "/explorer", icon: Globe },
     { label: "Installer", href: "/install", icon: Download },
   ];
 
