@@ -27,6 +27,7 @@ import Terms from "./pages/Terms";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Rankings from "./pages/Rankings";
+import PredictionsDashboard from "./pages/PredictionsDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/match/:matchId" element={<Match />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/predictions" element={<PredictionsDashboard />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />

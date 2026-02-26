@@ -36,6 +36,7 @@ const Header = () => {
     { label: "TEAMS", href: "/teams" },
     { label: "PLAYERS", href: "/players" },
     { label: "TRANSFERS", href: "/transfers" },
+    { label: "PRONOSTICS", href: "/predictions" },
   ];
 
   const isActive = (href: string) => {
