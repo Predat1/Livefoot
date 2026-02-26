@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { mockPlayers } from "@/data/playersData";
-import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar, ChevronDown, ChevronUp, Timer, Footprints, Crosshair, Shield, Zap } from "lucide-react";
+import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar, ChevronDown, ChevronUp, Timer, Footprints, Crosshair, Shield, Zap, GitCompare, Search, Trophy, Activity, X } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import TeamLogo from "@/components/TeamLogo";
 import CountryFlag from "@/components/CountryFlag";
@@ -12,6 +12,21 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+
+const COMPARE_STATS = [
+  { label: "⚽ Buts", key: "goals" as const, unit: "" },
+  { label: "🅰️ Passes déc.", key: "assists" as const, unit: "" },
+  { label: "🎮 Matchs", key: "appearances" as const, unit: "" },
+  { label: "⭐ Note", key: "rating" as const, unit: "" },
+  { label: "🎯 Tirs/match", key: "shotsPerGame" as const, unit: "" },
+  { label: "🎯 Précision passe", key: "passAccuracy" as const, unit: "%" },
+  { label: "💪 Duels gagnés", key: "duelsWon" as const, unit: "" },
+  { label: "🟨 Cartons J.", key: "yellowCards" as const, unit: "", lowerIsBetter: true },
+  { label: "🔴 Cartons R.", key: "redCards" as const, unit: "", lowerIsBetter: true },
+  { label: "🗓️ Âge", key: "age" as const, unit: "", lowerIsBetter: true },
+];
 
 // Generate deterministic season history per player
 const generateSeasonHistory = (player: ReturnType<typeof mockPlayers.find> & object) => {
@@ -92,6 +107,29 @@ const PlayerDetail = () => {
   const player = mockPlayers.find((p) => p.id === playerId);
   const { isFavorite, toggleFavorite } = useFavorites();
   const [showAllSeasons, setShowAllSeasons] = useState(false);
+  const [comparePlayerId, setComparePlayerId] = useState<string | null>(null);
+  const [compareSearch, setCompareSearch] = useState("");
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
+
+  const comparePlayer = comparePlayerId ? mockPlayers.find((p) => p.id === comparePlayerId) : null;
+  const compareDetailedStats = comparePlayer ? generateDetailedStats(comparePlayer) : null;
+
+  const otherPlayers = mockPlayers.filter((p) => p.id !== player.id);
+  const filteredOtherPlayers = otherPlayers.filter((p) =>
+    p.name.toLowerCase().includes(compareSearch.toLowerCase()) ||
+    p.team.toLowerCase().includes(compareSearch.toLowerCase())
+  );
+
+  const comparePair = comparePlayer ? [player, comparePlayer] : null;
+  const winCounts = comparePair
+    ? COMPARE_STATS.reduce<[number, number]>((acc, { key, lowerIsBetter }) => {
+        const a = Number(comparePair[0][key]);
+        const b = Number(comparePair[1][key]);
+        if (a === b) return acc;
+        const aWins = lowerIsBetter ? a < b : a > b;
+        return aWins ? [acc[0] + 1, acc[1]] : [acc[0], acc[1] + 1];
+      }, [0, 0])
+    : [0, 0];
 
   if (!player) {
     return (
@@ -138,11 +176,153 @@ const PlayerDetail = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to players
           </Link>
-          <ShareButton
-            title={`${player.name} - ${player.position} | LiveFoot`}
-            text={`${player.name} (${player.team}) - ${player.goals} buts, ${player.assists} passes déc. | LiveFoot`}
-          />
+          <div className="flex items-center gap-2">
+            <Dialog open={compareDialogOpen} onOpenChange={setCompareDialogOpen}>
+              <DialogTrigger asChild>
+                <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                  <GitCompare className="h-3.5 w-3.5" />
+                  Comparer
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Choisir un joueur à comparer</DialogTitle>
+                </DialogHeader>
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher un joueur..."
+                    value={compareSearch}
+                    onChange={(e) => setCompareSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="max-h-72 overflow-y-auto space-y-1">
+                  {filteredOtherPlayers.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setComparePlayerId(p.id);
+                        setCompareDialogOpen(false);
+                        setCompareSearch("");
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-colors",
+                        comparePlayerId === p.id ? "bg-primary/10 border border-primary/30" : "hover:bg-muted/50"
+                      )}
+                    >
+                      <PlayerAvatar name={p.name} photoUrl={p.photoUrl} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">{p.name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <TeamLogo teamName={p.team} size="xs" className="!h-3.5 !w-3.5" />
+                          <span className="text-xs text-muted-foreground truncate">{p.team}</span>
+                          <span className="text-xs text-muted-foreground">· {p.position}</span>
+                        </div>
+                      </div>
+                      <span className="text-sm font-black text-primary">{p.rating}</span>
+                    </button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+            <ShareButton
+              title={`${player.name} - ${player.position} | LiveFoot`}
+              text={`${player.name} (${player.team}) - ${player.goals} buts, ${player.assists} passes déc. | LiveFoot`}
+            />
+          </div>
         </div>
+
+        {/* ===== COMPARISON PANEL ===== */}
+        {comparePlayer && comparePair && (
+          <div className="rounded-2xl bg-card border border-primary/20 overflow-hidden mb-6 shadow-lg shadow-primary/5 animate-fade-in">
+            <div className="bg-primary/10 px-5 py-3 border-b border-primary/20 flex items-center gap-2">
+              <GitCompare className="h-4 w-4 text-primary" />
+              <h3 className="font-bold text-foreground">Comparaison</h3>
+              <button
+                onClick={() => setComparePlayerId(null)}
+                className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6">
+              {/* Player headers */}
+              <div className="grid grid-cols-[1fr_2fr_2fr] gap-3 sm:gap-6 mb-4">
+                <div />
+                {comparePair.map((p, idx) => (
+                  <div key={p.id} className="text-center">
+                    <div className="relative inline-block mb-2">
+                      <PlayerAvatar name={p.name} photoUrl={p.photoUrl} size="md" className="mx-auto" />
+                      {winCounts[idx] > winCounts[1 - idx] && (
+                        <span className="absolute -top-2 -right-2 text-lg">👑</span>
+                      )}
+                    </div>
+                    <p className="font-black text-sm text-foreground truncate">{p.name}</p>
+                    <div className="flex items-center justify-center gap-1 mt-0.5">
+                      <TeamLogo teamName={p.team} size="xs" className="!h-3.5 !w-3.5" />
+                      <p className="text-xs text-muted-foreground truncate">{p.team}</p>
+                    </div>
+                    <div className="mt-1 flex items-center justify-center gap-1">
+                      <CountryFlag country={p.country} size="sm" />
+                      <span className="text-xs text-muted-foreground">{p.position}</span>
+                    </div>
+                    <div className={cn(
+                      "mt-2 mx-auto w-fit px-3 py-1 rounded-full text-xs font-bold",
+                      winCounts[idx] > winCounts[1 - idx] ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+                    )}>
+                      {winCounts[idx]} / {COMPARE_STATS.length} stats
+                    </div>
+                    <div className="mt-1 font-bold text-sm text-primary">{p.marketValue}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-border" />
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Activity className="h-3 w-3" />
+                  Statistiques
+                </div>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              <div className="space-y-1">
+                {COMPARE_STATS.map(({ label, key, unit, lowerIsBetter }) => {
+                  const a = Number(comparePair[0][key]);
+                  const b = Number(comparePair[1][key]);
+                  const aWins = lowerIsBetter ? a < b : a > b;
+                  const bWins = lowerIsBetter ? b < a : b > a;
+                  const maxVal = Math.max(a, b) || 1;
+
+                  return (
+                    <div key={key} className="grid grid-cols-[1fr_2fr_2fr] gap-3 sm:gap-6 py-2 border-t border-border/40 items-center">
+                      <span className="text-[11px] sm:text-xs text-muted-foreground text-right pr-2">{label}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span className={cn("text-sm font-black", aWins ? "text-primary" : "text-foreground")}>{a}{unit}</span>
+                          {aWins && <Trophy className="h-3 w-3 text-primary opacity-70" />}
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className={cn("h-full rounded-full transition-all", aWins ? "bg-primary" : "bg-muted-foreground/30")} style={{ width: `${lowerIsBetter ? (1 - a / maxVal) * 100 : (a / maxVal) * 100}%` }} />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          {bWins && <Trophy className="h-3 w-3 text-primary opacity-70" />}
+                          <span className={cn("text-sm font-black ml-auto", bWins ? "text-primary" : "text-foreground")}>{b}{unit}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className={cn("h-full rounded-full transition-all", bWins ? "bg-primary" : "bg-muted-foreground/30")} style={{ width: `${lowerIsBetter ? (1 - b / maxVal) * 100 : (b / maxVal) * 100}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Player Header */}
         <div className="rounded-2xl bg-card border border-border/50 overflow-hidden mb-6">
