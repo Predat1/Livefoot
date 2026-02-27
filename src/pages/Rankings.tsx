@@ -6,6 +6,7 @@ import { useTopScorers, useTopAssists, TRENDING_LEAGUE_IDS } from "@/hooks/useAp
 import { Target, TrendingUp, Search, Loader2, Trophy, Shirt, Star, Filter, ArrowUpDown, Users, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import CountryFlag from "@/components/CountryFlag";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -278,7 +279,7 @@ const Rankings = () => {
                   return (
                     <Link
                       key={player.player_id}
-                      to={`/players/${player.player_id}`}
+                      to={`/players/${buildEntitySlug(player.player_id, player.player_name)}`}
                       className={cn(
                         "flex items-center gap-2 sm:grid sm:grid-cols-[3rem_1fr_auto_auto_auto] sm:gap-2 px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors",
                         isTop3 && "bg-primary/5"
@@ -359,7 +360,7 @@ const Rankings = () => {
                   return (
                     <Link
                       key={player.id}
-                      to={`/players/${player.id}`}
+                      to={`/players/${buildEntitySlug(player.id, player.name)}`}
                       className={cn(
                         "flex items-center gap-2 sm:grid sm:grid-cols-[3rem_1fr_auto_auto_auto_auto_auto] sm:gap-2 px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors",
                         isTop3 && "bg-primary/5"

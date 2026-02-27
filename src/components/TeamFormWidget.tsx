@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTeamForm, useTeamNextFixtures } from "@/hooks/useApiFootball";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 import { Calendar, TrendingUp, Loader2 } from "lucide-react";
 
 interface TeamFormWidgetProps {
@@ -66,7 +67,7 @@ const TeamFormWidget = ({ teamId, teamName, teamLogo }: TeamFormWidgetProps) => 
   return (
     <div className="rounded-xl bg-card border border-border/50 p-3 sm:p-4 hover-lift transition-all">
       {/* Team header */}
-      <Link to={`/teams/${teamId}`} className="flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity">
+      <Link to={`/teams/${buildEntitySlug(teamId, teamName)}`} className="flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity">
         {teamLogo && <img src={teamLogo} alt={teamName} className="h-6 w-6 object-contain" />}
         <span className="text-sm font-bold text-foreground truncate">{teamName}</span>
       </Link>

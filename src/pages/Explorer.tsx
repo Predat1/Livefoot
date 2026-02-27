@@ -6,6 +6,7 @@ import CountryFlag from "@/components/CountryFlag";
 import { Trophy, Users, Star, Search, Globe, ChevronRight, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 import { useQuery } from "@tanstack/react-query";
 import { useTrendingLeagues, TRENDING_LEAGUE_IDS } from "@/hooks/useApiFootball";
 import { getTeams, getTopScorers } from "@/services/apiFootball";
@@ -220,7 +221,7 @@ const Explorer = () => {
   );
 
   const renderTeam = (team: any) => (
-    <Link key={team.id} to={`/teams/${team.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+    <Link key={team.id} to={`/teams/${buildEntitySlug(team.id, team.name)}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
       {team.logo ? (
         <img src={team.logo} alt={team.name} className="h-7 w-7 object-contain" />
       ) : (
@@ -235,7 +236,7 @@ const Explorer = () => {
   );
 
   const renderPlayer = (player: any) => (
-    <Link key={player.id} to={`/players/${player.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+    <Link key={player.id} to={`/players/${buildEntitySlug(player.id, player.name)}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
       {player.photoUrl ? (
         <img src={player.photoUrl} alt={player.name} className="h-9 w-9 rounded-full object-cover bg-muted" />
       ) : (
