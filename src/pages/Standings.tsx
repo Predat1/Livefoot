@@ -5,6 +5,7 @@ import SEOHead from "@/components/SEOHead";
 import { useStandings } from "@/hooks/useApiFootball";
 import { Trophy, ArrowUp, ArrowDown, Minus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 import TeamLogo from "@/components/TeamLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -135,7 +136,7 @@ const Standings = () => {
                         </span>
                       </td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3">
-                        <Link to={`/teams/${team.team.id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                        <Link to={`/teams/${buildEntitySlug(team.team.id, team.team.name)}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                           {team.team.logo ? (
                             <img src={team.team.logo} alt={team.team.name} className="h-6 w-6 object-contain" />
                           ) : (

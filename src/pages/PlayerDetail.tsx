@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { extractIdFromSlug, buildEntitySlug } from "@/utils/slugify";
 
 const COMPARE_STATS = [
   { label: "⚽ Buts", key: "goals" as const, unit: "" },
@@ -45,19 +46,23 @@ function getPlayerStat(player: any, key: string): number {
 const PlayerDetail = () => {
   const { playerId } = useParams();
   const navigate = useNavigate();
-  const { data: player, isLoading, isError } = usePlayerDetailApi(playerId || "");
-  const resolvedId = player?.id || (/^\d+$/.test(playerId || "") ? playerId! : "");
+  const rawParam = playerId || "";
+  const resolvedParam = extractIdFromSlug(rawParam);
+  const { data: player, isLoading, isError } = usePlayerDetailApi(resolvedParam);
+  const resolvedId = player?.id || (/^\d+$/.test(resolvedParam) ? resolvedParam : "");
   const { data: trophies, isLoading: trophiesLoading } = usePlayerTrophies(resolvedId);
   const { data: seasonHistory, isLoading: seasonsLoading } = usePlayerSeasons(resolvedId);
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  // Redirect slug URLs to canonical numeric ID
-  const isSlug = !/^\d+$/.test(playerId || "");
+  // Redirect to canonical SEO-friendly URL
   useEffect(() => {
-    if (isSlug && player?.id) {
-      navigate(`/players/${player.id}`, { replace: true });
+    if (player?.id && player?.name) {
+      const canonical = buildEntitySlug(player.id, player.name);
+      if (rawParam !== canonical) {
+        navigate(`/players/${canonical}`, { replace: true });
+      }
     }
-  }, [isSlug, player?.id, navigate]);
+  }, [player?.id, player?.name, rawParam, navigate]);
   const [showAllSeasons, setShowAllSeasons] = useState(false);
   const [comparePlayerId, setComparePlayerId] = useState<string | null>(null);
   const [compareSearch, setCompareSearch] = useState("");

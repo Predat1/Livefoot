@@ -20,6 +20,7 @@ import { MatchSkeleton } from "@/components/BrandedLoader";
 import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 
 const Index = () => {
   const livefootLogo = useAppLogo();
@@ -202,7 +203,7 @@ const Index = () => {
               {topRatedPlayers.slice(0, 5).map((player, index) => (
                 <Link
                   key={player.player_id}
-                  to={`/players/${player.player_id}`}
+                  to={`/players/${buildEntitySlug(player.player_id, player.player_name)}`}
                   className="flex-shrink-0 w-28 sm:w-32 rounded-xl bg-card border border-border/50 p-3 text-center hover-lift transition-all"
                 >
                   <div className="relative mx-auto mb-2">

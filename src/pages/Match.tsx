@@ -12,6 +12,7 @@ import {
   TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareButton from "@/components/ShareButton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -564,7 +565,7 @@ const Match = () => {
                                     <img src={p.player.photo} alt="" className="h-7 w-7 rounded-full object-cover" />
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    <Link to={`/players/${p.player?.id}`} className="text-xs font-medium text-foreground hover:text-primary transition-colors truncate block">
+                                    <Link to={`/players/${buildEntitySlug(p.player?.id, p.player?.name || "")}`} className="text-xs font-medium text-foreground hover:text-primary transition-colors truncate block">
                                       {p.player?.name}
                                     </Link>
                                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
@@ -902,7 +903,7 @@ const Match = () => {
 
           <div className="p-3 sm:p-8">
             <div className="flex items-center justify-between gap-2 sm:gap-4">
-              <Link to={`/teams/${fix.teams.home.id}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
+              <Link to={`/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
                 {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain mx-auto mb-1 sm:mb-2" />}
                 <h2 className="text-xs sm:text-xl font-bold text-foreground truncate">{homeTeam.name}</h2>
               </Link>
@@ -922,7 +923,7 @@ const Match = () => {
                 )}
               </div>
 
-              <Link to={`/teams/${fix.teams.away.id}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
+              <Link to={`/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
                 {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain mx-auto mb-1 sm:mb-2" />}
                 <h2 className="text-xs sm:text-xl font-bold text-foreground truncate">{awayTeam.name}</h2>
               </Link>

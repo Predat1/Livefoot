@@ -9,25 +9,30 @@ import ShareButton from "@/components/ShareButton";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Skeleton } from "@/components/ui/skeleton";
+import { extractIdFromSlug, buildEntitySlug } from "@/utils/slugify";
 
 const TeamDetail = () => {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const { data: team, isLoading: loadingTeam } = useTeamDetail(teamId || "");
-  const resolvedId = team?.id || (/^\d+$/.test(teamId || "") ? teamId! : "");
-  const { data: squad, isLoading: loadingSquad } = useTeamSquad(resolvedId);
-  const { data: recentResults, isLoading: loadingResults } = useTeamFixtures(resolvedId, "2024");
-  const { data: nextFixtures } = useTeamNextFixtures(resolvedId);
+  const rawParam = teamId || "";
+  const resolvedParam = extractIdFromSlug(rawParam);
+  const { data: team, isLoading: loadingTeam } = useTeamDetail(resolvedParam);
+  const finalId = team?.id || (/^\d+$/.test(resolvedParam) ? resolvedParam : "");
+  const { data: squad, isLoading: loadingSquad } = useTeamSquad(finalId);
+  const { data: recentResults, isLoading: loadingResults } = useTeamFixtures(finalId, "2024");
+  const { data: nextFixtures } = useTeamNextFixtures(finalId);
 
-  // Redirect slug URLs to canonical numeric ID
-  const isSlug = !/^\d+$/.test(teamId || "");
+  // Redirect to canonical SEO-friendly URL
   useEffect(() => {
-    if (isSlug && team?.id) {
-      navigate(`/teams/${team.id}`, { replace: true });
+    if (team?.id && team?.name) {
+      const canonical = buildEntitySlug(team.id, team.name);
+      if (rawParam !== canonical) {
+        navigate(`/teams/${canonical}`, { replace: true });
+      }
     }
-  }, [isSlug, team?.id, navigate]);
+  }, [team?.id, team?.name, rawParam, navigate]);
 
   if (loadingTeam) {
     return (

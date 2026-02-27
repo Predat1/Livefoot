@@ -7,6 +7,7 @@ import { useTopScorers } from "@/hooks/useApiFootball";
 import { Search, Star, Target, TrendingUp, X, GitCompare, ChevronDown, ChevronUp, Trophy, Activity, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 import { Badge } from "@/components/ui/badge";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import CountryFlag from "@/components/CountryFlag";
@@ -245,7 +246,7 @@ const Players = () => {
               <div className="grid grid-cols-[1fr_2fr_2fr] gap-3 sm:gap-6 mb-4">
                 <div />
                 {comparePlayers.map((p, idx) => (
-                  <Link key={p.id} to={`/players/${p.id}`} className="text-center group">
+                  <Link key={p.id} to={`/players/${buildEntitySlug(p.id, p.name)}`} className="text-center group">
                     <div className="relative inline-block mb-2">
                       <PlayerAvatar name={p.name} photoUrl={p.photoUrl} size="md" className="mx-auto" />
                       {/* Winner crown if more wins */}
@@ -377,7 +378,7 @@ const Players = () => {
                   <span className="hidden sm:inline">{isSelected ? "Sélectionné" : "Comparer"}</span>
                 </button>
 
-                <Link to={`/players/${player.id}`}>
+                <Link to={`/players/${buildEntitySlug(player.id, player.name)}`}>
                   <div className="relative gradient-primary p-3 sm:p-4 text-primary-foreground">
                     <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-1">
                       <CountryFlag country={player.country} size="sm" />

@@ -6,6 +6,7 @@ import { useTeamsByLeague } from "@/hooks/useApiFootball";
 import { Search, ChevronRight, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { buildEntitySlug } from "@/utils/slugify";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const LEAGUES = [
@@ -92,7 +93,7 @@ const Teams = () => {
             {filteredTeams.map((team, index) => (
               <Link
                 key={team.id}
-                to={`/teams/${team.id}`}
+                to={`/teams/${buildEntitySlug(team.id, team.name)}`}
                 className="group rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden transition-all duration-300 hover-lift animate-fade-in"
                 style={{ animationDelay: `${index * 30}ms` }}
               >
