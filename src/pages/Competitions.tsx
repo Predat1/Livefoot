@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import {
@@ -80,6 +81,11 @@ const Competitions = () => {
 
   const countries = Object.keys(leaguesByCountry);
 
+  // Total competition count for the dynamic counter
+  const totalCount = useMemo(() => {
+    const countryLeagues = Object.values(leaguesByCountry).reduce((sum, arr) => sum + arr.length, 0);
+    return (search ? 0 : popularLeagues.length) + countryLeagues;
+  }, [popularLeagues, leaguesByCountry, search]);
   // Find selected league info from trending (has season info)
   const selectedTrending = trendingLeagues?.find((l) => l.id === selectedCompetition);
   const selectedAll = allLeagues?.find((l) => l.id === selectedCompetition);
@@ -100,6 +106,16 @@ const Competitions = () => {
             <h1 className="text-xl sm:text-3xl font-black text-foreground">Competitions</h1>
           </div>
           <p className="text-xs sm:text-base text-muted-foreground ml-3 sm:ml-4">All leagues and tournaments from around the world</p>
+          {!isLoading && (
+            <motion.div
+              key={totalCount}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="ml-3 sm:ml-4 mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold"
+            >
+              {totalCount} compétition{totalCount > 1 ? "s" : ""}
+            </motion.div>
+          )}
         </div>
 
         {/* Search */}
@@ -141,7 +157,15 @@ const Competitions = () => {
         )}
 
         {!isLoading && (
-          <div className="space-y-8">
+          <AnimatePresence mode="wait">
+          <motion.div
+            key={continent + search}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+            className="space-y-8"
+          >
             {/* Popular Section */}
             {!search && popularLeagues.length > 0 && (
               <section>
@@ -217,7 +241,8 @@ const Competitions = () => {
                 </Accordion>
               )}
             </section>
-          </div>
+          </motion.div>
+          </AnimatePresence>
         )}
       </div>
     </Layout>
