@@ -1,83 +1,109 @@
 
 
-# Tri intelligent, ligues favorites et championnats additionnels
+# Systeme complet de championnats a la BeSoccer/FlashScore
 
-## Objectif
-Trois fonctionnalites liees :
-1. **Tri intelligent** sur la page d'accueil : Live > Favoris utilisateur > Big 5 > reste
-2. **Ligues favorites** : epingler des championnats avec une etoile (persistance via favorites existant)
-3. **Championnats additionnels** : Saudi Pro League, Liga MX, Brasileirao, MLS dans Explorer + accueil
+## Etat actuel
+- Le tri intelligent (Live > Favoris > Big 5) est deja en place sur la page d'accueil
+- Les ligues favorites fonctionnent (etoile)
+- `TRENDING_LEAGUE_IDS` couvre deja les Tiers 1-3 (Big 5, UCL, UEL, Conference, Eredivisie, Primeira Liga, Saudi, MLS, Liga MX, Brasileirao)
+- La page Competitions ne montre que les ~34 ligues trending, pas TOUTES les ligues
 
----
+## Ce qui manque (et ce plan corrige)
 
-## 1. Ajouter les championnats manquants
+### 1. Refonte de la page Competitions (comme les concurrents)
 
-**Fichier : `src/hooks/useApiFootball.ts`**
-- Ajouter les IDs des nouvelles ligues a `TRENDING_LEAGUE_IDS` :
-  - Saudi Pro League : `307`
-  - MLS : `253`
-  - Liga MX : `262`
-  - Brasileirao Serie A : `71`
-- Le tableau passera de 10 a 14 entrees
-- `useTrendingLeagues` les inclura automatiquement puisqu'il filtre deja par cet array
+**Fichier : `src/pages/Competitions.tsx`**
 
-**Fichier : `src/pages/Explorer.tsx`**
-- Etendre `TOP_LEAGUE_IDS` pour prendre les 10 premieres ligues (au lieu de 5) afin d'inclure les nouvelles dans les onglets Equipes et Joueurs
+La page sera restructuree en 2 sections :
 
----
+- **Section "Populaires"** en haut : Big 5 + UCL/UEL/Conference League, visuellement separees avec un header dore/primaire, toujours visibles
+- **Section "Tous les championnats"** en dessous : TOUTES les ligues actives (pas seulement les trending), groupees par pays, avec recherche et filtre pays
+- Chaque ligue aura un bouton etoile pour l'epingler
+- Les ligues favorites remonteront dans la section "Populaires" automatiquement
 
-## 2. Systeme de ligues favorites
+On utilisera `useAvailableLeagues` (qui fetche `leagues?current=true`) pour obtenir TOUTES les ligues, pas seulement les trending.
 
-Le systeme de favoris existant (`useFavorites`) supporte deja le type `competitions`. On va l'exploiter.
-
-**Fichier : `src/pages/Explorer.tsx`**
-- Ajouter un bouton etoile a cote de chaque competition dans la liste
-- Au clic, appeler `toggleFavorite("competitions", leagueId, leagueName)`
-- Les ligues favorites seront mises en evidence (etoile remplie, couleur primaire)
-
-**Fichier : `src/components/LeagueSection.tsx`**
-- Ajouter un bouton etoile dans le header de chaque ligue sur la page d'accueil
-- Utiliser `useFavorites` pour toggle et afficher l'etat
-
----
-
-## 3. Tri intelligent sur la page d'accueil
-
-**Fichier : `src/hooks/useApiFootball.ts`**
-- Modifier `transformFixturesToLeagues` pour accepter un parametre optionnel `favoriteLeagueIds: Set<string>`
-- Nouveau tri en 4 niveaux de priorite :
-  1. **Ligues avec matchs live** (priorite max)
-  2. **Ligues favorites de l'utilisateur** (via `favorites.competitions`)
-  3. **Big 5 + UCL/UEL** (les IDs dans `TRENDING_LEAGUE_IDS`)
-  4. **Toutes les autres** (tri par nombre de matchs)
+### 2. Affinage du tri par tiers sur la page d'accueil
 
 **Fichier : `src/pages/Index.tsx`**
-- Importer `useFavorites` et recuperer `favorites.competitions`
-- Passer les IDs favoris au tri via un `useMemo` qui re-trie `leagues` selon la logique ci-dessus
-- Le tri s'appliquera sur `filteredLeagues` avant le rendu
+
+Le scoring actuel sera affine pour distinguer les tiers :
+
+```text
+Live                    -> +1000
+Favoris utilisateur     -> +500
+Tier 1 (Big 5)          -> +200
+Tier 2 (UCL/UEL/Conf)   -> +150
+Tier 3 (regional)       -> +100
+Autre                   -> 0
+```
+
+**Fichier : `src/hooks/useApiFootball.ts`**
+- Exporter des constantes `TIER1_IDS`, `TIER2_IDS`, `TIER3_IDS` pour une utilisation claire
+
+### 3. Ajout des championnats manquants dans les donnees de reference
+
+**Fichier : `src/hooks/useApiFootball.ts`**
+
+Ajout de quelques ligues supplementaires au `TRENDING_LEAGUE_IDS` pour couvrir les championnats populaires manquants :
+- Superliga Argentina (128)
+- Turkish Super Lig (203)
+- Belgian Pro League (144)
+- Scottish Premiership (179)
+- Championship anglais (40)
+
+Le `useTrendingLeagues` continuera a les prioriser dans la section "Populaires".
+
+### 4. Hook `useAllLeagues` pour la page Competitions complete
+
+**Fichier : `src/hooks/useApiFootball.ts`**
+
+Nouveau hook qui fetche TOUTES les ligues actives (type "league" + "cup") et les organise :
+- Retourne un objet `{ popular: League[], byCountry: Record<string, League[]> }`
+- `popular` = toutes les ligues dans TRENDING_LEAGUE_IDS + favoris utilisateur
+- `byCountry` = toutes les autres, groupees par pays, triees alphabetiquement
 
 ---
+
+## Fichiers modifies
+
+| Fichier | Changement |
+|---------|-----------|
+| `src/hooks/useApiFootball.ts` | Ajout TIER1/2/3 constants, IDs supplementaires, hook `useAllLeagues` |
+| `src/pages/Index.tsx` | Scoring affine avec tiers distincts |
+| `src/pages/Competitions.tsx` | Refonte complete : section Populaires + tous les championnats par pays avec recherche |
 
 ## Details techniques
 
-### Priorite de tri (implementation)
+### Structure de la page Competitions refaite
+
 ```text
-Score de priorite par ligue :
-  - A un match live         -> +1000
-  - Ligue favorite user     -> +500
-  - Dans TRENDING_LEAGUE_IDS -> +100
-  - Sinon                   -> 0
-  - Departage : nombre de matchs (desc)
++----------------------------------+
+| Rechercher...            [input] |
++----------------------------------+
+| [star] Populaires                |
+| +------------------------------+ |
+| | PL | Liga | Serie A | BuLi   | |
+| | Ligue1 | UCL | UEL | Conf   | |
+| | + ligues favorites user      | |
+| +------------------------------+ |
++----------------------------------+
+| Tous les championnats            |
+| [Filtre pays chips]             |
++----------------------------------+
+| Angleterre                       |
+|   Premier League    [star] [>]  |
+|   Championship      [star] [>]  |
+| Espagne                         |
+|   La Liga           [star] [>]  |
+| ...                              |
++----------------------------------+
 ```
 
-### Fichiers modifies
-| Fichier | Changement |
-|---------|-----------|
-| `src/hooks/useApiFootball.ts` | Ajout 4 IDs de ligues, export BIG5 set |
-| `src/pages/Index.tsx` | Import useFavorites, tri intelligent des leagues |
-| `src/pages/Explorer.tsx` | TOP_LEAGUE_IDS elargi, bouton etoile sur competitions |
-| `src/components/LeagueSection.tsx` | Bouton etoile dans le header de ligue |
+### API calls
+- `useAllLeagues` : 1 appel API (`leagues?current=true`) -- cache 2h, retourne ~900 ligues
+- Pas de changement au nombre d'appels sur la page d'accueil (les fixtures du jour incluent deja toutes les ligues ayant des matchs)
 
 ### Pas de migration DB necessaire
-Le type `competitions` est deja gere par la table `favorites` existante avec `entity_type = "competition"`.
+Le systeme de favoris existant couvre deja le type `competitions`.
 
