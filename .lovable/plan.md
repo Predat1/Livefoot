@@ -1,99 +1,54 @@
 
 
-# Ajout des fonctionnalites manquantes sur la page detail match
+# Generation d'un logo LiveFoot avec l'IA
 
-## Contexte
-La page Match (`src/pages/Match.tsx`) dispose deja de : events, stats, compos/terrain tactique, notes joueurs, forme recente, predictions API, H2H, pronostics communautaires, cotes et blessures. Il manque 4 elements cles des concurrents.
+## Objectif
+Creer un logo professionnel et memorable pour LiveFoot en utilisant l'IA de generation d'images (Gemini), puis l'integrer automatiquement dans l'application.
 
----
+## Approche
 
-## Fonctionnalites a implementer
+### 1. Edge Function de generation de logo
+Creer une edge function `generate-logo` qui utilise le modele `google/gemini-3-pro-image-preview` (meilleure qualite) pour generer un logo de football moderne.
 
-### 1. Commentaires textuels live (minute par minute)
+**Prompt de generation** : Logo minimaliste et moderne pour "LiveFoot", application de scores de football en direct. Fond transparent, couleurs vert vif (#22c55e) et blanc, style iconique avec un ballon de football stylise ou un eclair representant le "live". Design vectoriel propre, adapte aux petites tailles (favicon/icone PWA).
 
-L'API-Football propose l'endpoint `fixtures/events` que tu utilises deja. On va transformer ces evenements en un "fil de commentaires" enrichi, avec une timeline chronologique inversee, des icones contextuelles et des descriptions textuelles generees automatiquement a partir des donnees d'evenements.
+### 2. Page d'administration du logo
+Ajouter un petit composant sur la page Profile (ou une page dediee) permettant de :
+- Generer un logo avec un prompt personnalisable
+- Previsualiser le resultat
+- Telecharger le logo genere dans le storage backend
+- L'appliquer comme logo de l'app
 
-**Approche** : Creer un nouvel onglet "Commentaires" qui transforme les events en texte narratif minute par minute (ex: "45' -- But ! Mbappe ouvre le score pour le PSG, passe decisive de Dembele").
+### 3. Integration dans l'app
+- Stocker l'image generee dans un bucket storage "logos"
+- Mettre a jour les references au logo (Header, Layout footer, favicon)
 
-**Fichier** : `src/pages/Match.tsx`
-- Ajouter un onglet "Live" dans `tabItems`
-- Generer des commentaires textuels a partir des `events` existants avec des phrases descriptives par type (Goal, Card, subst, Var)
-- Afficher dans un format timeline verticale avec minute, icone et texte
-- Auto-refresh toutes les 60s (deja en place via `refetchInterval`)
-
-### 2. Momentum / Graphique de pression
-
-Utiliser les statistiques du match (`fixtures/statistics`) pour construire un graphique "momentum" avec Recharts.
-
-**Fichier** : `src/pages/Match.tsx`
-- Ajouter un onglet "Momentum" (ou l'integrer dans l'onglet Stats)
-- Construire un graphique en barres horizontales comparant les metriques cles : possession, tirs, corners, passes, fautes
-- Utiliser un `RadarChart` Recharts pour la vue "radar de domination" (comme SofaScore)
-- Les donnees viennent de `teamStats` deja charge
-
-### 3. Shotmap (carte des tirs)
-
-L'API-Football fournit les donnees de tirs via `fixtures/players` (shots.total, shots.on). On creera une representation visuelle simplifiee.
-
-**Fichier** : Nouveau composant `src/components/ShotMap.tsx`
-- Terrain SVG simplifie (moitie de terrain avec surface de reparation)
-- Positionner les tirs des joueurs de facon semi-aleatoire mais coherente (basee sur la position du joueur)
-- Couleur : vert pour tir cadre, rouge pour tir non cadre, or pour but
-- Les donnees viennent de `playersData` deja charge (statistiques individuelles par joueur)
-
-**Fichier** : `src/pages/Match.tsx`
-- Integrer le composant ShotMap dans l'onglet Stats ou un nouvel onglet
-
-### 4. Prochains matchs des 2 equipes
-
-Le hook `useTeamNextFixtures` existe deja.
-
-**Fichier** : `src/pages/Match.tsx`
-- Ajouter un onglet "Calendrier" 
-- Appeler `useTeamNextFixtures(homeTeamId)` et `useTeamNextFixtures(awayTeamId)`
-- Afficher les 3 prochains matchs de chaque equipe cote a cote
-
----
-
-## Reorganisation des onglets
-
-L'ordre final des onglets sera :
-```text
-Live | Events | Stats | Compos | Notes | Forme | Calendrier | Predictions | H2H | Pronostics | Cotes | Blessures
-```
-
-"Live" (commentaires) sera le premier onglet par defaut quand le match est en cours.
-
----
-
-## Fichiers modifies
+## Fichiers concernes
 
 | Fichier | Changement |
 |---------|-----------|
-| `src/pages/Match.tsx` | 3 nouveaux onglets (Live/commentaires, Momentum radar, Calendrier), integration ShotMap |
-| `src/components/ShotMap.tsx` | Nouveau composant : terrain SVG + visualisation des tirs |
+| `supabase/functions/generate-logo/index.ts` | Nouvelle edge function appelant Gemini image generation |
+| `src/pages/Profile.tsx` | Section "Generer un logo" avec bouton, prompt et previsualisation |
+| `src/components/Header.tsx` | Utiliser le logo genere depuis le storage si disponible |
+| `src/components/Layout.tsx` | Idem pour le footer |
 
 ## Details techniques
 
-### Commentaires textuels - Generateur de phrases
-```text
-Goal -> "[min]' -- BUT ! [joueur] marque pour [equipe]. Passe decisive de [assist]."
-Card (Yellow) -> "[min]' -- Carton jaune pour [joueur] ([equipe])."
-Card (Red) -> "[min]' -- Carton rouge ! [joueur] ([equipe]) est expulse."
-subst -> "[min]' -- Remplacement : [joueur entrant] remplace [joueur sortant]."
-Var -> "[min]' -- Decision VAR : [detail]."
-```
+### Edge function
+- Modele : `google/gemini-3-pro-image-preview`
+- Utilise `LOVABLE_API_KEY` (deja configure)
+- Retourne l'image en base64
+- L'image est ensuite uploadee dans un bucket storage `logos`
 
-### Radar Chart Momentum
-Utilise `recharts` (deja installe) avec `RadarChart`, `PolarGrid`, `PolarAngleAxis`, `Radar` pour comparer les deux equipes sur 6-8 metriques.
+### Stockage
+- Creer un bucket `logos` public
+- Stocker le logo genere avec un nom fixe (`logo.png`)
+- L'URL publique du bucket sera utilisee dans Header et Layout comme source du logo
 
-### ShotMap
-- SVG 400x300, moitie terrain avec surface
-- Cercles positionnes par position du joueur (GK/DEF/MID/FWD -> zones Y differentes)
-- X legerement randomise pour eviter superposition
-- Taille du cercle proportionnelle au nombre de tirs
-
-### Prochains matchs
-- Reutilise `useTeamNextFixtures` (next: "3")  
-- Affichage grid 2 colonnes (home/away)
+### UX
+- Bouton "Generer un logo IA" sur la page Profil
+- Champ de prompt pre-rempli mais modifiable
+- Spinner pendant la generation
+- Previsualisation avant application
+- Bouton "Appliquer comme logo"
 
