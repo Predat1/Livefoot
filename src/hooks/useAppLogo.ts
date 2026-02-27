@@ -8,11 +8,25 @@ export function useAppLogo() {
   useEffect(() => {
     const { data } = supabase.storage.from("logos").getPublicUrl("logo.png");
     if (data?.publicUrl) {
-      // Check if the file exists by loading it
       const img = new Image();
-      img.onload = () => setLogoUrl(data.publicUrl + "?t=" + Date.now());
+      const url = data.publicUrl + "?t=" + Date.now();
+      img.onload = () => setLogoUrl(url);
       img.onerror = () => setLogoUrl(defaultLogo);
-      img.src = data.publicUrl + "?t=" + Date.now();
+      img.src = url;
+    }
+
+    // Also update favicon dynamically
+    const { data: favData } = supabase.storage.from("logos").getPublicUrl("favicon.png");
+    if (favData?.publicUrl) {
+      const favImg = new Image();
+      const favUrl = favData.publicUrl + "?t=" + Date.now();
+      favImg.onload = () => {
+        const faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+        if (faviconLink) faviconLink.href = favUrl;
+        const appleIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
+        if (appleIcon) appleIcon.href = favUrl;
+      };
+      favImg.src = favUrl;
     }
   }, []);
 
