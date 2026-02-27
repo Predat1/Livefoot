@@ -35,8 +35,9 @@ const News = () => {
   return (
     <Layout>
       <SEOHead
-        title="Football News - Latest Headlines"
-        description="Stay updated with the latest football news, transfer rumours, match reports and analysis from around the world."
+        title="Actualités Football - Dernières Infos"
+        description="Toute l'actualité du football : transferts, résultats, analyses et rumeurs. Infos Premier League, La Liga, Serie A, Bundesliga, Ligue 1."
+        keywords="actualité football, transfert foot, infos football, news football, mercato, résultats foot"
       />
       <div className="container py-4 sm:py-8">
         {/* Hero Section */}

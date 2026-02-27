@@ -91,7 +91,11 @@ const Players = () => {
 
   return (
     <Layout>
-      <SEOHead title="Football Players" description="Discover top footballers, their statistics, goals, assists, ratings and market values." />
+      <SEOHead
+        title="Joueurs de Football - Stats & Classements"
+        description="Meilleurs buteurs, passeurs et joueurs les mieux notés des 5 grands championnats. Statistiques détaillées, comparaisons et notes communautaires."
+        keywords="meilleur buteur, joueurs football, statistiques joueurs, buteur ligue 1, passeur premier league, notes joueurs"
+      />
       <div className="container py-4 sm:py-8">
         {/* Title */}
         <div className="mb-6 sm:mb-8">

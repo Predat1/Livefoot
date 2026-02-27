@@ -36,7 +36,11 @@ const Standings = () => {
 
   return (
     <Layout>
-      <SEOHead title="League Standings & Tables" description="View league tables, rankings and standings for Premier League, La Liga, Serie A, Bundesliga and more." />
+      <SEOHead
+        title="Classements Football - Tableaux des Ligues"
+        description="Classements en direct de Premier League, La Liga, Serie A, Bundesliga et Ligue 1. Points, victoires, différence de buts et forme récente."
+        keywords="classement ligue 1, classement premier league, tableau la liga, classement serie a, bundesliga classement"
+      />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">

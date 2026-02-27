@@ -64,7 +64,11 @@ const Live = () => {
 
   return (
     <Layout>
-      <SEOHead title="Live Scores - Matchs en cours" description="Tous les matchs de football en direct. Scores en temps réel, notifications de buts." />
+      <SEOHead
+        title="Scores en Direct - Football Live"
+        description="Tous les matchs de football en direct maintenant. Scores temps réel, événements minute par minute, notifications de buts instantanées."
+        keywords="scores en direct, football live, résultats en direct, livescore foot, match en cours"
+      />
       <div className="container py-4 sm:py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">

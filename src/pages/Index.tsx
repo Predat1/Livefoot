@@ -111,20 +111,32 @@ const Index = () => {
   return (
     <div ref={containerRef} className="min-h-screen bg-background relative pb-16 lg:pb-0">
       <SEOHead
-        title="LiveFoot - Live Football Scores Today"
-        description="Follow all today's live football scores, results, fixtures and tables from Premier League, La Liga, Serie A, Bundesliga and more."
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "LiveFoot",
-          url: "https://livefoot.app",
-          description: "Live football scores, results, fixtures, tables, statistics and football news.",
-          potentialAction: {
-            "@type": "SearchAction",
-            target: "https://livefoot.app/search?q={search_term_string}",
-            "query-input": "required name=search_term_string",
+        title="LiveFoot - Scores Football en Direct Aujourd'hui"
+        description="Suivez tous les scores de football en direct, résultats, calendriers et classements : Premier League, La Liga, Serie A, Bundesliga, Ligue 1 et plus de 800 compétitions."
+        keywords="scores football en direct, résultats foot, classement ligue 1, premier league résultats, scores live, football aujourd'hui, livescore"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "LiveFoot",
+            url: "https://livefoot.app",
+            description: "Scores de football en direct, résultats, calendriers, classements et statistiques des meilleures ligues mondiales.",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: { "@type": "EntryPoint", urlTemplate: "https://livefoot.app/search?q={search_term_string}" },
+              "query-input": "required name=search_term_string",
+            },
+            inLanguage: ["fr", "en"],
           },
-        }}
+          {
+            "@context": "https://schema.org",
+            "@type": "SportsOrganization",
+            name: "LiveFoot",
+            url: "https://livefoot.app",
+            sport: "Football",
+            description: "Application de scores de football en direct couvrant plus de 800 compétitions mondiales.",
+          },
+        ]}
       />
       <PullToRefreshIndicator
         pullDistance={pullDistance}

@@ -28,7 +28,11 @@ const Teams = () => {
 
   return (
     <Layout>
-      <SEOHead title="Football Teams" description="Explore top football clubs from around the world." />
+      <SEOHead
+        title="Équipes de Football - Clubs & Effectifs"
+        description="Découvrez les clubs de football des 5 grands championnats : effectifs, statistiques et résultats de Premier League, La Liga, Serie A, Bundesliga, Ligue 1."
+        keywords="équipes football, clubs foot, effectif psg, effectif real madrid, joueurs premier league"
+      />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
