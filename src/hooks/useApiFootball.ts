@@ -484,7 +484,7 @@ export function useTransfersByTeam(teamId: string) {
 export const TIER1_IDS = new Set(["39", "140", "135", "78", "61"]);
 // Tier 2 — UEFA competitions + top leagues
 export const TIER2_IDS = new Set(["2", "3", "848", "4", "5", "480", "531"]); // UCL, UEL, UECL, Euro, WC, Copa America, UEFA Nations League
-// Tier 3 — Popular regional leagues
+// Tier 3 — Popular regional leagues + African leagues
 export const TIER3_IDS = new Set([
   "262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40",
   "98", "292", "188", "113", "103", "119", "106", "197", "207", "218",
@@ -494,6 +494,23 @@ export const TIER3_IDS = new Set([
   "271", "172", "345", "373", "318", "268", "270", "242", "299", "330",
   "99", "274", "296", "340", "301", "202", "409", "306", "350", "401",
   "357", "332", "225", "235", "302", "244", "352",
+  // African leagues
+  "233",  // Botola Pro (Morocco)
+  "36",   // CAF Champions League
+  "37",   // CAF Confederation Cup
+  "29",   // AFCON (Africa Cup of Nations)
+  "551",  // Egyptian Premier League
+  "270",  // South Africa Premier Division
+  "187",  // Tunisian Ligue 1
+  "367",  // Algerian Ligue 1
+  "271",  // Nigerian NPFL
+  "573",  // Ghanaian Premier League
+  "564",  // Kenyan Premier League
+  "366",  // Senegalese Ligue 1
+  "572",  // Ivory Coast Ligue 1
+  "365",  // Cameroon Elite One
+  "568",  // Tanzanian Premier League
+  "569",  // Ugandan Premier League
 ]);
 
 // All trending league IDs combined
@@ -502,9 +519,11 @@ export const TRENDING_LEAGUE_IDS = [
   "39", "140", "135", "78", "61",
   // Tier 2 - UEFA + International
   "2", "3", "848", "4", "5",
+  // African — CAF + Top domestic
+  "29", "36", "37", "551", "233", "187", "367", "270", "271", "366",
   // Tier 3 - Regional
   "262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40",
-  "98", "292", "188", "113", "233", "200",
+  "98", "292", "188", "113", "200",
 ];
 export const TRENDING_LEAGUE_SET = new Set(TRENDING_LEAGUE_IDS);
 

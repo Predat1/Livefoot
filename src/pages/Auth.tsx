@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SEOHead from "@/components/SEOHead";
 import livefootLogo from "@/assets/livefoot-logo.png";
 import { Loader2, Mail, Lock, User } from "lucide-react";
-import { toast } from "sonner";
+import { livefootToast } from "@/components/ui/sonner";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -31,9 +31,9 @@ const Auth = () => {
       password: loginPassword,
     });
     if (error) {
-      toast.error(error.message);
+      livefootToast.error("Connexion échouée", error.message);
     } else {
-      toast.success("Welcome back!");
+      livefootToast.success("Bienvenue !", "Vous êtes connecté.");
       navigate("/");
     }
     setLoading(false);
@@ -51,9 +51,9 @@ const Auth = () => {
       },
     });
     if (error) {
-      toast.error(error.message);
+      livefootToast.error("Inscription échouée", error.message);
     } else {
-      toast.success("Account created! Check your email to confirm your account.");
+      livefootToast.success("Compte créé !", "Vérifiez votre e-mail pour confirmer votre compte.");
     }
     setLoading(false);
   };
