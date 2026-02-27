@@ -4,44 +4,44 @@ import { Shield } from "lucide-react";
 
 const sections = [
   {
-    title: "1. Information We Collect",
+    title: "1. Informations Collectées",
     content:
-      "We collect information you provide directly, such as when you create an account, set preferences, or contact us. We also automatically collect certain information when you use our services, including your IP address, browser type, device information, and usage patterns through cookies and similar technologies.",
+      "Nous collectons les informations que vous fournissez directement, comme lorsque vous créez un compte, définissez vos préférences ou nous contactez. Nous collectons également automatiquement certaines informations lorsque vous utilisez nos services, notamment votre adresse IP, le type de navigateur, les informations sur l'appareil et les habitudes d'utilisation via des cookies et technologies similaires.",
   },
   {
-    title: "2. How We Use Your Information",
+    title: "2. Utilisation de Vos Informations",
     content:
-      "We use the information we collect to provide, maintain, and improve our services, personalize your experience, send you notifications about matches and teams you follow, communicate with you about updates and promotions, and ensure the security of our platform.",
+      "Nous utilisons les informations collectées pour fournir, maintenir et améliorer nos services, personnaliser votre expérience, vous envoyer des notifications sur les matchs et équipes que vous suivez, communiquer avec vous sur les mises à jour et promotions, et assurer la sécurité de notre plateforme.",
   },
   {
-    title: "3. Information Sharing",
+    title: "3. Partage d'Informations",
     content:
-      "We do not sell your personal information to third parties. We may share your information with service providers who assist us in operating our platform, when required by law, or to protect our rights and safety. Any third-party service providers are contractually obligated to maintain the confidentiality of your information.",
+      "Nous ne vendons pas vos informations personnelles à des tiers. Nous pouvons partager vos informations avec des prestataires de services qui nous aident à exploiter notre plateforme, lorsque la loi l'exige, ou pour protéger nos droits et notre sécurité. Tout prestataire tiers est contractuellement obligé de maintenir la confidentialité de vos informations.",
   },
   {
-    title: "4. Data Security",
+    title: "4. Sécurité des Données",
     content:
-      "We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. However, no internet transmission is completely secure, and we cannot guarantee absolute security.",
+      "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos informations personnelles contre l'accès non autorisé, l'altération, la divulgation ou la destruction. Cependant, aucune transmission sur Internet n'est totalement sécurisée et nous ne pouvons garantir une sécurité absolue.",
   },
   {
-    title: "5. Cookies and Tracking",
+    title: "5. Cookies et Suivi",
     content:
-      "We use cookies and similar tracking technologies to enhance your browsing experience, analyze site traffic, and understand usage patterns. You can control cookie preferences through your browser settings. Disabling cookies may affect certain features of our services.",
+      "Nous utilisons des cookies et des technologies de suivi similaires pour améliorer votre expérience de navigation, analyser le trafic du site et comprendre les habitudes d'utilisation. Vous pouvez contrôler les préférences de cookies via les paramètres de votre navigateur. La désactivation des cookies peut affecter certaines fonctionnalités de nos services.",
   },
   {
-    title: "6. Your Rights",
+    title: "6. Vos Droits",
     content:
-      "You have the right to access, correct, or delete your personal information. You may also object to or restrict certain processing activities. To exercise these rights, please contact us using the information provided on our Contact page.",
+      "Vous avez le droit d'accéder, de corriger ou de supprimer vos informations personnelles. Vous pouvez également vous opposer ou restreindre certaines activités de traitement. Pour exercer ces droits, veuillez nous contacter via les informations fournies sur notre page Contact.",
   },
   {
-    title: "7. Children's Privacy",
+    title: "7. Protection des Mineurs",
     content:
-      "Our services are not directed to children under 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected such information, we will take steps to delete it promptly.",
+      "Nos services ne sont pas destinés aux enfants de moins de 13 ans. Nous ne collectons pas sciemment d'informations personnelles auprès d'enfants de moins de 13 ans. Si nous apprenons que nous avons collecté de telles informations, nous prendrons des mesures pour les supprimer rapidement.",
   },
   {
-    title: "8. Changes to This Policy",
+    title: "8. Modifications de cette Politique",
     content:
-      "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the updated policy on our website. Your continued use of our services after any changes constitutes your acceptance of the updated policy.",
+      "Nous pouvons mettre à jour cette Politique de Confidentialité de temps en temps. Nous vous informerons de tout changement important en publiant la politique mise à jour sur notre site web. Votre utilisation continue de nos services après toute modification constitue votre acceptation de la politique mise à jour.",
   },
 ];
 
@@ -49,8 +49,8 @@ const Privacy = () => {
   return (
     <Layout>
       <SEOHead
-        title="Privacy Policy"
-        description="LiveFoot Privacy Policy - Learn how we collect, use, and protect your personal information."
+        title="Politique de Confidentialité - LiveFoot"
+        description="Politique de Confidentialité LiveFoot - Découvrez comment nous collectons, utilisons et protégeons vos informations personnelles."
       />
       <div className="container py-8 sm:py-16 max-w-4xl">
         <div className="text-center mb-10">
@@ -59,15 +59,13 @@ const Privacy = () => {
               <Shield className="h-7 w-7 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-foreground mb-4">Privacy Policy</h1>
-          <p className="text-sm text-muted-foreground">Last updated: January 2024</p>
+          <h1 className="text-3xl sm:text-5xl font-black text-foreground mb-4">Politique de Confidentialité</h1>
+          <p className="text-sm text-muted-foreground">Dernière mise à jour : Janvier 2024</p>
         </div>
 
         <div className="rounded-2xl bg-card border border-border/50 p-6 sm:p-10 mb-8">
           <p className="text-muted-foreground leading-relaxed mb-6">
-            At LiveFoot, we take your privacy seriously. This Privacy Policy explains how we collect,
-            use, disclose, and safeguard your information when you visit our website and use our
-            services. Please read this policy carefully.
+            Chez LiveFoot, nous prenons votre vie privée au sérieux. Cette Politique de Confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos informations lorsque vous visitez notre site web et utilisez nos services. Veuillez lire attentivement cette politique.
           </p>
         </div>
 

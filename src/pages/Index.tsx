@@ -14,13 +14,14 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users } from "lucide-react";
-import livefootLogo from "@/assets/livefoot-logo.png";
+import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
+  const livefootLogo = useAppLogo();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -231,7 +232,7 @@ const Index = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
             <h2 className="text-base sm:text-lg font-bold text-foreground">
-              {activeFilter === "live" ? "Live Matches" : activeFilter === "tv" ? "Televised Matches" : "Today's Matches"}
+              {activeFilter === "live" ? "Matchs en Direct" : activeFilter === "tv" ? "Matchs Télévisés" : "Matchs du Jour"}
             </h2>
           </div>
           {isLoading && (
@@ -275,12 +276,12 @@ const Index = () => {
         {isError && !isLoading && (
           <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl bg-card border border-border/50">
             <WifiOff className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-muted-foreground text-sm mb-3">Unable to load matches. Please try again.</p>
+            <p className="text-muted-foreground text-sm mb-3">Impossible de charger les matchs. Veuillez réessayer.</p>
             <button
               onClick={() => refetch()}
               className="rounded-lg gradient-primary px-4 py-2 text-sm font-medium text-primary-foreground"
             >
-              Retry
+              Réessayer
             </button>
           </div>
         )}
@@ -295,7 +296,7 @@ const Index = () => {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <p className="text-muted-foreground text-sm">
-                  {matchCounts.all === 0 ? "No matches scheduled for this date." : "No matches found for this filter."}
+                  {matchCounts.all === 0 ? "Aucun match programmé pour cette date." : "Aucun match trouvé pour ce filtre."}
                 </p>
               </div>
             )}
@@ -318,13 +319,13 @@ const Index = () => {
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
                 <Flame className="h-5 w-5 text-destructive" />
-                <h2 className="text-base sm:text-lg font-bold text-foreground">Trending News</h2>
+                <h2 className="text-base sm:text-lg font-bold text-foreground">Actualités Tendances</h2>
               </div>
               <Link
                 to="/news"
                 className="flex items-center gap-1 text-xs sm:text-sm font-medium text-primary hover:underline"
               >
-                All News <ArrowRight className="h-3.5 w-3.5" />
+                Toutes les Infos <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -373,7 +374,7 @@ const Index = () => {
             <span className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
           </div>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Your ultimate destination for live scores, results, fixtures, tables, statistics and football news.
+            Votre destination ultime pour les scores en direct, résultats, calendriers, classements, statistiques et actualités football.
           </p>
           <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
             {footerLinks.map((link) => (
@@ -387,7 +388,7 @@ const Index = () => {
             ))}
           </div>
           <p className="mt-6 text-xs text-muted-foreground/60">
-            © {new Date().getFullYear()} LiveFoot. All rights reserved.
+            © {new Date().getFullYear()} LiveFoot. Tous droits réservés.
           </p>
         </div>
       </footer>

@@ -325,7 +325,7 @@ const Rankings = () => {
           </div>
         )}
 
-        {/* API Results (goals/assists) */}
+        {/* Classement (buts/passes) */}
         {!isLoading && activeTab !== "community" && (
           <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="bg-league-header px-4 py-3 border-b border-border flex items-center gap-2">

@@ -642,7 +642,7 @@ const Match = () => {
           <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-primary" />
-              <h3 className="font-bold text-sm text-foreground">Prédictions API</h3>
+              <h3 className="font-bold text-sm text-foreground">Prédictions</h3>
             </div>
             <div className="p-4 sm:p-6">
               {predictionsData ? (() => {

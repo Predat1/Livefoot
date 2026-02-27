@@ -32,7 +32,7 @@ const Layout = ({ children }: LayoutProps) => {
             <span className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
           </div>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Your ultimate destination for live scores, results, fixtures, tables, statistics and football news.
+            Votre destination ultime pour les scores en direct, résultats, calendriers, classements, statistiques et actualités football.
           </p>
           <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
             {footerLinks.map((link) => (
@@ -51,7 +51,7 @@ const Layout = ({ children }: LayoutProps) => {
             <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">YouTube</a>
           </div>
           <p className="mt-6 text-xs text-muted-foreground/60">
-            © 2024 LiveFoot. All rights reserved.
+            © {new Date().getFullYear()} LiveFoot. Tous droits réservés.
           </p>
         </div>
       </footer>
