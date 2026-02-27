@@ -92,6 +92,9 @@ export const getPlayers = (params: Record<string, string>) =>
 export const getPlayerById = (id: string, season: string) =>
   callApi("players", { id, season });
 
+export const searchPlayerByName = (name: string, season: string) =>
+  callApi("players", { search: name, season });
+
 export const getTopScorers = (league: string, season: string) =>
   callApi("players/topscorers", { league, season });
 
@@ -160,6 +163,7 @@ export default {
   getTeamSquad,
   getPlayers,
   getPlayerById,
+  searchPlayerByName,
   getTopScorers,
   getTopAssists,
   getTopYellowCards,
