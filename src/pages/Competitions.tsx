@@ -6,7 +6,7 @@ import {
   TIER1_IDS, TIER2_IDS, TRENDING_LEAGUE_SET,
   type StandingTeam, type AllLeagueItem,
 } from "@/hooks/useApiFootball";
-import { Trophy, ChevronRight, ChevronDown, Star, Search, Loader2 } from "lucide-react";
+import { Trophy, ChevronRight, ChevronDown, Star, Search, Loader2, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -14,10 +14,12 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Target } from "lucide-react";
+import { getContinent, type Continent, CONTINENTS } from "@/utils/continents";
 
 const Competitions = () => {
   const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [continent, setContinent] = useState<Continent>("all");
   const { isFavorite, toggleFavorite, favorites } = useFavorites();
 
   const { data: trendingLeagues, isLoading: loadingTrending } = useTrendingLeagues();
@@ -32,13 +34,19 @@ const Competitions = () => {
     const popularSet = new Set([...TIER1_IDS, ...TIER2_IDS]);
     
     return allLeagues
-      .filter(l => popularSet.has(l.id) || favSet.has(l.id))
+      .filter(l => {
+        if (!popularSet.has(l.id) && !favSet.has(l.id)) return false;
+        if (continent !== "all") {
+          const c = getContinent(l.country);
+          if (c !== "all" && c !== continent) return false;
+        }
+        return true;
+      })
       .sort((a, b) => {
-        // Tier1 first, then Tier2, then user favs
         const tier = (id: string) => TIER1_IDS.has(id) ? 3 : TIER2_IDS.has(id) ? 2 : 1;
         return tier(b.id) - tier(a.id);
       });
-  }, [allLeagues, favorites.competitions]);
+  }, [allLeagues, favorites.competitions, continent]);
 
   // All leagues grouped by country (excluding popular ones already shown)
   const leaguesByCountry = useMemo(() => {
@@ -46,6 +54,10 @@ const Competitions = () => {
     const popularIds = new Set(popularLeagues.map(l => l.id));
     const filtered = allLeagues.filter(l => {
       if (popularIds.has(l.id)) return false;
+      if (continent !== "all") {
+        const c = getContinent(l.country);
+        if (c !== "all" && c !== continent) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         return l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q);
@@ -59,13 +71,12 @@ const Competitions = () => {
       if (!grouped[country]) grouped[country] = [];
       grouped[country].push(l);
     }
-    // Sort countries alphabetically, sort leagues within each country
     const sorted: Record<string, AllLeagueItem[]> = {};
     for (const country of Object.keys(grouped).sort()) {
       sorted[country] = grouped[country].sort((a, b) => a.name.localeCompare(b.name));
     }
     return sorted;
-  }, [allLeagues, popularLeagues, search]);
+  }, [allLeagues, popularLeagues, search, continent]);
 
   const countries = Object.keys(leaguesByCountry);
 
@@ -100,6 +111,25 @@ const Competitions = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
+        </div>
+
+        {/* Continent Filter */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {CONTINENTS.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => { setContinent(c.value); setSelectedCompetition(null); }}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border",
+                continent === c.value
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <span className="text-base">{c.icon}</span>
+              {c.label}
+            </button>
+          ))}
         </div>
 
         {isLoading && (
