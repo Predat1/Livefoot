@@ -1,31 +1,101 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { useTrendingLeagues, useStandings, useTopScorers, type StandingTeam } from "@/hooks/useApiFootball";
-import { Trophy, Users, Target, ChevronRight, ChevronDown, Star, Loader2 } from "lucide-react";
+import {
+  useTrendingLeagues, useAllLeagues, useStandings, useTopScorers,
+  TIER1_IDS, TIER2_IDS, TRENDING_LEAGUE_SET,
+  type StandingTeam, type AllLeagueItem,
+} from "@/hooks/useApiFootball";
+import { Trophy, ChevronRight, ChevronDown, Star, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Target } from "lucide-react";
 
 const Competitions = () => {
   const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null);
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const [search, setSearch] = useState("");
+  const { isFavorite, toggleFavorite, favorites } = useFavorites();
 
-  const { data: leagues, isLoading } = useTrendingLeagues();
+  const { data: trendingLeagues, isLoading: loadingTrending } = useTrendingLeagues();
+  const { data: allLeagues, isLoading: loadingAll } = useAllLeagues();
 
-  const selectedLeague = leagues?.find((l) => l.id === selectedCompetition);
+  const isLoading = loadingTrending || loadingAll;
+
+  // Popular = Tier1 + Tier2 + user favorites
+  const popularLeagues = useMemo(() => {
+    if (!allLeagues) return [];
+    const favSet = new Set(favorites.competitions);
+    const popularSet = new Set([...TIER1_IDS, ...TIER2_IDS]);
+    
+    return allLeagues
+      .filter(l => popularSet.has(l.id) || favSet.has(l.id))
+      .sort((a, b) => {
+        // Tier1 first, then Tier2, then user favs
+        const tier = (id: string) => TIER1_IDS.has(id) ? 3 : TIER2_IDS.has(id) ? 2 : 1;
+        return tier(b.id) - tier(a.id);
+      });
+  }, [allLeagues, favorites.competitions]);
+
+  // All leagues grouped by country (excluding popular ones already shown)
+  const leaguesByCountry = useMemo(() => {
+    if (!allLeagues) return {};
+    const popularIds = new Set(popularLeagues.map(l => l.id));
+    const filtered = allLeagues.filter(l => {
+      if (popularIds.has(l.id)) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q);
+      }
+      return true;
+    });
+
+    const grouped: Record<string, AllLeagueItem[]> = {};
+    for (const l of filtered) {
+      const country = l.country || "International";
+      if (!grouped[country]) grouped[country] = [];
+      grouped[country].push(l);
+    }
+    // Sort countries alphabetically, sort leagues within each country
+    const sorted: Record<string, AllLeagueItem[]> = {};
+    for (const country of Object.keys(grouped).sort()) {
+      sorted[country] = grouped[country].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return sorted;
+  }, [allLeagues, popularLeagues, search]);
+
+  const countries = Object.keys(leaguesByCountry);
+
+  // Find selected league info from trending (has season info)
+  const selectedTrending = trendingLeagues?.find((l) => l.id === selectedCompetition);
+  const selectedAll = allLeagues?.find((l) => l.id === selectedCompetition);
+  const selectedLeague = selectedTrending || selectedAll;
 
   return (
     <Layout>
       <SEOHead title="Football Competitions" description="Explore leagues, cups and tournaments from around the world." />
       <div className="container py-4 sm:py-8">
+        {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
             <h1 className="text-xl sm:text-3xl font-black text-foreground">Competitions</h1>
           </div>
-          <p className="text-xs sm:text-base text-muted-foreground ml-3 sm:ml-4">Trending leagues and tournaments from around the world</p>
+          <p className="text-xs sm:text-base text-muted-foreground ml-3 sm:ml-4">All leagues and tournaments from around the world</p>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search leagues or countries..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         {isLoading && (
@@ -36,56 +106,149 @@ const Competitions = () => {
           </div>
         )}
 
-        {!isLoading && leagues && (
-          <div className="space-y-3 sm:space-y-4">
-            {leagues.map((competition, index) => (
-              <div key={competition.id} className="animate-fade-in" style={{ animationDelay: `${index * 30}ms` }}>
-                <div
-                  onClick={() => setSelectedCompetition(selectedCompetition === competition.id ? null : competition.id)}
-                  className={cn(
-                    "group cursor-pointer rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 transition-all duration-300 hover-lift",
-                    selectedCompetition === competition.id && "ring-2 ring-primary"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      {competition.logo ? (
-                        <img src={competition.logo} alt={competition.name} className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
-                      ) : (
-                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-muted flex items-center justify-center">
-                          <Trophy className="h-5 w-5 text-primary" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">{competition.name}</h3>
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                          {competition.countryFlag && <img src={competition.countryFlag} alt="" className="h-3 w-4 object-cover rounded-sm" />}
-                          <span>{competition.country}</span>
-                          <span>•</span>
-                          <span>{competition.season}/{parseInt(competition.season) + 1}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={(e) => { e.stopPropagation(); toggleFavorite("competitions", competition.id, competition.name); }} className="p-1">
-                        <Star className={cn("h-4 w-4", isFavorite("competitions", competition.id) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40 hover:text-primary")} />
-                      </button>
-                      {selectedCompetition === competition.id ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
-                    </div>
-                  </div>
+        {!isLoading && (
+          <div className="space-y-8">
+            {/* Popular Section */}
+            {!search && popularLeagues.length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                  <h2 className="text-lg font-bold text-foreground">Populaires</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                  {popularLeagues.map((comp) => (
+                    <LeagueRow
+                      key={comp.id}
+                      league={comp}
+                      isSelected={selectedCompetition === comp.id}
+                      isFav={isFavorite("competitions", comp.id)}
+                      onSelect={() => setSelectedCompetition(selectedCompetition === comp.id ? null : comp.id)}
+                      onToggleFav={() => toggleFavorite("competitions", comp.id, comp.name)}
+                    />
+                  ))}
                 </div>
 
-                {selectedCompetition === competition.id && selectedLeague && (
+                {selectedCompetition && selectedLeague && popularLeagues.some(l => l.id === selectedCompetition) && (
                   <CompetitionDetail leagueId={selectedLeague.id} season={selectedLeague.season} />
                 )}
+              </section>
+            )}
+
+            {/* All Leagues by Country */}
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-bold text-foreground">
+                  {search ? `Results for "${search}"` : "All Competitions"}
+                </h2>
+                <span className="text-sm text-muted-foreground">({countries.length} countries)</span>
               </div>
-            ))}
+
+              {countries.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground text-sm">No competitions found.</div>
+              ) : (
+                <Accordion type="multiple" className="space-y-1">
+                  {countries.map((country) => (
+                    <AccordionItem key={country} value={country} className="border rounded-xl bg-card overflow-hidden">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          {leaguesByCountry[country][0]?.countryFlag && (
+                            <img src={leaguesByCountry[country][0].countryFlag} alt="" className="h-4 w-6 object-cover rounded-sm" />
+                          )}
+                          <span className="font-semibold text-sm text-foreground">{country}</span>
+                          <span className="text-xs text-muted-foreground">({leaguesByCountry[country].length})</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-2 pb-2">
+                        <div className="space-y-1">
+                          {leaguesByCountry[country].map((comp) => (
+                            <LeagueRow
+                              key={comp.id}
+                              league={comp}
+                              isSelected={selectedCompetition === comp.id}
+                              isFav={isFavorite("competitions", comp.id)}
+                              onSelect={() => setSelectedCompetition(selectedCompetition === comp.id ? null : comp.id)}
+                              onToggleFav={() => toggleFavorite("competitions", comp.id, comp.name)}
+                              compact
+                            />
+                          ))}
+                        </div>
+
+                        {selectedCompetition && selectedLeague && leaguesByCountry[country].some(l => l.id === selectedCompetition) && (
+                          <CompetitionDetail leagueId={selectedLeague.id} season={selectedLeague.season} />
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </section>
           </div>
         )}
       </div>
     </Layout>
   );
 };
+
+// League row component
+function LeagueRow({
+  league,
+  isSelected,
+  isFav,
+  onSelect,
+  onToggleFav,
+  compact = false,
+}: {
+  league: AllLeagueItem;
+  isSelected: boolean;
+  isFav: boolean;
+  onSelect: () => void;
+  onToggleFav: () => void;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      onClick={onSelect}
+      className={cn(
+        "group cursor-pointer rounded-xl bg-card border border-border/50 transition-all duration-200 hover:bg-muted/30",
+        compact ? "p-2.5" : "p-3 sm:p-4",
+        isSelected && "ring-2 ring-primary"
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          {league.logo ? (
+            <img src={league.logo} alt={league.name} className={cn("object-contain", compact ? "h-7 w-7" : "h-9 w-9 sm:h-10 sm:w-10")} />
+          ) : (
+            <div className={cn("rounded-lg bg-muted flex items-center justify-center", compact ? "h-7 w-7" : "h-9 w-9")}>
+              <Trophy className="h-4 w-4 text-primary" />
+            </div>
+          )}
+          <div>
+            <h3 className={cn("font-bold text-foreground group-hover:text-primary transition-colors", compact ? "text-sm" : "text-sm sm:text-base")}>
+              {league.name}
+            </h3>
+            {!compact && league.country && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {league.countryFlag && <img src={league.countryFlag} alt="" className="h-3 w-4 object-cover rounded-sm" />}
+                <span>{league.country}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleFav(); }}
+            className="p-1"
+          >
+            <Star className={cn("h-4 w-4", isFav ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40 hover:text-primary")} />
+          </button>
+          {isSelected ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Sub-component for competition details (standings + top scorers)
 function CompetitionDetail({ leagueId, season }: { leagueId: string; season: string }) {

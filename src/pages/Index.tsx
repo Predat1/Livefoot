@@ -9,7 +9,7 @@ import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { useFixturesByDate, TRENDING_LEAGUE_SET } from "@/hooks/useApiFootball";
+import { useFixturesByDate, TIER1_IDS, TIER2_IDS, TIER3_IDS } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff } from "lucide-react";
 import livefootLogo from "@/assets/livefoot-logo.png";
@@ -25,7 +25,7 @@ const Index = () => {
 
   const favoriteCompIds = useMemo(() => new Set(favorites.competitions), [favorites.competitions]);
 
-  // Smart sort: Live > User favorites > Big 5 > rest
+  // Smart sort: Live > User favorites > Tier1 > Tier2 > Tier3 > rest
   const leagues = useMemo(() => {
     const raw = apiLeagues || [];
     return [...raw].sort((a, b) => {
@@ -33,7 +33,9 @@ const Index = () => {
         let s = 0;
         if (league.matches.some((m) => m.status === "live")) s += 1000;
         if (favoriteCompIds.has(league.id)) s += 500;
-        if (TRENDING_LEAGUE_SET.has(league.id)) s += 100;
+        if (TIER1_IDS.has(league.id)) s += 200;
+        else if (TIER2_IDS.has(league.id)) s += 150;
+        else if (TIER3_IDS.has(league.id)) s += 100;
         s += league.matches.length * 0.1;
         return s;
       };
