@@ -156,7 +156,7 @@ const Index = () => {
         matchCounts={matchCounts}
       />
 
-      <main className="container py-4 sm:py-8">
+      <main className="px-2 sm:container py-4 sm:py-8">
         {/* Stats bar */}
         <div className="mb-6 sm:mb-8 grid grid-cols-3 gap-2 sm:gap-4">
           {stats.map((stat, index) => (
