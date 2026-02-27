@@ -6,13 +6,15 @@ import CountryFlag from "@/components/CountryFlag";
 import { Trophy, Users, Star, Search, Globe, ChevronRight, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useTrendingLeagues, useTeamsByLeague, useTopScorers, TRENDING_LEAGUE_IDS } from "@/hooks/useApiFootball";
+import { useQuery } from "@tanstack/react-query";
+import { useTrendingLeagues, TRENDING_LEAGUE_IDS } from "@/hooks/useApiFootball";
+import { getTeams, getTopScorers } from "@/services/apiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
 
 type Tab = "all" | "competitions" | "teams" | "players";
 
-// Map of league IDs to fetch teams/players for (top 5 leagues)
-const TOP_LEAGUE_IDS = TRENDING_LEAGUE_IDS.slice(0, 10);
+// Only fetch top 5 leagues for teams/players to reduce costs
+const TOP_LEAGUE_IDS = TRENDING_LEAGUE_IDS.slice(0, 5);
 
 const Explorer = () => {
   const [activeTab, setActiveTab] = useState<Tab>("all");
@@ -27,82 +29,90 @@ const Explorer = () => {
     { key: "players", label: "Joueurs", icon: <Star className="h-4 w-4" /> },
   ];
 
-  // Fetch leagues
   const { data: leagues = [], isLoading: leaguesLoading } = useTrendingLeagues();
 
-  // Fetch teams for top 5 leagues
-  const teamsQueries = TOP_LEAGUE_IDS.map((id) => {
-    const league = leagues.find((l) => l.id === id);
-    return useTeamsByLeague(id, league?.season || "2024");
+  // Single query for all teams across top leagues — only when teams tab is active
+  const shouldFetchTeams = activeTab === "all" || activeTab === "teams";
+  const { data: allTeams = [], isLoading: teamsLoading } = useQuery({
+    queryKey: ["explorer-teams", TOP_LEAGUE_IDS.join(",")],
+    queryFn: async () => {
+      const results: { id: string; name: string; logo: string; country: string; league: string; venue: string | null }[] = [];
+      for (const leagueId of TOP_LEAGUE_IDS) {
+        const league = leagues.find((l) => l.id === leagueId);
+        const season = league?.season || "2024";
+        try {
+          const res = await getTeams({ league: leagueId, season });
+          const leagueName = league?.name || "";
+          for (const item of (res.response || []) as any[]) {
+            results.push({
+              id: String(item.team.id),
+              name: item.team.name,
+              logo: item.team.logo,
+              country: item.team.country || league?.country || "",
+              league: leagueName,
+              venue: item.venue?.name || null,
+            });
+          }
+        } catch { /* skip failed league */ }
+      }
+      return results;
+    },
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    enabled: shouldFetchTeams && leagues.length > 0,
   });
 
-  // Fetch top scorers for top 5 leagues
-  const scorersQueries = TOP_LEAGUE_IDS.map((id) => {
-    const league = leagues.find((l) => l.id === id);
-    return useTopScorers(id, league?.season || "2024");
+  // Single query for all scorers — only when players tab is active
+  const shouldFetchPlayers = activeTab === "all" || activeTab === "players";
+  const { data: allPlayers = [], isLoading: playersLoading } = useQuery({
+    queryKey: ["explorer-scorers", TOP_LEAGUE_IDS.join(",")],
+    queryFn: async () => {
+      const players: { id: string; name: string; team: string; teamLogo: string; country: string; position: string; goals: number; assists: number; rating: number; jersey: number; photoUrl: string }[] = [];
+      const seen = new Set<string>();
+      for (const leagueId of TOP_LEAGUE_IDS) {
+        const league = leagues.find((l) => l.id === leagueId);
+        const season = league?.season || "2024";
+        try {
+          const res = await getTopScorers(leagueId, season);
+          for (const item of (res.response || []) as any[]) {
+            const p = item.player;
+            const s = item.statistics[0];
+            const id = String(p.id);
+            if (seen.has(id)) continue;
+            seen.add(id);
+            players.push({
+              id,
+              name: p.name,
+              team: s.team.name,
+              teamLogo: s.team.logo || "",
+              country: p.nationality || "",
+              position: s.games.position || "Forward",
+              goals: s.goals.total || 0,
+              assists: s.goals.assists || 0,
+              rating: parseFloat(s.games.rating) || 0,
+              jersey: s.games.number || 0,
+              photoUrl: p.photo || "",
+            });
+          }
+        } catch { /* skip */ }
+      }
+      return players;
+    },
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    enabled: shouldFetchPlayers && leagues.length > 0,
   });
 
   const isLoading = leaguesLoading;
 
-  // Transform leagues into explorer format
   const competitions = useMemo(() => {
     return leagues.map((l) => ({
-      id: l.id,
-      name: l.name,
-      logo: l.logo,
-      country: l.country,
-      countryFlag: l.countryFlag,
-      season: l.season,
-      type: l.type,
+      id: l.id, name: l.name, logo: l.logo, country: l.country,
+      countryFlag: l.countryFlag, season: l.season, type: l.type,
     }));
   }, [leagues]);
 
-  // Flatten all teams
-  const allTeams = useMemo(() => {
-    const teams: { id: string; name: string; logo: string; country: string; league: string; venue: string | null }[] = [];
-    teamsQueries.forEach((q, i) => {
-      const leagueInfo = leagues.find((l) => l.id === TOP_LEAGUE_IDS[i]);
-      (q.data || []).forEach((t) => {
-        teams.push({
-          id: t.id,
-          name: t.name,
-          logo: t.logo,
-          country: t.country || leagueInfo?.country || "",
-          league: leagueInfo?.name || "",
-          venue: t.venue?.name || null,
-        });
-      });
-    });
-    return teams;
-  }, [teamsQueries.map((q) => q.data), leagues]);
-
-  // Flatten all players (top scorers)
-  const allPlayers = useMemo(() => {
-    const players: { id: string; name: string; team: string; teamLogo: string; country: string; position: string; goals: number; assists: number; rating: number; jersey: number; photoUrl: string }[] = [];
-    scorersQueries.forEach((q) => {
-      (q.data || []).forEach((p) => {
-        // Avoid duplicates
-        if (!players.find((x) => x.id === p.id)) {
-          players.push({
-            id: p.id,
-            name: p.name,
-            team: p.team,
-            teamLogo: p.teamLogo || "",
-            country: p.country || p.nationality,
-            position: p.position,
-            goals: p.goals,
-            assists: p.assists,
-            rating: p.rating,
-            jersey: p.jersey,
-            photoUrl: p.photoUrl,
-          });
-        }
-      });
-    });
-    return players;
-  }, [scorersQueries.map((q) => q.data)]);
-
-  // Filter
+  // Filters
   const filteredCompetitions = useMemo(() => {
     return competitions.filter((c) => {
       const matchCountry = !selectedCountry || c.country === selectedCountry;
@@ -127,7 +137,6 @@ const Explorer = () => {
     });
   }, [allPlayers, selectedCountry, searchQuery]);
 
-  // Derive available countries from data
   const availableCountries = useMemo(() => {
     const set = new Set<string>();
     competitions.forEach((c) => set.add(c.country));
@@ -135,11 +144,10 @@ const Explorer = () => {
     return Array.from(set).filter(Boolean).sort();
   }, [competitions, allTeams]);
 
-  // Group by country
   const groupByCountry = <T extends { country: string }>(items: T[]) => {
     const grouped: Record<string, T[]> = {};
     items.forEach((item) => {
-      const key = item.country || "Other";
+      const key = item.country || "Autre";
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(item);
     });
@@ -153,15 +161,10 @@ const Explorer = () => {
   const hasResults = filteredCompetitions.length > 0 || filteredTeams.length > 0 || filteredPlayers.length > 0;
 
   const renderSection = (
-    title: string,
-    icon: React.ReactNode,
-    groupedData: Record<string, any[]>,
-    renderItem: (item: any) => React.ReactNode,
-    type: string,
-    sectionLoading: boolean
+    title: string, icon: React.ReactNode, groupedData: Record<string, any[]>,
+    renderItem: (item: any) => React.ReactNode, type: string, sectionLoading: boolean
   ) => {
     const entries = Object.entries(groupedData).sort(([a], [b]) => a.localeCompare(b));
-
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -185,9 +188,7 @@ const Explorer = () => {
                 <span className="text-sm font-bold text-foreground">{country}</span>
                 <span className="text-xs text-muted-foreground ml-auto">{items.length}</span>
               </div>
-              <div className="divide-y divide-border">
-                {items.map(renderItem)}
-              </div>
+              <div className="divide-y divide-border">{items.map(renderItem)}</div>
             </div>
           ))
         )}
@@ -219,11 +220,7 @@ const Explorer = () => {
   );
 
   const renderTeam = (team: any) => (
-    <Link
-      key={team.id}
-      to={`/teams/${team.id}`}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
-    >
+    <Link key={team.id} to={`/teams/${team.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
       {team.logo ? (
         <img src={team.logo} alt={team.name} className="h-7 w-7 object-contain" />
       ) : (
@@ -238,11 +235,7 @@ const Explorer = () => {
   );
 
   const renderPlayer = (player: any) => (
-    <Link
-      key={player.id}
-      to={`/players/${player.id}`}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
-    >
+    <Link key={player.id} to={`/players/${player.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
       {player.photoUrl ? (
         <img src={player.photoUrl} alt={player.name} className="h-9 w-9 rounded-full object-cover bg-muted" />
       ) : (
@@ -261,16 +254,9 @@ const Explorer = () => {
     </Link>
   );
 
-  const teamsLoading = teamsQueries.some((q) => q.isLoading);
-  const playersLoading = scorersQueries.some((q) => q.isLoading);
-
   return (
     <Layout>
-      <SEOHead
-        title="Explorer | LiveFoot"
-        description="Explorez les compétitions, équipes et joueurs de football par pays."
-      />
-
+      <SEOHead title="Explorer | LiveFoot" description="Explorez les compétitions, équipes et joueurs de football par pays." />
       <div className="container py-4 space-y-4">
         <div>
           <h1 className="text-2xl font-black text-foreground">Explorer</h1>
@@ -279,58 +265,33 @@ const Explorer = () => {
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10 rounded-xl bg-card border-border"
-          />
+          <Input placeholder="Rechercher..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 h-10 rounded-xl bg-card border-border" />
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
           {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all",
-                activeTab === tab.key
-                  ? "gradient-primary text-primary-foreground shadow-md"
-                  : "bg-card text-muted-foreground hover:text-foreground border border-border"
-              )}
-            >
-              {tab.icon}
-              {tab.label}
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all",
+              activeTab === tab.key ? "gradient-primary text-primary-foreground shadow-md" : "bg-card text-muted-foreground hover:text-foreground border border-border"
+            )}>
+              {tab.icon}{tab.label}
             </button>
           ))}
         </div>
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          <button
-            onClick={() => setSelectedCountry(null)}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
-              !selectedCountry
-                ? "bg-primary/15 text-primary border-primary/30"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            )}
-          >
-            <Globe className="h-3 w-3" />
-            Tous
+          <button onClick={() => setSelectedCountry(null)} className={cn(
+            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
+            !selectedCountry ? "bg-primary/15 text-primary border-primary/30" : "bg-card text-muted-foreground border-border hover:text-foreground"
+          )}>
+            <Globe className="h-3 w-3" />Tous
           </button>
           {availableCountries.slice(0, 15).map((country) => (
-            <button
-              key={country}
-              onClick={() => setSelectedCountry(selectedCountry === country ? null : country)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
-                selectedCountry === country
-                  ? "bg-primary/15 text-primary border-primary/30"
-                  : "bg-card text-muted-foreground border-border hover:text-foreground"
-              )}
-            >
-              <CountryFlag country={country} size="sm" />
-              {country}
+            <button key={country} onClick={() => setSelectedCountry(selectedCountry === country ? null : country)} className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
+              selectedCountry === country ? "bg-primary/15 text-primary border-primary/30" : "bg-card text-muted-foreground border-border hover:text-foreground"
+            )}>
+              <CountryFlag country={country} size="sm" />{country}
             </button>
           ))}
         </div>
@@ -343,13 +304,10 @@ const Explorer = () => {
           <div className="space-y-6 pb-20">
             {(activeTab === "all" || activeTab === "competitions") &&
               renderSection("Compétitions", <Trophy className="h-5 w-5 text-primary" />, competitionsByCountry, renderCompetition, "comp", false)}
-
             {(activeTab === "all" || activeTab === "teams") &&
               renderSection("Équipes", <Users className="h-5 w-5 text-primary" />, teamsByCountry, renderTeam, "team", teamsLoading)}
-
             {(activeTab === "all" || activeTab === "players") &&
               renderSection("Joueurs", <Star className="h-5 w-5 text-primary" />, playersByCountry, renderPlayer, "player", playersLoading)}
-
             {!hasResults && !teamsLoading && !playersLoading && (
               <div className="text-center py-16">
                 <Globe className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />

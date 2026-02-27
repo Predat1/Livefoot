@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Download, Check, Smartphone, Share, Plus, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
-import livefootLogo from "@/assets/livefoot-logo.png";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -10,6 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const Install = () => {
+  const livefootLogo = useAppLogo();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);

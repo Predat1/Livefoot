@@ -12,19 +12,18 @@ const NotFound = () => {
   }, [location.pathname]);
 
   const quickLinks = [
-    { icon: Home, label: "Home", href: "/", description: "Back to live scores" },
-    { icon: Trophy, label: "Competitions", href: "/competitions", description: "Leagues & tables" },
-    { icon: Users, label: "Teams", href: "/teams", description: "Explore clubs" },
-    { icon: Newspaper, label: "News", href: "/news", description: "Latest articles" },
-    { icon: Search, label: "Search", href: "/search", description: "Find anything" },
+    { icon: Home, label: "Accueil", href: "/", description: "Retour aux scores en direct" },
+    { icon: Trophy, label: "Compétitions", href: "/competitions", description: "Ligues & classements" },
+    { icon: Users, label: "Équipes", href: "/teams", description: "Explorer les clubs" },
+    { icon: Newspaper, label: "Infos", href: "/news", description: "Derniers articles" },
+    { icon: Search, label: "Recherche", href: "/search", description: "Trouver n'importe quoi" },
   ];
 
   return (
     <Layout>
-      <SEOHead title="Page Not Found" description="The page you're looking for doesn't exist." />
+      <SEOHead title="Page Non Trouvée" description="La page que vous recherchez n'existe pas." />
       <div className="container py-16 sm:py-24 text-center">
         <div className="max-w-lg mx-auto">
-          {/* 404 Number */}
           <div className="relative mb-6">
             <span className="text-[120px] sm:text-[180px] font-black text-primary/10 leading-none select-none">
               404
@@ -32,13 +31,12 @@ const NotFound = () => {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-3">
-            Page Not Found
+            Page Non Trouvée
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mb-8">
-            Looks like this page got a red card! The page you're looking for doesn't exist or has been moved.
+            On dirait que cette page a reçu un carton rouge ! La page que vous cherchez n'existe pas ou a été déplacée.
           </p>
 
-          {/* Quick Links */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
             {quickLinks.map((link) => (
               <Link
@@ -60,7 +58,7 @@ const NotFound = () => {
             className="inline-flex items-center gap-2 rounded-xl gradient-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-xl transition-all"
           >
             <Home className="h-4 w-4" />
-            Return to Home
+            Retour à l'Accueil
           </Link>
         </div>
       </div>

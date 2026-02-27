@@ -4,44 +4,44 @@ import { FileText } from "lucide-react";
 
 const sections = [
   {
-    title: "1. Acceptance of Terms",
+    title: "1. Acceptation des Conditions",
     content:
-      "By accessing or using LiveFoot's website and services, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use our services. We reserve the right to modify these terms at any time.",
+      "En accédant ou en utilisant le site web et les services de LiveFoot, vous acceptez d'être lié par ces Conditions d'Utilisation. Si vous n'acceptez pas une partie de ces conditions, vous ne pouvez pas utiliser nos services. Nous nous réservons le droit de modifier ces conditions à tout moment.",
   },
   {
-    title: "2. Use of Services",
+    title: "2. Utilisation des Services",
     content:
-      "LiveFoot provides live football scores, statistics, news, and related content. You agree to use our services only for lawful purposes and in accordance with these Terms. You must not use our services in any way that could damage, disable, or impair our servers or networks.",
+      "LiveFoot fournit des scores de football en direct, des statistiques, des actualités et du contenu associé. Vous acceptez d'utiliser nos services uniquement à des fins légales et conformément à ces Conditions. Vous ne devez pas utiliser nos services d'une manière qui pourrait endommager, désactiver ou altérer nos serveurs ou réseaux.",
   },
   {
-    title: "3. Account Responsibilities",
+    title: "3. Responsabilités du Compte",
     content:
-      "If you create an account, you are responsible for maintaining the confidentiality of your login credentials and for all activities under your account. You must notify us immediately of any unauthorized use. We reserve the right to suspend or terminate accounts that violate these terms.",
+      "Si vous créez un compte, vous êtes responsable de la confidentialité de vos identifiants de connexion et de toutes les activités sous votre compte. Vous devez nous notifier immédiatement de toute utilisation non autorisée. Nous nous réservons le droit de suspendre ou de résilier les comptes qui violent ces conditions.",
   },
   {
-    title: "4. Intellectual Property",
+    title: "4. Propriété Intellectuelle",
     content:
-      "All content on LiveFoot, including text, graphics, logos, images, and software, is the property of LiveFoot or its licensors and is protected by intellectual property laws. You may not reproduce, distribute, or create derivative works without our express written permission.",
+      "Tout le contenu sur LiveFoot, y compris les textes, graphiques, logos, images et logiciels, est la propriété de LiveFoot ou de ses concédants et est protégé par les lois sur la propriété intellectuelle. Vous ne pouvez pas reproduire, distribuer ou créer des œuvres dérivées sans notre permission écrite expresse.",
   },
   {
-    title: "5. Content Accuracy",
+    title: "5. Exactitude du Contenu",
     content:
-      "While we strive to provide accurate and up-to-date information, LiveFoot does not guarantee the accuracy, completeness, or reliability of any content. Match scores, statistics, and news are provided for informational purposes only and should not be relied upon for gambling or financial decisions.",
+      "Bien que nous nous efforcions de fournir des informations précises et à jour, LiveFoot ne garantit pas l'exactitude, l'exhaustivité ou la fiabilité de tout contenu. Les scores de matchs, statistiques et actualités sont fournis à titre informatif uniquement et ne doivent pas être utilisés pour des décisions financières ou de paris.",
   },
   {
-    title: "6. Third-Party Links",
+    title: "6. Liens Vers des Tiers",
     content:
-      "Our services may contain links to third-party websites. We are not responsible for the content, privacy policies, or practices of any third-party sites. Accessing such links is at your own risk.",
+      "Nos services peuvent contenir des liens vers des sites web tiers. Nous ne sommes pas responsables du contenu, des politiques de confidentialité ou des pratiques de ces sites tiers. L'accès à ces liens se fait à vos propres risques.",
   },
   {
-    title: "7. Limitation of Liability",
+    title: "7. Limitation de Responsabilité",
     content:
-      "To the fullest extent permitted by law, LiveFoot shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our services. Our total liability shall not exceed the amount you have paid us in the preceding twelve months.",
+      "Dans toute la mesure permise par la loi, LiveFoot ne sera pas responsable des dommages indirects, accessoires, spéciaux, consécutifs ou punitifs résultant de votre utilisation de nos services. Notre responsabilité totale ne dépassera pas le montant que vous nous avez payé au cours des douze mois précédents.",
   },
   {
-    title: "8. Governing Law",
+    title: "8. Droit Applicable",
     content:
-      "These Terms shall be governed by and construed in accordance with the laws of the United Kingdom. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts of England and Wales.",
+      "Ces Conditions sont régies et interprétées conformément au droit français. Tout litige découlant de ces conditions sera soumis à la compétence exclusive des tribunaux français.",
   },
 ];
 
@@ -49,8 +49,8 @@ const Terms = () => {
   return (
     <Layout>
       <SEOHead
-        title="Terms of Service"
-        description="LiveFoot Terms of Service - Read the terms and conditions governing your use of LiveFoot."
+        title="Conditions d'Utilisation - LiveFoot"
+        description="Conditions d'Utilisation de LiveFoot - Lisez les termes et conditions régissant votre utilisation de LiveFoot."
       />
       <div className="container py-8 sm:py-16 max-w-4xl">
         <div className="text-center mb-10">
@@ -59,15 +59,13 @@ const Terms = () => {
               <FileText className="h-7 w-7 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-foreground mb-4">Terms of Service</h1>
-          <p className="text-sm text-muted-foreground">Last updated: January 2024</p>
+          <h1 className="text-3xl sm:text-5xl font-black text-foreground mb-4">Conditions d'Utilisation</h1>
+          <p className="text-sm text-muted-foreground">Dernière mise à jour : Janvier 2024</p>
         </div>
 
         <div className="rounded-2xl bg-card border border-border/50 p-6 sm:p-10 mb-8">
           <p className="text-muted-foreground leading-relaxed">
-            Welcome to LiveFoot. These Terms of Service govern your access to and use of our website,
-            applications, and services. By using LiveFoot, you agree to comply with and be bound by
-            these terms.
+            Bienvenue sur LiveFoot. Ces Conditions d'Utilisation régissent votre accès et votre utilisation de notre site web, applications et services. En utilisant LiveFoot, vous acceptez de respecter et d'être lié par ces conditions.
           </p>
         </div>
 
