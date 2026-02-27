@@ -18,7 +18,7 @@ const footerLinks = [
 const Layout = ({ children }: LayoutProps) => {
   const logoUrl = useAppLogo();
   return (
-    <div className="min-h-screen bg-background pb-16 lg:pb-0">
+    <div className="min-h-screen bg-background pb-safe lg:pb-0">
       <Header />
       {children}
       

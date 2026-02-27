@@ -134,6 +134,15 @@
 }
 
 @layer utilities {
+  /* Safe area for notched devices */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .live-pulse {
     animation: pulse-live 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }

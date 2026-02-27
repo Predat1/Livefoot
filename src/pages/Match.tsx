@@ -238,10 +238,10 @@ const Match = () => {
 
     return (
       <Tabs defaultValue={isLive ? "live" : hasStats ? "events" : "predictions"} className="w-full">
-        <div className="overflow-x-auto -mx-4 px-4 mb-4">
+        <div className="overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4 mb-4 scrollbar-hide">
           <TabsList className="inline-flex w-auto min-w-full bg-card border border-border/50 rounded-xl p-1">
             {tabItems.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="rounded-lg text-[10px] sm:text-xs whitespace-nowrap px-2 sm:px-3">
+              <TabsTrigger key={tab.value} value={tab.value} className="rounded-lg text-[9px] sm:text-xs whitespace-nowrap px-1.5 sm:px-3 py-1 sm:py-1.5">
                 {tab.label}
               </TabsTrigger>
             ))}
@@ -903,31 +903,31 @@ const Match = () => {
             {isFinished && <span className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase">Full Time</span>}
           </div>
 
-          <div className="p-4 sm:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <Link to={`/teams/${fix.teams.home.id}`} className="flex-1 text-center hover:opacity-80 transition-opacity">
-                {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="h-16 w-16 sm:h-20 sm:w-20 object-contain mx-auto mb-2" />}
-                <h2 className="text-sm sm:text-xl font-bold text-foreground">{homeTeam.name}</h2>
+          <div className="p-3 sm:p-8">
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
+              <Link to={`/teams/${fix.teams.home.id}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
+                {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain mx-auto mb-1 sm:mb-2" />}
+                <h2 className="text-xs sm:text-xl font-bold text-foreground truncate">{homeTeam.name}</h2>
               </Link>
 
               <div className="text-center flex-shrink-0">
                 {hasStats ? (
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <span className={cn("text-3xl sm:text-5xl font-black", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
-                    <span className="text-xl sm:text-3xl text-muted-foreground">-</span>
-                    <span className={cn("text-3xl sm:text-5xl font-black", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
+                  <div className="flex items-center gap-1.5 sm:gap-4">
+                    <span className={cn("text-2xl sm:text-5xl font-black", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
+                    <span className="text-lg sm:text-3xl text-muted-foreground">-</span>
+                    <span className={cn("text-2xl sm:text-5xl font-black", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
                   </div>
                 ) : (
-                  <div className="rounded-xl sm:rounded-2xl bg-primary/10 px-4 sm:px-6 py-3 sm:py-4">
-                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-primary mx-auto mb-1 sm:mb-2" />
-                    <span className="text-xl sm:text-3xl font-black text-primary">{time}</span>
+                  <div className="rounded-xl sm:rounded-2xl bg-primary/10 px-3 sm:px-6 py-2 sm:py-4">
+                    <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-primary mx-auto mb-0.5 sm:mb-2" />
+                    <span className="text-lg sm:text-3xl font-black text-primary">{time}</span>
                   </div>
                 )}
               </div>
 
-              <Link to={`/teams/${fix.teams.away.id}`} className="flex-1 text-center hover:opacity-80 transition-opacity">
-                {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="h-16 w-16 sm:h-20 sm:w-20 object-contain mx-auto mb-2" />}
-                <h2 className="text-sm sm:text-xl font-bold text-foreground">{awayTeam.name}</h2>
+              <Link to={`/teams/${fix.teams.away.id}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
+                {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain mx-auto mb-1 sm:mb-2" />}
+                <h2 className="text-xs sm:text-xl font-bold text-foreground truncate">{awayTeam.name}</h2>
               </Link>
             </div>
 
@@ -939,7 +939,7 @@ const Match = () => {
               </div>
             )}
 
-            <div className="mt-4 sm:mt-6 flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-muted-foreground flex-wrap">
+            <div className="mt-3 sm:mt-6 flex items-center justify-center gap-3 sm:gap-8 text-[10px] sm:text-sm text-muted-foreground flex-wrap">
               {venue?.name && <div className="flex items-center gap-1"><MapPin className="h-3 w-3" /><span>{venue.name}</span></div>}
               {referee && <div className="flex items-center gap-1"><User className="h-3 w-3" /><span>{referee}</span></div>}
             </div>
