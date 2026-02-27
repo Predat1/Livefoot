@@ -11,6 +11,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useFixturesByDate, TIER1_IDS, TIER2_IDS, TIER3_IDS } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff } from "lucide-react";
 import livefootLogo from "@/assets/livefoot-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,10 +23,12 @@ const Index = () => {
 
   const { data: apiLeagues, isLoading, isError, refetch } = useFixturesByDate(selectedDate);
   const { favorites } = useFavorites();
+  const { data: userCountry } = useUserCountry();
 
   const favoriteCompIds = useMemo(() => new Set(favorites.competitions), [favorites.competitions]);
+  const localLeagueIds = useMemo(() => getLeagueIdsForCountry(userCountry), [userCountry]);
 
-  // Smart sort: Live > User favorites > Tier1 > Tier2 > Tier3 > rest
+  // Smart sort: Live > User favorites > Local league > Tier1 > Tier2 > Tier3 > rest
   const leagues = useMemo(() => {
     const raw = apiLeagues || [];
     return [...raw].sort((a, b) => {
@@ -33,6 +36,7 @@ const Index = () => {
         let s = 0;
         if (league.matches.some((m) => m.status === "live")) s += 1000;
         if (favoriteCompIds.has(league.id)) s += 500;
+        if (localLeagueIds.has(league.id)) s += 300;
         if (TIER1_IDS.has(league.id)) s += 200;
         else if (TIER2_IDS.has(league.id)) s += 150;
         else if (TIER3_IDS.has(league.id)) s += 100;
@@ -41,7 +45,7 @@ const Index = () => {
       };
       return score(b) - score(a);
     });
-  }, [apiLeagues, favoriteCompIds]);
+  }, [apiLeagues, favoriteCompIds, localLeagueIds]);
 
   const matchCounts = useMemo(() => {
     let all = 0;
