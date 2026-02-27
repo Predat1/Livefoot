@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareButton from "@/components/ShareButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MatchDetailSkeleton } from "@/components/BrandedLoader";
 import TacticalPitch from "@/components/TacticalPitch";
 import CommunityPredictions from "@/components/CommunityPredictions";
 import ShotMap from "@/components/ShotMap";
@@ -93,11 +94,7 @@ const Match = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="container py-8">
-          <Skeleton className="h-8 w-32 mb-6" />
-          <Skeleton className="h-48 rounded-2xl mb-6" />
-          <Skeleton className="h-64 rounded-2xl" />
-        </div>
+        <MatchDetailSkeleton />
       </Layout>
     );
   }

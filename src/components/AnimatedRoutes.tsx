@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { lazy, Suspense } from "react";
-import { Loader2 } from "lucide-react";
+import BrandedLoader from "./BrandedLoader";
 import PageTransition from "./PageTransition";
 
 // Eager: core pages
@@ -34,11 +34,7 @@ const PredictionsDashboard = lazy(() => import("@/pages/PredictionsDashboard"));
 const Explorer = lazy(() => import("@/pages/Explorer"));
 const Admin = lazy(() => import("@/pages/Admin"));
 
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[60vh]">
-    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-  </div>
-);
+const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
 
 const AnimatedRoutes = () => {
   const location = useLocation();
