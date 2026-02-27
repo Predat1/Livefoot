@@ -19,6 +19,7 @@ import TacticalPitch from "@/components/TacticalPitch";
 import CommunityPredictions from "@/components/CommunityPredictions";
 import ShotMap from "@/components/ShotMap";
 import HeatMap from "@/components/HeatMap";
+import PlayerRatingStars from "@/components/PlayerRatingStars";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar,
@@ -576,6 +577,14 @@ const Match = () => {
                                       {passes > 0 && <span>📤 {passes} passes{passAcc ? ` (${passAcc}%)` : ""}</span>}
                                       {duelsTotal > 0 && <span>💪 {duelsWon}/{duelsTotal}</span>}
                                     </div>
+                                    {isFinished && matchId && (
+                                      <PlayerRatingStars
+                                        fixtureId={matchId}
+                                        playerId={String(p.player?.id || "")}
+                                        playerName={p.player?.name || ""}
+                                        teamId={String(teamData.team?.id || "")}
+                                      />
+                                    )}
                                   </div>
                                   {rating > 0 && (
                                     <span className={cn("px-2 py-1 rounded-lg text-xs font-black", ratingBg(rating), ratingColor(rating))}>
