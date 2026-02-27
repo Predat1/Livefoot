@@ -83,7 +83,7 @@ const PlayerDetail = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="container py-8">
+        <div className="px-2 sm:container py-8">
           <div className="flex items-center gap-2 mb-6">
             <Link to="/players" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm">
               <ArrowLeft className="h-4 w-4" /> Retour
@@ -112,7 +112,7 @@ const PlayerDetail = () => {
   if (!player || isError) {
     return (
       <Layout>
-        <div className="container py-16 text-center">
+        <div className="px-2 sm:container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Joueur introuvable</h1>
           <Link to="/players" className="text-primary hover:underline">Retour aux joueurs</Link>
         </div>
@@ -164,7 +164,7 @@ const PlayerDetail = () => {
           memberOf: { "@type": "SportsTeam", name: player.team },
         }}
       />
-      <div className="container py-4 sm:py-8">
+      <div className="px-2 sm:container py-4 sm:py-8">
         <EntityBreadcrumbs steps={[
           { label: "Joueurs", href: "/players" },
           { label: player.name },

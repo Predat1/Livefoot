@@ -81,7 +81,7 @@ const Rankings = () => {
         title={`Classement ${activeTab === "goals" ? "Buteurs" : "Passeurs"} - ${currentLeague?.name || "Football"}`}
         description={`Classement en temps réel des meilleurs ${activeTab === "goals" ? "buteurs" : "passeurs"} de ${currentLeague?.name}. Stats détaillées.`}
       />
-      <div className="container py-4 sm:py-8">
+      <div className="px-2 sm:container py-4 sm:py-8">
         {/* Title */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-1">

@@ -38,7 +38,7 @@ const TeamDetail = () => {
   if (loadingTeam) {
     return (
       <Layout>
-        <div className="container py-8">
+        <div className="px-2 sm:container py-8">
           <Skeleton className="h-48 w-full rounded-2xl mb-6" />
           <Skeleton className="h-64 w-full rounded-2xl" />
         </div>
@@ -49,7 +49,7 @@ const TeamDetail = () => {
   if (!team) {
     return (
       <Layout>
-        <div className="container py-16 text-center">
+        <div className="px-2 sm:container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Team not found</h1>
           <Link to="/teams" className="text-primary hover:underline">Back to teams</Link>
         </div>
@@ -63,7 +63,7 @@ const TeamDetail = () => {
         title={`${team.name} - Squad, Results & Stats`}
         description={`${team.name} - ${team.country}. Stadium: ${team.venue?.name || "N/A"}.`}
       />
-      <div className="container py-4 sm:py-8">
+      <div className="px-2 sm:container py-4 sm:py-8">
         <EntityBreadcrumbs steps={[
           { label: "Équipes", href: "/teams" },
           { label: team.name },
