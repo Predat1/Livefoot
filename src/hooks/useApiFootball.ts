@@ -474,7 +474,8 @@ export function useTransfersByTeam(teamId: string) {
 // ─── Competitions (trending leagues) ──────────────────────────
 
 // Top trending league IDs (most followed globally)
-export const TRENDING_LEAGUE_IDS = ["39", "140", "135", "78", "61", "2", "3", "848", "94", "88"];
+export const TRENDING_LEAGUE_IDS = ["39", "140", "135", "78", "61", "2", "3", "848", "94", "88", "307", "253", "262", "71"];
+export const TRENDING_LEAGUE_SET = new Set(TRENDING_LEAGUE_IDS);
 
 export function useTrendingLeagues() {
   return useQuery({
