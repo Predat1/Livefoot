@@ -71,18 +71,18 @@ const Live = () => {
       />
       <div className="container py-4 sm:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-live animate-pulse" />
-              <h1 className="text-2xl font-black text-foreground">LIVE</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-foreground">LIVE</h1>
             </div>
-            <span className="rounded-full bg-live/15 px-3 py-1 text-sm font-bold text-live">
+            <span className="rounded-full bg-live/15 px-2.5 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-bold text-live">
               {totalLive} match{totalLive !== 1 ? "s" : ""}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Push Notifications toggle */}
             <button
               onClick={() => notificationsEnabled ? disableNotifications() : enableNotifications()}
@@ -95,7 +95,7 @@ const Live = () => {
               }
               disabled={permissionDenied}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+                "flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1.5 text-[10px] sm:text-xs font-semibold transition-colors",
                 permissionDenied
                   ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
                   : notificationsEnabled
@@ -111,20 +111,19 @@ const Live = () => {
               onClick={() => setSoundEnabled(!soundEnabled)}
               title={soundEnabled ? "Désactiver les sons" : "Activer les sons"}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+                "flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1.5 text-[10px] sm:text-xs font-semibold transition-colors",
                 soundEnabled ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
             >
               {soundEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
               <span className="hidden sm:inline">{soundEnabled ? "Son ON" : "Son OFF"}</span>
             </button>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Refresh </span>
+            <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
+              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span className="font-bold text-foreground">{countdown}s</span>
             </div>
-            <button onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-60">
-              <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
+            <button onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1 sm:gap-1.5 rounded-lg bg-primary/10 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-60">
+              <RefreshCw className={cn("h-3 w-3 sm:h-3.5 sm:w-3.5", isRefreshing && "animate-spin")} />
               <span className="hidden sm:inline">Actualiser</span>
             </button>
           </div>
@@ -184,24 +183,24 @@ const Live = () => {
                     </div>
                     <div className="divide-y divide-border/50">
                       {league.matches.map((match) => (
-                        <Link key={match.id} to={`/match/${match.id}`} className="block px-4 py-4 hover:bg-muted/30 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-col items-center w-12 flex-shrink-0">
-                              <span className="h-2 w-2 rounded-full bg-live live-pulse mb-1" />
-                              <span className="text-xs font-black text-live">{match.minute}'</span>
+                        <Link key={match.id} to={`/match/${match.id}`} className="block px-3 sm:px-4 py-3 sm:py-4 hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="flex flex-col items-center w-9 sm:w-12 flex-shrink-0">
+                              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-live live-pulse mb-0.5 sm:mb-1" />
+                              <span className="text-[10px] sm:text-xs font-black text-live">{match.minute}'</span>
                             </div>
-                            <div className="flex items-center gap-2 flex-1 justify-end">
-                              <span className="text-sm font-bold text-foreground text-right leading-tight">{match.homeTeam.name}</span>
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0">
+                              <span className="text-xs sm:text-sm font-bold text-foreground text-right leading-tight truncate">{match.homeTeam.name}</span>
                               <TeamLogo teamName={match.homeTeam.name} size="sm" />
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0 px-2">
-                              <span className="text-xl font-black text-live">{match.homeTeam.score}</span>
-                              <span className="text-sm text-muted-foreground">-</span>
-                              <span className="text-xl font-black text-live">{match.awayTeam.score}</span>
+                            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 px-1 sm:px-2">
+                              <span className="text-base sm:text-xl font-black text-live">{match.homeTeam.score}</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground">-</span>
+                              <span className="text-base sm:text-xl font-black text-live">{match.awayTeam.score}</span>
                             </div>
-                            <div className="flex items-center gap-2 flex-1">
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
                               <TeamLogo teamName={match.awayTeam.name} size="sm" />
-                              <span className="text-sm font-bold text-foreground leading-tight">{match.awayTeam.name}</span>
+                              <span className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate">{match.awayTeam.name}</span>
                             </div>
                           </div>
                         </Link>

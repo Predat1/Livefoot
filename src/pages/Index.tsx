@@ -109,7 +109,7 @@ const Index = () => {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-background relative pb-16 lg:pb-0">
+    <div ref={containerRef} className="min-h-screen bg-background relative pb-safe lg:pb-0">
       <SEOHead
         title="LiveFoot - Scores Football en Direct Aujourd'hui"
         description="Suivez tous les scores de football en direct, résultats, calendriers et classements : Premier League, La Liga, Serie A, Bundesliga, Ligue 1 et plus de 800 compétitions."
