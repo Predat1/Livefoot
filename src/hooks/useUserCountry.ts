@@ -76,9 +76,42 @@ const COUNTRY_LEAGUE_MAP: Record<string, string[]> = {
   CM: ["409"],                // Elite One Cameroon
   SN: ["306"],                // Ligue 1 Senegal
   CI: ["350"],                // Ligue 1 Ivory Coast
+  KE: ["276"],                // Kenyan Premier League
+  TZ: ["363"],                // Tanzanian Premier League
+  UG: ["385"],                // Ugandan Premier League
+  ET: ["364"],                // Ethiopian Premier League
+  CD: ["386"],                // Linafoot DR Congo
+  // Central America & Caribbean
+  HN: ["336"],                // Liga Nacional Honduras
+  GT: ["337"],                // Liga Nacional Guatemala
+  PA: ["338"],                // LPF Panama
+  JM: ["339"],                // Jamaica Premier League
   // Oceania
   AU: ["188", "189"],         // A-League Men, A-League Women
   NZ: ["401"],                // New Zealand National League
+  // Additional Asia
+  PH: ["377"],                // Philippines Football League
+  BH: ["380"],                // Bahrain Premier League
+  KW: ["381"],                // Kuwait Premier League
+  OM: ["382"],                // Oman Professional League
+  JO: ["383"],                // Jordan Pro League
+  LB: ["384"],                // Lebanese Premier League
+  IQ: ["385"],                // Iraqi Premier League
+  // Additional Europe
+  LT: ["362"],                // A Lyga Lithuania
+  LV: ["363"],                // Latvian Higher League
+  EE: ["364"],                // Meistriliiga Estonia
+  MT: ["393"],                // Maltese Premier League
+  LU: ["394"],                // Luxembourg National Division
+  MK: ["396"],                // Macedonian First League
+  AL: ["310"],                // Albanian Superliga
+  ME: ["397"],                // Montenegrin First League
+  XK: ["398"],                // Kosovo Superliga
+  GE: ["327"],                // Erovnuli Liga Georgia
+  AM: ["399"],                // Armenian Premier League
+  AZ: ["400"],                // Azerbaijan Premier League
+  MD: ["401"],                // Moldovan National Division
+  BY: ["402"],                // Belarusian Premier League
 };
 
 // Fallback: infer country from timezone
