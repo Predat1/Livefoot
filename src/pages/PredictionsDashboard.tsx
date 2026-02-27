@@ -377,8 +377,8 @@ const PredictionsDashboard = () => {
             <div className="rounded-xl bg-card border border-border/50 p-4">
               <h4 className="text-xs font-bold text-foreground mb-2">📊 Système de points</h4>
               <div className="space-y-1 text-[10px] text-muted-foreground">
-                <p>• <span className="font-bold text-foreground">10 pts</span> — Score exact deviné</p>
-                <p>• <span className="font-bold text-foreground">3 pts</span> — Bon résultat (1/N/2)</p>
+                <p>• <span className="font-bold text-foreground">15 pts</span> — Score exact deviné</p>
+                <p>• <span className="font-bold text-foreground">5 pts</span> — Bon résultat (1/N/2)</p>
                 <p>• <span className="font-bold text-foreground">1 pt</span> — Participation</p>
               </div>
             </div>
