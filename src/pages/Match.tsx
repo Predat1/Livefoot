@@ -9,7 +9,7 @@ import {
 import {
   ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
   Loader2, BarChart3, Swords, Star, DollarSign, HeartPulse, Users as UsersIcon,
-  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar,
+  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +18,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import TacticalPitch from "@/components/TacticalPitch";
 import CommunityPredictions from "@/components/CommunityPredictions";
 import ShotMap from "@/components/ShotMap";
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar, ResponsiveContainer, Legend } from "recharts";
+import HeatMap from "@/components/HeatMap";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar,
+  ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
+} from "recharts";
 
 function mapFixtureStatus(s: string): "scheduled" | "live" | "finished" {
   const live = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
@@ -158,6 +163,7 @@ const Match = () => {
       ...(hasStats ? [{ value: "live", label: "Live" }] : []),
       { value: "events", label: "Events" },
       { value: "stats", label: "Stats" },
+      ...(players.length >= 2 ? [{ value: "heatmap", label: "Heatmap" }] : []),
       { value: "lineups", label: "Compos" },
       ...(hasStats ? [{ value: "ratings", label: "Notes" }] : []),
       { value: "form", label: "Forme" },
@@ -166,7 +172,7 @@ const Match = () => {
       { value: "h2h", label: "H2H" },
       { value: "community", label: "Pronostics" },
       ...(odds.length > 0 ? [{ value: "odds", label: "Cotes" }] : []),
-      ...(injuries.length > 0 ? [{ value: "injuries", label: "Blessures" }] : []),
+      { value: "injuries", label: "Blessures" },
     ];
 
     // Generate live commentary from events
@@ -250,27 +256,35 @@ const Match = () => {
                 <h3 className="font-bold text-sm text-foreground">Commentaires Live</h3>
                 {isLive && <span className="ml-auto h-2 w-2 rounded-full bg-live live-pulse" />}
               </div>
-              <div className="p-3 sm:p-4">
+              <div className="p-3 sm:p-4 max-h-[70vh] overflow-y-auto">
                 {events.length > 0 ? (
-                  <div className="space-y-0">
-                    {[...events].reverse().map((event: any, index: number) => (
-                      <div key={index} className="flex gap-3 py-3 border-b border-border/30 last:border-b-0">
-                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                          <span className="text-xs font-black text-primary w-10 text-center">
-                            {event.time?.elapsed}'{event.time?.extra ? `+${event.time.extra}` : ""}
-                          </span>
-                          <span className="text-base">{getCommentaryIcon(event.type, event.detail)}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-foreground leading-relaxed">{generateCommentary(event)}</p>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            {event.team?.logo && <img src={event.team.logo} alt="" className="h-3.5 w-3.5 object-contain" />}
-                            <span className="text-[10px] text-muted-foreground">{event.team?.name}</span>
+                  <AnimatePresence>
+                    <div className="space-y-0">
+                      {[...events].reverse().map((event: any, index: number) => (
+                        <motion.div
+                          key={`${event.time?.elapsed}-${event.type}-${index}`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.35, delay: index * 0.05, ease: "easeOut" }}
+                          className="flex gap-3 py-3 border-b border-border/30 last:border-b-0"
+                        >
+                          <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                            <span className="text-xs font-black text-primary w-10 text-center">
+                              {event.time?.elapsed}'{event.time?.extra ? `+${event.time.extra}` : ""}
+                            </span>
+                            <span className="text-base">{getCommentaryIcon(event.type, event.detail)}</span>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs sm:text-sm text-foreground leading-relaxed">{generateCommentary(event)}</p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              {event.team?.logo && <img src={event.team.logo} alt="" className="h-3.5 w-3.5 object-contain" />}
+                              <span className="text-[10px] text-muted-foreground">{event.team?.name}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </AnimatePresence>
                 ) : (
                   <p className="text-center text-muted-foreground py-8 text-sm">Aucun événement pour le moment</p>
                 )}
@@ -379,6 +393,32 @@ const Match = () => {
             </div>
           )}
 
+          {/* Momentum Bar Chart - Pression */}
+          {momentumData.length > 0 && (
+            <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+                <Flame className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Graphique de Pression</h3>
+              </div>
+              <div className="p-2 sm:p-6">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={momentumData} layout="vertical" margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                    <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+                    <YAxis dataKey="metric" type="category" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} width={70} />
+                    <Tooltip
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                    />
+                    <Bar dataKey="home" name={homeTeam.name} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={12} />
+                    <Bar dataKey="away" name={awayTeam.name} fill="hsl(var(--destructive))" radius={[0, 4, 4, 0]} barSize={12} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
           {/* ShotMap */}
           {players.length >= 2 && (
             <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
@@ -386,7 +426,7 @@ const Match = () => {
                 <Crosshair className="h-4 w-4 text-primary" />
                 <h3 className="font-bold text-sm text-foreground">Carte des Tirs</h3>
               </div>
-              <div className="p-4 sm:p-6">
+              <div className="p-2 sm:p-6">
                 <ShotMap
                   playersData={players}
                   homeTeamId={homeTeamId}
@@ -398,6 +438,28 @@ const Match = () => {
             </div>
           )}
         </TabsContent>
+
+        {/* Heatmap */}
+        {players.length >= 2 && (
+          <TabsContent value="heatmap" className="mt-0">
+            <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+                <Flame className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Carte de Chaleur</h3>
+              </div>
+              <div className="p-2 sm:p-6">
+                <HeatMap
+                  playersData={players}
+                  homeTeamId={homeTeamId}
+                  awayTeamId={awayTeamId}
+                  homeTeamName={homeTeam.name}
+                  awayTeamName={awayTeam.name}
+                />
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
 
         {/* Lineups + Tactical Pitch */}
         <TabsContent value="lineups" className="mt-0 space-y-4">
@@ -674,16 +736,16 @@ const Match = () => {
                     </div>
                     <div className="space-y-2">
                       {matches.map((m: any, i: number) => (
-                        <Link key={i} to={`/match/${m.fixture.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
-                          <span className="text-[10px] text-muted-foreground w-16">
+                        <Link key={i} to={`/match/${m.fixture.id}`} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground w-12 sm:w-16 flex-shrink-0">
                             {new Date(m.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "2-digit" })}
                           </span>
-                          <div className="flex-1 flex items-center gap-2 justify-center">
-                            <img src={m.teams.home.logo} alt="" className="h-5 w-5 object-contain" />
-                            <span className="text-xs font-medium text-foreground">{m.teams.home.name}</span>
-                            <span className="font-black text-sm text-foreground">{m.goals.home} - {m.goals.away}</span>
-                            <span className="text-xs font-medium text-foreground">{m.teams.away.name}</span>
-                            <img src={m.teams.away.logo} alt="" className="h-5 w-5 object-contain" />
+                          <div className="flex-1 flex items-center gap-1 sm:gap-2 justify-center min-w-0">
+                            <img src={m.teams.home.logo} alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain flex-shrink-0" />
+                            <span className="text-[10px] sm:text-xs font-medium text-foreground truncate hidden sm:inline">{m.teams.home.name}</span>
+                            <span className="font-black text-xs sm:text-sm text-foreground flex-shrink-0">{m.goals.home} - {m.goals.away}</span>
+                            <span className="text-[10px] sm:text-xs font-medium text-foreground truncate hidden sm:inline">{m.teams.away.name}</span>
+                            <img src={m.teams.away.logo} alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain flex-shrink-0" />
                           </div>
                         </Link>
                       ))}
@@ -754,45 +816,49 @@ const Match = () => {
           </TabsContent>
         )}
 
-        {/* Injuries */}
-        {injuries.length > 0 && (
-          <TabsContent value="injuries" className="mt-0">
-            <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
-              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
-                <HeartPulse className="h-4 w-4 text-destructive" />
-                <h3 className="font-bold text-sm text-foreground">Blessures & Absences</h3>
-              </div>
-              <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[{ teamId: homeTeamId, team: homeTeam }, { teamId: awayTeamId, team: awayTeam }].map(({ teamId: tId, team }) => (
-                    <div key={tId}>
-                      <h4 className="font-bold text-xs text-foreground mb-2 flex items-center gap-2">
-                        {team.logo && <img src={team.logo} alt="" className="h-4 w-4 object-contain" />}
-                        {team.name}
-                      </h4>
-                      <div className="space-y-1.5">
-                        {injuries.filter((inj: any) => String(inj.team?.id) === tId).length > 0 ? (
-                          injuries.filter((inj: any) => String(inj.team?.id) === tId).map((inj: any, i: number) => (
-                            <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-destructive/5">
-                              {inj.player?.photo && <img src={inj.player.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
-                              <div className="flex-1">
-                                <p className="text-xs font-medium text-foreground">{inj.player?.name}</p>
-                                <p className="text-[10px] text-destructive">{inj.player?.reason || "Injured"}</p>
-                              </div>
-                              <span className="text-[10px] text-muted-foreground">{inj.player?.type}</span>
+        {/* Injuries - always visible */}
+        <TabsContent value="injuries" className="mt-0">
+          <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+            <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+              <HeartPulse className="h-4 w-4 text-destructive" />
+              <h3 className="font-bold text-sm text-foreground">Blessures & Absences</h3>
+            </div>
+            <div className="p-3 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[{ teamId: homeTeamId, team: homeTeam }, { teamId: awayTeamId, team: awayTeam }].map(({ teamId: tId, team }) => (
+                  <div key={tId}>
+                    <h4 className="font-bold text-xs text-foreground mb-2 flex items-center gap-2">
+                      {team.logo && <img src={team.logo} alt="" className="h-4 w-4 object-contain" />}
+                      {team.name}
+                    </h4>
+                    <div className="space-y-1.5">
+                      {injuries.filter((inj: any) => String(inj.team?.id) === tId).length > 0 ? (
+                        injuries.filter((inj: any) => String(inj.team?.id) === tId).map((inj: any, i: number) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="flex items-center gap-2 p-2 rounded-lg bg-destructive/5"
+                          >
+                            {inj.player?.photo && <img src={inj.player.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground truncate">{inj.player?.name}</p>
+                              <p className="text-[10px] text-destructive">{inj.player?.reason || "Injured"}</p>
                             </div>
-                          ))
-                        ) : (
-                          <p className="text-xs text-muted-foreground">Aucune blessure signalée</p>
-                        )}
-                      </div>
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0">{inj.player?.type}</span>
+                          </motion.div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Aucune blessure signalée</p>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </TabsContent>
-        )}
+          </div>
+        </TabsContent>
       </Tabs>
     );
   };
