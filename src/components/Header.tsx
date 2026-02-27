@@ -1,4 +1,4 @@
-import { Search, Menu, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle, Zap, Star, ChevronDown, Grid3X3, Globe } from "lucide-react";
+import { Search, Menu, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle, Zap, Star, ChevronDown, Grid3X3, Globe, Shield } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { useSearch } from "@/hooks/useSearch";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppLogo } from "@/hooks/useAppLogo";
+import { useIsAdmin } from "@/hooks/useAdmin";
 
 const Header = () => {
   const logoUrl = useAppLogo();
@@ -27,6 +28,7 @@ const Header = () => {
   const { query, setQuery, results } = useSearch();
   const { totalFavorites } = useFavorites();
   const { user, profile, signOut } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -256,6 +258,13 @@ const Header = () => {
                       <Trophy className="h-4 w-4" /> Pronostics
                     </Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" /> Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
