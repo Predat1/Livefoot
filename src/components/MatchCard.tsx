@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Star, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import TeamLogo from "./TeamLogo";
 
@@ -22,27 +23,40 @@ interface MatchCardProps {
   match: Match;
 }
 
+const MotionLink = motion.create(Link);
+
 const MatchCard = ({ match }: MatchCardProps) => {
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
 
   return (
-    <Link
+    <MotionLink
       to={`/match/${match.id}`}
-      className="group relative flex items-center justify-between px-3 sm:px-5 py-4 sm:py-5 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
+      className="group relative flex items-center justify-between px-3 sm:px-5 py-4 sm:py-5 transition-colors duration-200 hover:bg-muted/40 border-b border-border/50 last:border-b-0"
+      whileHover={{ scale: 1.005, backgroundColor: "hsl(var(--muted) / 0.4)" }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
       {/* Live indicator bar */}
       {isLive && (
-        <div className="absolute left-0 top-0 h-full w-1 bg-live rounded-r-full" />
+        <motion.div
+          className="absolute left-0 top-0 h-full w-1 bg-live rounded-r-full"
+          layoutId={`live-${match.id}`}
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        />
       )}
 
       {/* Favorite button - hidden on mobile */}
-      <button
+      <motion.button
         onClick={(e) => e.preventDefault()}
-        className="mr-2 sm:mr-3 text-muted-foreground/40 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-primary hover:scale-110"
+        className="mr-2 sm:mr-3 text-muted-foreground/40 hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:text-primary"
+        whileHover={{ scale: 1.3, rotate: 15 }}
+        whileTap={{ scale: 0.8 }}
       >
         <Star className="h-4 w-4" />
-      </button>
+      </motion.button>
 
       {/* Home Team */}
       <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
@@ -58,45 +72,68 @@ const MatchCard = ({ match }: MatchCardProps) => {
         >
           {match.homeTeam.name}
         </span>
-        {match.homeTeam.logo?.startsWith("http") ? (
-          <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain flex-shrink-0" />
-        ) : (
-          <TeamLogo teamName={match.homeTeam.name} size="sm" />
-        )}
+        <motion.div
+          className="flex-shrink-0"
+          whileHover={{ scale: 1.15, rotate: -5 }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+        >
+          {match.homeTeam.logo?.startsWith("http") ? (
+            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
+          ) : (
+            <TeamLogo teamName={match.homeTeam.name} size="sm" />
+          )}
+        </motion.div>
       </div>
 
       {/* Score / Time */}
       <div className="mx-3 sm:mx-6 flex min-w-[80px] sm:min-w-[110px] flex-col items-center flex-shrink-0">
         {isLive || isFinished ? (
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
-            <span
+          <motion.div
+            className="flex items-center gap-1.5 sm:gap-2.5"
+            initial={false}
+            whileHover={{ scale: 1.08 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          >
+            <motion.span
+              key={`home-${match.homeTeam.score}`}
+              initial={{ scale: 1.4, color: "hsl(var(--primary))" }}
+              animate={{ scale: 1, color: undefined }}
+              transition={{ duration: 0.5 }}
               className={cn(
-                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm transition-all duration-300",
+                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
                   : "bg-score-bg text-primary-foreground"
               )}
             >
               {match.homeTeam.score}
-            </span>
+            </motion.span>
             <span className="text-base sm:text-xl font-bold text-muted-foreground">-</span>
-            <span
+            <motion.span
+              key={`away-${match.awayTeam.score}`}
+              initial={{ scale: 1.4, color: "hsl(var(--primary))" }}
+              animate={{ scale: 1, color: undefined }}
+              transition={{ duration: 0.5 }}
               className={cn(
-                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm transition-all duration-300",
+                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
                   : "bg-score-bg text-primary-foreground"
               )}
             >
               {match.awayTeam.score}
-            </span>
-          </div>
+            </motion.span>
+          </motion.div>
         ) : (
-          <div className="rounded-md sm:rounded-lg bg-primary/10 px-3 sm:px-5 py-1.5 sm:py-2">
+          <motion.div
+            className="rounded-md sm:rounded-lg bg-primary/10 px-3 sm:px-5 py-1.5 sm:py-2"
+            whileHover={{ scale: 1.1, backgroundColor: "hsl(var(--primary) / 0.2)" }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          >
             <span className="text-sm sm:text-lg font-bold text-primary">
               {match.time}
             </span>
-          </div>
+          </motion.div>
         )}
         {isLive && match.minute && (
           <div className="mt-1 sm:mt-1.5 flex items-center gap-1">
@@ -115,11 +152,17 @@ const MatchCard = ({ match }: MatchCardProps) => {
 
       {/* Away Team */}
       <div className="flex flex-1 items-center gap-1.5 sm:gap-3 min-w-0">
-        {match.awayTeam.logo?.startsWith("http") ? (
-          <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain flex-shrink-0" />
-        ) : (
-          <TeamLogo teamName={match.awayTeam.name} size="sm" />
-        )}
+        <motion.div
+          className="flex-shrink-0"
+          whileHover={{ scale: 1.15, rotate: 5 }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+        >
+          {match.awayTeam.logo?.startsWith("http") ? (
+            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
+          ) : (
+            <TeamLogo teamName={match.awayTeam.name} size="sm" />
+          )}
+        </motion.div>
         <span
           className={cn(
             "text-sm sm:text-base font-semibold transition-colors truncate",
@@ -135,10 +178,15 @@ const MatchCard = ({ match }: MatchCardProps) => {
       </div>
 
       {/* Arrow - hidden on mobile */}
-      <div className="ml-2 sm:ml-3 text-muted-foreground/40 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:text-primary">
+      <motion.div
+        className="ml-2 sm:ml-3 text-muted-foreground/40 hidden sm:block opacity-0 group-hover:opacity-100 group-hover:text-primary"
+        initial={false}
+        whileHover={{ x: 3 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      >
         <ChevronRight className="h-5 w-5" />
-      </div>
-    </Link>
+      </motion.div>
+    </MotionLink>
   );
 };
 
