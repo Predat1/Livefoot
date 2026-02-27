@@ -646,71 +646,96 @@ export function useAllLeagues() {
 // ─── Player Detail ───────────────────────────────────────────
 
 export function usePlayerDetailApi(playerId: string, season = "2024") {
-  return useQuery({
+  const isNumeric = /^\d+$/.test(playerId);
+
+  const parsePlayerResponse = (res: any) => {
+    if (!res.response || res.response.length === 0) return null;
+    const item = res.response[0] as any;
+    const p = item.player;
+    const s = item.statistics?.[0];
+    if (!p || !s) return null;
+    return {
+      id: String(p.id),
+      name: p.name,
+      firstname: p.firstname,
+      lastname: p.lastname,
+      age: p.age || 0,
+      nationality: p.nationality || "",
+      height: p.height || "",
+      weight: p.weight || "",
+      photo: p.photo || "",
+      birth: p.birth,
+      team: s.team?.name || "",
+      teamId: String(s.team?.id || ""),
+      teamLogo: s.team?.logo || "",
+      league: s.league?.name || "",
+      leagueId: String(s.league?.id || ""),
+      leagueLogo: s.league?.logo || "",
+      leagueCountry: s.league?.country || "",
+      leagueFlag: s.league?.flag || "",
+      position: s.games?.position || "Unknown",
+      jersey: s.games?.number || 0,
+      rating: parseFloat(s.games?.rating) || 0,
+      appearances: s.games?.appearences || 0,
+      lineups: s.games?.lineups || 0,
+      minutes: s.games?.minutes || 0,
+      captain: s.games?.captain || false,
+      goals: s.goals?.total || 0,
+      assists: s.goals?.assists || 0,
+      conceded: s.goals?.conceded,
+      saves: s.goals?.saves,
+      yellowCards: s.cards?.yellow || 0,
+      redCards: s.cards?.red || 0,
+      shotsTotal: s.shots?.total || 0,
+      shotsOn: s.shots?.on || 0,
+      passesTotal: s.passes?.total || 0,
+      passesKey: s.passes?.key || 0,
+      passAccuracy: parseInt(s.passes?.accuracy) || 0,
+      tacklesTotal: s.tackles?.total || 0,
+      tacklesBlocks: s.tackles?.blocks || 0,
+      tacklesInterceptions: s.tackles?.interceptions || 0,
+      duelsTotal: s.duels?.total || 0,
+      duelsWon: s.duels?.won || 0,
+      dribblesAttempts: s.dribbles?.attempts || 0,
+      dribblesSuccess: s.dribbles?.success || 0,
+      foulsDrawn: s.fouls?.drawn || 0,
+      foulsCommitted: s.fouls?.committed || 0,
+      penaltyScored: s.penalty?.scored || 0,
+      penaltyMissed: s.penalty?.missed || 0,
+      allStats: (item.statistics || []) as any[],
+    };
+  };
+
+  const directQuery = useQuery({
     queryKey: ["player-detail", playerId, season],
     queryFn: async () => {
       const { getPlayerById } = await import("@/services/apiFootball");
       const res = await getPlayerById(playerId, season);
-      if (!res.response || res.response.length === 0) return null;
-      const item = res.response[0] as any;
-      const p = item.player;
-      const s = item.statistics?.[0];
-      if (!p || !s) return null;
-      return {
-        id: String(p.id),
-        name: p.name,
-        firstname: p.firstname,
-        lastname: p.lastname,
-        age: p.age || 0,
-        nationality: p.nationality || "",
-        height: p.height || "",
-        weight: p.weight || "",
-        photo: p.photo || "",
-        birth: p.birth,
-        team: s.team?.name || "",
-        teamId: String(s.team?.id || ""),
-        teamLogo: s.team?.logo || "",
-        league: s.league?.name || "",
-        leagueId: String(s.league?.id || ""),
-        leagueLogo: s.league?.logo || "",
-        leagueCountry: s.league?.country || "",
-        leagueFlag: s.league?.flag || "",
-        position: s.games?.position || "Unknown",
-        jersey: s.games?.number || 0,
-        rating: parseFloat(s.games?.rating) || 0,
-        appearances: s.games?.appearences || 0,
-        lineups: s.games?.lineups || 0,
-        minutes: s.games?.minutes || 0,
-        captain: s.games?.captain || false,
-        goals: s.goals?.total || 0,
-        assists: s.goals?.assists || 0,
-        conceded: s.goals?.conceded,
-        saves: s.goals?.saves,
-        yellowCards: s.cards?.yellow || 0,
-        redCards: s.cards?.red || 0,
-        shotsTotal: s.shots?.total || 0,
-        shotsOn: s.shots?.on || 0,
-        passesTotal: s.passes?.total || 0,
-        passesKey: s.passes?.key || 0,
-        passAccuracy: parseInt(s.passes?.accuracy) || 0,
-        tacklesTotal: s.tackles?.total || 0,
-        tacklesBlocks: s.tackles?.blocks || 0,
-        tacklesInterceptions: s.tackles?.interceptions || 0,
-        duelsTotal: s.duels?.total || 0,
-        duelsWon: s.duels?.won || 0,
-        dribblesAttempts: s.dribbles?.attempts || 0,
-        dribblesSuccess: s.dribbles?.success || 0,
-        foulsDrawn: s.fouls?.drawn || 0,
-        foulsCommitted: s.fouls?.committed || 0,
-        penaltyScored: s.penalty?.scored || 0,
-        penaltyMissed: s.penalty?.missed || 0,
-        // All statistics entries (for multi-season if available)
-        allStats: (item.statistics || []) as any[],
-      };
+      return parsePlayerResponse(res);
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !!playerId,
+    enabled: !!playerId && isNumeric,
   });
+
+  const slugQuery = useQuery({
+    queryKey: ["player-search", playerId, season],
+    queryFn: async () => {
+      const { searchPlayerByName } = await import("@/services/apiFootball");
+      const searchName = playerId.replace(/-/g, " ");
+      const res = await searchPlayerByName(searchName, season);
+      if (!res.response || res.response.length === 0) return null;
+      // Find best match
+      const best = res.response.find((r: any) =>
+        r.player.name.toLowerCase() === searchName.toLowerCase() ||
+        r.player.lastname?.toLowerCase() === searchName.toLowerCase()
+      ) || res.response[0];
+      return parsePlayerResponse({ response: [best] });
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!playerId && !isNumeric,
+  });
+
+  return isNumeric ? directQuery : slugQuery;
 }
 
 // ─── Player Trophies ─────────────────────────────────────────

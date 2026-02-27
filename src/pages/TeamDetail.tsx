@@ -1,8 +1,9 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { useTeamDetail, useTeamSquad, useTeamFixtures, useTeamNextFixtures } from "@/hooks/useApiFootball";
 import { ArrowLeft, MapPin, Users, Calendar, Star, Shirt, TrendingUp } from "lucide-react";
+import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareButton from "@/components/ShareButton";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const TeamDetail = () => {
   const { teamId } = useParams();
+  const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const { data: team, isLoading: loadingTeam } = useTeamDetail(teamId || "");
@@ -18,6 +20,14 @@ const TeamDetail = () => {
   const { data: squad, isLoading: loadingSquad } = useTeamSquad(resolvedId);
   const { data: recentResults, isLoading: loadingResults } = useTeamFixtures(resolvedId, "2024");
   const { data: nextFixtures } = useTeamNextFixtures(resolvedId);
+
+  // Redirect slug URLs to canonical numeric ID
+  const isSlug = !/^\d+$/.test(teamId || "");
+  useEffect(() => {
+    if (isSlug && team?.id) {
+      navigate(`/teams/${team.id}`, { replace: true });
+    }
+  }, [isSlug, team?.id, navigate]);
 
   if (loadingTeam) {
     return (

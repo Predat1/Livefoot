@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { usePlayerDetailApi, usePlayerTrophies, usePlayerSeasons, useTopScorers } from "@/hooks/useApiFootball";
@@ -10,7 +10,7 @@ import ShareButton from "@/components/ShareButton";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from "recharts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -44,10 +44,20 @@ function getPlayerStat(player: any, key: string): number {
 
 const PlayerDetail = () => {
   const { playerId } = useParams();
+  const navigate = useNavigate();
   const { data: player, isLoading, isError } = usePlayerDetailApi(playerId || "");
-  const { data: trophies, isLoading: trophiesLoading } = usePlayerTrophies(playerId || "");
-  const { data: seasonHistory, isLoading: seasonsLoading } = usePlayerSeasons(playerId || "");
+  const resolvedId = player?.id || (/^\d+$/.test(playerId || "") ? playerId! : "");
+  const { data: trophies, isLoading: trophiesLoading } = usePlayerTrophies(resolvedId);
+  const { data: seasonHistory, isLoading: seasonsLoading } = usePlayerSeasons(resolvedId);
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  // Redirect slug URLs to canonical numeric ID
+  const isSlug = !/^\d+$/.test(playerId || "");
+  useEffect(() => {
+    if (isSlug && player?.id) {
+      navigate(`/players/${player.id}`, { replace: true });
+    }
+  }, [isSlug, player?.id, navigate]);
   const [showAllSeasons, setShowAllSeasons] = useState(false);
   const [comparePlayerId, setComparePlayerId] = useState<string | null>(null);
   const [compareSearch, setCompareSearch] = useState("");
