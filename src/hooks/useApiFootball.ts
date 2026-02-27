@@ -263,8 +263,9 @@ export function useFixtureDetail(fixtureId: string) {
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 60 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
 }
@@ -276,7 +277,9 @@ export function useFixtureEvents(fixtureId: string) {
       const res = await getFixtureEvents(fixtureId);
       return res.response || [];
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
 }
@@ -288,7 +291,9 @@ export function useFixtureLineups(fixtureId: string) {
       const res = await getFixtureLineups(fixtureId);
       return res.response || [];
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
 }
@@ -300,7 +305,9 @@ export function useFixtureStatistics(fixtureId: string) {
       const res = await getFixtureStatistics(fixtureId);
       return res.response || [];
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
 }
@@ -777,7 +784,9 @@ export function useFixturePlayers(fixtureId: string) {
       const res = await getFixturePlayers(fixtureId);
       return (res.response || []) as any[];
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
 }
