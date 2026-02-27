@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { extractIdFromSlug, buildEntitySlug } from "@/utils/slugify";
+import EntityBreadcrumbs from "@/components/EntityBreadcrumbs";
 
 const COMPARE_STATS = [
   { label: "⚽ Buts", key: "goals" as const, unit: "" },
@@ -164,6 +165,10 @@ const PlayerDetail = () => {
         }}
       />
       <div className="container py-4 sm:py-8">
+        <EntityBreadcrumbs steps={[
+          { label: "Joueurs", href: "/players" },
+          { label: player.name },
+        ]} />
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <Link to="/players" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
             <ArrowLeft className="h-4 w-4" /> Retour aux joueurs

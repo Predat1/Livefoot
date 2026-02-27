@@ -33,6 +33,7 @@ const Rankings = lazy(() => import("@/pages/Rankings"));
 const PredictionsDashboard = lazy(() => import("@/pages/PredictionsDashboard"));
 const Explorer = lazy(() => import("@/pages/Explorer"));
 const Admin = lazy(() => import("@/pages/Admin"));
+const DynamicSitemap = lazy(() => import("@/pages/DynamicSitemap"));
 
 const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
 
@@ -68,6 +69,8 @@ const AnimatedRoutes = () => {
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
           <Route path="/explorer" element={<PageTransition><Explorer /></PageTransition>} />
           <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
+          <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </Suspense>

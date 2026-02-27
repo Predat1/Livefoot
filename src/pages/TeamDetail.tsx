@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Skeleton } from "@/components/ui/skeleton";
 import { extractIdFromSlug, buildEntitySlug } from "@/utils/slugify";
+import EntityBreadcrumbs from "@/components/EntityBreadcrumbs";
 
 const TeamDetail = () => {
   const { teamId } = useParams();
@@ -63,6 +64,10 @@ const TeamDetail = () => {
         description={`${team.name} - ${team.country}. Stadium: ${team.venue?.name || "N/A"}.`}
       />
       <div className="container py-4 sm:py-8">
+        <EntityBreadcrumbs steps={[
+          { label: "Équipes", href: "/teams" },
+          { label: team.name },
+        ]} />
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <Link to="/teams" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
             <ArrowLeft className="h-4 w-4" /> Back to teams
