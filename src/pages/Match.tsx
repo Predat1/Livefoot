@@ -74,6 +74,20 @@ function TeamFormInline({ teamId, teamName }: { teamId: string; teamName: string
   );
 }
 
+function EmptyMatchData({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+      <AlertTriangle className="h-8 w-8 text-muted-foreground/40" />
+      <p className="text-sm font-medium text-muted-foreground">
+        {label} non disponibles
+      </p>
+      <p className="text-xs text-muted-foreground/60 max-w-[250px]">
+        Ces données ne sont pas couvertes pour ce championnat ou ne sont pas encore publiées.
+      </p>
+    </div>
+  );
+}
+
 const Match = () => {
   const { matchId } = useParams();
 
@@ -330,7 +344,7 @@ const Match = () => {
                   })}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8 text-sm">No events yet</p>
+                <EmptyMatchData label="Événements" />
               )}
             </div>
           </div>
@@ -365,7 +379,7 @@ const Match = () => {
                   </div>
                 );
               }) : (
-                <p className="text-center text-muted-foreground py-8 text-sm">No statistics available</p>
+                <EmptyMatchData label="Statistiques" />
               )}
             </div>
           </div>
@@ -520,7 +534,7 @@ const Match = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8 text-sm">Lineups not available yet</p>
+                <EmptyMatchData label="Compositions" />
               )}
             </div>
           </div>
@@ -597,7 +611,7 @@ const Match = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8 text-sm">Player ratings not available</p>
+                  <EmptyMatchData label="Notes des joueurs" />
                 )}
               </div>
             </div>
