@@ -13,11 +13,11 @@ const InfiniteScrollLoader = forwardRef<HTMLDivElement, InfiniteScrollLoaderProp
         {isLoading && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span className="text-sm font-medium">Loading more...</span>
+            <span className="text-sm font-medium">Chargement...</span>
           </div>
         )}
         {!hasMore && !isLoading && (
-          <p className="text-sm text-muted-foreground">No more items to load</p>
+          <p className="text-sm text-muted-foreground"></p>
         )}
       </div>
     );

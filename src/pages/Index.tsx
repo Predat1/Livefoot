@@ -238,7 +238,7 @@ const Index = () => {
           {isLoading && (
             <div className="flex items-center gap-2 text-muted-foreground text-xs">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Loading...
+              Chargement...
             </div>
           )}
         </div>

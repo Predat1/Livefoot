@@ -71,7 +71,7 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
               {league.name}
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">
-              {league.matches.length} matches
+              {league.matches.length} {league.matches.length > 1 ? "matchs" : "match"}
             </span>
           </div>
           {hasLiveMatch && (
