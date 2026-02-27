@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -57,5 +57,53 @@ export function useAdminUsers() {
       return data || [];
     },
     staleTime: 60 * 1000,
+  });
+}
+
+export function useUserRoles() {
+  return useQuery({
+    queryKey: ["admin-user-roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as { id: string; user_id: string; role: string; created_at: string }[];
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useAssignRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const { error } = await supabase
+        .from("user_roles" as any)
+        .insert({ user_id: userId, role } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-user-roles"] });
+    },
+  });
+}
+
+export function useRemoveRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const { error } = await supabase
+        .from("user_roles" as any)
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", role);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-user-roles"] });
+      qc.invalidateQueries({ queryKey: ["is-admin"] });
+    },
   });
 }
