@@ -4,12 +4,12 @@ import SEOHead from "@/components/SEOHead";
 import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   usePredictions, useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
-  useTeamForm,
+  useTeamForm, useTeamNextFixtures,
 } from "@/hooks/useApiFootball";
 import {
   ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
   Loader2, BarChart3, Swords, Star, DollarSign, HeartPulse, Users as UsersIcon,
-  TrendingUp, Shield,
+  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,8 @@ import ShareButton from "@/components/ShareButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import TacticalPitch from "@/components/TacticalPitch";
 import CommunityPredictions from "@/components/CommunityPredictions";
+import ShotMap from "@/components/ShotMap";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar, ResponsiveContainer, Legend } from "recharts";
 
 function mapFixtureStatus(s: string): "scheduled" | "live" | "finished" {
   const live = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
@@ -153,11 +155,13 @@ const Match = () => {
   // ─── Tabs ────────────────────────────────────────────────────
   const renderTabs = () => {
     const tabItems = [
+      ...(hasStats ? [{ value: "live", label: "Live" }] : []),
       { value: "events", label: "Events" },
       { value: "stats", label: "Stats" },
       { value: "lineups", label: "Compos" },
       ...(hasStats ? [{ value: "ratings", label: "Notes" }] : []),
       { value: "form", label: "Forme" },
+      { value: "calendar", label: "Calendrier" },
       { value: "predictions", label: "Prédiction" },
       { value: "h2h", label: "H2H" },
       { value: "community", label: "Pronostics" },
@@ -165,8 +169,68 @@ const Match = () => {
       ...(injuries.length > 0 ? [{ value: "injuries", label: "Blessures" }] : []),
     ];
 
+    // Generate live commentary from events
+    const generateCommentary = (event: any) => {
+      const min = event.time?.elapsed || "?";
+      const extra = event.time?.extra ? `+${event.time.extra}` : "";
+      const timeStr = `${min}${extra}'`;
+      const player = event.player?.name || "Joueur inconnu";
+      const team = event.team?.name || "";
+      const assist = event.assist?.name;
+      const detail = event.detail || "";
+
+      switch (event.type) {
+        case "Goal":
+          if (detail === "Own Goal") return `${timeStr} — ⚽ But contre son camp ! ${player} (${team}) marque dans ses propres filets.`;
+          if (detail === "Penalty") return `${timeStr} — ⚽ PENALTY TRANSFORMÉ ! ${player} (${team}) ne tremble pas !${assist ? ` Faute obtenue par ${assist}.` : ""}`;
+          if (detail === "Missed Penalty") return `${timeStr} — ❌ Penalty manqué par ${player} (${team}) !`;
+          return `${timeStr} — ⚽ BUT ! ${player} marque pour ${team} !${assist ? ` Passe décisive de ${assist}.` : ""}`;
+        case "Card":
+          if (detail === "Red Card") return `${timeStr} — 🟥 Carton rouge ! ${player} (${team}) est expulsé !`;
+          if (detail === "Second Yellow card") return `${timeStr} — 🟨🟥 Deuxième jaune ! ${player} (${team}) prend le chemin des vestiaires.`;
+          return `${timeStr} — 🟨 Carton jaune pour ${player} (${team}).`;
+        case "subst":
+          return `${timeStr} — 🔄 Remplacement (${team}) : ${assist || "?"} sort, ${player} entre en jeu.`;
+        case "Var":
+          return `${timeStr} — 📺 Décision VAR : ${detail}. ${player ? `Joueur concerné : ${player}.` : ""}`;
+        default:
+          return `${timeStr} — ${event.type}: ${player} (${team}). ${detail}`;
+      }
+    };
+
+    const getCommentaryIcon = (type: string, detail?: string) => {
+      switch (type) {
+        case "Goal": return detail === "Missed Penalty" ? "❌" : "⚽";
+        case "Card": return detail === "Red Card" || detail === "Second Yellow card" ? "🟥" : "🟨";
+        case "subst": return "🔄";
+        case "Var": return "📺";
+        default: return "📋";
+      }
+    };
+
+    // Momentum radar data
+    const momentumData = (() => {
+      if (teamStats.length < 2) return [];
+      const metrics = ["Ball Possession", "Total Shots", "Shots on Goal", "Corner Kicks", "Passes %", "Fouls"];
+      const metricLabels: Record<string, string> = {
+        "Ball Possession": "Possession",
+        "Total Shots": "Tirs",
+        "Shots on Goal": "Tirs cadrés",
+        "Corner Kicks": "Corners",
+        "Passes %": "Passes",
+        "Fouls": "Fautes",
+      };
+      return metrics.map((m) => {
+        const homeStat = (teamStats[0]?.statistics || []).find((s: any) => s.type === m);
+        const awayStat = (teamStats[1]?.statistics || []).find((s: any) => s.type === m);
+        const hv = parseInt(String(homeStat?.value).replace("%", "")) || 0;
+        const av = parseInt(String(awayStat?.value).replace("%", "")) || 0;
+        return { metric: metricLabels[m] || m, home: hv, away: av };
+      });
+    })();
+
     return (
-      <Tabs defaultValue={hasStats ? "events" : "predictions"} className="w-full">
+      <Tabs defaultValue={isLive ? "live" : hasStats ? "events" : "predictions"} className="w-full">
         <div className="overflow-x-auto -mx-4 px-4 mb-4">
           <TabsList className="inline-flex w-auto min-w-full bg-card border border-border/50 rounded-xl p-1">
             {tabItems.map((tab) => (
@@ -176,6 +240,44 @@ const Match = () => {
             ))}
           </TabsList>
         </div>
+
+        {/* Live Commentary */}
+        {hasStats && (
+          <TabsContent value="live" className="mt-0">
+            <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Commentaires Live</h3>
+                {isLive && <span className="ml-auto h-2 w-2 rounded-full bg-live live-pulse" />}
+              </div>
+              <div className="p-3 sm:p-4">
+                {events.length > 0 ? (
+                  <div className="space-y-0">
+                    {[...events].reverse().map((event: any, index: number) => (
+                      <div key={index} className="flex gap-3 py-3 border-b border-border/30 last:border-b-0">
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <span className="text-xs font-black text-primary w-10 text-center">
+                            {event.time?.elapsed}'{event.time?.extra ? `+${event.time.extra}` : ""}
+                          </span>
+                          <span className="text-base">{getCommentaryIcon(event.type, event.detail)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground leading-relaxed">{generateCommentary(event)}</p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            {event.team?.logo && <img src={event.team.logo} alt="" className="h-3.5 w-3.5 object-contain" />}
+                            <span className="text-[10px] text-muted-foreground">{event.team?.name}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8 text-sm">Aucun événement pour le moment</p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        )}
 
         {/* Events */}
         <TabsContent value="events" className="mt-0">
@@ -221,8 +323,9 @@ const Match = () => {
           </div>
         </TabsContent>
 
-        {/* Stats */}
-        <TabsContent value="stats" className="mt-0">
+        {/* Stats + Momentum + ShotMap */}
+        <TabsContent value="stats" className="mt-0 space-y-4">
+          {/* Bar stats */}
           <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="bg-league-header px-4 py-2.5 border-b border-border">
               <h3 className="font-bold text-sm text-foreground">Match Statistics</h3>
@@ -253,6 +356,47 @@ const Match = () => {
               )}
             </div>
           </div>
+
+          {/* Momentum Radar */}
+          {momentumData.length > 0 && (
+            <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+                <Radar className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Radar de Domination</h3>
+              </div>
+              <div className="p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={280}>
+                  <RadarChart data={momentumData}>
+                    <PolarGrid stroke="hsl(var(--border))" />
+                    <PolarAngleAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                    <PolarRadiusAxis tick={false} axisLine={false} />
+                    <RechartsRadar name={homeTeam.name} dataKey="home" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+                    <RechartsRadar name={awayTeam.name} dataKey="away" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.2} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* ShotMap */}
+          {players.length >= 2 && (
+            <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+                <Crosshair className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Carte des Tirs</h3>
+              </div>
+              <div className="p-4 sm:p-6">
+                <ShotMap
+                  playersData={players}
+                  homeTeamId={homeTeamId}
+                  awayTeamId={awayTeamId}
+                  homeTeamName={homeTeam.name}
+                  awayTeamName={awayTeam.name}
+                />
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         {/* Lineups + Tactical Pitch */}
@@ -406,8 +550,23 @@ const Match = () => {
             </div>
           </div>
         </TabsContent>
+        {/* Calendar - Next matches */}
+        <TabsContent value="calendar" className="mt-0">
+          <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+            <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <h3 className="font-bold text-sm text-foreground">Prochains Matchs</h3>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <NextMatchesColumn teamId={homeTeamId} teamName={homeTeam.name} teamLogo={homeTeam.logo} />
+                <NextMatchesColumn teamId={awayTeamId} teamName={awayTeam.name} teamLogo={awayTeam.logo} />
+              </div>
+            </div>
+          </div>
+        </TabsContent>
 
-        {/* Predictions */}
+
         <TabsContent value="predictions" className="mt-0">
           <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
@@ -799,6 +958,53 @@ function TeamFormSection({ teamId, teamName, teamLogo }: { teamId: string; teamN
           </Link>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Next Matches Column ──────────────────────────────────────
+function NextMatchesColumn({ teamId, teamName, teamLogo }: { teamId: string; teamName: string; teamLogo?: string }) {
+  const { data: nextFixtures, isLoading } = useTeamNextFixtures(teamId);
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        {teamLogo && <img src={teamLogo} alt="" className="h-5 w-5 object-contain" />}
+        <span className="text-sm font-bold text-foreground">{teamName}</span>
+      </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : nextFixtures && nextFixtures.length > 0 ? (
+        <div className="space-y-2">
+          {(nextFixtures as any[]).slice(0, 3).map((fix: any, i: number) => (
+            <Link key={i} to={`/match/${fix.fixture.id}`} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex-shrink-0 text-center">
+                <p className="text-[10px] text-muted-foreground">
+                  {new Date(fix.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                </p>
+                <p className="text-[9px] text-muted-foreground">
+                  {new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <img src={fix.teams.home.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />
+                  <span className="text-xs text-foreground truncate">{fix.teams.home.name}</span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <img src={fix.teams.away.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />
+                  <span className="text-xs text-foreground truncate">{fix.teams.away.name}</span>
+                </div>
+              </div>
+              {fix.league?.logo && <img src={fix.league.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />}
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground py-4 text-center">Aucun match à venir</p>
+      )}
     </div>
   );
 }
