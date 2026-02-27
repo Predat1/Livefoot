@@ -14,9 +14,10 @@ const TeamDetail = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const { data: team, isLoading: loadingTeam } = useTeamDetail(teamId || "");
-  const { data: squad, isLoading: loadingSquad } = useTeamSquad(teamId || "");
-  const { data: recentResults, isLoading: loadingResults } = useTeamFixtures(teamId || "", "2024");
-  const { data: nextFixtures } = useTeamNextFixtures(teamId || "");
+  const resolvedId = team?.id || (/^\d+$/.test(teamId || "") ? teamId! : "");
+  const { data: squad, isLoading: loadingSquad } = useTeamSquad(resolvedId);
+  const { data: recentResults, isLoading: loadingResults } = useTeamFixtures(resolvedId, "2024");
+  const { data: nextFixtures } = useTeamNextFixtures(resolvedId);
 
   if (loadingTeam) {
     return (
