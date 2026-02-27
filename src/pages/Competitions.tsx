@@ -98,7 +98,7 @@ const Competitions = () => {
         description="Toutes les compétitions de football : Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, Europa League et plus de 800 tournois."
         keywords="compétitions football, champions league, ligue 1, premier league, liga, serie a, coupe du monde"
       />
-      <div className="container py-4 sm:py-8">
+      <div className="px-2 sm:container py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
