@@ -1,54 +1,82 @@
 
+# Plan: Corrections et Optimisations LiveFoot
 
-# Generation d'un logo LiveFoot avec l'IA
+## 1. Corriger la barre de recherche
 
-## Objectif
-Creer un logo professionnel et memorable pour LiveFoot en utilisant l'IA de generation d'images (Gemini), puis l'integrer automatiquement dans l'application.
+**Probleme** : La recherche du Header et de la page Search utilisent des donnees mock (`useSearch` hook) au lieu des donnees API reelles. Les resultats ne correspondent pas aux vrais matchs/equipes/joueurs affiches sur le site.
 
-## Approche
+**Solution** :
+- Modifier `useSearch` pour combiner les donnees mock avec les resultats de l'Explorer (API) quand disponibles
+- Corriger le comportement du dropdown de recherche dans le Header : s'assurer que les resultats s'affichent correctement sur mobile et desktop
+- Ajouter un lien vers la page `/search` depuis la recherche rapide du header quand aucun resultat n'est trouve
 
-### 1. Edge Function de generation de logo
-Creer une edge function `generate-logo` qui utilise le modele `google/gemini-3-pro-image-preview` (meilleure qualite) pour generer un logo de football moderne.
+## 2. Supprimer toute mention "Lovable" et "API" visible
 
-**Prompt de generation** : Logo minimaliste et moderne pour "LiveFoot", application de scores de football en direct. Fond transparent, couleurs vert vif (#22c55e) et blanc, style iconique avec un ballon de football stylise ou un eclair representant le "live". Design vectoriel propre, adapte aux petites tailles (favicon/icone PWA).
+**Probleme** : Apres verification, aucun texte "Lovable" ou "API" n'est visible directement dans l'interface utilisateur. Cependant, les pages statiques (About, Contact, Privacy, Terms, NotFound) sont en anglais au lieu du francais, ce qui cree une incoherence.
 
-### 2. Page d'administration du logo
-Ajouter un petit composant sur la page Profile (ou une page dediee) permettant de :
-- Generer un logo avec un prompt personnalisable
-- Previsualiser le resultat
-- Telecharger le logo genere dans le storage backend
-- L'appliquer comme logo de l'app
+**Solution** :
+- Traduire toutes les pages statiques en francais (About, Contact, Privacy, Terms, NotFound)
+- Verifier et supprimer toute reference technique qui pourrait apparaitre dans les messages d'erreur visibles par l'utilisateur
 
-### 3. Integration dans l'app
-- Stocker l'image generee dans un bucket storage "logos"
-- Mettre a jour les references au logo (Header, Layout footer, favicon)
+## 3. Verifier et implementer le logo personnalise
 
-## Fichiers concernes
+**Probleme** : Le hook `useAppLogo` charge le logo depuis le storage backend (`logos/logo.png`), avec fallback sur le logo par defaut. Le logo est utilise dans le Header et le favicon est mis a jour dynamiquement.
 
-| Fichier | Changement |
-|---------|-----------|
-| `supabase/functions/generate-logo/index.ts` | Nouvelle edge function appelant Gemini image generation |
-| `src/pages/Profile.tsx` | Section "Generer un logo" avec bouton, prompt et previsualisation |
-| `src/components/Header.tsx` | Utiliser le logo genere depuis le storage si disponible |
-| `src/components/Layout.tsx` | Idem pour le footer |
+**Solution** :
+- Le systeme est deja en place. Verifier que le logo par defaut (`src/assets/livefoot-logo.png`) est bien affiche partout : Header, Footer (Index.tsx), page About, page Install
+- Remplacer les imports statiques de `livefootLogo` par `useAppLogo()` dans les pages qui utilisent encore l'import direct (Index.tsx footer, About.tsx, Install.tsx)
+
+## 4. Ajouter un popup de consentement aux cookies (RGPD)
+
+**Solution** :
+- Creer un composant `CookieConsent` avec :
+  - Bandeau en bas de page (au-dessus du BottomNav sur mobile)
+  - 3 options : "Accepter tout", "Refuser", "Personnaliser"
+  - Sauvegarde du choix dans `localStorage`
+  - Le bandeau ne reapparait plus une fois le choix fait
+- Ajouter le composant dans `App.tsx`
+
+## 5. Reduire les couts API
+
+**Probleme** : La page Explorer fait 10 appels teams + 10 appels top scorers au chargement. Les hooks `useTeamsByLeague` et `useTopScorers` sont appeles en boucle dans le composant (violation des regles React hooks).
+
+**Solution** :
+- Augmenter les `staleTime` pour les donnees semi-statiques (equipes, joueurs, classements) de 2 min a 15-30 min
+- Corriger l'Explorer : remplacer les hooks en boucle par un seul hook personnalise qui gere les requetes de facon conditionnelle
+- Reduire le nombre de leagues chargees dans l'Explorer de 10 a 5
+- Ajouter une strategie de chargement paresseux : ne charger les equipes/joueurs que quand l'utilisateur clique sur l'onglet correspondant
+- Augmenter le `gcTime` (garbage collection) pour eviter de re-fetcher des donnees encore en cache
+
+## 6. Navigation fluide et corrections de bugs
+
+**Solution** :
+- Ajouter `scroll-behavior: smooth` au CSS global
+- Ajouter un `scrollTo(0, 0)` sur chaque changement de route via un composant `ScrollToTop`
+- Corriger le menu mobile qui ne se ferme pas toujours correctement
+- S'assurer que le `BottomNav` ne bloque pas le contenu en bas de page sur toutes les pages
+
+---
 
 ## Details techniques
 
-### Edge function
-- Modele : `google/gemini-3-pro-image-preview`
-- Utilise `LOVABLE_API_KEY` (deja configure)
-- Retourne l'image en base64
-- L'image est ensuite uploadee dans un bucket storage `logos`
+### Fichiers a creer
+| Fichier | Description |
+|---------|-------------|
+| `src/components/CookieConsent.tsx` | Bandeau RGPD cookies |
+| `src/components/ScrollToTop.tsx` | Reset scroll sur navigation |
 
-### Stockage
-- Creer un bucket `logos` public
-- Stocker le logo genere avec un nom fixe (`logo.png`)
-- L'URL publique du bucket sera utilisee dans Header et Layout comme source du logo
-
-### UX
-- Bouton "Generer un logo IA" sur la page Profil
-- Champ de prompt pre-rempli mais modifiable
-- Spinner pendant la generation
-- Previsualisation avant application
-- Bouton "Appliquer comme logo"
-
+### Fichiers a modifier
+| Fichier | Modifications |
+|---------|--------------|
+| `src/hooks/useSearch.ts` | Ameliorer la recherche pour fonctionner avec donnees reelles |
+| `src/hooks/useApiFootball.ts` | Augmenter staleTime/gcTime pour reduire appels API |
+| `src/pages/Explorer.tsx` | Corriger hooks en boucle, lazy loading par onglet |
+| `src/pages/About.tsx` | Traduction francais |
+| `src/pages/Contact.tsx` | Traduction francais |
+| `src/pages/Privacy.tsx` | Traduction francais |
+| `src/pages/Terms.tsx` | Traduction francais |
+| `src/pages/NotFound.tsx` | Traduction francais |
+| `src/pages/Index.tsx` | Utiliser `useAppLogo` au lieu de l'import statique, traduire textes EN restants |
+| `src/pages/Install.tsx` | Utiliser `useAppLogo` |
+| `src/App.tsx` | Ajouter CookieConsent + ScrollToTop |
+| `src/index.css` | Ajouter scroll-behavior smooth |
