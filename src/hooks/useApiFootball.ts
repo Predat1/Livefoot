@@ -473,12 +473,16 @@ export function useTransfersByTeam(teamId: string) {
 
 // ─── Competitions (trending leagues) ──────────────────────────
 
-// Tier 1 — Big 5 European leagues
+// Tier 1 — Big 5 European leagues + UEFA
 export const TIER1_IDS = new Set(["39", "140", "135", "78", "61"]);
-// Tier 2 — UEFA competitions
-export const TIER2_IDS = new Set(["2", "3", "848"]);
+// Tier 2 — UEFA competitions + top leagues
+export const TIER2_IDS = new Set(["2", "3", "848", "4", "5"]); // UCL, UEL, UECL, Euro, WC
 // Tier 3 — Popular regional leagues
-export const TIER3_IDS = new Set(["262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40"]);
+export const TIER3_IDS = new Set([
+  "262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40",
+  "98", "292", "188", "113", "103", "119", "106", "197", "207", "218",
+  "233", "200", "288", "323", "239", "265", "305", "169",
+]);
 
 // All trending league IDs combined
 export const TRENDING_LEAGUE_IDS = [

@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      player_ratings: {
+        Row: {
+          created_at: string
+          fixture_id: string
+          id: string
+          player_id: string
+          player_name: string
+          rating: number
+          team_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fixture_id: string
+          id?: string
+          player_id: string
+          player_name: string
+          rating: number
+          team_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fixture_id?: string
+          id?: string
+          player_id?: string
+          player_name?: string
+          rating?: number
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
