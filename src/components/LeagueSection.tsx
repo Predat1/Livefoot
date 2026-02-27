@@ -4,6 +4,7 @@ import MatchCard from "./MatchCard";
 import LeagueLogo from "./LeagueLogo";
 import CountryFlag from "./CountryFlag";
 import { cn } from "@/lib/utils";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface Team {
   name: string;
@@ -37,8 +38,10 @@ interface LeagueSectionProps {
 
 const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const hasLiveMatch = league.matches.some((m) => m.status === "live");
+  const isLeagueFavorite = isFavorite("competitions", league.id);
 
   return (
     <div
@@ -80,10 +83,10 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
         </div>
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           <button
-            className="text-muted-foreground/50 hover:text-primary transition-colors p-1 hidden sm:block opacity-0 group-hover:opacity-100"
-            onClick={(e) => e.stopPropagation()}
+            className="hover:text-primary transition-colors p-1"
+            onClick={(e) => { e.stopPropagation(); toggleFavorite("competitions", league.id, league.name); }}
           >
-            <Star className="h-4 w-4" />
+            <Star className={cn("h-4 w-4 transition-colors", isLeagueFavorite ? "fill-primary text-primary" : "text-muted-foreground/40")} />
           </button>
           <ChevronDown
             className={cn(

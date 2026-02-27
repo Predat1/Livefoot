@@ -7,16 +7,18 @@ import { Trophy, Users, Star, Search, Globe, ChevronRight, Loader2 } from "lucid
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useTrendingLeagues, useTeamsByLeague, useTopScorers, TRENDING_LEAGUE_IDS } from "@/hooks/useApiFootball";
+import { useFavorites } from "@/hooks/useFavorites";
 
 type Tab = "all" | "competitions" | "teams" | "players";
 
 // Map of league IDs to fetch teams/players for (top 5 leagues)
-const TOP_LEAGUE_IDS = TRENDING_LEAGUE_IDS.slice(0, 5); // PL, La Liga, Serie A, Bundesliga, Ligue 1
+const TOP_LEAGUE_IDS = TRENDING_LEAGUE_IDS.slice(0, 10);
 
 const Explorer = () => {
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "all", label: "Tout", icon: <Globe className="h-4 w-4" /> },
@@ -194,22 +196,26 @@ const Explorer = () => {
   };
 
   const renderCompetition = (comp: any) => (
-    <Link
-      key={comp.id}
-      to="/competitions"
-      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
-    >
-      {comp.logo ? (
-        <img src={comp.logo} alt={comp.name} className="h-6 w-6 object-contain" />
-      ) : (
-        <Trophy className="h-5 w-5 text-muted-foreground" />
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">{comp.name}</p>
-        <p className="text-xs text-muted-foreground">{comp.type} · Saison {comp.season}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-    </Link>
+    <div key={comp.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+      <Link to="/competitions" className="flex items-center gap-3 flex-1 min-w-0">
+        {comp.logo ? (
+          <img src={comp.logo} alt={comp.name} className="h-6 w-6 object-contain" />
+        ) : (
+          <Trophy className="h-5 w-5 text-muted-foreground" />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{comp.name}</p>
+          <p className="text-xs text-muted-foreground">{comp.type} · Saison {comp.season}</p>
+        </div>
+      </Link>
+      <button
+        onClick={(e) => { e.stopPropagation(); toggleFavorite("competitions", comp.id, comp.name); }}
+        className="p-1.5 rounded-lg hover:bg-muted transition-colors flex-shrink-0"
+      >
+        <Star className={cn("h-4 w-4 transition-colors", isFavorite("competitions", comp.id) ? "fill-primary text-primary" : "text-muted-foreground/40")} />
+      </button>
+      <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+    </div>
   );
 
   const renderTeam = (team: any) => (
