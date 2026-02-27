@@ -46,7 +46,7 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
 
   return (
     <motion.div
-      className="mb-3 sm:mb-4 overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-sm card-shine border border-border/50"
+      className="mb-2 sm:mb-4 overflow-hidden rounded-lg sm:rounded-2xl bg-card shadow-sm card-shine border border-border/50"
       initial={{ opacity: 0, y: 30, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
