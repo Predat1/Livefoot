@@ -76,7 +76,11 @@ const Competitions = () => {
 
   return (
     <Layout>
-      <SEOHead title="Football Competitions" description="Explore leagues, cups and tournaments from around the world." />
+      <SEOHead
+        title="Compétitions Football - Ligues & Coupes"
+        description="Toutes les compétitions de football : Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, Europa League et plus de 800 tournois."
+        keywords="compétitions football, champions league, ligue 1, premier league, liga, serie a, coupe du monde"
+      />
       <div className="container py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">

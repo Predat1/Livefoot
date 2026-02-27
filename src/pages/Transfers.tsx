@@ -50,7 +50,11 @@ const Transfers = () => {
 
   return (
     <Layout>
-      <SEOHead title="Transfer News" description="Latest football transfers from top European clubs." />
+      <SEOHead
+        title="Transferts Football - Mercato en Direct"
+        description="Derniers transferts de football : arrivées, départs et rumeurs mercato des plus grands clubs européens. Real Madrid, Barça, PSG, Liverpool et plus."
+        keywords="transfert football, mercato, transfert psg, transfert real madrid, rumeur mercato, transfert ligue 1"
+      />
       <div className="container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
