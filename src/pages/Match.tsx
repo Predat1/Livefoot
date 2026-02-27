@@ -1054,26 +1054,22 @@ function NextMatchesColumn({ teamId, teamName, teamLogo }: { teamId: string; tea
       ) : nextFixtures && nextFixtures.length > 0 ? (
         <div className="space-y-2">
           {(nextFixtures as any[]).slice(0, 3).map((fix: any, i: number) => (
-            <Link key={i} to={`/match/${fix.fixture.id}`} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-              <div className="flex-shrink-0 text-center">
-                <p className="text-[10px] text-muted-foreground">
-                  {new Date(fix.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-                </p>
-                <p className="text-[9px] text-muted-foreground">
-                  {new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                </p>
+            <Link key={i} to={`/match/${fix.id}`} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex-shrink-0 text-center w-12">
+                <p className="text-[10px] text-muted-foreground">{fix.date}</p>
+                <p className="text-[9px] text-muted-foreground">{fix.time}</p>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <img src={fix.teams.home.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />
-                  <span className="text-xs text-foreground truncate">{fix.teams.home.name}</span>
+                  {fix.homeTeam?.logo && <img src={fix.homeTeam.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />}
+                  <span className="text-xs text-foreground truncate">{fix.homeTeam?.name}</span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <img src={fix.teams.away.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />
-                  <span className="text-xs text-foreground truncate">{fix.teams.away.name}</span>
+                  {fix.awayTeam?.logo && <img src={fix.awayTeam.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />}
+                  <span className="text-xs text-foreground truncate">{fix.awayTeam?.name}</span>
                 </div>
               </div>
-              {fix.league?.logo && <img src={fix.league.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />}
+              <span className="text-[9px] text-muted-foreground truncate max-w-16">{fix.league}</span>
             </Link>
           ))}
         </div>
