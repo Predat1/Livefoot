@@ -16,6 +16,7 @@ import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users } from "lucide-react";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MatchSkeleton } from "@/components/BrandedLoader";
 import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import { cn } from "@/lib/utils";
@@ -244,33 +245,7 @@ const Index = () => {
         </div>
 
         {/* Loading skeleton */}
-        {isLoading && (
-          <div className="space-y-3 sm:space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
-                <div className="px-4 py-3 bg-league-header flex items-center gap-3">
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                  <Skeleton className="h-5 w-32" />
-                </div>
-                {[1, 2].map((j) => (
-                  <div key={j} className="flex items-center justify-between px-5 py-5 border-b border-border/50">
-                    <div className="flex flex-1 items-center justify-end gap-3">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-8 w-8 rounded-lg" />
-                    </div>
-                    <div className="mx-6">
-                      <Skeleton className="h-8 w-20 rounded-lg" />
-                    </div>
-                    <div className="flex flex-1 items-center gap-3">
-                      <Skeleton className="h-8 w-8 rounded-lg" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
+        {isLoading && <MatchSkeleton />}
 
         {/* Error state */}
         {isError && !isLoading && (
