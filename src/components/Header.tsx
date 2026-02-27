@@ -52,6 +52,8 @@ const Header = () => {
     { label: "Installer", href: "/install", icon: Download },
   ];
 
+  const location = useLocation();
+  
   const isActive = (href: string) => {
     if (href === "/") return location.pathname === "/";
     return location.pathname.startsWith(href);

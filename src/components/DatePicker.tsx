@@ -74,7 +74,7 @@ const DatePicker = ({
   const dates = generateDates();
 
   const formatDay = (date: Date) => {
-    return date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+    return date.toLocaleDateString("fr-FR", { weekday: "short" }).toUpperCase();
   };
 
   const formatDate = (date: Date) => {
@@ -82,7 +82,7 @@ const DatePicker = ({
   };
 
   const formatMonth = (date: Date) => {
-    return date.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    return date.toLocaleDateString("fr-FR", { month: "short" }).toUpperCase();
   };
 
   const isToday = (date: Date) => {
@@ -95,9 +95,9 @@ const DatePicker = ({
   };
 
   const filters = [
-    { id: "all", label: "All", mobileLabel: "All", count: matchCounts.all, icon: null },
-    { id: "tv", label: "Televised", mobileLabel: "TV", count: matchCounts.tv, icon: Tv },
-    { id: "live", label: "Live Now", mobileLabel: "Live", count: matchCounts.live, icon: Radio, isLive: true },
+    { id: "all", label: "Tous", mobileLabel: "Tous", count: matchCounts.all, icon: null },
+    { id: "tv", label: "Télévisés", mobileLabel: "TV", count: matchCounts.tv, icon: Tv },
+    { id: "live", label: "En Direct", mobileLabel: "Live", count: matchCounts.live, icon: Radio, isLive: true },
   ];
 
   return (
@@ -131,7 +131,7 @@ const DatePicker = ({
                   isSelected(date) ? "text-primary-foreground/90" : "text-muted-foreground",
                   isToday(date) && !isSelected(date) && "text-primary"
                 )}>
-                  {isToday(date) ? "TODAY" : formatDay(date)}
+                  {isToday(date) ? "AUJ." : formatDay(date)}
                 </span>
                 <span className={cn(
                   "text-lg sm:text-2xl font-black leading-tight mt-0.5",
