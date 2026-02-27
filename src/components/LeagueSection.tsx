@@ -60,10 +60,12 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
       }}
     >
       {/* League Header */}
-      <motion.button
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between bg-league-header px-3 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-muted/50 group"
-        whileTap={{ scale: 0.995 }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between bg-league-header px-3 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-muted/50 group cursor-pointer"
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <motion.div
@@ -119,7 +121,7 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
             <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           </motion.div>
         </div>
-      </motion.button>
+      </div>
 
       {/* Matches */}
       <AnimatePresence initial={false}>

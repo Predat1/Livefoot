@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { livefootToast } from "@/components/ui/sonner";
 
 export interface Favorites {
   teams: string[];
@@ -108,6 +109,7 @@ export const useFavorites = () => {
     async (type: keyof Favorites, id: string, name?: string) => {
       const entityType = TYPE_MAP[type];
       const isCurrentlyFavorite = favorites[type].includes(id);
+      const displayName = name || id;
 
       // Optimistic update
       setFavorites((prev) => {
@@ -117,6 +119,9 @@ export const useFavorites = () => {
           : [...list, id];
         return { ...prev, [type]: next };
       });
+
+      // Toast notification
+      livefootToast.favorite(displayName, !isCurrentlyFavorite);
 
       if (user) {
         if (isCurrentlyFavorite) {
