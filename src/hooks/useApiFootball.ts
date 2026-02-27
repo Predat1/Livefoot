@@ -476,22 +476,28 @@ export function useTransfersByTeam(teamId: string) {
 // Tier 1 — Big 5 European leagues + UEFA
 export const TIER1_IDS = new Set(["39", "140", "135", "78", "61"]);
 // Tier 2 — UEFA competitions + top leagues
-export const TIER2_IDS = new Set(["2", "3", "848", "4", "5"]); // UCL, UEL, UECL, Euro, WC
+export const TIER2_IDS = new Set(["2", "3", "848", "4", "5", "480", "531"]); // UCL, UEL, UECL, Euro, WC, Copa America, UEFA Nations League
 // Tier 3 — Popular regional leagues
 export const TIER3_IDS = new Set([
   "262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40",
   "98", "292", "188", "113", "103", "119", "106", "197", "207", "218",
   "233", "200", "288", "323", "239", "265", "305", "169",
+  // Additional leagues
+  "72", "141", "136", "79", "62", "89", "95", "210", "286", "333", "283",
+  "271", "172", "345", "373", "318", "268", "270", "242", "299", "330",
+  "99", "274", "296", "340", "301", "202", "409", "306", "350", "401",
+  "357", "332", "225", "235", "302", "244", "352",
 ]);
 
 // All trending league IDs combined
 export const TRENDING_LEAGUE_IDS = [
   // Tier 1 - Big 5
   "39", "140", "135", "78", "61",
-  // Tier 2 - UEFA
-  "2", "3", "848",
+  // Tier 2 - UEFA + International
+  "2", "3", "848", "4", "5",
   // Tier 3 - Regional
   "262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40",
+  "98", "292", "188", "113", "233", "200",
 ];
 export const TRENDING_LEAGUE_SET = new Set(TRENDING_LEAGUE_IDS);
 
