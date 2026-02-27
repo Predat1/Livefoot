@@ -473,8 +473,22 @@ export function useTransfersByTeam(teamId: string) {
 
 // ─── Competitions (trending leagues) ──────────────────────────
 
-// Top trending league IDs (most followed globally)
-export const TRENDING_LEAGUE_IDS = ["39", "140", "135", "78", "61", "2", "3", "848", "94", "88", "307", "253", "262", "71"];
+// Tier 1 — Big 5 European leagues
+export const TIER1_IDS = new Set(["39", "140", "135", "78", "61"]);
+// Tier 2 — UEFA competitions
+export const TIER2_IDS = new Set(["2", "3", "848"]);
+// Tier 3 — Popular regional leagues
+export const TIER3_IDS = new Set(["262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40"]);
+
+// All trending league IDs combined
+export const TRENDING_LEAGUE_IDS = [
+  // Tier 1 - Big 5
+  "39", "140", "135", "78", "61",
+  // Tier 2 - UEFA
+  "2", "3", "848",
+  // Tier 3 - Regional
+  "262", "71", "88", "94", "307", "253", "128", "203", "144", "179", "40",
+];
 export const TRENDING_LEAGUE_SET = new Set(TRENDING_LEAGUE_IDS);
 
 export function useTrendingLeagues() {
@@ -515,8 +529,44 @@ export function useTrendingLeagues() {
           : "2024",
       }));
     },
-    staleTime: 2 * 60 * 60 * 1000, // 2h — leagues rarely change
-    gcTime: 4 * 60 * 60 * 1000,    // keep in memory 4h
+    staleTime: 2 * 60 * 60 * 1000,
+    gcTime: 4 * 60 * 60 * 1000,
+  });
+}
+
+// ─── All Leagues (for Competitions page) ─────────────────────
+
+export interface AllLeagueItem {
+  id: string;
+  name: string;
+  logo: string;
+  type: string;
+  country: string;
+  countryFlag: string;
+  season: string;
+}
+
+export function useAllLeagues() {
+  return useQuery({
+    queryKey: ["all-leagues"],
+    queryFn: async () => {
+      const res = await getLeagues({ current: "true" });
+      const all = (res.response || []) as any[];
+
+      return all.map((item: any) => ({
+        id: String(item.league.id),
+        name: item.league.name,
+        logo: item.league.logo,
+        type: item.league.type,
+        country: item.country?.name || "",
+        countryFlag: item.country?.flag || "",
+        season: item.seasons?.[item.seasons.length - 1]?.year
+          ? String(item.seasons[item.seasons.length - 1].year)
+          : "2024",
+      })) as AllLeagueItem[];
+    },
+    staleTime: 2 * 60 * 60 * 1000,
+    gcTime: 4 * 60 * 60 * 1000,
   });
 }
 
