@@ -12,10 +12,13 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useFixturesByDate, TIER1_IDS, TIER2_IDS, TIER3_IDS } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
-import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff } from "lucide-react";
+import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
+import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users } from "lucide-react";
 import livefootLogo from "@/assets/livefoot-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import FavoritesFeed from "@/components/FavoritesFeed";
+import PlayerAvatar from "@/components/PlayerAvatar";
+import { cn } from "@/lib/utils";
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -95,6 +98,7 @@ const Index = () => {
   });
 
   const { data: newsArticles = [] } = useFootballNews();
+  const { data: topRatedPlayers, isLoading: loadingTopRated } = useCommunityTopRated("week");
   const trendingNews = newsArticles.filter((n) => n.trending).slice(0, 4);
 
   const footerLinks = [
@@ -164,7 +168,53 @@ const Index = () => {
         {/* Favorites Feed */}
         <FavoritesFeed leagues={leagues} isLoading={isLoading} />
 
-        {/* Section Header */}
+        {/* Top Community Players Widget */}
+        {(topRatedPlayers && topRatedPlayers.length > 0) && (
+          <section className="mb-6 sm:mb-8">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
+                <Star className="h-4 w-4 text-primary" />
+                <h2 className="text-sm sm:text-base font-bold text-foreground">Top Joueurs de la Semaine</h2>
+              </div>
+              <Link
+                to="/rankings"
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                Voir tout <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-1">
+              {topRatedPlayers.slice(0, 5).map((player, index) => (
+                <Link
+                  key={player.player_id}
+                  to={`/players/${player.player_id}`}
+                  className="flex-shrink-0 w-28 sm:w-32 rounded-xl bg-card border border-border/50 p-3 text-center hover-lift transition-all"
+                >
+                  <div className="relative mx-auto mb-2">
+                    <PlayerAvatar name={player.player_name} size="sm" />
+                    <span className={cn(
+                      "absolute -top-1 -left-1 h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-black",
+                      index === 0 ? "bg-primary text-primary-foreground" :
+                      index === 1 ? "bg-primary/20 text-primary" :
+                      index === 2 ? "bg-primary/10 text-primary" :
+                      "bg-muted text-muted-foreground"
+                    )}>
+                      {index + 1}
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-bold text-foreground truncate">{player.player_name}</p>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    <Star className="h-3 w-3 text-primary fill-primary" />
+                    <span className="text-xs font-black text-primary">{player.avg_rating}</span>
+                  </div>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{player.total_ratings} votes</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
