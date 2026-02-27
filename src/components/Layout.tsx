@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
-import livefootLogo from "@/assets/livefoot-logo.png";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,6 +16,7 @@ const footerLinks = [
 ];
 
 const Layout = ({ children }: LayoutProps) => {
+  const logoUrl = useAppLogo();
   return (
     <div className="min-h-screen bg-background pb-16 lg:pb-0">
       <Header />
@@ -26,7 +27,7 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="container text-center">
           <div className="mb-6 flex items-center justify-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
-              <img src={livefootLogo} alt="LiveFoot logo" className="h-full w-full object-cover" />
+              <img src={logoUrl} alt="LiveFoot logo" className="h-full w-full object-cover" />
             </div>
             <span className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
           </div>
