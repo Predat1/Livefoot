@@ -3,7 +3,7 @@ import {
   getFixtures, getLiveFixtures, getTopScorers, getTopAssists,
   getStandings, getFixtureById, getFixtureEvents, getFixtureLineups,
   getFixtureStatistics, getHeadToHead, getLeagues, getTeams, getTeamById,
-  getTeamSquad, getTeamStatistics, getTransfers,
+  getTeamSquad, getTeamStatistics, getTransfers, searchTeamByName,
 } from "@/services/apiFootball";
 import { format } from "date-fns";
 
@@ -362,7 +362,10 @@ export interface ApiTeamInfo {
 }
 
 export function useTeamDetail(teamId: string) {
-  return useQuery({
+  const isNumeric = /^\d+$/.test(teamId);
+
+  // If numeric, fetch directly by ID
+  const directQuery = useQuery({
     queryKey: ["team", teamId],
     queryFn: async () => {
       const res = await getTeamById(teamId);
@@ -385,8 +388,42 @@ export function useTeamDetail(teamId: string) {
       } as ApiTeamInfo;
     },
     staleTime: 10 * 60 * 1000,
-    enabled: !!teamId,
+    enabled: !!teamId && isNumeric,
   });
+
+  // If slug, search by name and pick best match
+  const slugQuery = useQuery({
+    queryKey: ["team-search", teamId],
+    queryFn: async () => {
+      const searchName = teamId.replace(/-/g, " ");
+      const res = await searchTeamByName(searchName);
+      if (!res.response || res.response.length === 0) return null;
+      // Find best match (case-insensitive)
+      const match = res.response.find((r: any) =>
+        r.team.name.toLowerCase() === searchName.toLowerCase()
+      ) || res.response[0];
+      const item = match as any;
+      return {
+        id: String(item.team.id),
+        name: item.team.name,
+        logo: item.team.logo,
+        country: item.team.country,
+        founded: item.team.founded,
+        venue: item.venue
+          ? {
+              name: item.venue.name,
+              city: item.venue.city,
+              capacity: item.venue.capacity,
+              image: item.venue.image,
+            }
+          : null,
+      } as ApiTeamInfo;
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!teamId && !isNumeric,
+  });
+
+  return isNumeric ? directQuery : slugQuery;
 }
 
 export function useTeamSquad(teamId: string) {

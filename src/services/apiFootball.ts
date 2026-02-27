@@ -76,6 +76,9 @@ export const getTeams = (params: Record<string, string>) =>
 export const getTeamById = (id: string) =>
   callApi("teams", { id });
 
+export const searchTeamByName = (name: string) =>
+  callApi("teams", { search: name });
+
 export const getTeamStatistics = (team: string, season: string, league: string) =>
   callApi("teams/statistics", { team, season, league });
 
@@ -152,6 +155,7 @@ export default {
   getStandings,
   getTeams,
   getTeamById,
+  searchTeamByName,
   getTeamStatistics,
   getTeamSquad,
   getPlayers,
