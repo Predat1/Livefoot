@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { UserCircle, Save, LogOut, Star, ArrowLeft, Shield } from "lucide-react";
+import LogoGenerator from "@/components/LogoGenerator";
 import { mockTeams } from "@/data/teamsData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { cn } from "@/lib/utils";
@@ -199,6 +200,11 @@ const Profile = () => {
               {saving ? "Saving…" : "Save Changes"}
             </Button>
           </div>
+        </div>
+
+        {/* Logo Generator */}
+        <div className="mb-6">
+          <LogoGenerator />
         </div>
 
         {/* Sign out */}

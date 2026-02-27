@@ -15,10 +15,10 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useSearch } from "@/hooks/useSearch";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
-import livefootLogo from "@/assets/livefoot-logo.png";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 const Header = () => {
-  const location = useLocation();
+  const logoUrl = useAppLogo();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -148,7 +148,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="group flex items-center gap-2 flex-shrink-0">
             <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg overflow-hidden shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-110">
-              <img src={livefootLogo} alt="LiveFoot" className="h-full w-full object-cover" />
+              <img src={logoUrl} alt="LiveFoot" className="h-full w-full object-cover" />
             </div>
             <span className="text-sm sm:text-lg font-black tracking-tight hidden sm:block">LIVEFOOT</span>
           </Link>
