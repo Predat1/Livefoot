@@ -876,7 +876,7 @@ const Match = () => {
         title={`${homeTeam.name} vs ${awayTeam.name} - ${isLive ? "Live" : isFinished ? "Result" : "Preview"}`}
         description={`${homeTeam.name} vs ${awayTeam.name} - ${league.name}`}
       />
-      <div className="container py-4 sm:py-8">
+      <div className="px-2 sm:container py-4 sm:py-8">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
             <ArrowLeft className="h-4 w-4" /> Retour

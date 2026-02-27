@@ -34,7 +34,7 @@ const Teams = () => {
         description="Découvrez les clubs de football des 5 grands championnats : effectifs, statistiques et résultats de Premier League, La Liga, Serie A, Bundesliga, Ligue 1."
         keywords="équipes football, clubs foot, effectif psg, effectif real madrid, joueurs premier league"
       />
-      <div className="container py-4 sm:py-8">
+      <div className="px-2 sm:container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />

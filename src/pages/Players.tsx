@@ -97,7 +97,7 @@ const Players = () => {
         description="Meilleurs buteurs, passeurs et joueurs les mieux notés des 5 grands championnats. Statistiques détaillées, comparaisons et notes communautaires."
         keywords="meilleur buteur, joueurs football, statistiques joueurs, buteur ligue 1, passeur premier league, notes joueurs"
       />
-      <div className="container py-4 sm:py-8">
+      <div className="px-2 sm:container py-4 sm:py-8">
         {/* Title */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
