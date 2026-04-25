@@ -104,12 +104,37 @@ const Index = () => {
   const { data: topRatedPlayers, isLoading: loadingTopRated } = useCommunityTopRated("week");
   const trendingNews = newsArticles.filter((n) => n.trending).slice(0, 4);
 
-  const footerLinks = [
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
-    { label: "Privacy", href: "/privacy" },
-    { label: "Terms", href: "/terms" },
-  ];
+const FOOTER_LINKS = [
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+];
+
+const SEO_LD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "LiveFoot",
+    url: "https://livefoot.app",
+    description: "Scores de football en direct, résultats, calendriers, classements et statistiques des meilleures ligues mondiales.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: "https://livefoot.app/search?q={search_term_string}" },
+      "query-input": "required name=search_term_string",
+    },
+    inLanguage: ["fr", "en"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SportsOrganization",
+    name: "LiveFoot",
+    url: "https://livefoot.app",
+    sport: "Football",
+    description: "Application de scores de football en direct couvrant plus de 800 compétitions mondiales.",
+  },
+];
+
 
   return (
     <div ref={containerRef} className="min-h-screen bg-background relative pb-safe lg:pb-0">
@@ -117,29 +142,7 @@ const Index = () => {
         title="LiveFoot - Scores Football en Direct Aujourd'hui"
         description="Suivez tous les scores de football en direct, résultats, calendriers et classements : Premier League, La Liga, Serie A, Bundesliga, Ligue 1 et plus de 800 compétitions."
         keywords="scores football en direct, résultats foot, classement ligue 1, premier league résultats, scores live, football aujourd'hui, livescore"
-        jsonLd={[
-          {
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "LiveFoot",
-            url: "https://livefoot.app",
-            description: "Scores de football en direct, résultats, calendriers, classements et statistiques des meilleures ligues mondiales.",
-            potentialAction: {
-              "@type": "SearchAction",
-              target: { "@type": "EntryPoint", urlTemplate: "https://livefoot.app/search?q={search_term_string}" },
-              "query-input": "required name=search_term_string",
-            },
-            inLanguage: ["fr", "en"],
-          },
-          {
-            "@context": "https://schema.org",
-            "@type": "SportsOrganization",
-            name: "LiveFoot",
-            url: "https://livefoot.app",
-            sport: "Football",
-            description: "Application de scores de football en direct couvrant plus de 800 compétitions mondiales.",
-          },
-        ]}
+        jsonLd={SEO_LD}
       />
       <PullToRefreshIndicator
         pullDistance={pullDistance}
@@ -353,7 +356,7 @@ const Index = () => {
             Votre destination ultime pour les scores en direct, résultats, calendriers, classements, statistiques et actualités football.
           </p>
           <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
-            {footerLinks.map((link) => (
+            {FOOTER_LINKS.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
