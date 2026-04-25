@@ -31,8 +31,27 @@ const DailyPicks = () => {
   // For a real app, we might want to pre-calculate these or only pick "top" matches
   // Here we'll show the top matches from popular leagues
   const topMatches = useMemo(() => {
-    // Sort by "importance" (simplified: based on league prominence or just the first few)
-    return allMatches.slice(0, 5);
+    const realMatches = allMatches.slice(0, 5);
+    
+    // Inject mock matches to preview the new prediction markets
+    const mockMatches = [
+      {
+        id: "mock1",
+        leagueName: "Ligue des Champions",
+        leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
+        homeTeam: { id: "541", name: "Real Madrid", logo: "https://media.api-sports.io/football/teams/541.png" },
+        awayTeam: { id: "50", name: "Manchester City", logo: "https://media.api-sports.io/football/teams/50.png" }
+      },
+      {
+        id: "mock2",
+        leagueName: "Premier League",
+        leagueLogo: "https://media.api-sports.io/football/leagues/39.png",
+        homeTeam: { id: "42", name: "Arsenal", logo: "https://media.api-sports.io/football/teams/42.png" },
+        awayTeam: { id: "40", name: "Liverpool", logo: "https://media.api-sports.io/football/teams/40.png" }
+      }
+    ];
+
+    return realMatches.length > 0 ? realMatches : mockMatches;
   }, [allMatches]);
 
   return (
@@ -105,7 +124,7 @@ const DailyPicks = () => {
             </div>
             <div>
               <h2 className="text-xl font-black text-foreground">Pronos du {format(today, "d MMMM", { locale: fr })}</h2>
-              <p className="text-xs text-muted-foreground">{allMatches.length} matchs analysés aujourd'hui</p>
+              <p className="text-xs text-muted-foreground">{topMatches.length} matchs analysés (Mode Aperçu Actif)</p>
             </div>
           </div>
           

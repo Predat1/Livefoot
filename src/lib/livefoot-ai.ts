@@ -452,7 +452,24 @@ export function generatePrediction(params: {
     bestBets.push({ type: "BTTS", label: "Les deux équipes marquent", confidence: bttsProb, emoji: "🎯" });
   } else {
     bestBets.push({ type: "BTTS", label: "Une seule équipe marque", confidence: 100 - bttsProb, emoji: "🚫" });
+  // Exact Score
+  bestBets.push({ type: "Score Exact", label: `${predictedHome} - ${predictedAway}`, confidence: Math.max(15, confidence - 25), emoji: "🎯" });
+
+  // Double Chance
+  if (outcome === "home") {
+    bestBets.push({ type: "Double Chance", label: `${homeTeamName} ou Nul`, confidence: Math.min(95, homeProb + drawProb), emoji: "🛡️" });
+  } else if (outcome === "away") {
+    bestBets.push({ type: "Double Chance", label: `${awayTeamName} ou Nul`, confidence: Math.min(95, awayProb + drawProb), emoji: "🛡️" });
+  } else {
+    bestBets.push({ type: "Double Chance", label: "Les deux équipes peuvent gagner", confidence: Math.min(90, homeProb + awayProb), emoji: "⚖️" });
   }
+
+  // HT/FT (Mi-temps / Fin de match)
+  let htftLabel = "";
+  if (outcome === "home") htftLabel = `${homeTeamName} / ${homeTeamName}`;
+  else if (outcome === "away") htftLabel = `${awayTeamName} / ${awayTeamName}`;
+  else htftLabel = "Nul / Nul";
+  bestBets.push({ type: "HT/FT", label: htftLabel, confidence: Math.max(20, confidence - 20), emoji: "⏱️" });
 
   return {
     outcome,

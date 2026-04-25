@@ -219,7 +219,7 @@ const Header = () => {
           <div className="flex-1 lg:hidden" />
 
           {/* Desktop search — BeSoccer style: wide search bar */}
-          <div className="relative hidden md:flex items-center" ref={searchRef}>
+          <div className="relative hidden xl:flex items-center" ref={searchRef}>
             <div className="relative">
               <Input
                 ref={searchInputRef}
@@ -227,7 +227,7 @@ const Header = () => {
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
-                className="h-9 w-[200px] xl:w-[280px] rounded-lg border-header-foreground/15 bg-header-foreground/5 pl-4 pr-9 text-sm text-header-foreground placeholder:text-header-foreground/40 transition-all duration-300 focus:w-[260px] xl:focus:w-[340px] focus:bg-header-foreground/10 focus-visible:ring-primary"
+                className="h-9 w-[280px] rounded-lg border-header-foreground/15 bg-header-foreground/5 pl-4 pr-9 text-sm text-header-foreground placeholder:text-header-foreground/40 transition-all duration-300 focus:w-[340px] focus:bg-header-foreground/10 focus-visible:ring-primary"
               />
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-header-foreground/40" />
             </div>
