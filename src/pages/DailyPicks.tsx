@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { useFixturesByDate } from "@/hooks/useApiFootball";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
-import { Brain, Calendar, Sparkles, TrendingUp, Trophy, Zap, ChevronRight, Filter } from "lucide-react";
+import { Brain, Calendar, Sparkles, TrendingUp, Trophy, Zap, ChevronRight, Filter, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
