@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="#0f0a1e"/>
+  <path d="M256 128C185.3 128 128 185.3 128 256C128 326.7 185.3 384 256 384C326.7 384 384 326.7 384 256C384 185.3 326.7 128 256 128ZM256 352C203 352 160 309 160 256C160 203 203 160 256 160C309 160 352 203 352 256C352 309 309 352 256 352Z" fill="url(#logo-grad)" filter="url(#glow)"/>
+  <path d="M256 192C220.7 192 192 220.7 192 256C192 291.3 220.7 320 256 320C291.3 320 320 291.3 320 256C320 220.7 291.3 192 256 192ZM256 288C238.3 288 224 273.7 224 256C224 238.3 238.3 224 256 224C273.7 224 288 238.3 288 256C288 273.7 273.7 288 256 288Z" fill="white" opacity="0.8"/>
+  <path d="M256 160L256 128M256 384L256 352M352 256L384 256M128 256L160 256" stroke="url(#logo-grad)" stroke-width="12" stroke-linecap="round"/>
+</svg>

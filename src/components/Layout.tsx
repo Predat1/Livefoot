@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
 import { useAppLogo } from "@/hooks/useAppLogo";
-import logoSvg from "@/assets/logo.svg";
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,7 +27,7 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="container text-center">
           <div className="mb-6 flex items-center justify-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30 gradient-primary p-2 border border-white/10">
-              <img src={logoSvg} alt="LiveFoot logo" className="h-full w-full object-contain brightness-0 invert" />
+              <img src="/logo.svg" alt="LiveFoot logo" className="h-full w-full object-contain brightness-0 invert" />
             </div>
             <span className="text-2xl font-black text-foreground tracking-tighter">LIVEFOOT<span className="text-primary ml-1">AI</span></span>
           </div>
