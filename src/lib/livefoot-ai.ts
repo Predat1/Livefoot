@@ -471,6 +471,27 @@ export function generatePrediction(params: {
   else htftLabel = "Nul / Nul";
   bestBets.push({ type: "HT/FT", label: htftLabel, confidence: Math.max(20, confidence - 20), emoji: "⏱️" });
 
+  // 1. Draw No Bet (DNB)
+  if (homeProb > awayProb) {
+    bestBets.push({ type: "DNB", label: `DNB: ${homeTeamName}`, confidence: Math.min(98, homeProb + drawProb * 0.4), emoji: "🛡️" });
+  } else {
+    bestBets.push({ type: "DNB", label: `DNB: ${awayTeamName}`, confidence: Math.min(98, awayProb + drawProb * 0.4), emoji: "🛡️" });
+  }
+
+  // 2. Asian Handicap (Simplified)
+  if (rank.rankDiff > 8 || hForm.formScore > aForm.formScore + 25) {
+    bestBets.push({ type: "Handicap", label: `${homeTeamName} -1.5`, confidence: Math.max(30, confidence - 15), emoji: "📉" });
+  } else if (rank.rankDiff < -8 || aForm.formScore > hForm.formScore + 25) {
+    bestBets.push({ type: "Handicap", label: `${awayTeamName} -1.5`, confidence: Math.max(30, confidence - 15), emoji: "📉" });
+  }
+
+  // 3. Clean Sheet / Win to Nil
+  if (outcome === "home" && aForm.avgGoalsScored < 0.7 && hForm.avgGoalsConceded < 0.9) {
+    bestBets.push({ type: "Special", label: `${homeTeamName} Win to Nil`, confidence: Math.max(25, confidence - 10), emoji: "🧤" });
+  } else if (hForm.avgGoalsConceded < 0.8) {
+    bestBets.push({ type: "Special", label: `${homeTeamName} Clean Sheet`, confidence: 65, emoji: "🔒" });
+  }
+
   return {
     outcome,
     confidence,

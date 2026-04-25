@@ -145,6 +145,40 @@ const Match = () => {
   const players = (playersData || []) as any[];
   const odds = (oddsData || []) as any[];
 
+  // Generate synthetic momentum timeline for AreaChart
+  const momentumTimeline = useMemo(() => {
+    const timeline = [];
+    const maxMin = isLive ? (minute || 45) : (isFinished ? 90 : 0);
+    let currentValue = 0;
+    
+    for (let i = 0; i <= maxMin; i += 2) {
+      // Find events in this window
+      const eventsInWindow = events.filter(e => e.time.elapsed >= i && e.time.elapsed < i + 2);
+      
+      eventsInWindow.forEach(e => {
+        const isHome = e.team.id === fix.teams.home.id;
+        const multiplier = isHome ? 1 : -1;
+        
+        if (e.type === "Goal") currentValue += 40 * multiplier;
+        if (e.type === "Card" && e.detail === "Red Card") currentValue -= 50 * multiplier;
+        if (e.type === "Card" && e.detail === "Yellow Card") currentValue -= 5 * multiplier;
+        if (e.type === "subst") currentValue += 2 * multiplier;
+      });
+
+      // Natural decay towards center
+      currentValue *= 0.85;
+      
+      // Random noise for "aliveness"
+      currentValue += (Math.random() - 0.5) * 10;
+      
+      // Clamp
+      currentValue = Math.max(-90, Math.min(90, currentValue));
+      
+      timeline.push({ minute: i, value: currentValue });
+    }
+    return timeline;
+  }, [events, isLive, isFinished, minute, fix.teams.home.id]);
+
   const getEventIcon = (type: string, detail?: string) => {
     switch (type) {
       case "Goal": return <Target className="h-4 w-4 text-primary" />;
@@ -173,6 +207,8 @@ const Match = () => {
   // ─── Tabs ────────────────────────────────────────────────────
   const renderTabs = () => {
     const tabItems = [
+      { value: "predictions", label: "Pronos IA" },
+      { value: "momentum", label: "Momentum" },
       ...(hasStats ? [{ value: "live", label: "Live" }] : []),
       { value: "events", label: "Events" },
       { value: "stats", label: "Stats" },
@@ -181,7 +217,6 @@ const Match = () => {
       ...(hasStats ? [{ value: "ratings", label: "Notes" }] : []),
       { value: "form", label: "Forme" },
       { value: "calendar", label: "Calendrier" },
-      { value: "predictions", label: "LiveFoot AI" },
       { value: "community", label: "Pronos" },
       ...(odds.length > 0 ? [{ value: "odds", label: "Cotes" }] : []),
       { value: "injuries", label: "Blessures" },
@@ -472,6 +507,85 @@ const Match = () => {
               </div>
             </div>
           )}
+        </TabsContent>
+        
+        {/* Momentum - Match Pressure Graph */}
+        <TabsContent value="momentum" className="mt-0">
+          <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+            <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Graphique de Pression (Momentum)</h3>
+              </div>
+              <div className="flex items-center gap-4 text-[10px] font-bold">
+                <div className="flex items-center gap-1.5"><div className="h-2 w-2 rounded-full bg-primary" /> {homeTeam.name}</div>
+                <div className="flex items-center gap-1.5"><div className="h-2 w-2 rounded-full bg-destructive" /> {awayTeam.name}</div>
+              </div>
+            </div>
+            <div className="p-2 sm:p-6 bg-[#0c0d12]">
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={momentumTimeline}>
+                    <defs>
+                      <linearGradient id="colorHome" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorAway" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis 
+                      dataKey="minute" 
+                      tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                      label={{ value: "Minutes", position: "insideBottom", offset: -5, fill: "rgba(255,255,255,0.2)", fontSize: 10 }}
+                    />
+                    <YAxis hide domain={[-100, 100]} />
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const val = payload[0].value as number;
+                          const min = payload[0].payload.minute;
+                          return (
+                            <div className="rounded-lg bg-card/95 border border-border p-2 shadow-xl backdrop-blur-md">
+                              <p className="text-[10px] font-bold text-muted-foreground mb-1">{min}'</p>
+                              <p className={cn("text-xs font-black", val > 0 ? "text-primary" : "text-destructive")}>
+                                {val > 0 ? `${homeTeam.name} domine` : `${awayTeam.name} domine`}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="url(#colorHome)" 
+                      fill="url(#colorHome)" 
+                      strokeWidth={2}
+                      baseLine={0}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Domination Globale</p>
+                  <p className="text-sm font-black text-white">{Math.round(momentumData.reduce((s, d) => s + (d.home || 0), 0) / 5)}% - {Math.round(momentumData.reduce((s, d) => s + (d.away || 0), 0) / 5)}%</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Intensité</p>
+                  <p className="text-sm font-black text-white">Élevée 🔥</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Heatmap */}
@@ -958,6 +1072,28 @@ const Match = () => {
 
         {/* All tabs */}
         {renderTabs()}
+
+        {/* VIP Premium CTA */}
+        <div className="mt-8 mb-12 p-8 rounded-[2rem] bg-gradient-to-br from-amber-500/10 via-card to-amber-500/5 border border-amber-500/20 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Trophy className="h-24 w-24 text-amber-500" />
+          </div>
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest mb-4">
+              <Zap className="h-3 w-3" /> Exclusivité Premium
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-black text-white mb-3">Accédez aux <span className="text-amber-500">Value Bets</span> de l'Oracle</h3>
+            <p className="text-sm text-muted-foreground max-w-xl mb-6">
+              Nos algorithmes de Deep Learning détectent les erreurs de cotation des bookmakers. Rejoignez le club VIP pour recevoir les alertes "Haute Confiance".
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <Link to="/auth" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 text-center">
+                DEVENIR VIP MAINTENANT
+              </Link>
+              <span className="text-xs font-bold text-muted-foreground">À partir de 9.99€ / mois</span>
+            </div>
+          </div>
+        </div>
       </div>
     </Layout>
   );

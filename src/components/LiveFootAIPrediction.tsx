@@ -1,9 +1,10 @@
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { Brain, TrendingUp, Shield, Zap, ChevronRight, Sparkles, Target, Share2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Brain, TrendingUp, Shield, Zap, ChevronRight, Sparkles, Target, Share2, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generatePrediction, type LiveFootAIPrediction, type TeamFormData } from "@/lib/livefoot-ai";
 import { useTeamForm, useHeadToHead } from "@/hooks/useApiFootball";
+import { toast } from "sonner";
 
 interface LiveFootAIPredictionCardProps {
   homeTeamId: string;
@@ -26,6 +27,7 @@ const LiveFootAIPredictionCard = ({
   homeTeamId, awayTeamId, homeTeamName, awayTeamName,
   homeLogo, awayLogo, standings, injuries,
 }: LiveFootAIPredictionCardProps) => {
+  const [isCopying, setIsCopying] = useState(false);
   const isMock = homeTeamId.startsWith("mock") || awayTeamId.startsWith("mock");
 
   const { data: homeFormData } = useTeamForm(isMock ? "" : homeTeamId);
@@ -93,6 +95,20 @@ const LiveFootAIPredictionCard = ({
     );
   }
 
+  const isValueBet = prediction.confidence > 65 && prediction.risk === "low";
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const text = `🎯 Pronostic LiveFoot AI: ${homeTeamName} vs ${awayTeamName}\n🏆 Mon prono: ${prediction.advice}\n📈 Confiance: ${prediction.confidence}%\n🔥 Découvrez plus sur LiveFoot AI !`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setIsCopying(true);
+      toast.success("Copié dans le presse-papier !");
+      setTimeout(() => setIsCopying(false), 2000);
+    }
+  };
+
   const risk = riskColors[prediction.risk];
   const winnerName = prediction.outcome === "home" ? homeTeamName
     : prediction.outcome === "away" ? awayTeamName
@@ -116,6 +132,7 @@ const LiveFootAIPredictionCard = ({
         {/* Header */}
         <div className="relative px-3.5 sm:px-6 py-3 sm:py-4 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -124,16 +141,32 @@ const LiveFootAIPredictionCard = ({
               <Brain className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-white" />
             </motion.div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
-                LiveFoot AI
-                <Sparkles className="h-3 w-3 text-violet-400" />
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
+                  LiveFoot AI
+                  <Sparkles className="h-3 w-3 text-violet-400" />
+                </h3>
+                {isValueBet && (
+                  <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black uppercase tracking-tighter">
+                    <Zap className="h-2 w-2" /> Value
+                  </span>
+                )}
+              </div>
               <p className="text-[9px] sm:text-[10px] text-violet-300/60">Analyse intelligente</p>
             </div>
           </div>
-          <div className={cn("flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold border whitespace-nowrap", risk.bg, risk.text, risk.border)}>
-            <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-            {risk.label}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleShare}
+              className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center text-white"
+              title="Partager"
+            >
+              {isCopying ? <Check className="h-3 w-3 text-emerald-400" /> : <Share2 className="h-3 w-3" />}
+            </button>
+            <div className={cn("flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold border whitespace-nowrap", risk.bg, risk.text, risk.border)}>
+              <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              {risk.label}
+            </div>
           </div>
         </div>
 
