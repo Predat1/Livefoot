@@ -111,9 +111,6 @@ export const getTopRedCards = (league: string, season: string) =>
 export const getTransfers = (params: Record<string, string>) =>
   callApi("transfers", params);
 
-// ─── Predictions ──────────────────────────────────────────────
-export const getPredictions = (fixtureId: string) =>
-  callApi("predictions", { fixture: fixtureId });
 
 // ─── Odds ─────────────────────────────────────────────────────
 export const getOdds = (params: Record<string, string>) =>
@@ -169,7 +166,6 @@ export default {
   getTopYellowCards,
   getTopRedCards,
   getTransfers,
-  getPredictions,
   getOdds,
   getInjuries,
   getCoach,

@@ -34,6 +34,7 @@ const PredictionsDashboard = lazy(() => import("@/pages/PredictionsDashboard"));
 const Explorer = lazy(() => import("@/pages/Explorer"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const DynamicSitemap = lazy(() => import("@/pages/DynamicSitemap"));
+const DailyPicks = lazy(() => import("@/pages/DailyPicks"));
 
 const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
 
@@ -61,6 +62,7 @@ const AnimatedRoutes = () => {
           <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/predictions" element={<PageTransition><PredictionsDashboard /></PageTransition>} />
+          <Route path="/daily-picks" element={<PageTransition><DailyPicks /></PageTransition>} />
           <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="/about" element={<PageTransition><About /></PageTransition>} />
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />

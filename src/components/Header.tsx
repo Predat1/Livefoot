@@ -35,10 +35,9 @@ const Header = () => {
 
   const mainNav = [
     { label: "MATCHS", href: "/" },
-    { label: "INFOS", href: "/news" },
+    { label: "PRONOS IA", href: "/daily-picks" },
     { label: "COMPÉTITIONS", href: "/competitions" },
     { label: "ÉQUIPES", href: "/teams" },
-    { label: "JOUEURS", href: "/players" },
     { label: "TRANSFERTS", href: "/transfers" },
   ];
 
@@ -46,7 +45,8 @@ const Header = () => {
     { label: "Live", href: "/live", icon: Zap },
     { label: "Classements", href: "/standings", icon: Trophy },
     { label: "Rankings", href: "/rankings", icon: Trophy },
-    { label: "Pronostics", href: "/predictions", icon: Trophy },
+    { label: "Pronos Communauté", href: "/predictions", icon: Users },
+    { label: "Infos", href: "/news", icon: Newspaper },
     { label: "Favoris", href: "/favorites", icon: Star },
     { label: "Explorer", href: "/explorer", icon: Globe },
     { label: "Installer", href: "/install", icon: Download },

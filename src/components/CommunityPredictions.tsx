@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Send, Loader2, Trophy, Minus, Plus, TrendingUp, BarChart3, Sparkles } from "lucide-react";
+import { Users, Send, Loader2, Trophy, Minus, Plus, TrendingUp, BarChart3, Sparkles, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 interface CommunityPredictionsProps {
   fixtureId: string;
@@ -57,29 +58,38 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Connectez-vous pour voter !");
+      return;
+    }
     setSubmitting(true);
 
-    if (hasSubmitted) {
-      await supabase
-        .from("match_predictions")
-        .update({ home_score: myHome, away_score: myAway })
-        .eq("user_id", user.id)
-        .eq("fixture_id", fixtureId);
-    } else {
-      await supabase
-        .from("match_predictions")
-        .insert({ user_id: user.id, fixture_id: fixtureId, home_score: myHome, away_score: myAway });
-    }
+    try {
+      if (hasSubmitted) {
+        await supabase
+          .from("match_predictions")
+          .update({ home_score: myHome, away_score: myAway })
+          .eq("user_id", user.id)
+          .eq("fixture_id", fixtureId);
+        toast.success("Pronostic mis à jour !");
+      } else {
+        await supabase
+          .from("match_predictions")
+          .insert({ user_id: user.id, fixture_id: fixtureId, home_score: myHome, away_score: myAway });
+        toast.success("Pronostic validé ! +1 pt de participation");
+      }
 
-    setHasSubmitted(true);
-    setJustSubmitted(true);
-    setTimeout(() => setJustSubmitted(false), 2000);
-    await loadPredictions();
-    setSubmitting(false);
+      setHasSubmitted(true);
+      setJustSubmitted(true);
+      setTimeout(() => setJustSubmitted(false), 3000);
+      await loadPredictions();
+    } catch (err) {
+      toast.error("Erreur lors de l'envoi");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // Stats
   const stats = useMemo(() => {
     const total = predictions.length;
     if (total === 0) return null;
@@ -89,11 +99,9 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
     const avgHome = (predictions.reduce((s, p) => s + p.home_score, 0) / total).toFixed(1);
     const avgAway = (predictions.reduce((s, p) => s + p.away_score, 0) / total).toFixed(1);
 
-    // Confidence: how skewed the predictions are (higher = more consensus)
     const maxPct = Math.max(homeWins, draws, awayWins) / total;
     const confidence = Math.round(maxPct * 100);
 
-    // Score distribution
     const scoreMap = new Map<string, number>();
     predictions.forEach((p) => {
       const key = `${p.home_score}-${p.away_score}`;
@@ -104,215 +112,241 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
     return { total, homeWins, draws, awayWins, avgHome, avgAway, confidence, topScores };
   }, [predictions]);
 
-  const ScoreButton = ({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) => (
-    <div className="flex flex-col items-center gap-1">
-      <button
+  const ScoreSelector = ({ value, onChange, colorClass }: { value: number; onChange: (v: number) => void; colorClass: string }) => (
+    <div className="flex flex-col items-center gap-2 sm:gap-3">
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => onChange(value + 1)}
-        className="h-8 w-8 rounded-lg bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors active:scale-90"
+        className={cn("h-12 w-12 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center transition-all shadow-lg", colorClass, "bg-opacity-20 border border-current")}
       >
-        <Plus className="h-3.5 w-3.5 text-primary" />
-      </button>
-      <motion.span
-        key={value}
-        initial={{ scale: 1.3, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="text-3xl font-black text-foreground tabular-nums w-10 text-center"
-      >
-        {value}
-      </motion.span>
-      <button
+        <Plus className="h-6 w-6 sm:h-5 sm:w-5" />
+      </motion.button>
+      
+      <div className="relative group">
+        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+        <motion.span
+          key={value}
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-4xl sm:text-5xl font-black text-foreground tabular-nums relative block min-w-[50px] sm:min-w-[60px] text-center"
+        >
+          {value}
+        </motion.span>
+      </div>
+
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => onChange(Math.max(0, value - 1))}
-        className="h-8 w-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors active:scale-90"
+        className="h-12 w-12 sm:h-10 sm:w-10 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center transition-all border border-border"
       >
-        <Minus className="h-3.5 w-3.5 text-muted-foreground" />
-      </button>
+        <Minus className="h-6 w-6 sm:h-5 sm:w-5 text-muted-foreground" />
+      </motion.button>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground text-xs">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Chargement...
+      <div className="flex flex-col items-center justify-center py-12 gap-4">
+        <div className="relative">
+          <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+          <Trophy className="absolute inset-0 m-auto h-5 w-5 text-primary/40" />
+        </div>
+        <p className="text-xs font-medium text-muted-foreground animate-pulse">Calcul des tendances...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {/* My prediction - redesigned */}
-      <div className="rounded-2xl bg-gradient-to-br from-primary/5 via-card to-accent/5 border border-border/50 p-5 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        
-        <h4 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2 relative">
-          <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center">
-            <Trophy className="h-4 w-4 text-primary-foreground" />
+    <div className="space-y-6 sm:space-y-8">
+      {/* Interactive Battle UI */}
+      <div className="relative rounded-3xl bg-gradient-to-b from-card/50 to-card border border-border/50 p-5 sm:p-8 overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+          <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
+          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-accent/5 rounded-full blur-[80px]" />
+        </div>
+
+        <div className="relative z-10">
+          <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border" />
+            <span className="px-3 py-1 rounded-full bg-primary/10 text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest whitespace-nowrap">Arène Communauté</span>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border" />
           </div>
-          {user ? "Mon pronostic" : "Pronostiquez ce match"}
-        </h4>
 
-        {user ? (
-          <div className="relative">
-            <div className="flex items-center justify-center gap-4 sm:gap-6">
-              {/* Home team */}
-              <div className="flex flex-col items-center gap-2 flex-1">
-                {homeLogo && <img src={homeLogo} alt="" className="h-10 w-10 object-contain" />}
-                <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">{homeTeamName}</span>
-              </div>
-
-              <ScoreButton value={myHome} onChange={setMyHome} label="home" />
-              
-              <span className="text-xl font-bold text-muted-foreground/40">:</span>
-
-              <ScoreButton value={myAway} onChange={setMyAway} label="away" />
-
-              {/* Away team */}
-              <div className="flex flex-col items-center gap-2 flex-1">
-                {awayLogo && <img src={awayLogo} alt="" className="h-10 w-10 object-contain" />}
-                <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">{awayTeamName}</span>
-              </div>
+          <div className="flex flex-col xs:flex-row items-center justify-between gap-6 xs:gap-4">
+            {/* Home Side */}
+            <div className="flex-1 w-full flex flex-col items-center gap-3 sm:gap-4">
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="relative"
+              >
+                <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full" />
+                {homeLogo ? (
+                  <img src={homeLogo} alt="" className="h-14 w-14 sm:h-20 sm:w-20 object-contain relative" />
+                ) : (
+                  <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-2xl bg-muted flex items-center justify-center text-xl sm:text-2xl font-bold">{homeTeamName[0]}</div>
+                )}
+              </motion.div>
+              <h4 className="text-xs sm:text-sm font-black text-foreground text-center line-clamp-1 max-w-[100px] sm:max-w-[120px]">{homeTeamName}</h4>
+              <ScoreSelector value={myHome} onChange={setMyHome} colorClass="text-primary" />
             </div>
 
-            <motion.button
-              onClick={handleSubmit}
-              disabled={submitting}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "w-full mt-4 rounded-xl py-3 text-sm font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-2",
-                justSubmitted
-                  ? "bg-emerald-500 text-white shadow-emerald-500/20"
-                  : "gradient-primary text-primary-foreground shadow-primary/20 hover:opacity-90"
-              )}
-            >
-              {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : justSubmitted ? (
-                <>✓ Enregistré</>
-              ) : (
-                <><Send className="h-4 w-4" /> {hasSubmitted ? "Modifier" : "Valider mon pronostic"}</>
-              )}
-            </motion.button>
+            {/* VS Divider */}
+            <div className="flex flex-row xs:flex-col items-center gap-4 xs:gap-2 w-full xs:w-auto">
+              <div className="h-[1px] xs:h-12 w-full xs:w-[1px] bg-gradient-to-r xs:bg-gradient-to-b from-transparent via-border to-transparent" />
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-background border-2 border-border flex items-center justify-center shadow-xl flex-shrink-0">
+                <span className="text-[10px] sm:text-xs font-black text-muted-foreground italic">VS</span>
+              </div>
+              <div className="h-[1px] xs:h-12 w-full xs:w-[1px] bg-gradient-to-l xs:bg-gradient-to-t from-transparent via-border to-transparent" />
+            </div>
 
-            {hasSubmitted && !justSubmitted && (
-              <p className="text-center text-[10px] text-muted-foreground mt-2">Vous pouvez modifier votre pronostic à tout moment</p>
+            {/* Away Side */}
+            <div className="flex-1 w-full flex flex-col items-center gap-3 sm:gap-4">
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="relative"
+              >
+                <div className="absolute inset-0 bg-accent/10 blur-2xl rounded-full" />
+                {awayLogo ? (
+                  <img src={awayLogo} alt="" className="h-14 w-14 sm:h-20 sm:w-20 object-contain relative" />
+                ) : (
+                  <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-2xl bg-muted flex items-center justify-center text-xl sm:text-2xl font-bold">{awayTeamName[0]}</div>
+                )}
+              </motion.div>
+              <h4 className="text-xs sm:text-sm font-black text-foreground text-center line-clamp-1 max-w-[100px] sm:max-w-[120px]">{awayTeamName}</h4>
+              <ScoreSelector value={myAway} onChange={setMyAway} colorClass="text-accent" />
+            </div>
+          </div>
+
+          <div className="mt-8 sm:mt-10 max-w-sm mx-auto">
+            {!user ? (
+              <div className="text-center space-y-4">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Rejoignez l'arène pour soumettre votre prono et gagner des points !</p>
+                <Link to="/auth" className="flex items-center justify-center gap-2 w-full rounded-2xl gradient-primary py-3.5 sm:py-4 text-xs sm:text-sm font-black text-primary-foreground shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
+                  <Swords className="h-4 w-4" /> SE CONNECTER
+                </Link>
+              </div>
+            ) : (
+              <motion.button
+                onClick={handleSubmit}
+                disabled={submitting}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  "w-full rounded-2xl py-3.5 sm:py-4 text-xs sm:text-sm font-black shadow-2xl transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden relative group",
+                  justSubmitted
+                    ? "bg-emerald-500 text-white shadow-emerald-500/20"
+                    : "gradient-primary text-primary-foreground shadow-primary/30"
+                )}
+              >
+                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+                {submitting ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : justSubmitted ? (
+                  <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5" /> PRONO ENREGISTRÉ !
+                  </motion.div>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" /> 
+                    {hasSubmitted ? "MODIFIER MON SCORE" : "VALIDER LE PRONOSTIC"}
+                  </>
+                )}
+              </motion.button>
             )}
           </div>
-        ) : (
-          <div className="text-center py-2">
-            <p className="text-xs text-muted-foreground mb-3">Connectez-vous pour soumettre votre pronostic</p>
-            <Link to="/auth" className="inline-flex items-center gap-1.5 rounded-xl gradient-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20">
-              Se connecter
-            </Link>
-          </div>
-        )}
+        </div>
       </div>
 
-      {/* Community stats - enriched */}
+      {/* Enhanced Community Trends */}
       {stats && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-primary" />
-              {stats.total} pronostic{stats.total > 1 ? "s" : ""}
-            </p>
-            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Sparkles className="h-3 w-3 text-amber-500" />
-              Confiance : {stats.confidence}%
-            </div>
-          </div>
-
-          {/* Visual bar distribution */}
-          <div className="rounded-xl bg-card border border-border/50 p-4">
-            <div className="flex items-end justify-between gap-2 mb-3">
-              <div className="text-center flex-1">
-                <p className="text-2xl font-black text-primary">{Math.round((stats.homeWins / stats.total) * 100)}%</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{homeTeamName}</p>
-              </div>
-              <div className="text-center flex-1">
-                <p className="text-2xl font-black text-muted-foreground">{Math.round((stats.draws / stats.total) * 100)}%</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Nul</p>
-              </div>
-              <div className="text-center flex-1">
-                <p className="text-2xl font-black text-primary">{Math.round((stats.awayWins / stats.total) * 100)}%</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{awayTeamName}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-3xl bg-card border border-border/50 p-6 flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <h5 className="text-sm font-black text-foreground flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" /> Tendances
+              </h5>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-black">
+                <Sparkles className="h-3 w-3" /> {stats.confidence}% CONFIANCE
               </div>
             </div>
-            {/* Animated bar */}
-            <div className="flex h-2.5 rounded-full overflow-hidden bg-muted gap-0.5">
-              <motion.div
-                className="bg-primary rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${(stats.homeWins / stats.total) * 100}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              />
-              <motion.div
-                className="bg-muted-foreground/40 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${(stats.draws / stats.total) * 100}%` }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
-              />
-              <motion.div
-                className="bg-accent rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${(stats.awayWins / stats.total) * 100}%` }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-              />
-            </div>
-          </div>
 
-          {/* Score moyen + Top scores */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-card border border-border/50 p-4 text-center">
-              <BarChart3 className="h-4 w-4 text-primary mx-auto mb-1.5" />
-              <p className="text-[10px] text-muted-foreground mb-0.5">Score moyen prédit</p>
-              <p className="text-xl font-black text-foreground">{stats.avgHome} - {stats.avgAway}</p>
-            </div>
-            <div className="rounded-xl bg-card border border-border/50 p-4 text-center">
-              <TrendingUp className="h-4 w-4 text-amber-500 mx-auto mb-1.5" />
-              <p className="text-[10px] text-muted-foreground mb-0.5">Score le + populaire</p>
-              {stats.topScores[0] && (
-                <>
-                  <p className="text-xl font-black text-foreground">{stats.topScores[0][0]}</p>
-                  <p className="text-[9px] text-muted-foreground">{Math.round((stats.topScores[0][1] / stats.total) * 100)}% des votes</p>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Top 3 scores chips */}
-          {stats.topScores.length > 1 && (
-            <div className="flex gap-2 justify-center">
-              {stats.topScores.map(([score, count], i) => (
-                <div
-                  key={score}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-center border",
-                    i === 0
-                      ? "border-primary/30 bg-primary/10"
-                      : "border-border/50 bg-card"
-                  )}
-                >
-                  <span className="text-xs font-black text-foreground">{score}</span>
-                  <span className="text-[9px] text-muted-foreground ml-1">{count}×</span>
+            <div className="space-y-6">
+              <div className="flex items-end justify-between px-2">
+                <div className="text-center group">
+                  <p className="text-3xl font-black text-primary group-hover:scale-110 transition-transform">{Math.round((stats.homeWins / stats.total) * 100)}%</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">DOMICILE</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      )}
+                <div className="text-center group">
+                  <p className="text-2xl font-black text-muted-foreground group-hover:scale-110 transition-transform">{Math.round((stats.draws / stats.total) * 100)}%</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">NUL</p>
+                </div>
+                <div className="text-center group">
+                  <p className="text-3xl font-black text-accent group-hover:scale-110 transition-transform">{Math.round((stats.awayWins / stats.total) * 100)}%</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">EXTÉRIEUR</p>
+                </div>
+              </div>
 
-      {!stats && (
-        <div className="text-center py-6">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <Sparkles className="h-5 w-5 text-primary" />
+              <div className="flex h-3 rounded-full overflow-hidden bg-muted p-0.5 gap-0.5">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(stats.homeWins / stats.total) * 100}%` }}
+                  className="bg-primary rounded-l-full"
+                />
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(stats.draws / stats.total) * 100}%` }}
+                  className="bg-muted-foreground/30"
+                />
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(stats.awayWins / stats.total) * 100}%` }}
+                  className="bg-accent rounded-r-full"
+                />
+              </div>
+            </div>
           </div>
-          <p className="text-sm font-medium text-foreground">Soyez le premier à pronostiquer !</p>
-          <p className="text-[10px] text-muted-foreground mt-1">Votre pronostic apparaîtra dans les statistiques de la communauté</p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-3xl bg-card border border-border/50 p-6 flex flex-col items-center justify-center text-center gap-2">
+              <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Score moyen</p>
+                <p className="text-2xl font-black text-foreground">{stats.avgHome} - {stats.avgAway}</p>
+              </div>
+            </div>
+
+            <div className="rounded-3xl bg-card border border-border/50 p-6 flex flex-col items-center justify-center text-center gap-2">
+              <div className="h-10 w-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Favori</p>
+                <p className="text-2xl font-black text-foreground">{stats.topScores[0]?.[0] || "N/A"}</p>
+              </div>
+            </div>
+
+            <div className="col-span-2 rounded-3xl bg-card border border-border/50 p-5">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center mb-4">Top 3 Scores Pronostiqués</p>
+              <div className="flex justify-around items-center">
+                {stats.topScores.map(([score, count], i) => (
+                  <div key={score} className="flex flex-col items-center gap-1">
+                    <div className={cn(
+                      "h-12 w-12 rounded-2xl flex items-center justify-center text-lg font-black border-2 shadow-lg",
+                      i === 0 ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-foreground/70"
+                    )}>
+                      {score}
+                    </div>
+                    <span className="text-[10px] font-bold text-muted-foreground">{count}× voix</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

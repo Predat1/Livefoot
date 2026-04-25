@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Target, TrendingUp, Medal, Users, Calendar, ArrowRight, Loader2, Crown, Flame } from "lucide-react";
+import { Trophy, Target, TrendingUp, Medal, Users, Calendar, ArrowRight, Loader2, Crown, Flame, Brain, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BadgeGrid, { computeBadges, computePoints } from "@/components/PredictionBadges";
@@ -136,15 +136,39 @@ const PredictionsDashboard = () => {
         <div className="flex items-center gap-3 mb-6">
           <div className="h-8 w-1 rounded-full gradient-primary" />
           <Trophy className="h-6 w-6 text-primary" />
-          <h1 className="text-xl sm:text-2xl font-black text-foreground">Pronostics</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-foreground">Arène des Pronostics</h1>
         </div>
 
+        {/* Oracle vs Community Banner */}
+        <Link to="/daily-picks" className="block group mb-8">
+          <div className="relative rounded-[2rem] overflow-hidden bg-gradient-to-r from-[#1a103c] via-[#0f0a1e] to-[#0a0e1a] border border-violet-500/20 p-6 sm:p-8">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-full bg-violet-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+            
+            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center shadow-lg shadow-violet-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <Brain className="h-7 w-7 text-white" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-black text-white">L'Oracle vs La Communauté</h3>
+                  <p className="text-xs text-violet-300/60 max-w-sm">Découvrez si vous êtes plus précis que notre Intelligence Artificielle.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors">
+                <span className="text-xs font-black text-white tracking-widest">DÉFIER L'IA</span>
+                <ArrowRight className="h-4 w-4 text-violet-400 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
+        </Link>
+
         <Tabs defaultValue={user ? "my" : "leaderboard"} className="w-full">
-          <TabsList className="w-full grid grid-cols-4 bg-card border border-border/50 rounded-xl p-1 mb-6">
-            <TabsTrigger value="my" className="rounded-lg text-[10px] sm:text-sm">Mes Pronos</TabsTrigger>
-            <TabsTrigger value="badges" className="rounded-lg text-[10px] sm:text-sm">Badges</TabsTrigger>
-            <TabsTrigger value="leaderboard" className="rounded-lg text-[10px] sm:text-sm">Classement</TabsTrigger>
-            <TabsTrigger value="stats" className="rounded-lg text-[10px] sm:text-sm">Stats</TabsTrigger>
+          <TabsList className="w-full flex sm:grid sm:grid-cols-4 bg-card border border-border/50 rounded-xl p-1 mb-6 overflow-x-auto overflow-y-hidden no-scrollbar">
+            <TabsTrigger value="my" className="flex-1 sm:flex-none rounded-lg text-[10px] sm:text-sm whitespace-nowrap px-4 py-2">Mes Pronos</TabsTrigger>
+            <TabsTrigger value="badges" className="flex-1 sm:flex-none rounded-lg text-[10px] sm:text-sm whitespace-nowrap px-4 py-2">Badges</TabsTrigger>
+            <TabsTrigger value="leaderboard" className="flex-1 sm:flex-none rounded-lg text-[10px] sm:text-sm whitespace-nowrap px-4 py-2">Classement</TabsTrigger>
+            <TabsTrigger value="stats" className="flex-1 sm:flex-none rounded-lg text-[10px] sm:text-sm whitespace-nowrap px-4 py-2">Stats</TabsTrigger>
           </TabsList>
 
           {/* My Predictions */}

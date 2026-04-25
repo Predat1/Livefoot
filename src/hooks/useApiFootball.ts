@@ -808,22 +808,6 @@ export function useHeadToHead(homeId: string, awayId: string) {
   });
 }
 
-// ─── Predictions ─────────────────────────────────────────────
-
-export function usePredictions(fixtureId: string) {
-  return useQuery({
-    queryKey: ["predictions", fixtureId],
-    queryFn: async () => {
-      const { getPredictions } = await import("@/services/apiFootball");
-      const res = await getPredictions(fixtureId);
-      if (!res.response || res.response.length === 0) return null;
-      return res.response[0] as any;
-    },
-    staleTime: 10 * 60 * 1000,
-    enabled: !!fixtureId,
-  });
-}
-
 // ─── Team Recent Form (last 5 fixtures) ─────────────────────
 
 export function useTeamForm(teamId: string) {

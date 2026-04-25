@@ -3,14 +3,15 @@ import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
-  usePredictions, useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
+  useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures,
 } from "@/hooks/useApiFootball";
 import {
   ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
   Loader2, BarChart3, Swords, Star, DollarSign, HeartPulse, Users as UsersIcon,
-  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame,
+  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame, Brain
 } from "lucide-react";
+import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -103,7 +104,6 @@ const Match = () => {
   const homeTeamId = fix?.teams?.home?.id ? String(fix.teams.home.id) : "";
   const awayTeamId = fix?.teams?.away?.id ? String(fix.teams.away.id) : "";
 
-  const { data: predictionsData } = usePredictions(matchId || "");
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
 
   if (isLoading) {
@@ -181,9 +181,8 @@ const Match = () => {
       ...(hasStats ? [{ value: "ratings", label: "Notes" }] : []),
       { value: "form", label: "Forme" },
       { value: "calendar", label: "Calendrier" },
-      { value: "predictions", label: "Prédiction" },
-      { value: "h2h", label: "H2H" },
-      { value: "community", label: "Pronostics" },
+      { value: "predictions", label: "LiveFoot AI" },
+      { value: "community", label: "Pronos" },
       ...(odds.length > 0 ? [{ value: "odds", label: "Cotes" }] : []),
       { value: "injuries", label: "Blessures" },
     ];
@@ -651,73 +650,19 @@ const Match = () => {
 
 
         <TabsContent value="predictions" className="mt-0">
-          <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
-            <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              <h3 className="font-bold text-sm text-foreground">Prédictions</h3>
-            </div>
-            <div className="p-4 sm:p-6">
-              {predictionsData ? (() => {
-                const pred = predictionsData as any;
-                const pct = pred.predictions?.percent;
-                const advice = pred.predictions?.advice;
-                const comparison = pred.comparison;
-                return (
-                  <div className="space-y-6">
-                    {advice && (
-                      <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/20">
-                        <p className="text-xs text-muted-foreground mb-1">Conseil</p>
-                        <p className="text-sm sm:text-base font-bold text-primary">{advice}</p>
-                      </div>
-                    )}
-                    {pct && (
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div className="rounded-xl bg-muted/30 p-4">
-                          <p className="text-2xl sm:text-3xl font-black text-foreground">{pct.home}</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{homeTeam.name}</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/30 p-4">
-                          <p className="text-2xl sm:text-3xl font-black text-muted-foreground">{pct.draw}</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Nul</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/30 p-4">
-                          <p className="text-2xl sm:text-3xl font-black text-foreground">{pct.away}</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{awayTeam.name}</p>
-                        </div>
-                      </div>
-                    )}
-                    {comparison && (
-                      <div className="space-y-3">
-                        {Object.entries(comparison).map(([key, val]: [string, any]) => {
-                          const hv = parseInt(String(val.home).replace("%", "")) || 0;
-                          const av = parseInt(String(val.away).replace("%", "")) || 0;
-                          const t = hv + av || 1;
-                          return (
-                            <div key={key}>
-                              <div className="flex justify-between text-xs mb-1">
-                                <span className="font-bold text-foreground">{val.home}</span>
-                                <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
-                                <span className="font-bold text-foreground">{val.away}</span>
-                              </div>
-                              <div className="flex h-2 rounded-full overflow-hidden bg-muted">
-                                <div className="bg-primary transition-all" style={{ width: `${(hv / t) * 100}%` }} />
-                                <div className="bg-muted-foreground/30 transition-all" style={{ width: `${(av / t) * 100}%` }} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })() : (
-                <div className="text-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Chargement des prédictions...</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <LiveFootAIPrediction
+            homeTeamId={homeTeamId}
+            awayTeamId={awayTeamId}
+            homeTeamName={homeTeam.name}
+            awayTeamName={awayTeam.name}
+            homeLogo={homeTeam.logo}
+            awayLogo={awayTeam.logo}
+            standings={standings}
+            injuries={{
+              home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
+              away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
+            }}
+          />
         </TabsContent>
 
         {/* H2H */}
