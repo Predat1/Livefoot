@@ -249,19 +249,27 @@ const Match = () => {
 
     return (
       <Tabs defaultValue={isLive ? "live" : hasStats ? "events" : "predictions"} className="w-full">
-        <div className="overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4 mb-4 scrollbar-hide">
-          <TabsList className="inline-flex w-auto min-w-full bg-card border border-border/50 rounded-xl p-1">
-            {tabItems.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="rounded-lg text-[9px] sm:text-xs whitespace-nowrap px-1.5 sm:px-3 py-1 sm:py-1.5">
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="sticky top-[52px] sm:top-[56px] z-40 bg-background/80 backdrop-blur-md pt-2 pb-2 -mx-2 px-2 sm:-mx-4 sm:px-4 mb-4 border-b border-border/50">
+          <div className="overflow-x-auto scrollbar-hide">
+            <TabsList className="inline-flex w-auto min-w-full bg-card/80 border border-border/50 rounded-xl p-1 relative">
+              {tabItems.map((tab) => (
+                <TabsTrigger 
+                  key={tab.value} 
+                  value={tab.value} 
+                  className="relative rounded-lg text-[10px] sm:text-xs whitespace-nowrap px-3 sm:px-4 py-1.5 sm:py-2 data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground z-10 transition-colors"
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+              {/* Note: In a real implementation with Radix UI, we'd need a custom active indicator or let Radix handle it. 
+                  For now, we enhance the CSS to make the active tab stand out more. */}
+            </TabsList>
+          </div>
         </div>
 
         {/* Live Commentary */}
         {hasStats && (
-          <TabsContent value="live" className="mt-0">
+          <TabsContent value="live" className="mt-0 focus-visible:outline-none">
             <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
               <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-primary" />
@@ -305,40 +313,55 @@ const Match = () => {
           </TabsContent>
         )}
 
-        {/* Events */}
-        <TabsContent value="events" className="mt-0">
+        {/* Events - Timeline View */}
+        <TabsContent value="events" className="mt-0 focus-visible:outline-none">
           <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="bg-league-header px-4 py-2.5 border-b border-border">
-              <h3 className="font-bold text-sm text-foreground">Match Events</h3>
+              <h3 className="font-bold text-sm text-foreground">Chronologie du Match</h3>
             </div>
-            <div className="p-3 sm:p-4">
+            <div className="p-4 sm:p-8 relative">
               {events.length > 0 ? (
-                <div className="space-y-2">
+                <div className="relative before:absolute before:inset-0 before:ml-1/2 before:-translate-x-1/2 md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-border/10 before:via-border before:to-border/10 space-y-6">
                   {events.map((event: any, index: number) => {
                     const isHome = event.team.id === fix.teams.home.id;
                     return (
-                      <div key={index} className="flex items-center gap-3 p-2 sm:p-3 rounded-lg bg-muted/30">
-                        {isHome ? (
-                          <>
-                            <span className="w-10 text-center font-bold text-xs text-muted-foreground">{event.time.elapsed}'</span>
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted">{getEventIcon(event.type, event.detail)}</div>
-                            <div className="flex-1">
-                              <span className="font-medium text-xs text-foreground">{event.player?.name}</span>
-                              {event.assist?.name && <span className="text-[10px] text-muted-foreground ml-2">({event.assist.name})</span>}
-                              {event.detail && <span className="text-[10px] text-muted-foreground ml-2">({event.detail})</span>}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex-1 text-right">
-                              <span className="font-medium text-xs text-foreground">{event.player?.name}</span>
-                              {event.assist?.name && <span className="text-[10px] text-muted-foreground mr-2">({event.assist.name})</span>}
-                            </div>
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted">{getEventIcon(event.type, event.detail)}</div>
-                            <span className="w-10 text-center font-bold text-xs text-muted-foreground">{event.time.elapsed}'</span>
-                          </>
+                      <motion.div 
+                        key={index} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        className={cn(
+                          "relative flex items-center justify-between md:justify-normal",
+                          isHome ? "md:flex-row-reverse" : "flex-row"
                         )}
-                      </div>
+                      >
+                        {/* Empty Space for the other side */}
+                        <div className="hidden md:block w-5/12" />
+
+                        {/* Event Icon/Marker */}
+                        <div className="absolute left-1/2 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-card border-2 border-border z-10 shadow-sm">
+                          {getEventIcon(event.type, event.detail)}
+                        </div>
+
+                        {/* Event Content */}
+                        <div className={cn(
+                          "w-5/12 flex flex-col",
+                          isHome ? "md:items-end text-left md:text-right" : "items-start text-left"
+                        )}>
+                          <div className={cn("flex items-center gap-2 mb-1", isHome ? "md:flex-row-reverse" : "flex-row")}>
+                            <span className="font-black text-primary text-sm">{event.time.elapsed}'{event.time.extra ? `+${event.time.extra}` : ""}</span>
+                            <span className="text-xs font-bold text-muted-foreground uppercase">{event.type}</span>
+                          </div>
+                          <div className={cn(
+                            "p-3 rounded-xl border border-border/30 bg-muted/20 w-full max-w-sm",
+                            isHome ? "rounded-tr-none md:rounded-tl-none md:rounded-tr-xl" : "rounded-tl-none"
+                          )}>
+                            <p className="font-bold text-sm text-foreground">{event.player?.name}</p>
+                            {event.assist?.name && <p className="text-[10px] text-muted-foreground mt-0.5">Assist: {event.assist.name}</p>}
+                            {event.detail && <p className="text-[10px] text-muted-foreground mt-0.5">{event.detail}</p>}
+                          </div>
+                        </div>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -843,62 +866,92 @@ const Match = () => {
           <ShareButton title={`${homeTeam.name} vs ${awayTeam.name} | LiveFoot`} text={`${homeTeam.name} vs ${awayTeam.name}`} />
         </div>
 
-        {/* Match Header */}
-        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden mb-4 sm:mb-6">
-          <div className="bg-league-header px-4 sm:px-6 py-2 sm:py-3 border-b border-border flex items-center justify-between">
+        {/* Match Header (Hero Section) */}
+        <div className="relative rounded-xl sm:rounded-3xl bg-card border border-border/50 overflow-hidden mb-6 sm:mb-8 shadow-2xl">
+          {/* Dynamic Background Effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-50 pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+          
+          <div className="relative bg-league-header/80 backdrop-blur-md px-4 sm:px-6 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {league.flag && <img src={league.flag} alt="" className="h-4 w-5 object-cover rounded-sm" />}
-              {league.logo && <img src={league.logo} alt="" className="h-5 w-5 object-contain" />}
-              <span className="font-bold text-sm sm:text-base text-foreground">{league.name}</span>
+              {league.flag && <img src={league.flag} alt="" className="h-4 w-5 sm:h-5 sm:w-6 object-cover rounded-sm shadow-sm" />}
+              {league.logo && <img src={league.logo} alt="" className="h-5 w-5 sm:h-6 sm:w-6 object-contain drop-shadow-md" />}
+              <span className="font-black text-xs sm:text-sm text-foreground uppercase tracking-wider">{league.name}</span>
             </div>
             {isLive && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-live/10 px-3 py-1 rounded-full border border-live/20">
                 <span className="h-2 w-2 rounded-full bg-live live-pulse" />
-                <span className="text-xs sm:text-sm font-bold text-live">LIVE {minute}'</span>
+                <span className="text-xs font-black text-live">LIVE {minute}'</span>
               </div>
             )}
-            {isFinished && <span className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase">Full Time</span>}
+            {isFinished && <span className="text-xs font-black text-muted-foreground uppercase tracking-widest bg-muted/50 px-3 py-1 rounded-full">Terminé</span>}
+            {!isLive && !isFinished && <span className="text-xs font-black text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full">À venir</span>}
           </div>
 
-          <div className="p-3 sm:p-8">
-            <div className="flex items-center justify-between gap-2 sm:gap-4">
-              <Link to={`/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
-                {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain mx-auto mb-1 sm:mb-2" />}
-                <h2 className="text-xs sm:text-xl font-bold text-foreground truncate">{homeTeam.name}</h2>
-              </Link>
-
-              <div className="text-center flex-shrink-0">
-                {hasStats ? (
-                  <div className="flex items-center gap-1.5 sm:gap-4">
-                    <span className={cn("text-2xl sm:text-5xl font-black", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
-                    <span className="text-lg sm:text-3xl text-muted-foreground">-</span>
-                    <span className={cn("text-2xl sm:text-5xl font-black", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
+          <div className="relative p-6 sm:p-10">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4">
+              
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex-1 text-center w-full sm:w-auto order-2 sm:order-1"
+              >
+                <Link to={`/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}`} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
+                  <div className="relative mb-3 sm:mb-4">
+                    <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-20 w-20 sm:h-28 sm:w-28 object-contain drop-shadow-2xl" />}
                   </div>
-                ) : (
-                  <div className="rounded-xl sm:rounded-2xl bg-primary/10 px-3 sm:px-6 py-2 sm:py-4">
-                    <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-primary mx-auto mb-0.5 sm:mb-2" />
-                    <span className="text-lg sm:text-3xl font-black text-primary">{time}</span>
+                  <h2 className="text-lg sm:text-2xl font-black text-foreground truncate max-w-[200px]">{homeTeam.name}</h2>
+                </Link>
+                {homeTeamId && (
+                  <div className="mt-3 flex justify-center">
+                    <TeamFormInline teamId={homeTeamId} teamName="" />
                   </div>
                 )}
-              </div>
+              </motion.div>
 
-              <Link to={`/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}`} className="flex-1 text-center hover:opacity-80 transition-opacity min-w-0">
-                {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain mx-auto mb-1 sm:mb-2" />}
-                <h2 className="text-xs sm:text-xl font-bold text-foreground truncate">{awayTeam.name}</h2>
-              </Link>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center flex-shrink-0 order-1 sm:order-2 w-full sm:w-auto"
+              >
+                {hasStats ? (
+                  <div className="flex items-center justify-center gap-3 sm:gap-6 px-6 sm:px-10 py-4 sm:py-6 bg-background/50 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/5 shadow-inner">
+                    <span className={cn("text-5xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
+                    <span className="text-2xl sm:text-4xl font-bold text-muted-foreground/50 mb-2">-</span>
+                    <span className={cn("text-5xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-2xl sm:rounded-3xl bg-primary/10 border border-primary/20 px-8 py-6 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.2)]">
+                    <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary mb-2 animate-pulse" />
+                    <span className="text-3xl sm:text-5xl font-black text-primary drop-shadow-md">{time}</span>
+                  </div>
+                )}
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex-1 text-center w-full sm:w-auto order-3"
+              >
+                <Link to={`/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}`} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
+                  <div className="relative mb-3 sm:mb-4">
+                    <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-20 w-20 sm:h-28 sm:w-28 object-contain drop-shadow-2xl" />}
+                  </div>
+                  <h2 className="text-lg sm:text-2xl font-black text-foreground truncate max-w-[200px]">{awayTeam.name}</h2>
+                </Link>
+                {awayTeamId && (
+                  <div className="mt-3 flex justify-center">
+                    <TeamFormInline teamId={awayTeamId} teamName="" />
+                  </div>
+                )}
+              </motion.div>
             </div>
 
-            {/* Recent form badges under score */}
-            {homeTeamId && awayTeamId && (
-              <div className="mt-3 flex items-center justify-between gap-4">
-                <TeamFormInline teamId={homeTeamId} teamName={homeTeam.name} />
-                <TeamFormInline teamId={awayTeamId} teamName={awayTeam.name} />
-              </div>
-            )}
-
-            <div className="mt-3 sm:mt-6 flex items-center justify-center gap-3 sm:gap-8 text-[10px] sm:text-sm text-muted-foreground flex-wrap">
-              {venue?.name && <div className="flex items-center gap-1"><MapPin className="h-3 w-3" /><span>{venue.name}</span></div>}
-              {referee && <div className="flex items-center gap-1"><User className="h-3 w-3" /><span>{referee}</span></div>}
+            <div className="mt-6 sm:mt-10 flex items-center justify-center gap-4 sm:gap-8 text-[11px] sm:text-sm font-medium text-muted-foreground flex-wrap">
+              {venue?.name && <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-full"><MapPin className="h-3.5 w-3.5 text-primary" /><span>{venue.name}</span></div>}
+              {referee && <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-full"><User className="h-3.5 w-3.5 text-primary" /><span>{referee}</span></div>}
             </div>
           </div>
         </div>

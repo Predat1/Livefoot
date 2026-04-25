@@ -1,6 +1,7 @@
 import { Search, Menu, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle, Zap, Star, ChevronDown, Grid3X3, Globe, Shield } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +26,7 @@ const Header = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { query, setQuery, results } = useSearch();
   const { totalFavorites } = useFavorites();
   const { user, profile, signOut } = useAuth();
@@ -97,8 +99,15 @@ const Header = () => {
         setSearchOpen(false);
       }
     };
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -143,7 +152,12 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-header text-header-foreground shadow-lg">
+      <header className={cn(
+        "sticky top-0 z-50 transition-all duration-300",
+        isScrolled 
+          ? "bg-header/80 backdrop-blur-md shadow-lg border-b border-white/5" 
+          : "bg-header shadow-lg"
+      )}>
         {/* Green accent line */}
         <div className="h-[3px] gradient-primary" />
 
@@ -172,7 +186,11 @@ const Header = () => {
               >
                 {item.label}
                 {isActive(item.href) && (
-                  <span className="absolute bottom-0 left-2 right-2 h-[3px] rounded-t-full bg-primary" />
+                  <motion.div
+                    layoutId="header-active-nav"
+                    className="absolute bottom-0 left-2 right-2 h-[3px] rounded-t-full bg-primary"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
                 )}
               </Link>
             ))}
