@@ -39,15 +39,15 @@ const DailyPicks = () => {
         id: "mock1",
         leagueName: "Ligue des Champions",
         leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
-        homeTeam: { id: "541", name: "Real Madrid", logo: "https://media.api-sports.io/football/teams/541.png" },
-        awayTeam: { id: "50", name: "Manchester City", logo: "https://media.api-sports.io/football/teams/50.png" }
+        homeTeam: { id: "mock-541", name: "Real Madrid", logo: "https://media.api-sports.io/football/teams/541.png" },
+        awayTeam: { id: "mock-50", name: "Manchester City", logo: "https://media.api-sports.io/football/teams/50.png" }
       },
       {
         id: "mock2",
         leagueName: "Premier League",
         leagueLogo: "https://media.api-sports.io/football/leagues/39.png",
-        homeTeam: { id: "42", name: "Arsenal", logo: "https://media.api-sports.io/football/teams/42.png" },
-        awayTeam: { id: "40", name: "Liverpool", logo: "https://media.api-sports.io/football/teams/40.png" }
+        homeTeam: { id: "mock-42", name: "Arsenal", logo: "https://media.api-sports.io/football/teams/42.png" },
+        awayTeam: { id: "mock-40", name: "Liverpool", logo: "https://media.api-sports.io/football/teams/40.png" }
       }
     ];
 

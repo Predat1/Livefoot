@@ -73,7 +73,6 @@ const AnimatedRoutes = () => {
           <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
           <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </Suspense>
     </AnimatePresence>

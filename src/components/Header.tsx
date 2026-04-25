@@ -165,10 +165,10 @@ const Header = () => {
         <div className="container flex h-12 sm:h-14 items-center gap-3 sm:gap-6">
           {/* Logo */}
           <Link to="/" className="group flex items-center gap-2 flex-shrink-0">
-            <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg overflow-hidden shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-110">
-              <img src={logoUrl} alt="LiveFoot" className="h-full w-full object-cover" />
+            <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg gradient-primary overflow-hidden shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-110 border border-white/10">
+              <img src="/src/assets/logo.svg" alt="LiveFoot" className="h-5 w-5 sm:h-6 sm:w-6 brightness-0 invert" />
             </div>
-            <span className="text-sm sm:text-lg font-black tracking-tight hidden sm:block">LIVEFOOT</span>
+            <span className="text-sm sm:text-lg font-black tracking-tighter hidden sm:block">LIVEFOOT<span className="text-primary ml-0.5">AI</span></span>
           </Link>
 
           {/* Desktop navigation - BeSoccer style */}

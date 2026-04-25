@@ -26,12 +26,35 @@ const LiveFootAIPredictionCard = ({
   homeTeamId, awayTeamId, homeTeamName, awayTeamName,
   homeLogo, awayLogo, standings, injuries,
 }: LiveFootAIPredictionCardProps) => {
-  const { data: homeFormData } = useTeamForm(homeTeamId);
-  const { data: awayFormData } = useTeamForm(awayTeamId);
-  const h2hKey = `${homeTeamId}-${awayTeamId}`;
-  const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
+  const isMock = homeTeamId.startsWith("mock") || awayTeamId.startsWith("mock");
+
+  const { data: homeFormData } = useTeamForm(isMock ? "" : homeTeamId);
+  const { data: awayFormData } = useTeamForm(isMock ? "" : awayTeamId);
+  const { data: h2hData } = useHeadToHead(isMock ? "" : homeTeamId, isMock ? "" : awayTeamId);
 
   const prediction = useMemo<LiveFootAIPrediction | null>(() => {
+    if (isMock) {
+      // Return high-quality mock prediction
+      return {
+        outcome: homeTeamId === "mock1" ? "home" : "draw",
+        confidence: 88,
+        predictedScore: homeTeamId === "mock1" ? { home: 2, away: 1 } : { home: 2, away: 2 },
+        probabilities: homeTeamId === "mock1" ? { home: 45, draw: 30, away: 25 } : { home: 35, draw: 40, away: 25 },
+        factors: [
+          { icon: "📈", label: "Forme Étincelante", impact: "positive", description: "L'équipe à domicile survole ses derniers matchs." },
+          { icon: "🚑", label: "Effectif Complet", impact: "positive", description: "Aucun blessé majeur à déplorer." },
+          { icon: "🏟️", label: "Avantage Terrain", impact: "positive", description: "Une forteresse imprenable cette saison." }
+        ],
+        advice: homeTeamId === "mock1" ? "Victoire logique à domicile." : "Match très serré, le nul est probable.",
+        risk: "low",
+        bestBets: [
+          { type: "1X2", label: "Victoire Domicile", confidence: 85, emoji: "💰" },
+          { type: "Score Exact", label: homeTeamId === "mock1" ? "2-1" : "2-2", confidence: 25, emoji: "🎯" },
+          { type: "Double Chance", label: "1X", confidence: 92, emoji: "🛡️" }
+        ]
+      };
+    }
+
     if (!homeFormData || !awayFormData) return null;
 
     return generatePrediction({
@@ -45,7 +68,7 @@ const LiveFootAIPredictionCard = ({
       awayTeamName,
       injuries,
     });
-  }, [homeFormData, awayFormData, h2hData, standings, homeTeamId, awayTeamId, homeTeamName, awayTeamName, injuries]);
+  }, [homeFormData, awayFormData, h2hData, standings, homeTeamId, awayTeamId, homeTeamName, awayTeamName, injuries, isMock]);
 
   if (!prediction) {
     return (
