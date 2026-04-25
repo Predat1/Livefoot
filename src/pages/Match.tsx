@@ -905,7 +905,7 @@ const Match = () => {
                 </Link>
                 {homeTeamId && (
                   <div className="mt-3 flex justify-center">
-                    <TeamFormInline teamId={homeTeamId} teamName="" />
+                    <TeamFormInline teamId={homeTeamId} teamName={homeTeam.name} />
                   </div>
                 )}
               </motion.div>
@@ -943,7 +943,7 @@ const Match = () => {
                 </Link>
                 {awayTeamId && (
                   <div className="mt-3 flex justify-center">
-                    <TeamFormInline teamId={awayTeamId} teamName="" />
+                    <TeamFormInline teamId={awayTeamId} teamName={awayTeam.name} />
                   </div>
                 )}
               </motion.div>

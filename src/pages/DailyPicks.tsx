@@ -51,7 +51,7 @@ const DailyPicks = () => {
       }
     ];
 
-    return realMatches.length > 0 ? realMatches : mockMatches;
+    return [...mockMatches, ...realMatches];
   }, [allMatches]);
 
   return (

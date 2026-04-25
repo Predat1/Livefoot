@@ -18,6 +18,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { useIsAdmin } from "@/hooks/useAdmin";
+import logoSvg from "@/assets/logo.svg";
 
 const Header = () => {
   const logoUrl = useAppLogo();
@@ -166,7 +167,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="group flex items-center gap-2 flex-shrink-0">
             <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg gradient-primary overflow-hidden shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-110 border border-white/10">
-              <img src="/src/assets/logo.svg" alt="LiveFoot" className="h-5 w-5 sm:h-6 sm:w-6 brightness-0 invert" />
+              <img src={logoSvg} alt="LiveFoot" className="h-5 w-5 sm:h-6 sm:w-6 brightness-0 invert" />
             </div>
             <span className="text-sm sm:text-lg font-black tracking-tighter hidden sm:block">LIVEFOOT<span className="text-primary ml-0.5">AI</span></span>
           </Link>

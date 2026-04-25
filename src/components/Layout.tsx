@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
 import { useAppLogo } from "@/hooks/useAppLogo";
+import logoSvg from "@/assets/logo.svg";
 
 interface LayoutProps {
   children: ReactNode;
@@ -26,10 +27,10 @@ const Layout = ({ children }: LayoutProps) => {
       <footer className="hidden lg:block border-t border-border bg-card py-8 sm:py-12 mt-6 sm:mt-8">
         <div className="container text-center">
           <div className="mb-6 flex items-center justify-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
-              <img src={logoUrl} alt="LiveFoot logo" className="h-full w-full object-cover" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30 gradient-primary p-2 border border-white/10">
+              <img src={logoSvg} alt="LiveFoot logo" className="h-full w-full object-contain brightness-0 invert" />
             </div>
-            <span className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
+            <span className="text-2xl font-black text-foreground tracking-tighter">LIVEFOOT<span className="text-primary ml-1">AI</span></span>
           </div>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Votre destination ultime pour les scores en direct, résultats, calendriers, classements, statistiques et actualités football.
