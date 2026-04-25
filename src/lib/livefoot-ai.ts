@@ -51,6 +51,24 @@ export interface BetSuggestion {
   emoji: string;
 }
 
+// ─── AI Configuration ────────────────────────────────────────
+
+const AI_CONFIG = {
+  WEIGHTS: {
+    FORM: 0.35,
+    H2H: 0.20,
+    RANK: 0.25,
+    INJURIES: 0.20,
+    HOME_BONUS: 8,
+  },
+  BASE_PROBS: {
+    HOME: 40,
+    DRAW: 28,
+    AWAY: 32,
+  }
+};
+
+
 // ─── Form Analysis ───────────────────────────────────────────
 
 function analyzeForm(form: TeamFormData[]): {
@@ -344,16 +362,17 @@ export function generatePrediction(params: {
   }
 
   // ─── Combine all weights ───────────────────────────────────
-  const totalWeight = formWeight * 0.35 + h2hWeight * 0.2 + rankWeight * 0.25 + homeBonus + injuryWeight * 0.2;
+  const totalWeight = 
+    (formWeight * AI_CONFIG.WEIGHTS.FORM) + 
+    (h2hWeight * AI_CONFIG.WEIGHTS.H2H) + 
+    (rankWeight * AI_CONFIG.WEIGHTS.RANK) + 
+    (injuryWeight * AI_CONFIG.WEIGHTS.INJURIES) + 
+    AI_CONFIG.WEIGHTS.HOME_BONUS;
 
   // Convert total weight to probabilities
-  const baseHome = 40; // Base home win probability
-  const baseDraw = 28;
-  const baseAway = 32;
-
-  let homeProb = baseHome + totalWeight;
-  let drawProb = baseDraw - Math.abs(totalWeight) * 0.3;
-  let awayProb = baseAway - totalWeight;
+  let homeProb = AI_CONFIG.BASE_PROBS.HOME + totalWeight;
+  let drawProb = AI_CONFIG.BASE_PROBS.DRAW - Math.abs(totalWeight) * 0.3;
+  let awayProb = AI_CONFIG.BASE_PROBS.AWAY - totalWeight;
 
   // Clamp and normalize
   homeProb = Math.max(5, Math.min(85, homeProb));
@@ -364,6 +383,7 @@ export function generatePrediction(params: {
   homeProb = Math.round((homeProb / total) * 100);
   drawProb = Math.round((drawProb / total) * 100);
   awayProb = 100 - homeProb - drawProb;
+
 
   // ─── Determine outcome ─────────────────────────────────────
   let outcome: "home" | "draw" | "away";
@@ -452,6 +472,8 @@ export function generatePrediction(params: {
     bestBets.push({ type: "BTTS", label: "Les deux équipes marquent", confidence: bttsProb, emoji: "🎯" });
   } else {
     bestBets.push({ type: "BTTS", label: "Une seule équipe marque", confidence: 100 - bttsProb, emoji: "🚫" });
+  }
+
   // Exact Score
   bestBets.push({ type: "Score Exact", label: `${predictedHome} - ${predictedAway}`, confidence: Math.max(15, confidence - 25), emoji: "🎯" });
 

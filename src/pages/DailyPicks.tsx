@@ -11,6 +11,23 @@ import { BrandedLoader } from "@/components/BrandedLoader";
 import { Link } from "react-router-dom";
 import { buildEntitySlug } from "@/utils/slugify";
 
+const MOCK_MATCHES = [
+  {
+    id: "mock1",
+    leagueName: "Ligue des Champions",
+    leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
+    homeTeam: { id: "mock-541", name: "Real Madrid", logo: "https://media.api-sports.io/football/teams/541.png" },
+    awayTeam: { id: "mock-50", name: "Manchester City", logo: "https://media.api-sports.io/football/teams/50.png" }
+  },
+  {
+    id: "mock2",
+    leagueName: "Premier League",
+    leagueLogo: "https://media.api-sports.io/football/leagues/39.png",
+    homeTeam: { id: "mock-42", name: "Arsenal", logo: "https://media.api-sports.io/football/teams/42.png" },
+    awayTeam: { id: "mock-40", name: "Liverpool", logo: "https://media.api-sports.io/football/teams/40.png" }
+  }
+];
+
 const DailyPicks = () => {
   const today = new Date();
   const { data: leagues, isLoading } = useFixturesByDate(today);
@@ -28,30 +45,9 @@ const DailyPicks = () => {
     ).filter(m => m.status === "scheduled");
   }, [leagues]);
 
-  // For a real app, we might want to pre-calculate these or only pick "top" matches
-  // Here we'll show the top matches from popular leagues
   const topMatches = useMemo(() => {
     const realMatches = allMatches.slice(0, 5);
-    
-    // Inject mock matches to preview the new prediction markets
-    const mockMatches = [
-      {
-        id: "mock1",
-        leagueName: "Ligue des Champions",
-        leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
-        homeTeam: { id: "mock-541", name: "Real Madrid", logo: "https://media.api-sports.io/football/teams/541.png" },
-        awayTeam: { id: "mock-50", name: "Manchester City", logo: "https://media.api-sports.io/football/teams/50.png" }
-      },
-      {
-        id: "mock2",
-        leagueName: "Premier League",
-        leagueLogo: "https://media.api-sports.io/football/leagues/39.png",
-        homeTeam: { id: "mock-42", name: "Arsenal", logo: "https://media.api-sports.io/football/teams/42.png" },
-        awayTeam: { id: "mock-40", name: "Liverpool", logo: "https://media.api-sports.io/football/teams/40.png" }
-      }
-    ];
-
-    return [...mockMatches, ...realMatches];
+    return [...MOCK_MATCHES, ...realMatches];
   }, [allMatches]);
 
   return (
@@ -63,23 +59,23 @@ const DailyPicks = () => {
 
       <div className="container max-w-5xl py-6 sm:py-10">
         {/* Hero Section */}
-        <div className="relative mb-12 rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#1a103c] via-[#0f0a1e] to-[#0a0e1a] border border-violet-500/20 p-8 sm:p-12 text-center">
+        <div className="relative mb-12 rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#0a1a10] via-[#050f0a] to-[#020503] border border-primary/20 p-8 sm:p-12 text-center">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-violet-500/20 rounded-full blur-[100px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-primary/10 rounded-full blur-[100px]" />
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative z-10 space-y-3 sm:space-y-4"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[9px] sm:text-xs font-black uppercase tracking-widest">
-              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Exclusivité SaaS
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] sm:text-xs font-black uppercase tracking-widest">
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> IA PRÉDICTION
             </div>
             <h1 className="text-3xl sm:text-6xl font-black text-white tracking-tighter leading-none">
-              L'ORACLE <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">LIVEFOOT AI</span>
+              L'ORACLE <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">LIVEFOOT AI</span>
             </h1>
-            <p className="text-xs sm:text-lg text-violet-200/60 max-w-2xl mx-auto font-medium px-4">
-              Chaque jour, notre algorithme analyse des millions de données pour vous proposer les pronostics les plus fiables du marché. Gratuitement.
+            <p className="text-xs sm:text-lg text-emerald-100/60 max-w-2xl mx-auto font-medium px-4">
+              Chaque jour, notre algorithme analyse des millions de données pour vous proposer les pronostics les plus fiables du marché.
             </p>
 
             <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-6 pt-2 sm:pt-4">

@@ -74,17 +74,17 @@ const LiveFootAIPredictionCard = ({
 
   if (!prediction) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-violet-500/5 via-card to-blue-500/5 border border-violet-500/20 p-6 text-center">
+      <div className="rounded-2xl bg-gradient-to-br from-primary/5 via-card to-emerald-500/5 border border-primary/20 p-6 text-center">
         <div className="animate-pulse flex flex-col items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-violet-500/10 flex items-center justify-center">
-            <Brain className="h-6 w-6 text-violet-400" />
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Brain className="h-6 w-6 text-primary" />
           </div>
           <p className="text-sm text-muted-foreground">LiveFoot AI analyse le match...</p>
           <div className="flex gap-1">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="h-1.5 w-6 rounded-full bg-violet-500/30"
+                className="h-1.5 w-6 rounded-full bg-primary/30"
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
               />
@@ -122,12 +122,12 @@ const LiveFootAIPredictionCard = ({
       className="rounded-2xl overflow-hidden relative"
     >
       {/* Glowing border effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/20 via-blue-500/20 to-cyan-500/20 blur-sm" />
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/20 via-emerald-500/20 to-teal-500/20 blur-sm" />
       
-      <div className="relative rounded-2xl bg-gradient-to-br from-[#0f0a1e] via-[#131025] to-[#0a0e1a] border border-violet-500/20 overflow-hidden">
+      <div className="relative rounded-2xl bg-gradient-to-br from-[#0a1a10] via-[#050f0a] to-[#020503] border border-primary/20 overflow-hidden">
         {/* Ambient glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-violet-500/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-primary/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl" />
 
         {/* Header */}
         <div className="relative px-3.5 sm:px-6 py-3 sm:py-4 border-b border-white/5 flex items-center justify-between">
@@ -135,7 +135,7 @@ const LiveFootAIPredictionCard = ({
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center shadow-lg shadow-violet-500/20"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/20"
             >
               <Brain className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-white" />
             </motion.div>
@@ -143,7 +143,7 @@ const LiveFootAIPredictionCard = ({
               <div className="flex items-center gap-2">
                 <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
                   LiveFoot AI
-                  <Sparkles className="h-3 w-3 text-violet-400" />
+                  <Sparkles className="h-3 w-3 text-primary" />
                 </h3>
                 {isValueBet && (
                   <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black uppercase tracking-tighter">
@@ -151,7 +151,7 @@ const LiveFootAIPredictionCard = ({
                   </span>
                 )}
               </div>
-              <p className="text-[9px] sm:text-[10px] text-violet-300/60">Analyse intelligente</p>
+              <p className="text-[9px] sm:text-[10px] text-emerald-300/60">Analyse intelligente</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ const LiveFootAIPredictionCard = ({
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="text-xs text-violet-300/50 uppercase tracking-widest mb-2"
+              className="text-xs text-emerald-300/50 uppercase tracking-widest mb-2"
             >
               Pronostic du jour
             </motion.p>
@@ -189,7 +189,7 @@ const LiveFootAIPredictionCard = ({
             >
               {winnerName}
             </motion.h4>
-            <p className="text-xs text-violet-300/60">{prediction.advice}</p>
+            <p className="text-xs text-emerald-300/60">{prediction.advice}</p>
           </div>
 
           {/* Score prediction */}
@@ -207,14 +207,14 @@ const LiveFootAIPredictionCard = ({
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
               <span className={cn(
                 "text-3xl sm:text-4xl font-black tabular-nums",
-                prediction.outcome === "home" ? "text-violet-400" : "text-white/80"
+                prediction.outcome === "home" ? "text-primary" : "text-white/80"
               )}>
                 {prediction.predictedScore.home}
               </span>
               <span className="text-lg text-white/20 font-light">:</span>
               <span className={cn(
                 "text-3xl sm:text-4xl font-black tabular-nums",
-                prediction.outcome === "away" ? "text-violet-400" : "text-white/80"
+                prediction.outcome === "away" ? "text-primary" : "text-white/80"
               )}>
                 {prediction.predictedScore.away}
               </span>
@@ -235,7 +235,7 @@ const LiveFootAIPredictionCard = ({
             </div>
             <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5 bg-white/5">
               <motion.div
-                className="bg-gradient-to-r from-violet-500 to-violet-400 rounded-full"
+                className="bg-gradient-to-r from-primary to-emerald-400 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${prediction.probabilities.home}%` }}
                 transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
@@ -247,7 +247,7 @@ const LiveFootAIPredictionCard = ({
                 transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
               />
               <motion.div
-                className="bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
+                className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${prediction.probabilities.away}%` }}
                 transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
@@ -282,8 +282,8 @@ const LiveFootAIPredictionCard = ({
                 />
                 <defs>
                   <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8b5cf6" />
-                    <stop offset="100%" stopColor="#06b6d4" />
+                    <stop offset="0%" stopColor="#22c55e" />
+                    <stop offset="100%" stopColor="#10b981" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -300,7 +300,7 @@ const LiveFootAIPredictionCard = ({
           {/* Key Factors */}
           <div className="space-y-1.5 sm:space-y-2 mb-5">
             <p className="text-[9px] sm:text-[10px] font-bold text-white/40 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-              <Zap className="h-3 w-3 text-violet-400" />
+              <Zap className="h-3 w-3 text-primary" />
               Facteurs clés
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -350,13 +350,13 @@ const LiveFootAIPredictionCard = ({
                   <div className="flex items-center justify-center gap-1 mt-1.5">
                     <div className="h-1 flex-1 rounded-full bg-white/10 overflow-hidden">
                       <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
+                        className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${bet.confidence}%` }}
                         transition={{ duration: 0.8, delay: 1.4 + i * 0.1 }}
                       />
                     </div>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-violet-300">{bet.confidence}%</span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-primary">{bet.confidence}%</span>
                   </div>
                 </motion.div>
               ))}
