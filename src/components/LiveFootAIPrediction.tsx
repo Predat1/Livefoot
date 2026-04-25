@@ -132,7 +132,6 @@ const LiveFootAIPredictionCard = ({
         {/* Header */}
         <div className="relative px-3.5 sm:px-6 py-3 sm:py-4 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}

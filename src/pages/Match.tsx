@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { useMemo } from "react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import {
@@ -9,7 +10,7 @@ import {
 import {
   ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
   Loader2, BarChart3, Swords, Star, DollarSign, HeartPulse, Users as UsersIcon,
-  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame, Brain
+  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame, Brain, Trophy, Zap
 } from "lucide-react";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar,
   ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
+  AreaChart, Area, ReferenceLine
 } from "recharts";
 
 function mapFixtureStatus(s: string): "scheduled" | "live" | "finished" {
@@ -105,6 +107,8 @@ const Match = () => {
   const awayTeamId = fix?.teams?.away?.id ? String(fix.teams.away.id) : "";
 
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
+  const { data: standingsData } = useTeamForm(homeTeamId); // Placeholder or real standings hook
+
 
   if (isLoading) {
     return (
@@ -577,7 +581,7 @@ const Match = () => {
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Domination Globale</p>
-                  <p className="text-sm font-black text-white">{Math.round(momentumData.reduce((s, d) => s + (d.home || 0), 0) / 5)}% - {Math.round(momentumData.reduce((s, d) => s + (d.away || 0), 0) / 5)}%</p>
+                  <p className="text-sm font-black text-white">{momentumData.length > 0 ? Math.round(momentumData.reduce((s, d) => s + (d.home || 0), 0) / momentumData.length) : 0}% - {momentumData.length > 0 ? Math.round(momentumData.reduce((s, d) => s + (d.away || 0), 0) / momentumData.length) : 0}%</p>
                 </div>
                 <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Intensité</p>
@@ -794,7 +798,7 @@ const Match = () => {
             awayTeamName={awayTeam.name}
             homeLogo={homeTeam.logo}
             awayLogo={awayTeam.logo}
-            standings={standings}
+            standings={standingsData || []}
             injuries={{
               home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
               away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
