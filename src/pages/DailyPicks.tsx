@@ -145,7 +145,7 @@ const DailyPicks = () => {
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{match.leagueName}</span>
                   </div>
                   <Link 
-                    to={`/match/${match.id}/${buildEntitySlug(match.homeTeam.name)}-vs-${buildEntitySlug(match.awayTeam.name)}`}
+                    to={`/match/${match.id}/${buildEntitySlug(match.id, match.homeTeam.name)}-vs-${buildEntitySlug(match.id, match.awayTeam.name)}`}
                     className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
                   >
                     VOIR LE MATCH <ChevronRight className="h-3 w-3" />
@@ -153,8 +153,8 @@ const DailyPicks = () => {
                 </div>
                 
                 <LiveFootAIPrediction
-                  homeTeamId={match.homeTeam.id}
-                  awayTeamId={match.awayTeam.id}
+                  homeTeamId={(match.homeTeam as any).id ?? ""}
+                  awayTeamId={(match.awayTeam as any).id ?? ""}
                   homeTeamName={match.homeTeam.name}
                   awayTeamName={match.awayTeam.name}
                   homeLogo={match.homeTeam.logo}

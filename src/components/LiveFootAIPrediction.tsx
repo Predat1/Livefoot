@@ -43,9 +43,9 @@ const LiveFootAIPredictionCard = ({
         predictedScore: homeTeamId === "mock1" ? { home: 2, away: 1 } : { home: 2, away: 2 },
         probabilities: homeTeamId === "mock1" ? { home: 45, draw: 30, away: 25 } : { home: 35, draw: 40, away: 25 },
         factors: [
-          { icon: "📈", label: "Forme Étincelante", impact: "positive", description: "L'équipe à domicile survole ses derniers matchs." },
-          { icon: "🚑", label: "Effectif Complet", impact: "positive", description: "Aucun blessé majeur à déplorer." },
-          { icon: "🏟️", label: "Avantage Terrain", impact: "positive", description: "Une forteresse imprenable cette saison." }
+          { icon: "📈", label: "Forme Étincelante", impact: "positive", team: "home", description: "L'équipe à domicile survole ses derniers matchs." },
+          { icon: "🚑", label: "Effectif Complet", impact: "positive", team: "both", description: "Aucun blessé majeur à déplorer." },
+          { icon: "🏟️", label: "Avantage Terrain", impact: "positive", team: "home", description: "Une forteresse imprenable cette saison." }
         ],
         advice: homeTeamId === "mock1" ? "Victoire logique à domicile." : "Match très serré, le nul est probable.",
         risk: "low",
