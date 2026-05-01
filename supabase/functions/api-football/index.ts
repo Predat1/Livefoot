@@ -106,12 +106,22 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
 
-    // Cache the response
+    // Detect API-level errors (invalid key, quota, etc.) and DO NOT cache them
+    const hasApiError =
+      data &&
+      typeof data === "object" &&
+      data.errors &&
+      !Array.isArray(data.errors) &&
+      Object.keys(data.errors).length > 0;
+
+    // Cache the response only if it's a successful payload
     const ttl = getCacheTTL(cleanEndpoint);
-    cache.set(cacheKey, {
-      data,
-      expiresAt: Date.now() + ttl * 1000,
-    });
+    if (!hasApiError && response.ok) {
+      cache.set(cacheKey, {
+        data,
+        expiresAt: Date.now() + ttl * 1000,
+      });
+    }
 
     // Clean expired cache entries periodically (every 100 requests)
     if (Math.random() < 0.01) {
