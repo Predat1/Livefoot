@@ -148,13 +148,13 @@ const Header = () => {
           </Link>
 
           {/* Desktop navigation - BeSoccer style */}
-          <nav className="hidden lg:flex items-center gap-0 flex-1">
+          <nav className="hidden lg:flex items-center gap-0 flex-1 overflow-x-auto scrollbar-hide">
             {mainNav.map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
                 className={cn(
-                  "relative px-3 xl:px-4 py-4 text-[13px] xl:text-sm font-bold tracking-wide transition-colors whitespace-nowrap",
+                  "relative px-2 xl:px-4 py-4 text-[11px] xl:text-sm font-bold tracking-tight xl:tracking-wide transition-colors whitespace-nowrap",
                   isActive(item.href)
                     ? "text-primary"
                     : "text-header-foreground/70 hover:text-header-foreground"
@@ -164,20 +164,16 @@ const Header = () => {
                 {isActive(item.href) && (
                   <motion.div
                     layoutId="header-active-nav"
-                    className="absolute bottom-0 left-2 right-2 h-[3px] rounded-t-full bg-primary"
+                    className="absolute bottom-0 left-1 right-1 h-[3px] rounded-t-full bg-primary"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
               </Link>
             ))}
-
           </nav>
 
-          {/* Spacer for mobile */}
-          <div className="flex-1 lg:hidden" />
-
           {/* Desktop search — BeSoccer style: wide search bar */}
-          <div className="relative hidden xl:flex items-center" ref={searchRef}>
+          <div className="relative hidden lg:flex items-center ml-2" ref={searchRef}>
             <div className="relative">
               <Input
                 ref={searchInputRef}
@@ -185,12 +181,12 @@ const Header = () => {
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
-                className="h-9 w-[280px] rounded-lg border-header-foreground/15 bg-header-foreground/5 pl-4 pr-9 text-sm text-header-foreground placeholder:text-header-foreground/40 transition-all duration-300 focus:w-[340px] focus:bg-header-foreground/10 focus-visible:ring-primary"
+                className="h-8 xl:h-9 w-[180px] xl:w-[280px] rounded-lg border-header-foreground/15 bg-header-foreground/5 pl-4 pr-9 text-[12px] xl:text-sm text-header-foreground placeholder:text-header-foreground/40 transition-all duration-300 focus:w-[240px] xl:focus:w-[340px] focus:bg-header-foreground/10 focus-visible:ring-primary"
               />
-              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-header-foreground/40" />
+              <Search className="absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-header-foreground/40" />
             </div>
             {searchOpen && results.length > 0 && (
-              <div className="absolute top-full mt-2 right-0 w-[340px]">
+              <div className="absolute top-full mt-2 right-0 w-[240px] xl:w-[340px]">
                 {searchResults}
               </div>
             )}
@@ -202,7 +198,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg text-header-foreground/70 hover:bg-header-foreground/10 hover:text-primary md:hidden"
+              className="h-8 w-8 rounded-lg text-header-foreground/70 hover:bg-header-foreground/10 hover:text-primary lg:hidden"
               onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
             >
               <Search className="h-4 w-4" />
