@@ -10,33 +10,33 @@ const corsHeaders = {
 const cache = new Map<string, { data: unknown; expiresAt: number }>();
 
 const CACHE_TTL: Record<string, number> = {
-  // Live data — short cache
-  "fixtures": 60,           // 1 min for live scores
-  "fixtures/events": 60,
-  "fixtures/lineups": 120,
-  "fixtures/statistics": 60,
-  "fixtures/players": 120,
+  // Live data — cache increased to save credits
+  "fixtures": 900,           // 15 min (was 1 min)
+  "fixtures/events": 900,
+  "fixtures/lineups": 3600,   // 1 hour
+  "fixtures/statistics": 900,
+  "fixtures/players": 3600,
   // Semi-live
-  "standings": 300,          // 5 min
-  "players/topscorers": 300,
-  "players/topassists": 300,
-  "players/topredcards": 300,
-  "players/topyellowcards": 300,
+  "standings": 43200,         // 12 hours (was 5 min)
+  "players/topscorers": 43200,
+  "players/topassists": 43200,
+  "players/topredcards": 43200,
+  "players/topyellowcards": 43200,
   // Static-ish data — long cache
-  "leagues": 3600,           // 1 hour
-  "teams": 3600,
-  "teams/statistics": 600,
-  "players": 600,
-  "players/squads": 3600,
-  "transfers": 1800,
+  "leagues": 86400,           // 24 hours
+  "teams": 86400,
+  "teams/statistics": 21600,  // 6 hours
+  "players": 21600,
+  "players/squads": 86400,
+  "transfers": 86400,
   "trophies": 86400,
-  "coaches": 3600,
+  "coaches": 86400,
   "venues": 86400,
   "countries": 86400,
-  "odds": 300,
-  "predictions": 600,
-  "injuries": 600,
-  "sidelined": 3600,
+  "odds": 3600,               // 1 hour
+  "predictions": 43200,       // 12 hours
+  "injuries": 3600,           // 1 hour
+  "sidelined": 86400,
 };
 
 function getCacheTTL(endpoint: string): number {
@@ -91,11 +91,14 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get("API_FOOTBALL_KEY");
     if (!apiKey) {
+      console.error("DEBUG: API_FOOTBALL_KEY is missing in Supabase Secrets!");
       return new Response(
         JSON.stringify({ error: "API key not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`DEBUG: Calling API Football: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -105,6 +108,11 @@ Deno.serve(async (req) => {
     });
 
     const data = await response.json();
+    console.log(`DEBUG: API Response status: ${response.status}`);
+    
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      console.error("DEBUG: API Football returned errors:", data.errors);
+    }
 
     // Detect API-level errors (invalid key, quota, etc.) and DO NOT cache them
     const hasApiError =

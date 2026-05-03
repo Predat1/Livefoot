@@ -180,8 +180,8 @@ export function useFixturesByDate(date: Date) {
       const res = await getFixtures({ date: dateStr });
       return transformFixturesToLeagues(res.response);
     },
-    staleTime: 60 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    refetchInterval: 15 * 60 * 1000,
   });
 }
 
@@ -192,8 +192,8 @@ export function useLiveFixtures() {
       const res = await getLiveFixtures();
       return transformFixturesToLeagues(res.response);
     },
-    staleTime: 30 * 1000,
-    refetchInterval: 30 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000,
   });
 }
 
@@ -204,8 +204,8 @@ export function useTopScorers(leagueId: string, season: string) {
       const res = await getTopScorers(leagueId, season);
       return transformTopScorers(res.response);
     },
-    staleTime: 30 * 60 * 1000,  // 30min — scorer rankings stable
-    gcTime: 60 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000,
     enabled: !!leagueId && !!season,
   });
 }
@@ -217,7 +217,7 @@ export function useTopAssists(leagueId: string, season: string) {
       const res = await getTopAssists(leagueId, season);
       return transformTopScorers(res.response);
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
     enabled: !!leagueId && !!season,
   });
 }
@@ -248,7 +248,7 @@ export function useStandings(leagueId: string, season: string) {
       if (!leagueData?.standings?.[0]) return [];
       return leagueData.standings[0] as StandingTeam[];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
     enabled: !!leagueId && !!season,
   });
 }
@@ -263,8 +263,8 @@ export function useFixtureDetail(fixtureId: string) {
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 30 * 1000,
-    refetchInterval: 30 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    refetchInterval: 15 * 60 * 1000,
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
@@ -464,7 +464,7 @@ export function useTeamFixtures(teamId: string, season: string) {
         league: fix.league.name,
       }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 12 * 60 * 60 * 1000, // 12 hours
     enabled: !!teamId,
   });
 }
@@ -483,7 +483,7 @@ export function useTeamNextFixtures(teamId: string) {
         league: fix.league.name,
       }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 12 * 60 * 60 * 1000, // 12 hours
     enabled: !!teamId,
   });
 }
@@ -510,7 +510,7 @@ export function useTransfersByTeam(teamId: string) {
       const res = await getTransfers({ team: teamId });
       return (res.response || []) as ApiTransfer[];
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
     enabled: !!teamId,
   });
 }
