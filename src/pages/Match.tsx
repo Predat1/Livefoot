@@ -211,14 +211,15 @@ const Match = () => {
   // ─── Tabs ────────────────────────────────────────────────────
   const renderTabs = () => {
     const tabItems = [
+      { value: "events", label: "Résumé" },
       { value: "predictions", label: "Pronos IA" },
-      { value: "momentum", label: "Momentum" },
-      ...(hasStats ? [{ value: "live", label: "Live" }] : []),
-      { value: "events", label: "Events" },
       { value: "stats", label: "Stats" },
-      ...(players.length >= 2 ? [{ value: "heatmap", label: "Heatmap" }] : []),
       { value: "lineups", label: "Compos" },
+      ...(hasStats ? [{ value: "live", label: "Live" }] : []),
       ...(hasStats ? [{ value: "ratings", label: "Notes" }] : []),
+      { value: "momentum", label: "Momentum" },
+      ...(players.length >= 2 ? [{ value: "heatmap", label: "Heatmap" }] : []),
+      { value: "h2h", label: "H2H" },
       { value: "form", label: "Forme" },
       { value: "calendar", label: "Calendrier" },
       { value: "community", label: "Pronos" },
