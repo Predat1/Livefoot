@@ -980,8 +980,9 @@ const Match = () => {
   return (
     <Layout>
       <SEOHead
-        title={`${homeTeam.name} vs ${awayTeam.name} - ${isLive ? "Live" : isFinished ? "Result" : "Preview"}`}
-        description={`${homeTeam.name} vs ${awayTeam.name} - ${league.name}`}
+        title={`${homeTeam.name} vs ${awayTeam.name} Direct, Pronostics & Stats - ${league.name}`}
+        description={`Match ${homeTeam.name} vs ${awayTeam.name} en direct le ${new Date(fix.fixture.date).toLocaleDateString("fr-FR")} sur LiveFoot.fun. Retrouvez les pronostics IA gratuits, les compositions et les statistiques live.`}
+        keywords={`${homeTeam.name} vs ${awayTeam.name} direct, prono ${homeTeam.name} ${awayTeam.name}, score ${homeTeam.name} ${awayTeam.name}, stats match foot`}
       />
       <div className="px-2 sm:container py-4 sm:py-8">
         <div className="flex items-center justify-between mb-4 sm:mb-6">

@@ -17,8 +17,8 @@ interface SEOHeadProps {
   };
 }
 
-const SITE_URL = "https://livefoot.app";
-const DEFAULT_OG_IMAGE = "https://livefoot.app/pwa-512x512.png";
+const SITE_URL = "https://livefoot.fun";
+const DEFAULT_OG_IMAGE = "https://livefoot.fun/og-image.png";
 
 const SEOHead = ({
   title,

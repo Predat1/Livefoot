@@ -118,11 +118,11 @@ const SEO_LD = [
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "LiveFoot",
-    url: "https://livefoot.app",
+    url: "https://livefoot.fun",
     description: "Scores de football en direct, résultats, calendriers, classements et statistiques des meilleures ligues mondiales.",
     potentialAction: {
       "@type": "SearchAction",
-      target: { "@type": "EntryPoint", urlTemplate: "https://livefoot.app/search?q={search_term_string}" },
+      target: { "@type": "EntryPoint", urlTemplate: "https://livefoot.fun/search?q={search_term_string}" },
       "query-input": "required name=search_term_string",
     },
     inLanguage: ["fr", "en"],
@@ -131,7 +131,7 @@ const SEO_LD = [
     "@context": "https://schema.org",
     "@type": "SportsOrganization",
     name: "LiveFoot",
-    url: "https://livefoot.app",
+    url: "https://livefoot.fun",
     sport: "Football",
     description: "Application de scores de football en direct couvrant plus de 800 compétitions mondiales.",
   },
@@ -141,9 +141,9 @@ const SEO_LD = [
   return (
     <div ref={containerRef} className="min-h-screen bg-background relative pb-safe lg:pb-0">
       <SEOHead
-        title="LiveFoot - Scores Football en Direct Aujourd'hui"
-        description="Suivez tous les scores de football en direct, résultats, calendriers et classements : Premier League, La Liga, Serie A, Bundesliga, Ligue 1 et plus de 800 compétitions."
-        keywords="scores football en direct, résultats foot, classement ligue 1, premier league résultats, scores live, football aujourd'hui, livescore"
+        title="LiveFoot.fun - Scores Football en Direct, Pronos IA & Résultats Live"
+        description="Suivez tous les scores de football en direct sur LiveFoot.fun. Résultats live, pronostics IA gratuits, classements et statistiques en temps réel pour plus de 800 compétitions mondiales."
+        keywords="scores football direct, résultats foot live, pronostics foot gratuits, pronos ia football, classement ligue 1, score en direct aujourd'hui, livescore gratuit"
         jsonLd={SEO_LD}
       />
       <PullToRefreshIndicator
