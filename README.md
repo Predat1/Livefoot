@@ -1,73 +1,48 @@
-# Welcome to your Lovable project
+# ⚽ LiveFoot - Premier Football Intelligence Platform
 
-## Project info
+LiveFoot is a high-performance, mobile-first web application providing real-time football scores, expert AI predictions, and comprehensive match statistics for over 800 leagues worldwide.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Features
 
-## How can I edit this code?
+- **Real-time Scores**: Instant updates for matches across all major and minor leagues.
+- **AI Expert Predictions**: Advanced match analysis using Gemini 2.0 Flash (via OpenRouter) and historical data.
+- **Deep Statistics**: Head-to-Head (H2H), team form, standings, and player performance metrics.
+- **Search Engine**: Rapid search for teams, players, and competitions.
+- **Personalization**: Favorite teams and leagues for a tailored experience.
+- **SEO Optimized**: High-performance metadata and JSON-LD for maximum visibility.
+- **PWA Support**: Installable on mobile devices for an app-like experience.
 
-There are several ways of editing your application.
+## 🛠️ Technology Stack
 
-**Use Lovable**
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS.
+- **UI Components**: shadcn/ui, Framer Motion for smooth animations.
+- **Backend**: Supabase (Auth, Database, Edge Functions).
+- **Data Source**: API-Football (RapidAPI/API-Sports).
+- **AI Engine**: OpenRouter (Google Gemini 2.0 Flash).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## 📦 Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repository
+git clone https://github.com/Predat1/Livefoot.git
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd livefoot
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## ⚙️ Configuration
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The project relies on Supabase Edge Functions to proxy API requests securely. Ensure the following environment variables are set in your Supabase project:
 
-**Use GitHub Codespaces**
+- `API_FOOTBALL_KEY`: Your API-Football / API-Sports key.
+- `OPENROUTER_API_KEY`: Your OpenRouter API key for AI predictions.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📄 License
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Private - All rights reserved.
