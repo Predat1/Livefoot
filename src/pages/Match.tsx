@@ -172,9 +172,6 @@ const Match = () => {
       // Natural decay towards center
       currentValue *= 0.85;
       
-      // Random noise for "aliveness"
-      currentValue += (Math.random() - 0.5) * 10;
-      
       // Clamp
       currentValue = Math.max(-90, Math.min(90, currentValue));
       

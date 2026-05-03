@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import DatePicker from "@/components/DatePicker";
@@ -14,7 +13,7 @@ import { useFixturesByDate, TIER1_IDS, TIER2_IDS, TIER3_IDS } from "@/hooks/useA
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
-import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Sparkles } from "lucide-react";
+import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users } from "lucide-react";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -84,9 +83,9 @@ const Index = () => {
   }, [activeFilter, leagues]);
 
   const stats = [
-    { icon: Trophy, label: "Ligues", value: String(leagues.length), color: "text-amber-500" },
-    { icon: TrendingUp, label: "En Direct", value: String(matchCounts.live), color: "text-red-500" },
-    { icon: Zap, label: "Total Matchs", value: String(matchCounts.all), color: "text-primary" },
+    { icon: Trophy, label: "Competitions", value: String(leagues.length) },
+    { icon: TrendingUp, label: "Live", value: String(matchCounts.live) },
+    { icon: Zap, label: "Matches", value: String(matchCounts.all) },
   ];
 
   const handleRefresh = useCallback(async () => {
@@ -103,25 +102,49 @@ const Index = () => {
   });
 
   const { data: newsArticles = [] } = useFootballNews();
-  const { data: topRatedPlayers } = useCommunityTopRated("week");
+  const { data: topRatedPlayers, isLoading: loadingTopRated } = useCommunityTopRated("week");
   const trendingNews = newsArticles.filter((n) => n.trending).slice(0, 4);
-  const featuredNews = newsArticles[0];
 
-  const FOOTER_LINKS = [
-    { label: "À propos", href: "/about" },
-    { label: "Contact", href: "/contact" },
-    { label: "Confidentialité", href: "/privacy" },
-    { label: "Conditions", href: "/terms" },
-  ];
+const FOOTER_LINKS = [
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+];
+
+const SEO_LD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "LiveFoot",
+    url: "https://livefoot.app",
+    description: "Scores de football en direct, résultats, calendriers, classements et statistiques des meilleures ligues mondiales.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: "https://livefoot.app/search?q={search_term_string}" },
+      "query-input": "required name=search_term_string",
+    },
+    inLanguage: ["fr", "en"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SportsOrganization",
+    name: "LiveFoot",
+    url: "https://livefoot.app",
+    sport: "Football",
+    description: "Application de scores de football en direct couvrant plus de 800 compétitions mondiales.",
+  },
+];
+
 
   return (
     <div ref={containerRef} className="min-h-screen bg-background relative pb-safe lg:pb-0">
       <SEOHead
         title="LiveFoot - Scores Football en Direct Aujourd'hui"
-        description="Suivez tous les scores de football en direct, résultats, calendriers et classements."
-        canonical="/"
+        description="Suivez tous les scores de football en direct, résultats, calendriers et classements : Premier League, La Liga, Serie A, Bundesliga, Ligue 1 et plus de 800 compétitions."
+        keywords="scores football en direct, résultats foot, classement ligue 1, premier league résultats, scores live, football aujourd'hui, livescore"
+        jsonLd={SEO_LD}
       />
-      
       <PullToRefreshIndicator
         pullDistance={pullDistance}
         isRefreshing={isRefreshing}
@@ -129,258 +152,224 @@ const Index = () => {
       />
       
       <Header />
+      <DatePicker
+        selectedDate={selectedDate}
+        activeFilter={activeFilter}
+        onDateChange={setSelectedDate}
+        onFilterChange={setActiveFilter}
+        matchCounts={matchCounts}
+      />
 
-      <main className="animate-fade-in">
-        {/* Elite Hero Section */}
-        {featuredNews && (
-          <section className="relative h-[40vh] sm:h-[50vh] overflow-hidden group">
-            <motion.img 
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
-              src={featuredNews.image} 
-              className="absolute inset-0 w-full h-full object-cover" 
-              alt="Featured"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent hidden sm:block" />
-            
-            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 sm:pb-20">
-              <div className="container px-0 sm:px-4">
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="max-w-3xl space-y-4"
+      <main className="px-2 sm:container py-4 sm:py-8">
+        {/* Stats bar */}
+        <div className="mb-6 sm:mb-8 grid grid-cols-3 gap-2 sm:gap-4">
+          {stats.map((stat, index) => (
+            <div 
+              key={stat.label}
+              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 rounded-xl sm:rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50 hover-lift animate-scale-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl gradient-primary shadow-lg shadow-primary/20">
+                <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+              </div>
+              <div className="text-center sm:text-left">
+                {isLoading ? (
+                  <Skeleton className="h-6 w-8 mx-auto sm:mx-0" />
+                ) : (
+                  <p className="text-lg sm:text-2xl font-black text-foreground">{stat.value}</p>
+                )}
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Favorites Feed */}
+        <FavoritesFeed leagues={leagues} isLoading={isLoading} />
+
+        {/* Top Community Players Widget */}
+        {(topRatedPlayers && topRatedPlayers.length > 0) && (
+          <section className="mb-6 sm:mb-8">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
+                <Star className="h-4 w-4 text-primary" />
+                <h2 className="text-sm sm:text-base font-bold text-foreground">Top Joueurs de la Semaine</h2>
+              </div>
+              <Link
+                to="/rankings"
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                Voir tout <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-1">
+              {topRatedPlayers.slice(0, 5).map((player, index) => (
+                <Link
+                  key={player.player_id}
+                  to={`/players/${buildEntitySlug(player.player_id, player.player_name)}`}
+                  className="flex-shrink-0 w-28 sm:w-32 rounded-xl bg-card border border-border/50 p-3 text-center hover-lift transition-all"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-primary text-[10px] font-black text-primary-foreground uppercase tracking-widest">À LA UNE</span>
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-white/80 uppercase tracking-widest">
-                      <Sparkles size={12} className="text-primary" /> {featuredNews.category}
+                  <div className="relative mx-auto mb-2">
+                    <PlayerAvatar name={player.player_name} size="sm" />
+                    <span className={cn(
+                      "absolute -top-1 -left-1 h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-black",
+                      index === 0 ? "bg-primary text-primary-foreground" :
+                      index === 1 ? "bg-primary/20 text-primary" :
+                      index === 2 ? "bg-primary/10 text-primary" :
+                      "bg-muted text-muted-foreground"
+                    )}>
+                      {index + 1}
                     </span>
                   </div>
-                  <h1 className="text-2xl sm:text-5xl font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl">
-                    {featuredNews.title}
-                  </h1>
-                  <p className="text-sm sm:text-lg text-white/70 font-medium line-clamp-2 max-w-xl">
-                    {featuredNews.summary || "Découvrez les dernières analyses et résultats du monde du football en direct."}
-                  </p>
-                  <div className="flex items-center gap-4 pt-2">
-                    <Button asChild className="rounded-full px-8 gradient-primary shadow-xl shadow-primary/30">
-                      <Link to={`/news/${featuredNews.id}`}>Lire l'article</Link>
-                    </Button>
-                    <div className="flex items-center gap-2 text-white/60 text-xs font-bold uppercase tracking-widest">
-                      <Eye size={14} /> {featuredNews.views?.toLocaleString()} vues
-                    </div>
+                  <p className="text-[11px] font-bold text-foreground truncate">{player.player_name}</p>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    <Star className="h-3 w-3 text-primary fill-primary" />
+                    <span className="text-xs font-black text-primary">{player.avg_rating}</span>
                   </div>
-                </motion.div>
-              </div>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{player.total_ratings} votes</p>
+                </Link>
+              ))}
             </div>
           </section>
         )}
 
-        <DatePicker
-          selectedDate={selectedDate}
-          activeFilter={activeFilter}
-          onDateChange={setSelectedDate}
-          onFilterChange={setActiveFilter}
-          matchCounts={matchCounts}
-        />
-
-        <div className="px-2 sm:container py-6 sm:py-10">
-          {/* Elite Stats Cards */}
-          <div className="mb-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {stats.map((stat, index) => (
-              <motion.div 
-                key={stat.label}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative overflow-hidden rounded-3xl glass-card p-6 shadow-sm hover-lift card-shine"
-              >
-                <div className="absolute top-0 right-0 p-4 opacity-10 transition-transform group-hover:scale-150 group-hover:rotate-12">
-                  <stat.icon size={64} />
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 shadow-inner transition-transform group-hover:scale-110", stat.color)}>
-                    <stat.icon className="h-7 w-7" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-black text-foreground tracking-tighter leading-none">
-                      {isLoading ? "..." : stat.value}
-                    </p>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">{stat.label}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+        <div className="mb-4 sm:mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
+            <h2 className="text-base sm:text-lg font-bold text-foreground">
+              {activeFilter === "live" ? "Matchs en Direct" : activeFilter === "tv" ? "Matchs Télévisés" : "Matchs du Jour"}
+            </h2>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 space-y-8">
-              {/* Favorites Feed */}
-              <FavoritesFeed leagues={leagues} isLoading={isLoading} />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-1.5 rounded-full gradient-primary shadow-glow" />
-                  <h2 className="text-xl font-black text-foreground tracking-tighter uppercase">
-                    {activeFilter === "live" ? "Direct 🔥" : activeFilter === "tv" ? "Télévisé 📺" : "Le Programme"}
-                  </h2>
-                </div>
-                {isLoading && (
-                  <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest animate-pulse">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Mise à jour...
-                  </div>
-                )}
-              </div>
-
-              {/* Loading skeleton */}
-              {isLoading && <MatchSkeleton />}
-
-              {/* Error state */}
-              {isError && !isLoading && (
-                <div className="flex flex-col items-center justify-center py-16 text-center rounded-[2.5rem] bg-card border border-border">
-                  <WifiOff className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground font-bold mb-4 uppercase text-xs tracking-widest">Connexion interrompue</p>
-                  <Button onClick={() => refetch()} className="rounded-full gradient-primary px-8">Réessayer</Button>
-                </div>
-              )}
-
-              {/* Leagues */}
-              {!isLoading && !isError && (
-                <div className="space-y-4">
-                  <AnimatePresence mode="popLayout">
-                    {visibleLeagues.length > 0 ? (
-                      visibleLeagues.map((league, index) => (
-                        <motion.div
-                          key={league.id}
-                          initial={{ opacity: 0, scale: 0.98 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.98 }}
-                          transition={{ delay: index * 0.05 }}
-                        >
-                          <LeagueSection league={league} index={index} />
-                        </motion.div>
-                      ))
-                    ) : (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 text-center">
-                        <p className="text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">
-                          {matchCounts.all === 0 ? "Silence radio sur les terrains..." : "Aucun match ne correspond à vos critères."}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Infinite Scroll Loader */}
-              {!isLoading && !isError && (
-                <InfiniteScrollLoader
-                  ref={loadMoreRef}
-                  isLoading={isLoadingMore}
-                  hasMore={hasMore}
-                />
-              )}
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Chargement...
             </div>
-
-            <aside className="lg:col-span-4 space-y-10">
-              {/* Community Widget */}
-              {topRatedPlayers && topRatedPlayers.length > 0 && (
-                <section className="rounded-[2.5rem] bg-card/40 border border-border p-8 shadow-sm">
-                  <div className="mb-6 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Star className="h-5 w-5 text-primary fill-primary" />
-                      <h3 className="text-lg font-black tracking-tighter uppercase">Elite Players</h3>
-                    </div>
-                    <Link to="/rankings" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Voir tout</Link>
-                  </div>
-                  <div className="space-y-4">
-                    {topRatedPlayers.slice(0, 5).map((player, index) => (
-                      <Link
-                        key={player.player_id}
-                        to={`/players/${buildEntitySlug(player.player_id, player.player_name)}`}
-                        className="flex items-center gap-4 p-3 rounded-2xl hover:bg-muted/50 transition-all group"
-                      >
-                        <div className="relative">
-                          <PlayerAvatar name={player.player_name} size="sm" />
-                          <span className={cn(
-                            "absolute -top-1 -left-1 h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-card",
-                            index === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                          )}>
-                            {index + 1}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-black text-foreground truncate leading-none group-hover:text-primary transition-colors">{player.player_name}</p>
-                          <p className="text-[9px] text-muted-foreground uppercase font-bold mt-1 tracking-wider">{player.total_ratings} votes</p>
-                        </div>
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10">
-                           <Star size={12} className="text-primary fill-primary" />
-                           <span className="text-sm font-black text-primary">{player.avg_rating}</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Trending News Widget */}
-              {trendingNews.length > 0 && (
-                <section className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Flame className="h-5 w-5 text-destructive animate-pulse" />
-                      <h3 className="text-lg font-black tracking-tighter uppercase">Hot News</h3>
-                    </div>
-                    <Link to="/news" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Tout voir</Link>
-                  </div>
-                  <div className="space-y-3">
-                    {trendingNews.map((news, index) => (
-                      <Link
-                        key={`${news.id}-${index}`}
-                        to={`/news/${news.id}`}
-                        className="group flex gap-4 items-center animate-fade-in"
-                      >
-                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-border shadow-sm">
-                          <img src={news.image} className="h-full w-full object-cover transition-transform group-hover:scale-110" alt={news.title} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{news.category}</p>
-                          <h4 className="text-sm font-black text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">{news.title}</h4>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </aside>
-          </div>
+          )}
         </div>
+
+        {/* Loading skeleton */}
+        {isLoading && <MatchSkeleton />}
+
+        {/* Error state */}
+        {isError && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl bg-card border border-border/50">
+            <WifiOff className="h-10 w-10 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground text-sm mb-3">Impossible de charger les matchs. Veuillez réessayer.</p>
+            <button
+              onClick={() => refetch()}
+              className="rounded-lg gradient-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            >
+              Réessayer
+            </button>
+          </div>
+        )}
+
+        {/* Leagues */}
+        {!isLoading && !isError && (
+          <div className="space-y-3 sm:space-y-4">
+            {visibleLeagues.length > 0 ? (
+              visibleLeagues.map((league, index) => (
+                <LeagueSection key={league.id} league={league} index={index} />
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-muted-foreground text-sm">
+                  {matchCounts.all === 0 ? "Aucun match programmé pour cette date." : "Aucun match trouvé pour ce filtre."}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Infinite Scroll Loader */}
+        {!isLoading && !isError && (
+          <InfiniteScrollLoader
+            ref={loadMoreRef}
+            isLoading={isLoadingMore}
+            hasMore={hasMore}
+          />
+        )}
+
+        {/* Trending News Section */}
+        {trendingNews.length > 0 && (
+          <section className="mt-8 sm:mt-12">
+            <div className="mb-4 sm:mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
+                <Flame className="h-5 w-5 text-destructive" />
+                <h2 className="text-base sm:text-lg font-bold text-foreground">Actualités Tendances</h2>
+              </div>
+              <Link
+                to="/news"
+                className="flex items-center gap-1 text-xs sm:text-sm font-medium text-primary hover:underline"
+              >
+                Toutes les Infos <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              {trendingNews.map((news, index) => (
+                <Link
+                  key={`${news.id}-${index}`}
+                  to={`/news/${news.id}`}
+                  className="group rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden hover-lift transition-all animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="relative h-32 sm:h-40 overflow-hidden">
+                    <img
+                      src={news.image}
+                      alt={news.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+                    <span className="absolute bottom-2 left-2 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                      {news.category}
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-xs sm:text-sm font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                      {news.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-1"><Calendar className="h-2.5 w-2.5" /> {news.date}</span>
+                      <span className="flex items-center gap-1"><Eye className="h-2.5 w-2.5" /> {news.views?.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
-      <footer className="border-t border-border bg-card py-20 mt-12">
-        <div className="container text-center space-y-8">
-          <div className="flex items-center justify-center gap-4">
-            <div className="h-14 w-14 rounded-[1.5rem] gradient-primary shadow-xl shadow-primary/20 flex items-center justify-center p-3">
-              <img src="/logo.svg" className="brightness-0 invert h-full w-full object-contain" />
+      {/* Footer - hidden on mobile */}
+      <footer className="hidden lg:block border-t border-border bg-card py-12 mt-8">
+        <div className="container text-center">
+          <div className="mb-6 flex items-center justify-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
+              <img src={livefootLogo} alt="LiveFoot logo" className="h-full w-full object-cover" />
             </div>
-            <span className="text-3xl font-black text-foreground tracking-tighter">LIVEFOOT<span className="text-primary">AI</span></span>
+            <span className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
           </div>
-          <p className="text-sm text-muted-foreground max-w-xl mx-auto font-medium leading-relaxed">
-            L'excellence du football en temps réel. Découvrez les scores, analyses et prédictions propulsées par l'intelligence marketplace.
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Votre destination ultime pour les scores en direct, résultats, calendriers, classements, statistiques et actualités football.
           </p>
-          <div className="flex items-center justify-center gap-8 flex-wrap">
+          <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
             {FOOTER_LINKS.map((link) => (
-              <Link key={link.label} to={link.href} className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
+              <Link
+                key={link.label}
+                to={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
                 {link.label}
               </Link>
             ))}
           </div>
-          <div className="pt-8 border-t border-border/50 max-w-xs mx-auto">
-            <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">
-              © {new Date().getFullYear()} LIVEFOOT ELITE STUDIO
-            </p>
-          </div>
+          <p className="mt-6 text-xs text-muted-foreground/60">
+            © {new Date().getFullYear()} LiveFoot. Tous droits réservés.
+          </p>
         </div>
       </footer>
     </div>

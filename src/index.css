@@ -37,15 +37,14 @@
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --header-bg: 220 25% 10%;
+    --header-bg: 220 25% 12%;
     --header-foreground: 0 0% 100%;
     --league-header: 220 14% 96%;
     --match-time: 142 71% 45%;
     --live-indicator: 0 84% 60%;
     --score-bg: 220 25% 15%;
     --gradient-primary: 142 71% 45%;
-    --gradient-secondary: 160 84% 39%;
-    --gradient-elite: 220 25% 12%;
+    --gradient-secondary: 160 70% 40%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -58,48 +57,50 @@
   }
 
   .dark {
-    --background: 220 25% 6%;
+    --background: 220 25% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 220 25% 10%;
+    --card: 220 25% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 220 25% 10%;
+    --popover: 220 25% 12%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 142 71% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 15%;
+    --secondary: 220 20% 18%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 20% 15%;
+    --muted: 220 20% 18%;
     --muted-foreground: 220 9% 55%;
 
     --accent: 142 71% 45%;
     --accent-foreground: 0 0% 100%;
 
-    --border: 220 20% 15%;
-    --input: 220 20% 15%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
     --ring: 142 71% 45%;
 
-    --header-bg: 220 30% 4%;
+    --header-bg: 220 30% 6%;
     --header-foreground: 0 0% 100%;
-    --league-header: 220 25% 12%;
+    --league-header: 220 25% 15%;
     --match-time: 142 71% 45%;
     --live-indicator: 0 84% 60%;
     --score-bg: 142 71% 45%;
     --gradient-primary: 142 71% 45%;
-    --gradient-secondary: 160 84% 39%;
-    --gradient-elite: 220 30% 8%;
+    --gradient-secondary: 160 70% 40%;
 
-    --sidebar-background: 220 25% 6%;
+    --sidebar-background: 220 25% 8%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 142 71% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 25% 12%;
+    --sidebar-accent: 220 25% 15%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 220 20% 15%;
+    --sidebar-border: 220 20% 18%;
     --sidebar-ring: 142 71% 45%;
   }
 }
@@ -120,7 +121,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30;
+    @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
@@ -132,7 +133,7 @@
   footer,
   nav,
   [class*="bg-"] {
-    transition: background-color 400ms cubic-bezier(0.4, 0, 0.2, 1), border-color 400ms ease, color 400ms ease;
+    transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease;
   }
 }
 
@@ -147,38 +148,27 @@
   }
 
   .live-pulse {
-    animation: pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse-live 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   @keyframes pulse-live {
     0%, 100% {
       opacity: 1;
       transform: scale(1);
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
     }
     50% {
-      opacity: 0.7;
-      transform: scale(0.92);
-      box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+      opacity: 0.6;
+      transform: scale(0.95);
     }
   }
 
   .gradient-primary {
     background: linear-gradient(135deg, hsl(var(--gradient-primary)) 0%, hsl(var(--gradient-secondary)) 100%);
   }
-  
-  .gradient-elite {
-    background: linear-gradient(135deg, hsl(var(--gradient-elite)) 0%, hsl(var(--background)) 100%);
-  }
 
-  .glass-card {
-    @apply backdrop-blur-xl border border-white/5 dark:border-white/10;
-    background: hsl(var(--card) / 0.6);
-  }
-
-  .glass-header {
-    @apply backdrop-blur-md border-b border-white/5 dark:border-white/10;
-    background: hsl(var(--header-bg) / 0.85);
+  .glass-effect {
+    backdrop-filter: blur(12px);
+    background: hsl(var(--card) / 0.8);
   }
 
   .hover-lift {
@@ -186,12 +176,8 @@
   }
 
   .hover-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px -10px hsl(var(--primary) / 0.2);
-  }
-
-  .text-glow {
-    text-shadow: 0 0 15px hsl(var(--primary) / 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px hsl(var(--primary) / 0.15);
   }
 
   .card-shine {
@@ -206,8 +192,8 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.08), transparent);
-    transition: left 0.7s ease;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.05), transparent);
+    transition: left 0.5s ease;
   }
 
   .card-shine:hover::before {
@@ -221,9 +207,5 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-  
-  .mask-fade-right {
-    mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
 }
