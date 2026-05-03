@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiveFixtures } from "@/hooks/useApiFootball";
+import { motion } from "framer-motion";
 
 const navItems = [
   { href: "/", icon: Home, label: "Matchs" },
