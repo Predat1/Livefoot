@@ -110,12 +110,7 @@ const Match = () => {
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
   const { data: standingsData } = useTeamForm(homeTeamId); // Placeholder or real standings hook
   
-  const { data: aiExpertPrediction, isLoading: loadingAiExpert } = useAiExpert({
-    fixtureId: matchId || "",
-    homeTeam: fix?.teams?.home?.name || "Home",
-    awayTeam: fix?.teams?.away?.name || "Away",
-    leagueName: fix?.league?.name || "League",
-  });
+  const aiExpertPrediction = null;
 
 
   if (isLoading) {
