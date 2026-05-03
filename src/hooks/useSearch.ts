@@ -24,6 +24,18 @@ export interface SearchFilters {
   marketValueMax: number;
 }
 
+export const LEAGUES = [
+  "Premier League", "La Liga", "Serie A", "Bundesliga", "Ligue 1",
+  "Champions League", "Europa League", "Eredivisie", "Primeira Liga",
+];
+
+export const COUNTRIES = [
+  "England", "Spain", "Italy", "Germany", "France", "Portugal",
+  "Netherlands", "Belgium", "Brazil", "Argentina", "USA",
+];
+
+export const POSITIONS = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
+
 export const DEFAULT_FILTERS: SearchFilters = {
   types: ["team", "player", "competition", "news"],
   league: "",
