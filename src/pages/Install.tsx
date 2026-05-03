@@ -66,12 +66,12 @@ const Install = () => {
           </div>
 
           <h1 className="mb-4 text-3xl sm:text-4xl font-black text-foreground">
-            Install LiveFoot
+            Installer LiveFoot
           </h1>
           
           <p className="mb-8 text-base sm:text-lg text-muted-foreground">
-            Get the best football experience. Install our app for instant access to live scores, 
-            news, and more - even offline!
+            Profitez de la meilleure expérience football. Installez notre application pour un accès instantané aux scores en direct, 
+            aux pronostics IA et bien plus encore - même hors ligne !
           </p>
 
           {isInstalled ? (
@@ -79,9 +79,9 @@ const Install = () => {
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
                 <Check className="h-8 w-8 text-primary" />
               </div>
-              <p className="text-lg font-semibold text-primary">App Installed!</p>
+              <p className="text-lg font-semibold text-primary">Application Installée !</p>
               <p className="text-sm text-muted-foreground">
-                You can now access LiveFoot from your home screen.
+                Vous pouvez maintenant accéder à LiveFoot depuis votre écran d'accueil.
               </p>
             </div>
           ) : (
@@ -94,7 +94,7 @@ const Install = () => {
                   className="mb-8 h-14 rounded-2xl gradient-primary px-8 text-lg font-bold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
                 >
                   <Download className="mr-3 h-6 w-6" />
-                  Install App
+                  Installer l'Appli
                 </Button>
               )}
 
@@ -103,20 +103,20 @@ const Install = () => {
                 <div className="mb-8 rounded-2xl border border-border bg-card p-6 text-left">
                   <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
                     <Smartphone className="h-5 w-5 text-primary" />
-                    Install on iPhone/iPad
+                    Installer sur iPhone/iPad
                   </h3>
                   <ol className="space-y-4 text-muted-foreground">
                     <li className="flex items-start gap-3">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span>
-                      <span>Tap the <Share className="inline h-4 w-4 mx-1" /> Share button in Safari</span>
+                      <span>Appuyez sur le bouton Partager <Share className="inline h-4 w-4 mx-1" /> dans Safari</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span>
-                      <span>Scroll down and tap <Plus className="inline h-4 w-4 mx-1" /> "Add to Home Screen"</span>
+                      <span>Faites défiler et appuyez sur <Plus className="inline h-4 w-4 mx-1" /> "Sur l'écran d'accueil"</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span>
-                      <span>Tap "Add" to install</span>
+                      <span>Appuyez sur "Ajouter" pour installer</span>
                     </li>
                   </ol>
                 </div>
@@ -127,20 +127,20 @@ const Install = () => {
                 <div className="mb-8 rounded-2xl border border-border bg-card p-6 text-left">
                   <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
                     <Smartphone className="h-5 w-5 text-primary" />
-                    Install on Android
+                    Installer sur Android
                   </h3>
                   <ol className="space-y-4 text-muted-foreground">
                     <li className="flex items-start gap-3">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span>
-                      <span>Tap the <MoreVertical className="inline h-4 w-4 mx-1" /> menu in Chrome</span>
+                      <span>Appuyez sur le menu <MoreVertical className="inline h-4 w-4 mx-1" /> dans Chrome</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span>
-                      <span>Tap "Install app" or "Add to Home screen"</span>
+                      <span>Appuyez sur "Installer l'application"</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span>
-                      <span>Confirm by tapping "Install"</span>
+                      <span>Confirmez en appuyant sur "Installer"</span>
                     </li>
                   </ol>
                 </div>
@@ -151,9 +151,9 @@ const Install = () => {
           {/* Features */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
             {[
-              { icon: "⚡", title: "Fast", desc: "Instant loading speeds" },
-              { icon: "📱", title: "Native Feel", desc: "Works like a real app" },
-              { icon: "🔔", title: "Offline", desc: "Access without internet" },
+              { icon: "⚡", title: "Rapide", desc: "Chargement instantané" },
+              { icon: "📱", title: "Expérience Native", desc: "Comme une vraie appli" },
+              { icon: "📡", title: "Hors Ligne", desc: "Accès même sans internet" },
             ].map((feature) => (
               <div
                 key={feature.title}

@@ -27,6 +27,7 @@ const Header = () => {
     { label: "LIVE", href: "/live" },
     { label: "COMPÉTITIONS", href: "/competitions" },
     { label: "ACTUALITÉS", href: "/news" },
+    { label: "INSTALLER", href: "/install" },
   ];
 
   const location = useLocation();

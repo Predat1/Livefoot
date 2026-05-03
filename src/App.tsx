@@ -13,6 +13,8 @@ import { useEffect } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { toast } from "sonner";
 
+import InstallPWA from "@/components/InstallPWA";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -66,6 +68,7 @@ const App = () => {
             <ScrollToTop />
             <CookieConsent />
             <AnimatedRoutes />
+            <InstallPWA />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
