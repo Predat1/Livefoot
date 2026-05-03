@@ -68,17 +68,33 @@ serve(async (req) => {
       - Arbitre : ${fixtureDetail?.fixture?.referee || 'Inconnu'}
 
       CONSIGNES :
-      1. Analyse les tendances récentes et l'historique.
+      1. Analyse les tendances récentes, l'historique H2H et le contexte (arbitre, stade, enjeux).
       2. Rédige une analyse captivante de 3-4 phrases en français.
-      3. Propose un score exact réaliste.
-      4. Identifie le facteur clé.
+      3. Fournis des prédictions précises pour CHAQUE catégorie demandée ci-dessous.
       
-      Réponds UNIQUEMENT au format JSON :
+      Réponds UNIQUEMENT au format JSON strict suivant :
       {
         "analysis": "ton analyse ici",
         "predictedScore": "X-Y",
         "confidence": 0.85,
-        "keyFactor": "le facteur clé du match"
+        "keyFactor": "le facteur clé du match",
+        "predictions": {
+          "winner": "1, X ou 2",
+          "btts": "Oui/Non",
+          "overUnder25": "Over/Under",
+          "doubleChance": "1X, X2 ou 12",
+          "corners": "nombre estimé (ex: 8-10)",
+          "cards": "nombre estimé (ex: 3-5)",
+          "possession": "ex: 55%-45%",
+          "firstScorer": "nom du joueur probable",
+          "anytimeScorer": "nom du joueur probable",
+          "penalty": "Probabilité (Faible/Moyenne/Haute)",
+          "var": "Probabilité (Faible/Moyenne/Haute)",
+          "cleanSheet": "Équipe (ou Aucune)",
+          "timingFirstGoal": "Tranche (ex: 15-30 min)",
+          "highestScoringHalf": "1ère ou 2ème",
+          "winningMargin": "ex: 1 but"
+        }
       }
     `;
 

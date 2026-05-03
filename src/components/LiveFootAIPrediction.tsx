@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, TrendingUp, Shield, Zap, ChevronRight, Sparkles, Target, Share2, Copy, Check } from "lucide-react";
+import { 
+  Trophy, TrendingUp, Zap, Sparkles, Target, Share2, Copy, Check,
+  AlertTriangle, Eye, User, Clock, Calendar, Swords, Video, ShieldCheck,
+  Grid3X3, Flame, Shield, Loader2, Brain
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generatePrediction, type LiveFootAIPrediction, type TeamFormData } from "@/lib/livefoot-ai";
 import { useTeamForm, useHeadToHead } from "@/hooks/useApiFootball";
@@ -21,6 +25,23 @@ interface LiveFootAIPredictionCardProps {
     predictedScore: string;
     confidence: number;
     keyFactor: string;
+    predictions?: {
+      winner: string;
+      btts: string;
+      overUnder25: string;
+      doubleChance: string;
+      corners: string;
+      cards: string;
+      possession: string;
+      firstScorer: string;
+      anytimeScorer: string;
+      penalty: string;
+      var: string;
+      cleanSheet: string;
+      timingFirstGoal: string;
+      highestScoringHalf: string;
+      winningMargin: string;
+    };
   };
 }
 
@@ -64,7 +85,8 @@ const LiveFootAIPredictionCard = ({
           bestBets: [
             { type: "AI", label: `Oracle: ${aiExpertPrediction.predictedScore}`, confidence: Math.round(aiExpertPrediction.confidence * 100), emoji: "✨" }
           ],
-          isExpert: true
+          isExpert: true,
+          detailedPredictions: aiExpertPrediction.predictions
         };
       } catch (e) {
         console.error("Error mapping Expert prediction:", e);
@@ -366,6 +388,52 @@ const LiveFootAIPredictionCard = ({
               <p className="text-[10px] text-white/40">Basé sur {prediction.factors.length} facteurs d'analyse</p>
             </div>
           </motion.div>
+
+          {/* Detailed Expert Predictions Grid */}
+          {(prediction as any).detailedPredictions && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 space-y-4 mb-8"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Grid3X3 className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Événements du Match</h4>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {Object.entries((prediction as any).detailedPredictions).map(([key, value]) => {
+                  const labels: Record<string, { label: string, icon: any }> = {
+                    winner: { label: "Vainqueur", icon: Trophy },
+                    btts: { label: "BTTS", icon: Zap },
+                    overUnder25: { label: "Buts +/- 2.5", icon: Flame },
+                    doubleChance: { label: "Double Chance", icon: Shield },
+                    corners: { label: "Corners", icon: TrendingUp },
+                    cards: { label: "Cartons", icon: AlertTriangle },
+                    possession: { label: "Possession", icon: Eye },
+                    firstScorer: { label: "1er Buteur", icon: User },
+                    anytimeScorer: { label: "Buteur", icon: User },
+                    penalty: { label: "Penalty", icon: Target },
+                    var: { label: "VAR", icon: Video },
+                    cleanSheet: { label: "Clean Sheet", icon: ShieldCheck },
+                    timingFirstGoal: { label: "Temps 1er But", icon: Clock },
+                    highestScoringHalf: { label: "Mi-temps +", icon: Calendar },
+                    winningMargin: { label: "Marge", icon: Swords },
+                  };
+                  const config = labels[key];
+                  if (!config) return null;
+                  const Icon = config.icon;
+                  
+                  return (
+                    <div key={key} className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center text-center group hover:bg-white/10 transition-colors">
+                      <Icon className="h-4 w-4 text-primary/60 mb-2 group-hover:text-primary transition-colors" />
+                      <p className="text-[9px] text-white/40 uppercase font-bold mb-1">{config.label}</p>
+                      <p className="text-xs font-black text-white">{value as string}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
 
           {/* Key Factors */}
           <div className="space-y-1.5 sm:space-y-2 mb-5">
