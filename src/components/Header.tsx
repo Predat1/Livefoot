@@ -153,22 +153,22 @@ const Header = () => {
   return (
     <>
       <header className={cn(
-        "sticky top-0 z-50 transition-all duration-300",
+        "sticky top-0 z-50 transition-all duration-500",
         isScrolled 
-          ? "bg-header/80 backdrop-blur-md shadow-lg border-b border-white/5" 
+          ? "glass-header shadow-xl shadow-black/5" 
           : "bg-header shadow-lg"
       )}>
-        {/* Green accent line */}
-        <div className="h-[3px] gradient-primary" />
+        {/* Elite accent line */}
+        <div className="h-[2px] gradient-primary opacity-80" />
 
         {/* Main header row */}
         <div className="container flex h-12 sm:h-14 items-center gap-3 sm:gap-6">
           {/* Logo */}
-          <Link to="/" className="group flex items-center gap-2 flex-shrink-0">
-            <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg gradient-primary overflow-hidden shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-110 border border-white/10">
-              <img src="/logo.svg" alt="LiveFoot" className="h-5 w-5 sm:h-6 sm:w-6 brightness-0 invert" />
+          <Link to="/" className="group flex items-center gap-2.5 flex-shrink-0">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl gradient-primary overflow-hidden shadow-lg shadow-primary/20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 border border-white/10">
+              <img src="/logo.svg" alt="LiveFoot" className="h-5 w-5 sm:h-6 sm:w-6 brightness-0 invert transition-transform group-hover:scale-110" />
             </div>
-            <span className="text-sm sm:text-lg font-black tracking-tighter hidden sm:block">LIVEFOOT<span className="text-primary ml-0.5">AI</span></span>
+            <span className="text-base sm:text-xl font-black tracking-tighter hidden sm:block">LIVEFOOT<span className="text-primary ml-0.5 text-glow">AI</span></span>
           </Link>
 
           {/* Desktop navigation - BeSoccer style */}

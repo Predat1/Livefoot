@@ -101,7 +101,7 @@ const DatePicker = ({
   ];
 
   return (
-    <div className="bg-card border-b border-border shadow-sm">
+    <div className="sticky top-[52px] sm:top-[56px] z-40 glass-header border-b border-border shadow-sm">
       <div className="container py-4 sm:py-5">
         {/* Date selector */}
         <div className="flex items-center justify-center gap-1 sm:gap-3">
@@ -120,12 +120,18 @@ const DatePicker = ({
                 key={index}
                 onClick={() => handleDateChange(date)}
                 className={cn(
-                  "group flex min-w-[48px] sm:min-w-[72px] flex-col items-center rounded-lg sm:rounded-xl px-2 sm:px-3 py-2 sm:py-3 transition-all duration-300 flex-shrink-0",
+                  "group flex min-w-[54px] sm:min-w-[80px] flex-col items-center rounded-2xl px-2 sm:px-3 py-2.5 sm:py-3.5 transition-all duration-500 flex-shrink-0 relative",
                   isSelected(date)
-                    ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/30 scale-105"
-                    : "hover:bg-muted"
+                    ? "gradient-primary text-primary-foreground shadow-xl shadow-primary/30 scale-105 z-10"
+                    : "hover:bg-muted/50"
                 )}
               >
+                {isSelected(date) && (
+                  <motion.div 
+                    layoutId="active-date-glow" 
+                    className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl -z-10" 
+                  />
+                )}
                 <span className={cn(
                   "text-[9px] sm:text-[11px] font-semibold tracking-wide",
                   isSelected(date) ? "text-primary-foreground/90" : "text-muted-foreground",

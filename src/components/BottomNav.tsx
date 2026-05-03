@@ -30,8 +30,8 @@ const BottomNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-header/95 backdrop-blur-md border-t border-header-foreground/10 safe-area-bottom">
-      <div className="flex items-center justify-around h-14 sm:h-16 px-1">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden glass-header border-t border-white/5 safe-area-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
+      <div className="flex items-center justify-around h-14 sm:h-16 px-2">
         {navItems.map(({ href, icon: Icon, label, isLive }) => {
           const active = isActive(href);
           const isProfile = href === "/profile";
@@ -47,8 +47,11 @@ const BottomNav = () => {
                 active ? "text-primary" : "text-header-foreground/50 hover:text-header-foreground/80"
               )}
             >
-              {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-primary" />
+               {active && (
+                <motion.span 
+                  layoutId="bottom-nav-active-dot"
+                  className="absolute bottom-1 h-1 w-1 rounded-full bg-primary shadow-glow shadow-primary/50" 
+                />
               )}
 
               <div className="relative">

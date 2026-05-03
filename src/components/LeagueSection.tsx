@@ -46,17 +46,17 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
 
   return (
     <motion.div
-      className="mb-2 sm:mb-4 overflow-hidden rounded-lg sm:rounded-2xl bg-card shadow-sm card-shine border border-border/50"
-      initial={{ opacity: 0, y: 30, scale: 0.97 }}
+      className="mb-3 sm:mb-6 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] bg-card/60 backdrop-blur-xl shadow-sm border border-border/50 group/section"
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
-        duration: 0.4,
-        delay: index * 0.08,
-        ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
+        duration: 0.5,
+        delay: index * 0.1,
+        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
       }}
       whileHover={{
-        y: -2,
-        boxShadow: "0 8px 25px -5px hsl(var(--primary) / 0.12)",
+        y: -4,
+        boxShadow: "0 20px 40px -10px hsl(var(--primary) / 0.15)",
       }}
     >
       {/* League Header */}
@@ -65,7 +65,7 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between bg-league-header px-3 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-muted/50 group cursor-pointer"
+        className="w-full flex items-center justify-between bg-muted/30 px-4 sm:px-6 py-4 sm:py-5 transition-all hover:bg-muted/50 group cursor-pointer border-b border-border/50"
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <motion.div

@@ -32,9 +32,11 @@ const MatchCard = ({ match }: MatchCardProps) => {
   return (
     <MotionLink
       to={`/match/${match.id}`}
-      className="group relative flex items-center justify-between px-3 sm:px-5 py-4 sm:py-5 transition-colors duration-200 hover:bg-muted/40 border-b border-border/50 last:border-b-0"
-      whileHover={{ scale: 1.005, backgroundColor: "hsl(var(--muted) / 0.4)" }}
-      whileTap={{ scale: 0.985 }}
+      className="group relative flex items-center justify-between px-4 sm:px-8 py-5 sm:py-7 transition-all duration-300 hover:bg-muted/30 border-b border-border/50 last:border-b-0"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      whileHover={{ scale: 1.01, x: 4 }}
+      whileTap={{ scale: 0.99 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
       {/* Live indicator bar */}
@@ -62,7 +64,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
       <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
         <span
           className={cn(
-            "text-sm sm:text-base font-semibold transition-colors truncate text-right",
+            "text-sm sm:text-lg font-black tracking-tighter transition-colors truncate text-right",
             isFinished && match.homeTeam.score! > match.awayTeam.score!
               ? "text-foreground"
               : isFinished
@@ -100,9 +102,9 @@ const MatchCard = ({ match }: MatchCardProps) => {
               animate={{ scale: 1, color: undefined }}
               transition={{ duration: 0.5 }}
               className={cn(
-                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm",
+                "min-w-[32px] sm:min-w-[44px] rounded-xl px-2 sm:px-4 py-1.5 sm:py-2.5 text-center text-lg sm:text-2xl font-black shadow-inner",
                 isLive
-                  ? "bg-live text-primary-foreground shadow-live/30"
+                  ? "bg-live text-primary-foreground shadow-live/30 text-glow"
                   : "bg-score-bg text-primary-foreground"
               )}
             >
@@ -115,9 +117,9 @@ const MatchCard = ({ match }: MatchCardProps) => {
               animate={{ scale: 1, color: undefined }}
               transition={{ duration: 0.5 }}
               className={cn(
-                "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm",
+                "min-w-[32px] sm:min-w-[44px] rounded-xl px-2 sm:px-4 py-1.5 sm:py-2.5 text-center text-lg sm:text-2xl font-black shadow-inner",
                 isLive
-                  ? "bg-live text-primary-foreground shadow-live/30"
+                  ? "bg-live text-primary-foreground shadow-live/30 text-glow"
                   : "bg-score-bg text-primary-foreground"
               )}
             >
@@ -165,7 +167,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
         </motion.div>
         <span
           className={cn(
-            "text-sm sm:text-base font-semibold transition-colors truncate",
+            "text-sm sm:text-lg font-black tracking-tighter transition-colors truncate",
             isFinished && match.awayTeam.score! > match.homeTeam.score!
               ? "text-foreground"
               : isFinished
