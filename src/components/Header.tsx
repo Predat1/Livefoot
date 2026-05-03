@@ -1,4 +1,4 @@
-import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -16,7 +16,7 @@ const Header = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { query, setQuery, results } = useSearch();
+  const { query, setQuery, results, isLoading } = useSearch();
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -102,27 +102,50 @@ const Header = () => {
 
   const searchResults = (
     <div className="bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50">
-      {results.map((r) => (
-        <button
-          key={`${r.type}-${r.id}`}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
-          onClick={() => handleSearchSelect(r.href)}
-        >
-          {getResultIcon(r.type)}
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground truncate">{r.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{r.subtitle}</p>
-          </div>
-          <span className="text-[10px] uppercase text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{r.type}</span>
-        </button>
-      ))}
-      <Link
-        to={`/search?q=${encodeURIComponent(query)}`}
-        className="block text-center py-2 text-xs font-medium text-primary hover:bg-muted/30 border-t border-border"
-        onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
-      >
-        Voir tous les résultats →
-      </Link>
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
+          <Loader2 className="h-6 w-6 text-primary animate-spin" />
+          <p className="text-xs text-muted-foreground font-medium">Recherche en cours...</p>
+        </div>
+      ) : results.length > 0 ? (
+        <>
+          {results.map((r) => (
+            <button
+              key={`${r.type}-${r.id}`}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left group"
+              onClick={() => handleSearchSelect(r.href)}
+            >
+              <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border/50 group-hover:border-primary/30 transition-colors">
+                {r.image ? (
+                  <img src={r.image} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  getResultIcon(r.type)
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{r.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate uppercase tracking-tight">{r.subtitle}</p>
+              </div>
+              <span className="text-[9px] font-black uppercase text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">{r.type}</span>
+            </button>
+          ))}
+          <Link
+            to={`/search?q=${encodeURIComponent(query)}`}
+            className="block text-center py-2.5 text-xs font-black text-primary hover:bg-primary/5 border-t border-border uppercase tracking-widest"
+            onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
+          >
+            Voir tous les résultats
+          </Link>
+        </>
+      ) : query.length >= 3 ? (
+        <div className="py-8 text-center">
+          <p className="text-sm text-muted-foreground">Aucun résultat pour "{query}"</p>
+        </div>
+      ) : (
+        <div className="py-6 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Tapez au moins 3 caractères</p>
+        </div>
+      )}
     </div>
   );
 
