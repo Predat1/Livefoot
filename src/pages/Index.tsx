@@ -13,7 +13,8 @@ import { useFixturesByDate, TIER1_IDS, TIER2_IDS, TIER3_IDS } from "@/hooks/useA
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
-import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles } from "lucide-react";
+import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2 } from "lucide-react";
+import ShareWidget from "@/components/ShareWidget";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -385,6 +386,25 @@ const SEO_LD = [
             </div>
           </section>
         )}
+        {/* Viral Share Section */}
+        <section className="mt-12 mb-8 animate-fade-in">
+          <div className="rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10 p-6 sm:p-10 text-center">
+            <div className="mx-auto h-16 w-16 rounded-2xl gradient-primary flex items-center justify-center mb-6 shadow-xl shadow-primary/20 rotate-3">
+              <Share2 className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-3">Tu aimes LiveFoot ?</h2>
+            <p className="text-sm text-white/60 max-w-md mx-auto mb-8">
+              Partage l'application avec tes amis parieurs et fans de foot pour les aider à gagner grâce à nos pronos IA !
+            </p>
+            <div className="max-w-sm mx-auto">
+              <ShareWidget 
+                title="LiveFoot - Scores & Pronos IA"
+                text="Je te conseille LiveFoot pour suivre les scores en direct et avoir des pronostics IA de fou ! C'est 100% gratuit."
+                url="/"
+              />
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer - hidden on mobile */}

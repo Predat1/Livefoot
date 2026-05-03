@@ -16,7 +16,9 @@ import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ShareButton from "@/components/ShareButton";
+import ShareWidget from "@/components/ShareWidget";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFavorites } from "@/hooks/useFavorites";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MatchDetailSkeleton } from "@/components/BrandedLoader";
 import TacticalPitch from "@/components/TacticalPitch";
@@ -1101,6 +1103,18 @@ const Match = () => {
               <span className="text-xs font-bold text-muted-foreground">Analyses avancées & Communauté VIP</span>
             </div>
           </div>
+        </div>
+
+        {/* Share Widget */}
+        <div className="px-4 sm:px-6 py-6 border-t border-white/5 bg-white/[0.02]">
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Share2 className="h-3 w-3 text-primary" /> Partager ce match
+          </p>
+          <ShareWidget
+            title={`LiveFoot: ${homeTeam.name} vs ${awayTeam.name}`}
+            text={`Regarde le match ${homeTeam.name} vs ${awayTeam.name} en direct sur LiveFoot. Pronos IA, stats et scores live !`}
+            url={`/match/${matchId}`}
+          />
         </div>
       </div>
     </Layout>
