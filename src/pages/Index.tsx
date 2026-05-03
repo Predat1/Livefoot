@@ -17,6 +17,7 @@ import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Sparkles } from "lucide-react";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { MatchSkeleton } from "@/components/BrandedLoader";
 import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";
@@ -118,7 +119,7 @@ const Index = () => {
       <SEOHead
         title="LiveFoot - Scores Football en Direct Aujourd'hui"
         description="Suivez tous les scores de football en direct, résultats, calendriers et classements."
-        path="/"
+        canonical="/"
       />
       
       <PullToRefreshIndicator
