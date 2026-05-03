@@ -9,14 +9,15 @@ interface TopScorersWidgetProps {
   leagueId: string;
   season: string;
   title: string;
+  className?: string;
 }
 
-const TopScorersWidget = ({ leagueId, season, title }: TopScorersWidgetProps) => {
+const TopScorersWidget = ({ leagueId, season, title, className }: TopScorersWidgetProps) => {
   const { data: scorers, isLoading } = useTopScorers(leagueId, season);
 
   if (isLoading) {
     return (
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+      <div className={cn("flex gap-2 overflow-x-auto scrollbar-hide", className)}>
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="flex-shrink-0 w-28 h-36 rounded-xl" />
         ))}
@@ -27,7 +28,7 @@ const TopScorersWidget = ({ leagueId, season, title }: TopScorersWidgetProps) =>
   if (!scorers || scorers.length === 0) return null;
 
   return (
-    <section className="mb-6 sm:mb-8">
+    <section className={cn("mb-6 sm:mb-8", className)}>
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />

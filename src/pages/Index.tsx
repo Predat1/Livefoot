@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, Fragment } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
@@ -268,8 +268,6 @@ const SEO_LD = [
           </section>
         )}
 
-        <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" />
-        <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" />
 
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -308,7 +306,15 @@ const SEO_LD = [
           <div className="space-y-3 sm:space-y-4">
             {visibleLeagues.length > 0 ? (
               visibleLeagues.map((league, index) => (
-                <LeagueSection key={league.id} league={league} index={index} />
+                <Fragment key={league.id}>
+                  <LeagueSection league={league} index={index} />
+                  {/* Intercalate Top Scorers Widgets */}
+                  {index === 0 && <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" className="my-6" />}
+                  {index === 1 && <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" className="my-6" />}
+                  {index === 2 && <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />}
+                  {index === 3 && <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />}
+                  {index === 4 && <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />}
+                </Fragment>
               ))
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
