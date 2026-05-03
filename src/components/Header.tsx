@@ -1,4 +1,4 @@
-import { Search, Menu, X, Trophy, Star, Newspaper, Zap } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -90,7 +90,7 @@ const Header = () => {
     setMobileSearchOpen(false);
   }, [location.pathname]);
 
-  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  
 
   const handleSearchSelect = (href: string) => {
     navigate(href);
@@ -258,7 +258,7 @@ const Header = () => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
           <div className="absolute top-[52px] left-0 right-0 bg-header border-b border-header-foreground/10 shadow-2xl max-h-[80vh] overflow-y-auto animate-fade-in">
             <nav className="container py-2 flex flex-col gap-0.5">
-              {[...mainNav, ...moreNav.map(m => ({ label: m.label.toUpperCase(), href: m.href }))].map((item) => (
+              {mainNav.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
