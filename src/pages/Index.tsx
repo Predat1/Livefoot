@@ -188,7 +188,7 @@ const SEO_LD = [
 
         {/* Free AI Predictions Highlight */}
         <section className="mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '300ms' }}>
-          <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1a12] via-[#050f0a] to-background border border-primary/20 overflow-hidden group">
+          <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1a12] via-[#050f0a] to-[#0c0d12] border border-primary/20 overflow-hidden group">
             <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
               <Zap className="h-16 w-16 sm:h-24 sm:w-24 text-primary" />
             </div>
@@ -388,12 +388,12 @@ const SEO_LD = [
         )}
         {/* Viral Share Section */}
         <section className="mt-12 mb-8 animate-fade-in">
-          <div className="rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10 p-6 sm:p-10 text-center">
+          <div className="rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border border-primary/20 p-6 sm:p-10 text-center">
             <div className="mx-auto h-16 w-16 rounded-2xl gradient-primary flex items-center justify-center mb-6 shadow-xl shadow-primary/20 rotate-3">
               <Share2 className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-3">Tu aimes LiveFoot ?</h2>
-            <p className="text-sm text-white/60 max-w-md mx-auto mb-8">
+            <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Tu aimes LiveFoot ?</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
               Partage l'application avec tes amis parieurs et fans de foot pour les aider à gagner grâce à nos pronos IA !
             </p>
             <div className="max-w-sm mx-auto">
