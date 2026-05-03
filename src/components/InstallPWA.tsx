@@ -8,24 +8,34 @@ const InstallPWA = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Check if already installed (standalone mode)
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || 
+                        (window.navigator as any).standalone === true;
+    
+    // Check if user dismissed it recently
+    const isDismissed = localStorage.getItem("pwa_banner_dismissed");
+    
+    if (isStandalone || isDismissed) {
+      setIsVisible(false);
+      return;
+    }
+
     const handler = (e: any) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
-      // Show the install button
       setIsVisible(true);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Check if app is already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsVisible(false);
-    }
-
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    // Remember dismissal for 7 days
+    localStorage.setItem("pwa_banner_dismissed", "true");
+  };
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -54,7 +64,7 @@ const InstallPWA = () => {
       >
         <div className="bg-card border border-primary/20 rounded-2xl shadow-2xl p-4 shadow-primary/10 backdrop-blur-md">
           <button 
-            onClick={() => setIsVisible(false)}
+            onClick={handleDismiss}
             className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
