@@ -166,7 +166,14 @@ export const useSearch = (debounceMs = 300) => {
     results,
     isLoading,
     filters,
-    updateFilter: (key: keyof SearchFilters, value: any) => setFilters(prev => ({ ...prev, [key]: value })),
+    updateFilter: <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => setFilters(prev => ({ ...prev, [key]: value })),
     resetFilters: () => setFilters(DEFAULT_FILTERS),
+    activeFilterCount: (
+      (filters.types.length < 4 ? 1 : 0) +
+      (filters.league ? 1 : 0) +
+      (filters.country ? 1 : 0) +
+      (filters.position ? 1 : 0) +
+      (filters.marketValueMin > 0 || filters.marketValueMax < 500 ? 1 : 0)
+    ),
   };
 };
