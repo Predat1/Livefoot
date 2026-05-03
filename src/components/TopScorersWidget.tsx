@@ -2,8 +2,9 @@ import { useTopScorers } from "@/hooks/useApiFootball";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { buildEntitySlug } from "@/utils/slugify";
-import { Trophy, ArrowRight } from "lucide-react";
+import { Trophy, ArrowRight, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ShareWidget from "./ShareWidget";
 
 interface TopScorersWidgetProps {
   leagueId: string;
@@ -35,12 +36,20 @@ const TopScorersWidget = ({ leagueId, season, title, className }: TopScorersWidg
           <Trophy className="h-4 w-4 text-primary" />
           <h2 className="text-sm sm:text-base font-bold text-foreground">{title}</h2>
         </div>
-        <Link
-          to={`/rankings?league=${leagueId}`}
-          className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-        >
-          Classement <ArrowRight className="h-3 w-3" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <ShareWidget 
+            variant="minimal"
+            title={`Meilleurs Buteurs - ${title}`}
+            text={`Découvre les meilleurs buteurs de ${title} sur LiveFoot.fun !`}
+            url={`/rankings?league=${leagueId}`}
+          />
+          <Link
+            to={`/rankings?league=${leagueId}`}
+            className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            Classement <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
       </div>
       <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-1">
         {scorers.slice(0, 6).map((player, index) => (
