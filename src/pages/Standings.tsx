@@ -10,11 +10,13 @@ import TeamLogo from "@/components/TeamLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const LEAGUES = [
+  { id: "61", name: "Ligue 1", season: "2024" },
   { id: "39", name: "Premier League", season: "2024" },
   { id: "140", name: "La Liga", season: "2024" },
   { id: "135", name: "Serie A", season: "2024" },
   { id: "78", name: "Bundesliga", season: "2024" },
-  { id: "61", name: "Ligue 1", season: "2024" },
+  { id: "2", name: "Champions League", season: "2024" },
+  { id: "3", name: "Europa League", season: "2024" },
 ];
 
 const Standings = () => {
@@ -24,13 +26,13 @@ const Standings = () => {
 
   const getFormBadge = (char: string) => {
     const colors: Record<string, string> = {
-      W: "bg-primary text-primary-foreground",
-      D: "bg-muted text-muted-foreground",
-      L: "bg-destructive text-destructive-foreground",
+      W: "bg-emerald-500 text-white shadow-sm shadow-emerald-500/20",
+      D: "bg-amber-500 text-white shadow-sm shadow-amber-500/20",
+      L: "bg-destructive text-white shadow-sm shadow-destructive-500/20",
     };
     return (
-      <span className={cn("w-4 h-4 sm:w-5 sm:h-5 rounded text-[10px] sm:text-xs font-bold flex items-center justify-center", colors[char] || "bg-muted text-muted-foreground")}>
-        {char}
+      <span className={cn("w-4 h-4 sm:w-5 sm:h-5 rounded-md text-[10px] sm:text-xs font-black flex items-center justify-center", colors[char] || "bg-muted text-muted-foreground")}>
+        {char === "W" ? "V" : char === "L" ? "D" : "N"}
       </span>
     );
   };
@@ -38,31 +40,31 @@ const Standings = () => {
   return (
     <Layout>
       <SEOHead
-        title="Classements Football - Tableaux des Ligues"
-        description="Classements en direct de Premier League, La Liga, Serie A, Bundesliga et Ligue 1. Points, victoires, différence de buts et forme récente."
+        title={`Classement ${selectedLeague.name} - Tableaux de Ligue`}
+        description={`Classements en direct de ${selectedLeague.name}. Points, victoires, différence de buts et forme récente.`}
         keywords="classement ligue 1, classement premier league, tableau la liga, classement serie a, bundesliga classement"
       />
       <div className="px-2 sm:container py-4 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
-            <h1 className="text-xl sm:text-3xl font-black text-foreground">Standings</h1>
+            <h1 className="text-xl sm:text-3xl font-black text-foreground">Classements</h1>
           </div>
-          <p className="text-xs sm:text-base text-muted-foreground ml-3 sm:ml-4">League tables and rankings</p>
+          <p className="text-xs sm:text-base text-muted-foreground ml-3 sm:ml-4">Tableaux des championnats et statistiques d'équipe</p>
         </div>
 
         {/* League Selector */}
         <div className="mb-6 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-2 min-w-max">
+          <div className="flex items-center gap-2 min-w-max pb-2">
             {LEAGUES.map((league) => (
               <button
                 key={league.id}
                 onClick={() => setSelectedLeague(league)}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap",
+                  "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all duration-300 whitespace-nowrap border",
                   selectedLeague.id === league.id
-                    ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-card border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+                    ? "gradient-primary text-primary-foreground border-transparent shadow-lg shadow-primary/30"
+                    : "bg-card border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
                 )}
               >
                 {league.name}
@@ -94,8 +96,8 @@ const Standings = () => {
 
         {/* Error */}
         {isError && !isLoading && (
-          <div className="text-center py-12 text-muted-foreground">
-            Unable to load standings. Please try again.
+          <div className="text-center py-12 text-muted-foreground bg-card border border-border/50 rounded-2xl">
+            <p>Impossible de charger les classements. Veuillez réessayer plus tard.</p>
           </div>
         )}
 
@@ -113,18 +115,18 @@ const Standings = () => {
             <div className="overflow-x-auto scrollbar-hide">
               <table className="w-full min-w-[600px]">
                 <thead>
-                  <tr className="border-b border-border text-[10px] sm:text-xs text-muted-foreground">
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium">#</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium">Team</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">P</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">W</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">D</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">L</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">GF</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">GA</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">GD</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">Pts</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium hidden sm:table-cell">Form</th>
+                  <tr className="border-b border-border text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
+                    <th className="px-2 sm:px-4 py-3 text-left font-bold">#</th>
+                    <th className="px-2 sm:px-4 py-3 text-left font-bold">Équipe</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">J</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">V</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">N</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">D</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">BP</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">BC</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">+/-</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold">Pts</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold hidden sm:table-cell">Forme</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,8 +173,8 @@ const Standings = () => {
         )}
 
         {!isLoading && !isError && (!standings || standings.length === 0) && (
-          <div className="text-center py-12 text-muted-foreground">
-            No standings data available for this league.
+          <div className="text-center py-12 text-muted-foreground bg-card border border-border/50 rounded-2xl">
+            Aucune donnée de classement disponible pour cette ligue.
           </div>
         )}
       </div>
