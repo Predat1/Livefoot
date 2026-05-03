@@ -140,6 +140,10 @@ export const getCountries = () =>
 export const getSidelined = (params: Record<string, string>) =>
   callApi("sidelined", params);
 
+// ─── Predictions ──────────────────────────────────────────────
+export const getPredictions = (fixtureId: string) =>
+  callApi("predictions", { fixture: fixtureId });
+
 export default {
   getFixtures,
   getLiveFixtures,
@@ -173,4 +177,5 @@ export default {
   getTrophies,
   getCountries,
   getSidelined,
+  getPredictions,
 };

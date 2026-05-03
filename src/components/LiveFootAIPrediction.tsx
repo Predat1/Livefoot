@@ -15,6 +15,7 @@ interface LiveFootAIPredictionCardProps {
   awayLogo?: string;
   standings?: any[];
   injuries?: { home: number; away: number };
+  apiPredictions?: any;
 }
 
 const riskColors = {
@@ -25,7 +26,7 @@ const riskColors = {
 
 const LiveFootAIPredictionCard = ({
   homeTeamId, awayTeamId, homeTeamName, awayTeamName,
-  homeLogo, awayLogo, standings, injuries,
+  homeLogo, awayLogo, standings, injuries, apiPredictions,
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
   const { data: homeFormData } = useTeamForm(homeTeamId);
@@ -33,6 +34,56 @@ const LiveFootAIPredictionCard = ({
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
 
   const prediction = useMemo<LiveFootAIPrediction | null>(() => {
+    // Priority 1: Use API Predictions if available
+    if (apiPredictions) {
+      try {
+        const p = apiPredictions.predictions;
+        const h2h = apiPredictions.h2h || [];
+        const comp = apiPredictions.comparison;
+
+        // Map API percent strings to numbers
+        const homeProb = parseInt(p.percent.home) || 33;
+        const drawProb = parseInt(p.percent.draw) || 34;
+        const awayProb = parseInt(p.percent.away) || 33;
+
+        const outcome = p.winner.id === parseInt(homeTeamId) ? "home" 
+          : p.winner.id === parseInt(awayTeamId) ? "away" : "draw";
+
+        // Map factors from comparison
+        const factors: any[] = [];
+        if (comp) {
+          if (parseInt(comp.form.home) > parseInt(comp.form.away) + 10) {
+            factors.push({ icon: "🔥", label: "Forme", description: `${homeTeamName} a une meilleure dynamique (${comp.form.home})`, impact: "positive", team: "home" });
+          }
+          if (parseInt(comp.att.home) > parseInt(comp.att.away) + 10) {
+            factors.push({ icon: "🎯", label: "Attaque", description: `Offensive plus percutante pour ${homeTeamName}`, impact: "positive", team: "home" });
+          }
+          if (parseInt(comp.def.away) > parseInt(comp.def.home) + 10) {
+            factors.push({ icon: "🛡️", label: "Défense", description: `Solidité défensive pour ${awayTeamName}`, impact: "positive", team: "away" });
+          }
+        }
+
+        return {
+          outcome,
+          confidence: Math.max(homeProb, drawProb, awayProb),
+          predictedScore: { 
+            home: parseInt(p.goals.home) || 0, 
+            away: parseInt(p.goals.away) || 0 
+          },
+          probabilities: { home: homeProb, draw: drawProb, away: awayProb },
+          factors: factors.slice(0, 5),
+          advice: p.advice,
+          risk: (Math.max(homeProb, drawProb, awayProb) > 60) ? "low" : "medium",
+          bestBets: [
+            { type: "API", label: p.advice, confidence: Math.max(homeProb, drawProb, awayProb), emoji: "✅" }
+          ]
+        };
+      } catch (e) {
+        console.error("Error mapping API prediction:", e);
+      }
+    }
+
+    // Priority 2: Fallback to local algorithm
     if (!homeFormData || !awayFormData) return null;
 
     return generatePrediction({

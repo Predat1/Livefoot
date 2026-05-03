@@ -5,7 +5,7 @@ import SEOHead from "@/components/SEOHead";
 import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
-  useTeamForm, useTeamNextFixtures,
+  useTeamForm, useTeamNextFixtures, useFixturePredictions,
 } from "@/hooks/useApiFootball";
 import {
   ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
@@ -101,6 +101,7 @@ const Match = () => {
   const { data: playersData } = useFixturePlayers(matchId || "");
   const { data: oddsData } = useFixtureOdds(matchId || "");
   const { data: injuriesData } = useFixtureInjuries(matchId || "");
+  const { data: apiPredictions } = useFixturePredictions(matchId || "");
 
   const fix = fixtureData as any;
   const homeTeamId = fix?.teams?.home?.id ? String(fix.teams.home.id) : "";
@@ -796,6 +797,7 @@ const Match = () => {
             homeLogo={homeTeam.logo}
             awayLogo={awayTeam.logo}
             standings={standingsData || []}
+            apiPredictions={apiPredictions}
             injuries={{
               home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
               away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length

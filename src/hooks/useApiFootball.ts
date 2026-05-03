@@ -3,7 +3,7 @@ import {
   getFixtures, getLiveFixtures, getTopScorers, getTopAssists,
   getStandings, getFixtureById, getFixtureEvents, getFixtureLineups,
   getFixtureStatistics, getHeadToHead, getLeagues, getTeams, getTeamById,
-  getTeamSquad, getTeamStatistics, getTransfers, searchTeamByName,
+  getTeamSquad, getTeamStatistics, getTransfers, searchTeamByName, getPredictions,
 } from "@/services/apiFootball";
 import { format } from "date-fns";
 
@@ -803,8 +803,21 @@ export function useHeadToHead(homeId: string, awayId: string) {
       const res = await getHeadToHead(h2h);
       return res.response || [];
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
     enabled: !!homeId && !!awayId,
+  });
+}
+
+export function useFixturePredictions(fixtureId: string) {
+  return useQuery({
+    queryKey: ["predictions", fixtureId],
+    queryFn: async () => {
+      const res = await getPredictions(fixtureId);
+      if (!res.response || res.response.length === 0) return null;
+      return res.response[0];
+    },
+    staleTime: 60 * 60 * 1000,
+    enabled: !!fixtureId,
   });
 }
 

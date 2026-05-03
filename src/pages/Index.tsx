@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { MatchSkeleton } from "@/components/BrandedLoader";
 import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";
+import TopScorersWidget from "@/components/TopScorersWidget";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 
@@ -233,6 +234,9 @@ const SEO_LD = [
             </div>
           </section>
         )}
+
+        <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" />
+        <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" />
 
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
