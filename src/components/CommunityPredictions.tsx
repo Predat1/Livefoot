@@ -110,26 +110,22 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
   };
 
   const stats = useMemo(() => {
-    const total = predictions.length;
-    if (total === 0) return null;
-    const homeWins = predictions.filter((p) => p.home_score > p.away_score).length;
-    const draws = predictions.filter((p) => p.home_score === p.away_score).length;
-    const awayWins = total - homeWins - draws;
-    const avgHome = (predictions.reduce((s, p) => s + p.home_score, 0) / total).toFixed(1);
-    const avgAway = (predictions.reduce((s, p) => s + p.away_score, 0) / total).toFixed(1);
-
-    const maxPct = Math.max(homeWins, draws, awayWins) / total;
+    if (!serverStats || serverStats.total === 0) return null;
+    const { total, home_wins, draws, away_wins, avg_home, avg_away, top_scores } = serverStats;
+    const maxPct = Math.max(home_wins, draws, away_wins) / total;
     const confidence = Math.round(maxPct * 100);
-
-    const scoreMap = new Map<string, number>();
-    predictions.forEach((p) => {
-      const key = `${p.home_score}-${p.away_score}`;
-      scoreMap.set(key, (scoreMap.get(key) || 0) + 1);
-    });
-    const topScores = [...scoreMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-
-    return { total, homeWins, draws, awayWins, avgHome, avgAway, confidence, topScores };
-  }, [predictions]);
+    const topScores: [string, number][] = (top_scores || []).map((t) => [t.score, t.count]);
+    return {
+      total,
+      homeWins: home_wins,
+      draws,
+      awayWins: away_wins,
+      avgHome: Number(avg_home).toFixed(1),
+      avgAway: Number(avg_away).toFixed(1),
+      confidence,
+      topScores,
+    };
+  }, [serverStats]);
 
   const ScoreSelector = ({ value, onChange, colorClass }: { value: number; onChange: (v: number) => void; colorClass: string }) => (
     <div className="flex flex-col items-center gap-2 sm:gap-3">
