@@ -173,6 +173,11 @@ export type Database = {
     }
     Functions: {
       admin_stats: { Args: never; Returns: Json }
+      get_player_rating_stats: {
+        Args: { _fixture_id: string; _player_id: string }
+        Returns: Json
+      }
+      get_prediction_stats: { Args: { _fixture_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

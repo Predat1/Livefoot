@@ -25,20 +25,18 @@ const PlayerRatingStars = ({ fixtureId, playerId, playerName, teamId }: PlayerRa
   }, [fixtureId, playerId]);
 
   const fetchRatings = async () => {
-    // Get average rating
-    const { data: ratings } = await supabase
-      .from("player_ratings")
-      .select("rating")
-      .eq("fixture_id", fixtureId)
-      .eq("player_id", playerId);
-
-    if (ratings && ratings.length > 0) {
-      const avg = ratings.reduce((s, r) => s + r.rating, 0) / ratings.length;
-      setAvgRating(Math.round(avg * 10) / 10);
-      setTotalVotes(ratings.length);
+    // Aggregated stats via RPC (no individual user data exposed)
+    const { data: stats } = await supabase.rpc("get_player_rating_stats", {
+      _fixture_id: fixtureId,
+      _player_id: playerId,
+    });
+    if (stats) {
+      const s = stats as { avg: number; count: number };
+      setAvgRating(Number(s.avg) || 0);
+      setTotalVotes(Number(s.count) || 0);
     }
 
-    // Get user's rating
+    // User's own rating
     if (user) {
       const { data: myRating } = await supabase
         .from("player_ratings")
