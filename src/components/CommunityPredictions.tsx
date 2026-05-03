@@ -22,9 +22,20 @@ interface Prediction {
   away_score: number;
 }
 
+interface PredictionStats {
+  total: number;
+  home_wins: number;
+  draws: number;
+  away_wins: number;
+  avg_home: number;
+  avg_away: number;
+  top_scores: { score: string; count: number }[];
+}
+
 const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo, awayLogo }: CommunityPredictionsProps) => {
   const { user } = useAuth();
   const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [serverStats, setServerStats] = useState<PredictionStats | null>(null);
   const [myHome, setMyHome] = useState(0);
   const [myAway, setMyAway] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -38,16 +49,24 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
 
   const loadPredictions = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("match_predictions")
-      .select("id, user_id, home_score, away_score")
-      .eq("fixture_id", fixtureId);
 
-    const preds = (data || []) as Prediction[];
-    setPredictions(preds);
+    // Load aggregated public stats via RPC
+    const { data: statsData } = await supabase.rpc("get_prediction_stats", {
+      _fixture_id: fixtureId,
+    });
+    if (statsData) setServerStats(statsData as unknown as PredictionStats);
 
+    // Load only the current user's prediction (if any)
     if (user) {
-      const mine = preds.find((p) => p.user_id === user.id);
+      const { data } = await supabase
+        .from("match_predictions")
+        .select("id, user_id, home_score, away_score")
+        .eq("fixture_id", fixtureId)
+        .eq("user_id", user.id);
+
+      const preds = (data || []) as Prediction[];
+      setPredictions(preds);
+      const mine = preds[0];
       if (mine) {
         setMyHome(mine.home_score);
         setMyAway(mine.away_score);
