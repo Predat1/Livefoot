@@ -1,23 +1,13 @@
-import { Search, Menu, X, Download, Trophy, Users, Newspaper, LogIn, LogOut, UserCircle, Zap, Star, ChevronDown, Grid3X3, Globe, Shield } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useSearch } from "@/hooks/useSearch";
-import { useFavorites } from "@/hooks/useFavorites";
-import { useAuth } from "@/contexts/AuthContext";
 import { useAppLogo } from "@/hooks/useAppLogo";
-import { useIsAdmin } from "@/hooks/useAdmin";
 
 const Header = () => {
   const logoUrl = useAppLogo();
@@ -25,12 +15,8 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { query, setQuery, results } = useSearch();
-  const { totalFavorites } = useFavorites();
-  const { user, profile, signOut } = useAuth();
-  const { data: isAdmin } = useIsAdmin();
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
