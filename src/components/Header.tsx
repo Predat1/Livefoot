@@ -38,20 +38,9 @@ const Header = () => {
   const mainNav = [
     { label: "MATCHS", href: "/" },
     { label: "PRONOS IA", href: "/daily-picks" },
+    { label: "LIVE", href: "/live" },
     { label: "COMPÉTITIONS", href: "/competitions" },
-    { label: "ÉQUIPES", href: "/teams" },
-    { label: "TRANSFERTS", href: "/transfers" },
-  ];
-
-  const moreNav = [
-    { label: "Live", href: "/live", icon: Zap },
-    { label: "Classements", href: "/standings", icon: Trophy },
-    { label: "Rankings", href: "/rankings", icon: Trophy },
-    { label: "Pronos Communauté", href: "/predictions", icon: Users },
-    { label: "Infos", href: "/news", icon: Newspaper },
-    { label: "Favoris", href: "/favorites", icon: Star },
-    { label: "Explorer", href: "/explorer", icon: Globe },
-    { label: "Installer", href: "/install", icon: Download },
+    { label: "ACTUALITÉS", href: "/news" },
   ];
 
   const location = useLocation();
@@ -195,24 +184,6 @@ const Header = () => {
               </Link>
             ))}
 
-            {/* More dropdown */}
-            <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
-              <DropdownMenuTrigger className="flex items-center gap-1 px-3 py-4 text-[13px] xl:text-sm font-bold tracking-wide text-header-foreground/70 hover:text-header-foreground transition-colors">
-                <span className="hidden xl:inline">PLUS</span>
-                <Grid3X3 className="h-4 w-4 xl:hidden" />
-                <ChevronDown className={cn("h-3 w-3 transition-transform", moreOpen && "rotate-180")} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {moreNav.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link to={item.href} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </nav>
 
           {/* Spacer for mobile */}
@@ -252,55 +223,6 @@ const Header = () => {
 
             <ThemeToggle />
 
-            {/* Auth button */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="hidden sm:flex h-8 gap-1.5 rounded-lg border border-header-foreground/15 bg-header-foreground/5 text-header-foreground text-xs font-semibold hover:bg-header-foreground/15 px-3">
-                    <UserCircle className="h-4 w-4" />
-                    <span className="max-w-[80px] truncate">{displayName}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center gap-2">
-                      <UserCircle className="h-4 w-4" /> Mon Profil
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/favorites" className="flex items-center gap-2">
-                      <Star className="h-4 w-4" /> Mes Favoris
-                      {totalFavorites > 0 && <span className="ml-auto text-xs text-primary">{totalFavorites}</span>}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/predictions" className="flex items-center gap-2">
-                      <Trophy className="h-4 w-4" /> Pronostics
-                    </Link>
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin" className="flex items-center gap-2">
-                        <Shield className="h-4 w-4" /> Admin
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
-                    onClick={signOut}
-                  >
-                    <LogOut className="h-4 w-4" /> Déconnexion
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link to="/auth" className="hidden sm:block">
-                <Button className="h-8 rounded-lg gradient-primary font-bold text-xs px-4 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all gap-1.5">
-                  Entrer
-                </Button>
-              </Link>
-            )}
 
             {/* Hamburger */}
             <Button
@@ -369,34 +291,6 @@ const Header = () => {
                 </Link>
               ))}
 
-              <div className="h-px bg-header-foreground/10 my-2" />
-
-              {user ? (
-                <div className="space-y-1">
-                  <Link
-                    to="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 rounded-lg text-sm font-semibold text-header-foreground/70 hover:bg-header-foreground/10 flex items-center gap-3"
-                  >
-                    <UserCircle className="h-4 w-4" />
-                    {displayName}
-                  </Link>
-                  <button
-                    className="w-full px-4 py-3 rounded-lg text-sm font-semibold text-destructive hover:bg-destructive/10 flex items-center gap-3 transition-colors"
-                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Déconnexion
-                  </button>
-                </div>
-              ) : (
-                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full h-11 rounded-lg gradient-primary font-bold shadow-md gap-2">
-                    <LogIn className="h-4 w-4" />
-                    Connexion / Inscription
-                  </Button>
-                </Link>
-              )}
             </nav>
           </div>
         </div>

@@ -16,6 +16,12 @@ interface LiveFootAIPredictionCardProps {
   standings?: any[];
   injuries?: { home: number; away: number };
   apiPredictions?: any;
+  aiExpertPrediction?: {
+    analysis: string;
+    predictedScore: string;
+    confidence: number;
+    keyFactor: string;
+  };
 }
 
 const riskColors = {
@@ -27,6 +33,7 @@ const riskColors = {
 const LiveFootAIPredictionCard = ({
   homeTeamId, awayTeamId, homeTeamName, awayTeamName,
   homeLogo, awayLogo, standings, injuries, apiPredictions,
+  aiExpertPrediction,
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
   const { data: homeFormData } = useTeamForm(homeTeamId);
@@ -34,6 +41,36 @@ const LiveFootAIPredictionCard = ({
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
 
   const prediction = useMemo<LiveFootAIPrediction | null>(() => {
+    // Priority 0: Use AI Expert Prediction from OpenRouter if available
+    if (aiExpertPrediction) {
+      try {
+        const [homeScore, awayScore] = aiExpertPrediction.predictedScore.split("-").map(Number);
+        const outcome = homeScore > awayScore ? "home" : homeScore < awayScore ? "away" : "draw";
+        
+        return {
+          outcome,
+          confidence: Math.round(aiExpertPrediction.confidence * 100),
+          predictedScore: { home: homeScore, away: awayScore },
+          probabilities: { home: 0, draw: 0, away: 0 }, // We might not have these from expert but we can estimate or leave as 0
+          factors: [{
+            icon: "🧠",
+            label: "Analyse Expert",
+            description: aiExpertPrediction.keyFactor,
+            impact: "neutral",
+            team: "both"
+          }],
+          advice: aiExpertPrediction.analysis,
+          risk: aiExpertPrediction.confidence > 0.7 ? "low" : "medium",
+          bestBets: [
+            { type: "AI", label: `Oracle: ${aiExpertPrediction.predictedScore}`, confidence: Math.round(aiExpertPrediction.confidence * 100), emoji: "✨" }
+          ],
+          isExpert: true
+        };
+      } catch (e) {
+        console.error("Error mapping Expert prediction:", e);
+      }
+    }
+
     // Priority 1: Use API Predictions if available
     if (apiPredictions) {
       try {
@@ -97,7 +134,7 @@ const LiveFootAIPredictionCard = ({
       awayTeamName,
       injuries,
     });
-  }, [homeFormData, awayFormData, h2hData, standings, homeTeamId, awayTeamId, homeTeamName, awayTeamName, injuries]);
+  }, [homeFormData, awayFormData, h2hData, standings, homeTeamId, awayTeamId, homeTeamName, awayTeamName, injuries, apiPredictions, aiExpertPrediction]);
 
   if (!prediction) {
     return (
@@ -172,13 +209,18 @@ const LiveFootAIPredictionCard = ({
                   LiveFoot AI
                   <Sparkles className="h-3 w-3 text-primary" />
                 </h3>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[8px] font-black uppercase tracking-tighter">
+                  100% GRATUIT
+                </span>
                 {isValueBet && (
                   <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black uppercase tracking-tighter">
                     <Zap className="h-2 w-2" /> Value
                   </span>
                 )}
               </div>
-              <p className="text-[9px] sm:text-[10px] text-emerald-300/60">Analyse intelligente</p>
+              <p className="text-[9px] sm:text-[10px] text-emerald-300/60">
+                {(prediction as any).isExpert ? "Analyse LiveFoot Expert" : "Analyse intelligente"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -253,39 +295,40 @@ const LiveFootAIPredictionCard = ({
             </div>
           </motion.div>
 
-          {/* Probability Bars */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between text-[10px] mb-2">
-              <span className="font-bold text-white">{prediction.probabilities.home}%</span>
-              <span className="text-white/40">Probabilités</span>
-              <span className="font-bold text-white">{prediction.probabilities.away}%</span>
+          {prediction.probabilities.home > 0 && (
+            <div className="mb-5">
+              <div className="flex items-center justify-between text-[10px] mb-2">
+                <span className="font-bold text-white">{prediction.probabilities.home}%</span>
+                <span className="text-white/40">Probabilités</span>
+                <span className="font-bold text-white">{prediction.probabilities.away}%</span>
+              </div>
+              <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5 bg-white/5">
+                <motion.div
+                  className="bg-gradient-to-r from-primary to-emerald-400 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${prediction.probabilities.home}%` }}
+                  transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+                />
+                <motion.div
+                  className="bg-white/20 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${prediction.probabilities.draw}%` }}
+                  transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
+                />
+                <motion.div
+                  className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${prediction.probabilities.away}%` }}
+                  transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[9px] text-white/30 mt-1">
+                <span>{homeTeamName}</span>
+                <span>Nul {prediction.probabilities.draw}%</span>
+                <span>{awayTeamName}</span>
+              </div>
             </div>
-            <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5 bg-white/5">
-              <motion.div
-                className="bg-gradient-to-r from-primary to-emerald-400 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${prediction.probabilities.home}%` }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
-              />
-              <motion.div
-                className="bg-white/20 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${prediction.probabilities.draw}%` }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
-              />
-              <motion.div
-                className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${prediction.probabilities.away}%` }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-[9px] text-white/30 mt-1">
-              <span>{homeTeamName}</span>
-              <span>Nul {prediction.probabilities.draw}%</span>
-              <span>{awayTeamName}</span>
-            </div>
-          </div>
+          )}
 
           {/* Confidence Ring */}
           <motion.div
@@ -405,7 +448,7 @@ const LiveFootAIPredictionCard = ({
               if (navigator.share) {
                 navigator.share({
                   title: `Prono LiveFoot AI: ${homeTeamName} vs ${awayTeamName}`,
-                  text: `L'Oracle LiveFoot AI prédit un score de ${prediction.predictedScore.home}-${prediction.predictedScore.away} (${prediction.confidence}% de confiance).`,
+                  text: `L'IA LiveFoot prédit un score de ${prediction.predictedScore.home}-${prediction.predictedScore.away} (${prediction.confidence}% de confiance).`,
                   url: window.location.href,
                 });
               }

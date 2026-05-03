@@ -816,8 +816,22 @@ export function useFixturePredictions(fixtureId: string) {
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 60 * 60 * 1000,
+    staleTime: 12 * 60 * 60 * 1000, // 12 hours
     enabled: !!fixtureId,
+  });
+}
+
+export function useAiExpert(params: { fixtureId: string; homeTeam: string; awayTeam: string; leagueName: string }) {
+  return useQuery({
+    queryKey: ["ai-expert", params.fixtureId],
+    queryFn: async () => {
+      const { getAiPrediction } = await import("@/services/apiFootball");
+      const { data, error } = await getAiPrediction(params);
+      if (error) throw error;
+      return data as { analysis: string; predictedScore: string; confidence: number; keyFactor: string };
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours (one prediction per match)
+    enabled: !!params.fixtureId,
   });
 }
 

@@ -109,6 +109,13 @@ const Match = () => {
 
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
   const { data: standingsData } = useTeamForm(homeTeamId); // Placeholder or real standings hook
+  
+  const { data: aiExpertPrediction, isLoading: loadingAiExpert } = useAiExpert({
+    fixtureId: matchId || "",
+    homeTeam: fix?.teams?.home?.name || "Home",
+    awayTeam: fix?.teams?.away?.name || "Away",
+    leagueName: fix?.league?.name || "League",
+  });
 
 
   if (isLoading) {
@@ -798,6 +805,7 @@ const Match = () => {
             awayLogo={awayTeam.logo}
             standings={standingsData || []}
             apiPredictions={apiPredictions}
+            aiExpertPrediction={aiExpertPrediction}
             injuries={{
               home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
               away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
@@ -1083,17 +1091,17 @@ const Match = () => {
           </div>
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest mb-4">
-              <Zap className="h-3 w-3" /> Exclusivité Premium
+              <Star className="h-3 w-3" /> Club VIP Premium
             </div>
-            <h3 className="text-2xl sm:text-3xl font-black text-white mb-3">Accédez aux <span className="text-amber-500">Value Bets</span> de l'Oracle</h3>
+            <h3 className="text-2xl sm:text-3xl font-black text-white mb-3">Passez au niveau supérieur</h3>
             <p className="text-sm text-muted-foreground max-w-xl mb-6">
-              Nos algorithmes de Deep Learning détectent les erreurs de cotation des bookmakers. Rejoignez le club VIP pour recevoir les alertes "Haute Confiance".
+              Alors que nos prédictions de base sont <strong>100% gratuites</strong>, le Club VIP vous donne accès aux "Value Bets" détectés par nos algorithmes avancés et aux alertes exclusives en temps réel.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link to="/auth" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 text-center">
-                DEVENIR VIP MAINTENANT
+                REJOINDRE LE CLUB VIP
               </Link>
-              <span className="text-xs font-bold text-muted-foreground">À partir de 9.99€ / mois</span>
+              <span className="text-xs font-bold text-muted-foreground">Analyses avancées & Communauté VIP</span>
             </div>
           </div>
         </div>

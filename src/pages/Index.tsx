@@ -185,7 +185,40 @@ const SEO_LD = [
           ))}
         </div>
 
-        {/* Favorites Feed */}
+        {/* Free AI Predictions Highlight */}
+        <section className="mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '300ms' }}>
+          <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1a12] via-[#050f0a] to-background border border-primary/20 overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+              <Zap className="h-16 w-16 sm:h-24 sm:w-24 text-primary" />
+            </div>
+            <div className="relative z-10 p-5 sm:p-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-widest mb-4">
+                <Sparkles className="h-3.5 w-3.5" /> IA Expert 100% Gratuit
+              </div>
+              <h2 className="text-xl sm:text-3xl font-black text-white mb-2 leading-tight">
+                Découvrez les Pronostics de l'IA <span className="text-primary">LiveFoot</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-emerald-300/60 max-w-lg mb-6">
+                Nos modèles analysent des millions de données (H2H, forme, stats) pour vous offrir les prédictions les plus fiables sur chaque match.
+              </p>
+              <div className="flex items-center gap-4">
+                <Button asChild className="rounded-xl px-6 py-5 font-black text-sm">
+                  <Link to="/match/recent">VOIR LES PRONOS</Link>
+                </Button>
+                <div className="flex -space-x-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-8 w-8 rounded-full border-2 border-background bg-muted overflow-hidden">
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`} alt="User" />
+                    </div>
+                  ))}
+                  <div className="h-8 px-2 flex items-center justify-center bg-card rounded-full border-2 border-background text-[10px] font-bold text-muted-foreground">
+                    +5k actifs
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
         <FavoritesFeed leagues={leagues} isLoading={isLoading} />
 
         {/* Top Community Players Widget */}

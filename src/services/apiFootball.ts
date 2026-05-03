@@ -141,6 +141,9 @@ export const getSidelined = (params: Record<string, string>) =>
   callApi("sidelined", params);
 
 // ─── Predictions ──────────────────────────────────────────────
+export const getAiPrediction = (params: { fixtureId: string; homeTeam: string; awayTeam: string; leagueName: string }) =>
+  supabase.functions.invoke("ai-prediction", { body: params });
+
 export const getPredictions = (fixtureId: string) =>
   callApi("predictions", { fixture: fixtureId });
 
