@@ -10,13 +10,14 @@ import {
 import {
   ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
   Loader2, BarChart3, Swords, Star, DollarSign, HeartPulse, Users as UsersIcon,
-  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame, Brain, Trophy, Zap
+  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame, Brain, Trophy, Zap, Share2
 } from "lucide-react";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareWidget from "@/components/ShareWidget";
+import ShareButton from "@/components/ShareButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Skeleton } from "@/components/ui/skeleton";
