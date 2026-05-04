@@ -35,6 +35,8 @@ const logoBreathTransition = {
   transition: { duration: 2, repeat: Infinity, ease: easeInOut },
 };
 
+const BrandedLoader = ({ variant = "section", message }: BrandedLoaderProps) => {
+  const logoUrl = useAppLogo();
   const [showRefresh, setShowRefresh] = useState(false);
 
   useEffect(() => {
