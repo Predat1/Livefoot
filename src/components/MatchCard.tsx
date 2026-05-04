@@ -3,6 +3,7 @@ import { Star, ChevronRight, Gift } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import TeamLogo from "./TeamLogo";
+import { buildEntitySlug } from "@/utils/slugify";
 
 interface Team {
   name: string;
@@ -31,7 +32,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
 
   return (
     <MotionLink
-      to={`/match/${match.id}`}
+      to={`/match/${buildEntitySlug(match.id, `${match.homeTeam.name}-vs-${match.awayTeam.name}`)}`}
       className="group relative flex items-center justify-between px-3 sm:px-5 py-4 sm:py-5 transition-colors duration-200 hover:bg-muted/40 border-b border-border/50 last:border-b-0"
       whileHover={{ scale: 1.005, backgroundColor: "hsl(var(--muted) / 0.4)" }}
       whileTap={{ scale: 0.985 }}

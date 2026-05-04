@@ -1,5 +1,5 @@
-import { useParams, Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useMemo, useEffect } from "react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import {
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import { cn } from "@/lib/utils";
-import { buildEntitySlug } from "@/utils/slugify";
+import { buildEntitySlug, extractIdFromSlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareWidget from "@/components/ShareWidget";
 import ShareButton from "@/components/ShareButton";
@@ -95,16 +95,18 @@ function EmptyMatchData({ label }: { label: string }) {
 }
 
 const Match = () => {
-  const { matchId } = useParams();
+  const { matchId: rawMatchId } = useParams();
+  const navigate = useNavigate();
+  const matchId = extractIdFromSlug(rawMatchId || "");
 
-  const { data: fixtureData, isLoading } = useFixtureDetail(matchId || "");
-  const { data: eventsData } = useFixtureEvents(matchId || "");
-  const { data: lineupsData } = useFixtureLineups(matchId || "");
-  const { data: statsData } = useFixtureStatistics(matchId || "");
-  const { data: playersData } = useFixturePlayers(matchId || "");
-  const { data: oddsData } = useFixtureOdds(matchId || "");
-  const { data: injuriesData } = useFixtureInjuries(matchId || "");
-  const { data: apiPredictions } = useFixturePredictions(matchId || "");
+  const { data: fixtureData, isLoading } = useFixtureDetail(matchId);
+  const { data: eventsData } = useFixtureEvents(matchId);
+  const { data: lineupsData } = useFixtureLineups(matchId);
+  const { data: statsData } = useFixtureStatistics(matchId);
+  const { data: playersData } = useFixturePlayers(matchId);
+  const { data: oddsData } = useFixtureOdds(matchId);
+  const { data: injuriesData } = useFixtureInjuries(matchId);
+  const { data: apiPredictions } = useFixturePredictions(matchId);
 
   const fix = fixtureData as any;
   const homeTeamId = fix?.teams?.home?.id ? String(fix.teams.home.id) : "";
@@ -115,7 +117,15 @@ const Match = () => {
   
   const aiExpertPrediction = null;
 
-
+  // Redirect to canonical SEO-friendly URL
+  useEffect(() => {
+    if (fix?.fixture?.id && fix?.teams?.home?.name && fix?.teams?.away?.name) {
+      const canonical = buildEntitySlug(fix.fixture.id, `${fix.teams.home.name}-vs-${fix.teams.away.name}`);
+      if (rawMatchId !== canonical) {
+        navigate(`/match/${canonical}`, { replace: true });
+      }
+    }
+  }, [fix?.fixture?.id, fix?.teams?.home?.name, fix?.teams?.away?.name, rawMatchId, navigate]);
   if (isLoading) {
     return (
       <Layout>
