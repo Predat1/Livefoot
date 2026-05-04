@@ -221,7 +221,6 @@ const SEO_LD = [
             </div>
           </div>
         </section>
-        </section>
         
         <FavoritesFeed leagues={leagues} isLoading={isLoading} />
 
