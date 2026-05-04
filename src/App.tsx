@@ -26,6 +26,10 @@ const queryClient = new QueryClient({
   },
 });
 
+// Versioning pour forcer la mise à jour du cache en cas de changement majeur
+const APP_VERSION = "1.0.1";
+const STORAGE_KEY = "livefoot_version";
+
 const App = () => {
   const {
     offlineReady: [offlineReady, setOfflineReady],
@@ -39,6 +43,26 @@ const App = () => {
       console.log("SW registration error", error);
     },
   });
+
+  useEffect(() => {
+    const savedVersion = localStorage.getItem(STORAGE_KEY);
+    if (savedVersion !== APP_VERSION) {
+      console.log(`Mise à jour de version détectée: ${savedVersion} -> ${APP_VERSION}`);
+      
+      // Nettoyage des caches Service Worker si possible
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      
+      localStorage.setItem(STORAGE_KEY, APP_VERSION);
+      // On ne recharge pas forcément immédiatement pour ne pas interrompre l'utilisateur
+      // mais on s'assure que la prochaine session sera propre.
+    }
+  }, []);
 
   useEffect(() => {
     if (needRefresh) {
