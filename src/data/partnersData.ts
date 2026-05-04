@@ -13,7 +13,7 @@ export const PARTNERS: Partner[] = [
   {
     id: "1xbet",
     name: "1XBET",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/1xBet_logo.svg/2560px-1xBet_logo.svg.png",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/1xBet_logo.svg/1024px-1xBet_logo.svg.png",
     link: "https://reffpa.com/L?tag=d_633509m_18975c_&site=633509&ad=18975",
     promoCode: "PREDAT",
     bonus: "130.000 FCFA",
@@ -33,7 +33,7 @@ export const PARTNERS: Partner[] = [
   {
     id: "1win",
     name: "1WIN",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/1win_Logo.svg/2560px-1win_Logo.svg.png",
+    logo: "https://cdn.freebiesupply.com/logos/large/2x/1win-logo-png-transparent.png",
     link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
     promoCode: "BALLWIN",
     bonus: "500% de Bonus",
@@ -43,7 +43,7 @@ export const PARTNERS: Partner[] = [
   {
     id: "1win-predat",
     name: "1WIN (Bonus PREDAT)",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/1win_Logo.svg/2560px-1win_Logo.svg.png",
+    logo: "https://cdn.freebiesupply.com/logos/large/2x/1win-logo-png-transparent.png",
     link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
     promoCode: "PREDAT",
     bonus: "Bonus spécial",
@@ -53,7 +53,7 @@ export const PARTNERS: Partner[] = [
   {
     id: "betwinner",
     name: "BETWINNER",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Betwinner_logo.svg/2560px-Betwinner_logo.svg.png",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Betwinner_logo.svg/1024px-Betwinner_logo.svg.png",
     link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
     promoCode: "BALL10",
     bonus: "Bonus exclusif",
@@ -63,7 +63,7 @@ export const PARTNERS: Partner[] = [
   {
     id: "melbet",
     name: "MELBET",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Melbet_logo.svg/2560px-Melbet_logo.svg.png",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Melbet_logo.svg/1024px-Melbet_logo.svg.png",
     link: "https://refpa3665.com/L?tag=d_2730287m_45415c_&site=2730287&ad=45415",
     promoCode: "PREDAT",
     bonus: "Bonus de dépôt",
