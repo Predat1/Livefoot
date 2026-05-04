@@ -221,7 +221,7 @@ const SEO_LD = [
             </div>
           </div>
         </section>
-        
+
         <FavoritesFeed leagues={leagues} isLoading={isLoading} />
 
         {/* Top Community Players Widget */}
