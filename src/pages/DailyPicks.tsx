@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { useFixturesByDate } from "@/hooks/useApiFootball";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
-import { Brain, Calendar, Sparkles, TrendingUp, Trophy, Zap, ChevronRight, Filter, Shield } from "lucide-react";
+import { Brain, Calendar, Sparkles, TrendingUp, Trophy, Zap, ChevronRight, Filter, Shield, Gift } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -162,6 +162,34 @@ const DailyPicks = () => {
                 />
               </div>
             ))}
+
+            {/* Strategic Affiliate Banner */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="relative p-6 sm:p-10 rounded-[2.5rem] bg-gradient-to-r from-primary/10 to-emerald-500/10 border border-primary/20 overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Gift className="h-24 w-24 text-primary" />
+              </div>
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="text-center md:text-left">
+                  <h3 className="text-xl sm:text-3xl font-black text-foreground mb-3 italic">
+                    Gagnez plus avec nos Bonus Partenaires !
+                  </h3>
+                  <p className="text-xs sm:text-base text-muted-foreground max-w-lg leading-relaxed">
+                    Utilisez le code promo <span className="text-primary font-black">PREDAT</span> chez nos partenaires pour débloquer jusqu'à 130.000 FCFA de bonus sur votre premier dépôt.
+                  </p>
+                </div>
+                <Link 
+                  to="/bonuses" 
+                  className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-sm sm:text-base shadow-xl shadow-primary/30 hover:scale-105 transition-transform whitespace-nowrap"
+                >
+                  DÉCOUVRIR LES OFFRES <ChevronRight className="h-5 w-5" />
+                </Link>
+              </div>
+            </motion.div>
 
             {/* CTA for more matches */}
             <div className="text-center py-12 rounded-[2rem] bg-muted/30 border-2 border-dashed border-border/50">

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Star, ChevronRight } from "lucide-react";
+import { Star, ChevronRight, Gift } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import TeamLogo from "./TeamLogo";
@@ -141,6 +141,12 @@ const MatchCard = ({ match }: MatchCardProps) => {
             <span className="text-[10px] sm:text-xs font-bold text-live">
               {match.minute}'
             </span>
+          </div>
+        )}
+        {isLive && (
+          <div className="mt-1 px-1.5 py-0.5 rounded-full bg-primary/20 flex items-center gap-1 animate-pulse">
+            <Gift className="h-2 w-2 text-primary" />
+            <span className="text-[7px] font-black text-primary uppercase tracking-tighter">BONUS</span>
           </div>
         )}
         {isFinished && (
