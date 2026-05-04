@@ -10,24 +10,7 @@ import CookieConsent from "@/components/CookieConsent";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
 
 import { useEffect } from "react";
-// PWA Register import with safety check
-let useRegisterSW: any = () => ({
-  offlineReady: [false, () => {}],
-  needRefresh: [false, () => {}],
-  updateServiceWorker: () => {},
-});
-
-try {
-  // @ts-ignore
-  import("virtual:pwa-register/react").then(module => {
-    useRegisterSW = module.useRegisterSW;
-  }).catch(() => {
-    console.warn("PWA Register not available");
-  });
-} catch (e) {
-  console.warn("PWA Register import failed");
-}
-
+import { useRegisterSW } from "virtual:pwa-register/react";
 import { toast } from "sonner";
 
 import InstallPWA from "@/components/InstallPWA";
@@ -44,7 +27,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  /*
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -74,24 +56,23 @@ const App = () => {
       return () => clearTimeout(timer);
     }
   }, [needRefresh, updateServiceWorker]);
-  */
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ScrollToTop />
-              <CookieConsent />
-              <AnimatedRoutes />
-              <InstallPWA />
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <CookieConsent />
+            <AnimatedRoutes />
+            <InstallPWA />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
     </ThemeProvider>
   );
 };
