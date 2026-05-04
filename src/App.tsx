@@ -40,6 +40,21 @@ const App = () => {
     },
   });
 
+  const MAJOR_UPDATE_VERSION = "2024.05.04.01"; // Increment this to force a hard reload for all users
+
+  useEffect(() => {
+    const lastVersion = localStorage.getItem("livefoot_app_version");
+    if (lastVersion && lastVersion !== MAJOR_UPDATE_VERSION) {
+      console.log("Major update detected. Clearing cache...");
+      localStorage.clear();
+      sessionStorage.clear();
+      localStorage.setItem("livefoot_app_version", MAJOR_UPDATE_VERSION);
+      window.location.reload();
+    } else {
+      localStorage.setItem("livefoot_app_version", MAJOR_UPDATE_VERSION);
+    }
+  }, []);
+
   useEffect(() => {
     if (needRefresh) {
       toast("Une nouvelle version est disponible", {
