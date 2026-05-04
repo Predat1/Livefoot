@@ -1,6 +1,26 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <script>
+      // Force update for users stuck with a broken cache
+      (function() {
+        var version = '20240504_v2';
+        if (localStorage.getItem('lf_cv') !== version) {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              if (registrations.length > 0) {
+                for (var i = 0; i < registrations.length; i++) {
+                  registrations[i].unregister();
+                }
+                localStorage.setItem('lf_cv', version);
+                window.location.reload();
+              }
+            });
+          }
+          localStorage.setItem('lf_cv', version);
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <title>LiveFoot - Scores Football en Direct | Résultats & Classements</title>
