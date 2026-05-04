@@ -1,4 +1,4 @@
-import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2 } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -27,6 +27,7 @@ const Header = () => {
     { label: "LIVE", href: "/live" },
     { label: "COMPÉTITIONS", href: "/competitions" },
     { label: "ACTUALITÉS", href: "/news" },
+    { label: "BONUS", href: "/bonuses" },
     { label: "INSTALLER", href: "/install" },
   ];
 
@@ -177,12 +178,13 @@ const Header = () => {
                 key={item.label}
                 to={item.href}
                 className={cn(
-                  "relative px-2 xl:px-4 py-4 text-[11px] xl:text-sm font-bold tracking-tight xl:tracking-wide transition-colors whitespace-nowrap",
+                  "relative px-2 xl:px-4 py-4 text-[11px] xl:text-sm font-bold tracking-tight xl:tracking-wide transition-colors whitespace-nowrap flex items-center gap-1.5",
                   isActive(item.href)
                     ? "text-primary"
                     : "text-header-foreground/70 hover:text-header-foreground"
                 )}
               >
+                {item.label === "BONUS" && <Gift className="h-3 w-3 text-primary animate-pulse" />}
                 {item.label}
                 {isActive(item.href) && (
                   <motion.div

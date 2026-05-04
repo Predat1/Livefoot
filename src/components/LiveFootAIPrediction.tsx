@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { generatePrediction, type LiveFootAIPrediction, type TeamFormData } from "@/lib/livefoot-ai";
 import { useTeamForm, useHeadToHead } from "@/hooks/useApiFootball";
 import { toast } from "sonner";
+import { getRandomPartner } from "@/data/partnersData";
+import PartnerCard from "@/components/PartnerCard";
 
 interface LiveFootAIPredictionCardProps {
   homeTeamId: string;
@@ -60,6 +62,8 @@ const LiveFootAIPredictionCard = ({
   const { data: homeFormData } = useTeamForm(homeTeamId);
   const { data: awayFormData } = useTeamForm(awayTeamId);
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
+
+  const featuredPartner = useMemo(() => getRandomPartner(), []);
 
   const prediction = useMemo<LiveFootAIPrediction | null>(() => {
     // Priority 0: Use AI Expert Prediction from OpenRouter if available
@@ -500,6 +504,19 @@ const LiveFootAIPredictionCard = ({
               ))}
             </div>
           </div>
+
+          {/* Affiliate CTA */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.5 }}
+            className="mt-8 pt-6 border-t border-white/5"
+          >
+            <p className="text-[10px] font-black text-primary/80 uppercase tracking-widest text-center mb-4">
+              Profitez du Bonus pour ce match
+            </p>
+            <PartnerCard partner={featuredPartner} variant="full" />
+          </motion.div>
         </div>
 
         {/* Footer */}

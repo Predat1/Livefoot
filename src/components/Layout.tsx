@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Gift } from "lucide-react";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -9,10 +10,11 @@ interface LayoutProps {
 }
 
 const footerLinks = [
-  { label: "About", href: "/about" },
+  { label: "Bonus & Offres", href: "/bonuses" },
+  { label: "À propos", href: "/about" },
   { label: "Contact", href: "/contact" },
-  { label: "Privacy", href: "/privacy" },
-  { label: "Terms", href: "/terms" },
+  { label: "Confidentialité", href: "/privacy" },
+  { label: "Conditions", href: "/terms" },
 ];
 
 const Layout = ({ children }: LayoutProps) => {
@@ -39,9 +41,16 @@ const Layout = ({ children }: LayoutProps) => {
               <Link
                 key={link.label}
                 to={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                className={cn(
+                  "text-sm font-medium transition-colors flex items-center gap-1.5",
+                  link.href === "/bonuses" ? "text-primary font-bold" : "text-muted-foreground hover:text-primary"
+                )}
               >
+                {link.href === "/bonuses" && <Gift className="h-3.5 w-3.5" />}
                 {link.label}
+                {link.href === "/bonuses" && (
+                  <span className="text-[8px] bg-primary text-primary-foreground px-1 rounded-sm">NEW</span>
+                )}
               </Link>
             ))}
           </div>
