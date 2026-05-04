@@ -76,6 +76,7 @@ const BrandedLoader = ({ variant = "page", message }: BrandedLoaderProps) => {
               src={logoUrl}
               alt="LiveFoot"
               className="h-full w-full object-cover"
+              loading="eager"
             />
           </motion.div>
         </motion.div>

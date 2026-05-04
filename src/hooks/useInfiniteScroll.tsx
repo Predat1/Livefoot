@@ -28,7 +28,7 @@ export const useInfiniteScroll = <T,>({
 
     setIsLoading(true);
     
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const currentLength = items.length;
     const nextItems = loadMoreItems 

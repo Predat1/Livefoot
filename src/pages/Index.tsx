@@ -101,7 +101,7 @@ const Index = () => {
 
   const { items: visibleLeagues, hasMore, isLoading: isLoadingMore, loadMoreRef } = useInfiniteScroll({
     initialItems: filteredLeagues,
-    itemsPerPage: 3,
+    itemsPerPage: 5,
   });
 
   const { data: newsArticles = [] } = useFootballNews();
@@ -418,7 +418,12 @@ const SEO_LD = [
         <div className="container text-center">
           <div className="mb-6 flex items-center justify-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
-              <img src={livefootLogo} alt="LiveFoot logo" className="h-full w-full object-cover" />
+              <img
+              src={livefootLogo}
+              alt="LiveFoot"
+              className="h-full w-full object-cover"
+              loading="eager"
+            />
             </div>
             <span className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</span>
           </div>
