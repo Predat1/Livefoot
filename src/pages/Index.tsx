@@ -22,6 +22,7 @@ import { MatchSkeleton } from "@/components/BrandedLoader";
 import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import TopScorersWidget from "@/components/TopScorersWidget";
+import PartnerBanner from "@/components/PartnerBanner";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 
@@ -220,32 +221,6 @@ const SEO_LD = [
             </div>
           </div>
         </section>
-        
-        {/* Featured Partner Banner */}
-        <section className="mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
-          <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-r from-blue-900/20 to-primary/10 border border-primary/20 overflow-hidden shadow-lg shadow-primary/5 group">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-20 pointer-events-none" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-5 sm:p-8 gap-6">
-              <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 text-center md:text-left">
-                <div className="h-14 w-32 bg-white rounded-xl p-3 flex items-center justify-center shadow-inner transform group-hover:scale-105 transition-transform">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/1xBet_logo.svg/2560px-1xBet_logo.svg.png" alt="1xBet" className="h-full w-full object-contain" />
-                </div>
-                <div>
-                  <h3 className="text-lg sm:text-xl font-black text-foreground mb-1 italic">
-                    Jusqu'à <span className="text-primary">130.000 FCFA</span> de Bonus !
-                  </h3>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase font-black tracking-widest">
-                    Utilisez le code promo : <span className="text-primary px-1.5 py-0.5 bg-primary/10 rounded">PREDAT</span>
-                  </p>
-                </div>
-              </div>
-              <Button asChild className="rounded-xl px-8 py-6 font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/30 transform hover:scale-105 transition-transform h-12 w-full md:w-auto">
-                <a href="https://reffpa.com/L?tag=d_633509m_18975c_&site=633509&ad=18975" target="_blank" rel="noopener noreferrer">
-                  Profiter de l'Offre
-                </a>
-              </Button>
-            </div>
-          </div>
         </section>
         
         <FavoritesFeed leagues={leagues} isLoading={isLoading} />
@@ -343,6 +318,10 @@ const SEO_LD = [
                   {index === 2 && <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />}
                   {index === 3 && <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />}
                   {index === 4 && <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />}
+                  
+                  {/* Strategic Affiliate Placement Between Leagues */}
+                  {index === 2 && <PartnerBanner partnerId="1xbet" className="my-8" />}
+                  {index === 5 && <PartnerBanner partnerId="1win" className="my-8" />}
                 </Fragment>
               ))
             ) : (
