@@ -83,8 +83,10 @@ function mapFixtureStatus(apiStatus: string): "scheduled" | "live" | "finished" 
   return "scheduled";
 }
 
-function transformFixturesToLeagues(fixtures: any[]): LeagueData[] {
+function transformFixturesToLeagues(fixtures: any[] = []): LeagueData[] {
   const leagueMap = new Map<number, LeagueData>();
+  
+  if (!fixtures || !Array.isArray(fixtures)) return [];
 
   for (const fix of fixtures) {
     const leagueId = fix.league.id;
@@ -133,7 +135,8 @@ function transformFixturesToLeagues(fixtures: any[]): LeagueData[] {
   });
 }
 
-function transformTopScorers(scorers: any[]): PlayerData[] {
+function transformTopScorers(scorers: any[] = []): PlayerData[] {
+  if (!scorers || !Array.isArray(scorers)) return [];
   return scorers.map((item) => {
     const p = item.player;
     const s = item.statistics[0];
@@ -178,10 +181,10 @@ export function useFixturesByDate(date: Date) {
     queryKey: ["fixtures", dateStr],
     queryFn: async () => {
       const res = await getFixtures({ date: dateStr });
-      return transformFixturesToLeagues(res.response);
+      return transformFixturesToLeagues(res?.response || []);
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    refetchInterval: 15 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // Increased to 30 mins for Free Plan
+    refetchInterval: 30 * 60 * 1000,
   });
 }
 
@@ -190,10 +193,10 @@ export function useLiveFixtures() {
     queryKey: ["fixtures", "live"],
     queryFn: async () => {
       const res = await getLiveFixtures();
-      return transformFixturesToLeagues(res.response);
+      return transformFixturesToLeagues(res?.response || []);
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchInterval: 10 * 60 * 1000,
   });
 }
 

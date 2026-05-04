@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { motion, type Transition } from "framer-motion";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 interface BrandedLoaderProps {
   variant?: "page" | "section" | "match";
@@ -33,8 +35,25 @@ const logoBreathTransition = {
   transition: { duration: 2, repeat: Infinity, ease: easeInOut },
 };
 
-const BrandedLoader = ({ variant = "page", message }: BrandedLoaderProps) => {
-  const logoUrl = useAppLogo();
+  const [showRefresh, setShowRefresh] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowRefresh(true), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleHardRefresh = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister();
+        }
+        window.location.reload();
+      });
+    } else {
+      window.location.reload();
+    }
+  };
 
   if (variant === "match") {
     return <MatchSkeleton />;
@@ -92,7 +111,23 @@ const BrandedLoader = ({ variant = "page", message }: BrandedLoaderProps) => {
         />
       </div>
 
-      {message && (
+      {showRefresh ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-3"
+        >
+          <p className="text-xs text-muted-foreground">Le chargement prend plus de temps que prévu...</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleHardRefresh}
+            className="text-[10px] h-8 px-4 border-primary/30 text-primary hover:bg-primary/5"
+          >
+            Forcer la mise à jour
+          </Button>
+        </motion.div>
+      ) : message ? (
         <motion.p
           className="text-xs text-muted-foreground font-medium"
           initial={{ opacity: 0 }}
@@ -101,7 +136,7 @@ const BrandedLoader = ({ variant = "page", message }: BrandedLoaderProps) => {
         >
           {message}
         </motion.p>
-      )}
+      ) : null}
     </div>
   );
 };

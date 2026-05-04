@@ -107,6 +107,17 @@ Deno.serve(async (req) => {
       },
     });
 
+    if (response.status === 429) {
+      console.warn("DEBUG: API Football Rate Limit reached (429)");
+      return new Response(
+        JSON.stringify({ 
+          error: "Limite de requêtes atteinte. Veuillez réessayer dans quelques minutes.",
+          status: 429 
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const data = await response.json();
     console.log(`DEBUG: API Response status: ${response.status}`);
     
@@ -129,14 +140,6 @@ Deno.serve(async (req) => {
         data,
         expiresAt: Date.now() + ttl * 1000,
       });
-    }
-
-    // Clean expired cache entries periodically (every 100 requests)
-    if (Math.random() < 0.01) {
-      const now = Date.now();
-      for (const [key, val] of cache) {
-        if (now >= val.expiresAt) cache.delete(key);
-      }
     }
 
     return new Response(JSON.stringify(data), {
