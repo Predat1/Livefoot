@@ -16,7 +16,6 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
-      injectRegister: 'auto',
       manifest: {
         name: "LiveFoot - Live Soccer Scores",
         short_name: "LiveFoot",
@@ -47,9 +46,6 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
