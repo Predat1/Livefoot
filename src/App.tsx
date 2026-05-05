@@ -27,7 +27,7 @@ const queryClient = new QueryClient({
 });
 
 // Versioning pour forcer la mise à jour du cache en cas de changement majeur
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 const STORAGE_KEY = "livefoot_version";
 
 const App = () => {
@@ -49,35 +49,33 @@ const App = () => {
     if (savedVersion !== APP_VERSION) {
       console.log(`Mise à jour de version détectée: ${savedVersion} -> ${APP_VERSION}`);
       
-      // Nettoyage des caches Service Worker si possible
+      // Dés-enregistre tous les Service Workers pour purger le cache
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
           for (let registration of registrations) {
             registration.unregister();
           }
+          // Efface tous les caches Workbox
+          if ('caches' in window) {
+            caches.keys().then(keys => {
+              keys.forEach(key => caches.delete(key));
+            });
+          }
+          // Sauvegarde la nouvelle version PUIS reload
+          localStorage.setItem(STORAGE_KEY, APP_VERSION);
+          window.location.reload();
         });
+      } else {
+        localStorage.setItem(STORAGE_KEY, APP_VERSION);
+        window.location.reload();
       }
-      
-      localStorage.setItem(STORAGE_KEY, APP_VERSION);
-      // On ne recharge pas forcément immédiatement pour ne pas interrompre l'utilisateur
-      // mais on s'assure que la prochaine session sera propre.
     }
   }, []);
 
   useEffect(() => {
     if (needRefresh) {
-      toast("Une nouvelle version est disponible", {
-        description: "Mise à jour automatique pour les meilleures performances.",
-        action: {
-          label: "Actualiser",
-          onClick: () => updateServiceWorker(true),
-        },
-      });
-      // Force update after 3 seconds if user doesn't click
-      const timer = setTimeout(() => {
-        updateServiceWorker(true);
-      }, 3000);
-      return () => clearTimeout(timer);
+      // Force la mise à jour immédiatement sans attendre l'action utilisateur
+      updateServiceWorker(true);
     }
   }, [needRefresh, updateServiceWorker]);
 
