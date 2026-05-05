@@ -74,6 +74,8 @@ export interface PlayerData {
   photoUrl: string;
 }
 
+const fallbackLeagues = mockLeagues as unknown as LeagueData[];
+
 // ─── Data transformers ────────────────────────────────────────
 
 function mapFixtureStatus(apiStatus: string): "scheduled" | "live" | "finished" {
@@ -186,7 +188,7 @@ export function useFixturesByDate(date: Date) {
         return transformFixturesToLeagues(res?.response || []);
       } catch (error) {
         console.warn("Impossible de charger les matchs, affichage du contenu de secours.", error);
-        return mockLeagues;
+        return fallbackLeagues;
       }
     },
     staleTime: 30 * 60 * 1000, // Increased to 30 mins for Free Plan
@@ -203,7 +205,7 @@ export function useLiveFixtures() {
         return transformFixturesToLeagues(res?.response || []);
       } catch (error) {
         console.warn("Impossible de charger les matchs en direct, affichage du contenu de secours.", error);
-        return mockLeagues
+        return fallbackLeagues
           .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
           .filter((league) => league.matches.length > 0);
       }
