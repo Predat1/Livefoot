@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { livefootToast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 export interface Favorites {
   teams: string[];
@@ -9,14 +9,7 @@ export interface Favorites {
   competitions: string[];
 }
 
-// Map from our Favorites key to entity_type stored in DB
-const TYPE_MAP: Record<keyof Favorites, string> = {
-  teams: "team",
-  players: "player",
-  competitions: "competition",
-};
-
-const STORAGE_KEY = "livefoot_favorites";
+const STORAGE_KEY = "livefoot_favorites_v2";
 
 const getStoredFavorites = (): Favorites => {
   try {
@@ -32,20 +25,26 @@ const saveStoredFavorites = (fav: Favorites) => {
   } catch {}
 };
 
+const TYPE_MAP: Record<keyof Favorites, string> = {
+  teams: "team",
+  players: "player",
+  competitions: "competition",
+};
+
 export const useFavorites = () => {
   const { user } = useAuth();
   const [favorites, setFavorites] = useState<Favorites>(getStoredFavorites);
   const [loading, setLoading] = useState(false);
-  const mergedRef = useRef(false);
+  const isMerged = useRef(false);
 
-  // Load favorites from DB when user logs in
+  // 1. Sync DB -> Local when user logs in
   useEffect(() => {
     if (!user) {
-      mergedRef.current = false;
+      isMerged.current = false;
       return;
     }
 
-    const loadFromDB = async () => {
+    const syncFavorites = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("favorites")
@@ -53,6 +52,7 @@ export const useFavorites = () => {
         .eq("user_id", user.id);
 
       if (error) {
+        console.error("Error loading favorites:", error);
         setLoading(false);
         return;
       }
@@ -64,95 +64,69 @@ export const useFavorites = () => {
         else if (row.entity_type === "competition") dbFavs.competitions.push(row.entity_id);
       });
 
-      // Merge localStorage favorites into DB (only first login per session)
-      if (!mergedRef.current) {
-        mergedRef.current = true;
+      // Merge local into DB on first login
+      if (!isMerged.current) {
         const local = getStoredFavorites();
-        const toInsert: { user_id: string; entity_id: string; entity_type: string; entity_name: string }[] = [];
-
-        (["teams", "players", "competitions"] as (keyof Favorites)[]).forEach((key) => {
-          local[key].forEach((id) => {
-            if (!dbFavs[key].includes(id)) {
-              dbFavs[key].push(id);
+        const toInsert = [];
+        
+        for (const type of ["teams", "players", "competitions"] as (keyof Favorites)[]) {
+          for (const id of local[type]) {
+            if (!dbFavs[type].includes(id)) {
+              dbFavs[type].push(id);
               toInsert.push({
                 user_id: user.id,
                 entity_id: id,
-                entity_type: TYPE_MAP[key],
-                entity_name: id, // fallback, id is descriptive enough
+                entity_type: TYPE_MAP[type],
               });
             }
-          });
-        });
+          }
+        }
 
         if (toInsert.length > 0) {
           await supabase.from("favorites").insert(toInsert);
         }
-        // Clear localStorage after merge
-        saveStoredFavorites({ teams: [], players: [], competitions: [] });
+        isMerged.current = true;
       }
 
       setFavorites(dbFavs);
       setLoading(false);
     };
 
-    loadFromDB();
+    syncFavorites();
   }, [user]);
 
-  // Persist to localStorage when not logged in
+  // 2. Persist to LocalStorage (for guest users)
   useEffect(() => {
     if (!user) {
       saveStoredFavorites(favorites);
     }
   }, [favorites, user]);
 
-  const toggleFavorite = useCallback(
-    async (type: keyof Favorites, id: string, name?: string) => {
-      const entityType = TYPE_MAP[type];
-      const isCurrentlyFavorite = favorites[type].includes(id);
-      const displayName = name || id;
+  const toggleFavorite = useCallback(async (type: keyof Favorites, id: string, name?: string) => {
+    const isCurrentlyFav = favorites[type].includes(id);
+    const entityType = TYPE_MAP[type];
 
-      // Optimistic update
-      setFavorites((prev) => {
-        const list = prev[type];
-        const next = isCurrentlyFavorite
-          ? list.filter((i) => i !== id)
-          : [...list, id];
-        return { ...prev, [type]: next };
-      });
+    // Optimistic Update
+    setFavorites(prev => {
+      const list = prev[type];
+      const next = isCurrentlyFav ? list.filter(i => i !== id) : [...list, id];
+      return { ...prev, [type]: next };
+    });
 
-      // Toast notification
-      livefootToast.favorite(displayName, !isCurrentlyFavorite);
+    toast(isCurrentlyFav ? "Retiré des favoris" : "Ajouté aux favoris", {
+      description: name || id
+    });
 
-      if (user) {
-        if (isCurrentlyFavorite) {
-          await supabase
-            .from("favorites")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("entity_id", id)
-            .eq("entity_type", entityType);
-        } else {
-          await supabase.from("favorites").insert({
-            user_id: user.id,
-            entity_id: id,
-            entity_type: entityType,
-            entity_name: name || id,
-          });
-        }
+    if (user) {
+      if (isCurrentlyFav) {
+        await supabase.from("favorites").delete().match({ user_id: user.id, entity_id: id, entity_type: entityType });
+      } else {
+        await supabase.from("favorites").insert({ user_id: user.id, entity_id: id, entity_type: entityType, entity_name: name });
       }
-    },
-    [favorites, user]
-  );
+    }
+  }, [favorites, user]);
 
-  const isFavorite = useCallback(
-    (type: keyof Favorites, id: string) => favorites[type].includes(id),
-    [favorites]
-  );
+  const isFavorite = useCallback((type: keyof Favorites, id: string) => favorites[type].includes(id), [favorites]);
 
-  const totalFavorites =
-    favorites.teams.length +
-    favorites.players.length +
-    favorites.competitions.length;
-
-  return { favorites, toggleFavorite, isFavorite, totalFavorites, loading };
+  return { favorites, toggleFavorite, isFavorite, loading };
 };
