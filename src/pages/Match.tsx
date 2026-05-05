@@ -99,7 +99,7 @@ const Match = () => {
   const navigate = useNavigate();
   const matchId = extractIdFromSlug(rawMatchId || "");
 
-  const { data: fixtureData, isLoading } = useFixtureDetail(matchId);
+  const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
   const { data: eventsData } = useFixtureEvents(matchId);
   const { data: lineupsData } = useFixtureLineups(matchId);
   const { data: statsData } = useFixtureStatistics(matchId);
@@ -130,6 +130,25 @@ const Match = () => {
     return (
       <Layout>
         <MatchDetailSkeleton />
+      </Layout>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <div className="max-w-md mx-auto p-8 rounded-3xl bg-destructive/5 border border-destructive/20">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h1 className="text-xl font-bold text-foreground mb-2">Erreur de chargement</h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              {fetchError instanceof Error ? fetchError.message : "Impossible de récupérer les détails du match."}
+            </p>
+            <Link to="/" className="inline-flex items-center gap-2 text-primary font-bold hover:underline">
+              <ArrowLeft className="h-4 w-4" /> Retour à l'accueil
+            </Link>
+          </div>
+        </div>
       </Layout>
     );
   }
