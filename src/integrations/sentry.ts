@@ -16,28 +16,23 @@ const isValidDsn = (dsn: string): boolean => {
 };
 
 export const initSentry = () => {
-  if (!import.meta.env.PROD) return;
-
-  if (!isValidDsn(SENTRY_DSN)) {
-    console.warn("[Sentry] DSN non configuré ou invalide — monitoring désactivé. Définissez VITE_SENTRY_DSN dans votre .env.");
-    return;
+  if (import.meta.env.PROD && SENTRY_DSN && isValidDsn(SENTRY_DSN)) {
+    Sentry.init({
+      dsn: SENTRY_DSN,
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
+      ],
+      tracesSampleRate: 1.0,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+      environment: import.meta.env.MODE,
+      beforeSend(event) {
+        return event;
+      },
+    });
+    console.log("[Sentry] Initialized for production.");
   }
-
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
-    ],
-    tracesSampleRate: 1.0,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-    environment: import.meta.env.MODE,
-    beforeSend(event) {
-      return event;
-    },
-  });
-  console.log("[Sentry] Initialized for production.");
 };
 
 export const captureError = (error: Error, context?: Record<string, unknown>) => {

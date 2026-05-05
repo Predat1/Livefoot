@@ -66,7 +66,7 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <ErrorBoundary fallback={<RouteErrorFallback />} key={location.pathname}>
         <Suspense fallback={<PageLoader />}>
-          <Routes location={location} key={location.pathname}>
+          <Routes location={location}>
             <Route path="/" element={<PageTransition><Index /></PageTransition>} />
             <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
             <Route path="/live" element={<PageTransition><Live /></PageTransition>} />

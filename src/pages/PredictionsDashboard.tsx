@@ -76,8 +76,8 @@ const PredictionsDashboard = () => {
     const avgGoals = total > 0
       ? ((myPredictions.reduce((s, p) => s + p.home_score + p.away_score, 0)) / total).toFixed(1)
       : "0";
-    // Points: 1 pt per prediction (placeholder - real scoring would compare vs actual results)
-    const points = computePoints({ exactScores: 0, correctResults: 0, totalPredictions: total });
+    // Points: 1 pt per prediction (participation) - real scoring calculated after matches
+    const points = total; 
     return { total, homeWins, draws, awayWins, avgGoals, points };
   }, [myPredictions]);
 
@@ -100,7 +100,7 @@ const PredictionsDashboard = () => {
     const entries: LeaderboardEntry[] = [];
     for (const [userId, total] of userMap) {
       const profile = profiles.get(userId);
-      const points = computePoints({ exactScores: 0, correctResults: 0, totalPredictions: total });
+      const points = total; // 1 pt par participation
       entries.push({
         user_id: userId,
         display_name: profile?.display_name || "Anonyme",
@@ -405,6 +405,9 @@ const PredictionsDashboard = () => {
                 <p>• <span className="font-bold text-foreground">5 pts</span> — Bon résultat (1/N/2)</p>
                 <p>• <span className="font-bold text-foreground">1 pt</span> — Participation</p>
               </div>
+              <p className="mt-3 text-[9px] text-amber-500 font-medium italic">
+                * Les points définitifs seront calculés automatiquement après chaque match terminé.
+              </p>
             </div>
           </TabsContent>
         </Tabs>

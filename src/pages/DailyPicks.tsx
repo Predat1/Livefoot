@@ -46,8 +46,11 @@ const DailyPicks = () => {
   }, [leagues]);
 
   const topMatches = useMemo(() => {
-    const realMatches = allMatches.slice(0, 5);
-    return [...MOCK_MATCHES, ...realMatches];
+    if (allMatches.length >= 2) {
+      return allMatches.slice(0, 7);
+    }
+    // Fallback : données de démo si aucun match réel disponible
+    return [...MOCK_MATCHES, ...allMatches].slice(0, 7);
   }, [allMatches]);
 
   return (

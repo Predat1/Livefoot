@@ -33,7 +33,7 @@ const Explorer = () => {
   const { data: leagues = [], isLoading: leaguesLoading } = useTrendingLeagues();
 
   // Single query for all teams across top leagues — only when teams tab is active
-  const shouldFetchTeams = activeTab === "all" || activeTab === "teams";
+  const shouldFetchTeams = activeTab === "teams";
   const { data: allTeams = [], isLoading: teamsLoading } = useQuery({
     queryKey: ["explorer-teams", TOP_LEAGUE_IDS.join(",")],
     queryFn: async () => {

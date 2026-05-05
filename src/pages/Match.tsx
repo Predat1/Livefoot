@@ -5,7 +5,7 @@ import SEOHead from "@/components/SEOHead";
 import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
-  useTeamForm, useTeamNextFixtures, useFixturePredictions,
+  useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
 } from "@/hooks/useApiFootball";
 import {
   ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
@@ -116,7 +116,12 @@ const Match = () => {
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
   const { data: standingsData } = useTeamForm(homeTeamId); // Placeholder or real standings hook
   
-  const aiExpertPrediction = null;
+  const { data: aiExpertPrediction } = useAiExpert({
+    fixtureId: matchId,
+    homeTeam: fix?.teams?.home?.name || "",
+    awayTeam: fix?.teams?.away?.name || "",
+    leagueName: fix?.league?.name || "",
+  });
 
   // Redirect to canonical SEO-friendly URL
   useEffect(() => {
@@ -1278,7 +1283,7 @@ function NextMatchesColumn({ teamId, teamName, teamLogo }: { teamId: string; tea
                   <span className="text-xs text-foreground truncate">{fix.awayTeam?.name}</span>
                 </div>
               </div>
-              <span className="text-[9px] text-muted-foreground truncate max-w-16">{fix.league}</span>
+              <span className="text-[9px] text-muted-foreground truncate max-w-16">{fix.league?.name ?? fix.league}</span>
             </Link>
           ))}
         </div>

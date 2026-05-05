@@ -74,8 +74,14 @@ const App = () => {
 
   useEffect(() => {
     if (needRefresh) {
-      // Force la mise à jour immédiatement sans attendre l'action utilisateur
-      updateServiceWorker(true);
+      toast("Nouvelle version disponible", {
+        description: "Rechargez pour profiter des dernières améliorations.",
+        duration: Infinity,
+        action: {
+          label: "Recharger",
+          onClick: () => updateServiceWorker(true),
+        },
+      });
     }
   }, [needRefresh, updateServiceWorker]);
 

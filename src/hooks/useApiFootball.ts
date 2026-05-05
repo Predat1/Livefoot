@@ -811,32 +811,34 @@ export function usePlayerSeasons(playerId: string) {
     queryKey: ["player-seasons", playerId],
     queryFn: async () => {
       const { getPlayers } = await import("@/services/apiFootball");
-      // Fetch several seasons
       const seasons = ["2024", "2023", "2022", "2021", "2020"];
+      
+      const responses = await Promise.allSettled(
+        seasons.map(season => getPlayers({ id: playerId, season }))
+      );
+
       const results: any[] = [];
-      for (const season of seasons) {
-        try {
-          const res = await getPlayers({ id: playerId, season });
-          if (res.response?.[0]) {
-            const item = res.response[0] as any;
-            const stats = item.statistics || [];
-            for (const s of stats) {
-              results.push({
-                season,
-                league: s.league?.name || "",
-                leagueLogo: s.league?.logo || "",
-                team: s.team?.name || "",
-                teamLogo: s.team?.logo || "",
-                appearances: s.games?.appearences || 0,
-                goals: s.goals?.total || 0,
-                assists: s.goals?.assists || 0,
-                minutes: s.games?.minutes || 0,
-                rating: parseFloat(s.games?.rating) || 0,
-              });
-            }
-          }
-        } catch { /* skip failed season */ }
-      }
+      responses.forEach((res, idx) => {
+        if (res.status !== "fulfilled") return;
+        const item = res.value?.response?.[0] as any;
+        if (!item) return;
+        const season = seasons[idx];
+        const stats = item.statistics || [];
+        for (const s of stats) {
+          results.push({
+            season,
+            league: s.league?.name || "",
+            leagueLogo: s.league?.logo || "",
+            team: s.team?.name || "",
+            teamLogo: s.team?.logo || "",
+            appearances: s.games?.appearences || 0,
+            goals: s.goals?.total || 0,
+            assists: s.goals?.assists || 0,
+            minutes: s.games?.minutes || 0,
+            rating: parseFloat(s.games?.rating) || 0,
+          });
+        }
+      });
       return results;
     },
     staleTime: 10 * 60 * 1000,
@@ -906,7 +908,7 @@ export function useAiExpert(params: { fixtureId: string; homeTeam: string; awayT
       }
     },
     staleTime: 24 * 60 * 60 * 1000, // 24h — une prédiction par match
-    retry: false,        // circuit breaker: 0 retry sur une API IA externe instable
+    retry: 1,
     throwOnError: false, // isolation — pas de cascade d'erreur vers la page
     enabled: !!params.fixtureId && !!params.homeTeam && !!params.awayTeam,
   });
