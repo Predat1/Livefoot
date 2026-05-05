@@ -28,6 +28,7 @@ import ShotMap from "@/components/ShotMap";
 import HeatMap from "@/components/HeatMap";
 import PlayerRatingStars from "@/components/PlayerRatingStars";
 import { motion, AnimatePresence } from "framer-motion";
+import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar,
   ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
@@ -824,21 +825,23 @@ const Match = () => {
 
 
         <TabsContent value="predictions" className="mt-0">
-          <LiveFootAIPrediction
-            homeTeamId={homeTeamId}
-            awayTeamId={awayTeamId}
-            homeTeamName={homeTeam.name}
-            awayTeamName={awayTeam.name}
-            homeLogo={homeTeam.logo}
-            awayLogo={awayTeam.logo}
-            standings={standingsData || []}
-            apiPredictions={apiPredictions}
-            aiExpertPrediction={aiExpertPrediction}
-            injuries={{
-              home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
-              away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
-            }}
-          />
+          <SectionErrorBoundary name="AI Predictions">
+            <LiveFootAIPrediction
+              homeTeamId={homeTeamId}
+              awayTeamId={awayTeamId}
+              homeTeamName={homeTeam.name}
+              awayTeamName={awayTeam.name}
+              homeLogo={homeTeam.logo}
+              awayLogo={awayTeam.logo}
+              standings={standingsData || []}
+              apiPredictions={apiPredictions}
+              aiExpertPrediction={aiExpertPrediction}
+              injuries={{
+                home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
+                away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
+              }}
+            />
+          </SectionErrorBoundary>
         </TabsContent>
 
         {/* H2H */}

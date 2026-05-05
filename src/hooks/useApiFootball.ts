@@ -224,8 +224,8 @@ export function useFixturesByDate(date: Date) {
         return fallbackLeagues;
       }
     },
-    staleTime: 30 * 60 * 1000, // Increased to 30 mins for Free Plan
-    refetchInterval: 30 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes for general lists
+    refetchInterval: 5 * 60 * 1000,
   });
 }
 
@@ -243,8 +243,8 @@ export function useLiveFixtures() {
           .filter((league) => league.matches.length > 0);
       }
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 10 * 60 * 1000,
+    staleTime: 1 * 60 * 1000, // 1 minute for Live
+    refetchInterval: 1 * 60 * 1000,
   });
 }
 
@@ -314,8 +314,8 @@ export function useFixtureDetail(fixtureId: string) {
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    refetchInterval: 15 * 60 * 1000,
+    staleTime: 1 * 60 * 1000, // 1 minute
+    refetchInterval: 1 * 60 * 1000,
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
