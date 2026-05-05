@@ -162,7 +162,7 @@ const Header = () => {
         <div className="h-[3px] gradient-primary" />
 
         {/* Main header row */}
-        <div className="container flex h-12 sm:h-14 items-center gap-3 sm:gap-6">
+        <div className="container flex h-12 sm:h-14 items-center justify-between gap-3 sm:gap-6">
           {/* Logo */}
           <Link to="/" className="group flex items-center gap-2 flex-shrink-0">
             <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg gradient-primary overflow-hidden shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-110 border border-white/10">
@@ -218,7 +218,7 @@ const Header = () => {
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 ml-auto lg:ml-0">
             {/* Mobile search */}
             <Button
               variant="ghost"
