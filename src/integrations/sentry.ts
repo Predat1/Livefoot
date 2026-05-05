@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
 
 // Remplacez le DSN par celui fourni par votre compte Sentry
 const SENTRY_DSN = "https://placeholder-dsn@o123456.ingest.sentry.io/123456";
@@ -8,7 +7,7 @@ export const initSentry = () => {
   if (import.meta.env.PROD) {
     Sentry.init({
       dsn: SENTRY_DSN,
-      integrations: [new BrowserTracing()],
+      integrations: [Sentry.browserTracingIntegration()],
       tracesSampleRate: 1.0,
       environment: import.meta.env.MODE,
       beforeSend(event) {
