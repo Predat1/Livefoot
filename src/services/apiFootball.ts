@@ -18,7 +18,10 @@ async function callApi<T = unknown>(
     body: { endpoint, params },
   });
 
-  if (error) throw new Error(`API Football error: ${error.message}`);
+  if (error) {
+    console.error(`Edge Function invocation error [${endpoint}]:`, error);
+    throw new Error(`Erreur de connexion aux serveurs (Edge Function: ${error.message}). Assurez-vous que la fonction 'api-football' est bien déployée sur votre projet Supabase.`);
+  }
 
   const response = data as ApiFootballResponse<T>;
 
