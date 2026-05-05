@@ -6,6 +6,7 @@ import {
   getTeamSquad, getTeamStatistics, getTransfers, searchTeamByName, getPredictions,
 } from "@/services/apiFootball";
 import { format } from "date-fns";
+import { mockLeagues } from "@/data/mockData";
 
 // ─── Types matching existing component interfaces ─────────────
 
@@ -180,8 +181,13 @@ export function useFixturesByDate(date: Date) {
   return useQuery({
     queryKey: ["fixtures", dateStr],
     queryFn: async () => {
-      const res = await getFixtures({ date: dateStr });
-      return transformFixturesToLeagues(res?.response || []);
+      try {
+        const res = await getFixtures({ date: dateStr });
+        return transformFixturesToLeagues(res?.response || []);
+      } catch (error) {
+        console.warn("Impossible de charger les matchs, affichage du contenu de secours.", error);
+        return mockLeagues;
+      }
     },
     staleTime: 30 * 60 * 1000, // Increased to 30 mins for Free Plan
     refetchInterval: 30 * 60 * 1000,
@@ -192,8 +198,15 @@ export function useLiveFixtures() {
   return useQuery({
     queryKey: ["fixtures", "live"],
     queryFn: async () => {
-      const res = await getLiveFixtures();
-      return transformFixturesToLeagues(res?.response || []);
+      try {
+        const res = await getLiveFixtures();
+        return transformFixturesToLeagues(res?.response || []);
+      } catch (error) {
+        console.warn("Impossible de charger les matchs en direct, affichage du contenu de secours.", error);
+        return mockLeagues
+          .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
+          .filter((league) => league.matches.length > 0);
+      }
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     refetchInterval: 10 * 60 * 1000,
