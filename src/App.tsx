@@ -32,15 +32,15 @@ const STORAGE_KEY = "livefoot_version";
 
 const App = () => {
   const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needRefresh: [needRefresh, setNeedRefresh],
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log("SW Registered");
+      console.log("SW Registered:", r);
     },
     onRegisterError(error) {
-      console.log("SW registration error", error);
+      console.error("SW registration error:", error);
     },
   });
 

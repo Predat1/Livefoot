@@ -7,8 +7,15 @@ export const initSentry = () => {
   if (import.meta.env.PROD) {
     Sentry.init({
       dsn: SENTRY_DSN,
-      integrations: [Sentry.browserTracingIntegration()],
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
+      ],
+      // Performance Monitoring
       tracesSampleRate: 1.0,
+      // Session Replay
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
       environment: import.meta.env.MODE,
       beforeSend(event) {
         // Optionnel: filtrer ou modifier l'événement avant l'envoi

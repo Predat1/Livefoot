@@ -3,12 +3,15 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 import { initSentry } from "./integrations/sentry";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Initialisation de Sentry pour le monitoring des erreurs
 initSentry();
 
 createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
-    <App />
-  </HelmetProvider>
+  <ErrorBoundary>
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  </ErrorBoundary>
 );
