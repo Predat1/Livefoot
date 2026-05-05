@@ -882,35 +882,29 @@ export function useFixturePredictions(fixtureId: string) {
   });
 }
 
-export function useAiExpert(params: { fixtureId: string; homeTeam: string; awayTeam: string; leagueName: string }) {
+export function useAiExpert(params: {
+  fixtureId: string;
+  homeTeam: string;
+  awayTeam: string;
+  leagueName: string;
+}) {
   return useQuery({
     queryKey: ["ai-expert", params.fixtureId],
     queryFn: async () => {
-      try {
-        const { getAiPrediction } = await import("@/services/apiFootball");
-        // Timeout 15s — l'Edge Function OpenRouter peut être lente en cold start
-        const { data, error } = await withTimeout(
-          getAiPrediction(params),
-          15_000,
-          `ai-prediction[${params.fixtureId}]`
-        );
-        if (error) {
-          // FunctionsHttpError peut ne pas être une instance d'Error — on normalise
-          const msg = (error as { message?: string })?.message ?? "AI Edge Function error";
-          throw new Error(msg);
-        }
-        // Validation du schéma JSON — protection contre l'API drift OpenRouter
-        return validateAiPrediction(data);
-      } catch (err) {
-        console.warn("[useAiExpert] Service IA indisponible:", err);
-        // Retourne null proprement — la page continue de fonctionner sans IA
-        return null;
-      }
+      const { getAiPrediction } = await import("@/services/apiFootball");
+      const { data, error } = await getAiPrediction(params);
+      if (error) throw error;
+      return data as {
+        analysis: string;
+        predictedScore: string;
+        confidence: number;
+        keyFactor: string;
+      };
     },
-    staleTime: 24 * 60 * 60 * 1000, // 24h — une prédiction par match
-    retry: 1,
-    throwOnError: false, // isolation — pas de cascade d'erreur vers la page
+    staleTime: 24 * 60 * 60 * 1000,
+    // ✅ N'appelle l'IA que quand toutes les données sont présentes
     enabled: !!params.fixtureId && !!params.homeTeam && !!params.awayTeam,
+    retry: 1,
   });
 }
 

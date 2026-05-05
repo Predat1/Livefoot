@@ -100,6 +100,7 @@ const Match = () => {
   const navigate = useNavigate();
   const matchId = extractIdFromSlug(rawMatchId || "");
 
+  // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
   const { data: eventsData } = useFixtureEvents(matchId);
   const { data: lineupsData } = useFixtureLineups(matchId);
@@ -114,8 +115,9 @@ const Match = () => {
   const awayTeamId = fix?.teams?.away?.id ? String(fix.teams.away.id) : "";
 
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
-  const { data: standingsData } = useTeamForm(homeTeamId); // Placeholder or real standings hook
-  
+  const { data: standingsData } = useTeamForm(homeTeamId);
+
+  // ✅ useAiExpert ici (avant les early returns)
   const { data: aiExpertPrediction } = useAiExpert({
     fixtureId: matchId,
     homeTeam: fix?.teams?.home?.name || "",
@@ -123,15 +125,59 @@ const Match = () => {
     leagueName: fix?.league?.name || "",
   });
 
-  // Redirect to canonical SEO-friendly URL
+  // ✅ useMemo ICI — avant tout early return — avec guard interne
+  const momentumTimeline = useMemo(() => {
+    // Guard : si pas de données, retourner tableau vide
+    if (!fixtureData || !fix?.teams?.home?.id) return [];
+
+    const events = (eventsData || []) as any[];
+    const statusRaw = fix?.fixture?.status?.short || "";
+    const isLiveLocal = ["1H","2H","HT","ET","P","BT","LIVE","INT"].includes(statusRaw);
+    const isFinishedLocal = ["FT","AET","PEN","AWD","WO"].includes(statusRaw);
+    const minuteLocal = fix?.fixture?.status?.elapsed;
+
+    const timeline = [];
+    const maxMin = isLiveLocal ? (minuteLocal || 45) : (isFinishedLocal ? 90 : 0);
+    let currentValue = 0;
+
+    for (let i = 0; i <= maxMin; i += 2) {
+      const eventsInWindow = events.filter((e: any) =>
+        e?.time?.elapsed >= i && e?.time?.elapsed < i + 2
+      );
+      eventsInWindow.forEach((e: any) => {
+        const isHome = e.team?.id === fix.teams.home.id;
+        const multiplier = isHome ? 1 : -1;
+        if (e.type === "Goal") currentValue += 40 * multiplier;
+        if (e.type === "Card" && e.detail === "Red Card") currentValue -= 50 * multiplier;
+        if (e.type === "Card" && e.detail === "Yellow Card") currentValue -= 5 * multiplier;
+        if (e.type === "subst") currentValue += 2 * multiplier;
+      });
+      currentValue *= 0.85;
+      currentValue = Math.max(-90, Math.min(90, currentValue));
+      timeline.push({ minute: i, value: currentValue });
+    }
+    return timeline;
+  }, [fixtureData, eventsData, fix?.teams?.home?.id]);
+
+  // ─── Redirect canonical SEO (simplifié, sans boucle) ──────────
   useEffect(() => {
-    if (fix?.fixture?.id && fix?.teams?.home?.name && fix?.teams?.away?.name) {
-      const canonical = buildEntitySlug(fix.fixture.id, `${fix.teams.home.name}-vs-${fix.teams.away.name}`);
-      if (rawMatchId !== canonical) {
-        navigate(`/match/${canonical}`, { replace: true });
-      }
+    // Ne rediriger que si l'URL est un ID numérique pur (pas déjà un slug)
+    const isNumericOnly = /^\d+$/.test(rawMatchId || "");
+    if (
+      isNumericOnly &&
+      fix?.fixture?.id &&
+      fix?.teams?.home?.name &&
+      fix?.teams?.away?.name
+    ) {
+      const canonical = buildEntitySlug(
+        fix.fixture.id,
+        `${fix.teams.home.name}-vs-${fix.teams.away.name}`
+      );
+      navigate(`/match/${canonical}`, { replace: true });
     }
   }, [fix?.fixture?.id, fix?.teams?.home?.name, fix?.teams?.away?.name, rawMatchId, navigate]);
+
+  // ─── Early returns APRÈS tous les hooks ───────────────────────
   if (isLoading) {
     return (
       <Layout>
@@ -163,33 +209,26 @@ const Match = () => {
     return (
       <Layout>
         <div className="container py-16 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Match not found</h1>
-          <Link to="/" className="text-primary hover:underline">Back to home</Link>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Match introuvable</h1>
+          <Link to="/" className="text-primary hover:underline">Retour à l'accueil</Link>
         </div>
       </Layout>
     );
   }
 
+  // ─── Dérivation des données (pas des hooks, OK après les guards) ─
   const status = mapFixtureStatus(fix.fixture.status.short);
   const isLive = status === "live";
   const isFinished = status === "finished";
   const hasStats = isLive || isFinished;
 
-  const homeTeam = { 
-    name: fix?.teams?.home?.name || "Équipe domicile", 
-    logo: fix?.teams?.home?.logo, 
-    score: fix?.goals?.home ?? 0 
-  };
-  const awayTeam = { 
-    name: fix?.teams?.away?.name || "Équipe extérieur", 
-    logo: fix?.teams?.away?.logo, 
-    score: fix?.goals?.away ?? 0 
-  };
-  const league = fix?.league;
-  const venue = fix?.fixture?.venue;
-  const referee = fix?.fixture?.referee;
-  const minute = fix?.fixture?.status?.elapsed;
-  const time = fix?.fixture?.date ? new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "--:--";
+  const homeTeam = { name: fix.teams.home.name, logo: fix.teams.home.logo, score: fix.goals?.home ?? 0 };
+  const awayTeam = { name: fix.teams.away.name, logo: fix.teams.away.logo, score: fix.goals?.away ?? 0 };
+  const league = fix.league;
+  const venue = fix.fixture.venue;
+  const referee = fix.fixture.referee;
+  const minute = fix.fixture.status.elapsed;
+  const time = new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
   const events = (eventsData || []) as any[];
   const teamStats = (statsData || []) as any[];
@@ -198,36 +237,6 @@ const Match = () => {
   const players = (playersData || []) as any[];
   const odds = (oddsData || []) as any[];
 
-  // Generate synthetic momentum timeline for AreaChart
-  const momentumTimeline = useMemo(() => {
-    const timeline = [];
-    const maxMin = isLive ? (minute || 45) : (isFinished ? 90 : 0);
-    let currentValue = 0;
-    
-    for (let i = 0; i <= maxMin; i += 2) {
-      // Find events in this window
-      const eventsInWindow = events.filter(e => e.time.elapsed >= i && e.time.elapsed < i + 2);
-      
-      eventsInWindow.forEach(e => {
-        const isHome = e.team.id === fix.teams.home.id;
-        const multiplier = isHome ? 1 : -1;
-        
-        if (e.type === "Goal") currentValue += 40 * multiplier;
-        if (e.type === "Card" && e.detail === "Red Card") currentValue -= 50 * multiplier;
-        if (e.type === "Card" && e.detail === "Yellow Card") currentValue -= 5 * multiplier;
-        if (e.type === "subst") currentValue += 2 * multiplier;
-      });
-
-      // Natural decay towards center
-      currentValue *= 0.85;
-      
-      // Clamp
-      currentValue = Math.max(-90, Math.min(90, currentValue));
-      
-      timeline.push({ minute: i, value: currentValue });
-    }
-    return timeline;
-  }, [events, isLive, isFinished, minute, fix.teams.home.id]);
 
   const getEventIcon = (type: string, detail?: string) => {
     switch (type) {
@@ -1283,7 +1292,9 @@ function NextMatchesColumn({ teamId, teamName, teamLogo }: { teamId: string; tea
                   <span className="text-xs text-foreground truncate">{fix.awayTeam?.name}</span>
                 </div>
               </div>
-              <span className="text-[9px] text-muted-foreground truncate max-w-16">{fix.league?.name ?? fix.league}</span>
+              <span className="text-[9px] text-muted-foreground truncate max-w-16">
+                {typeof fix.league === "object" ? fix.league?.name : fix.league}
+              </span>
             </Link>
           ))}
         </div>

@@ -50,7 +50,7 @@ class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    // ✅ FIX CRITIQUE : était this.children (undefined) → doit être this.props.children
+    // ✅ CORRECTION : this.props.children (pas this.children)
     return this.props.children;
   }
 }
