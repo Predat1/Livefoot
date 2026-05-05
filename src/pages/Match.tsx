@@ -170,13 +170,21 @@ const Match = () => {
   const isFinished = status === "finished";
   const hasStats = isLive || isFinished;
 
-  const homeTeam = { name: fix.teams.home.name, logo: fix.teams.home.logo, score: fix.goals?.home };
-  const awayTeam = { name: fix.teams.away.name, logo: fix.teams.away.logo, score: fix.goals?.away };
-  const league = fix.league;
-  const venue = fix.fixture.venue;
-  const referee = fix.fixture.referee;
-  const minute = fix.fixture.status.elapsed;
-  const time = new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const homeTeam = { 
+    name: fix?.teams?.home?.name || "Équipe domicile", 
+    logo: fix?.teams?.home?.logo, 
+    score: fix?.goals?.home ?? 0 
+  };
+  const awayTeam = { 
+    name: fix?.teams?.away?.name || "Équipe extérieur", 
+    logo: fix?.teams?.away?.logo, 
+    score: fix?.goals?.away ?? 0 
+  };
+  const league = fix?.league;
+  const venue = fix?.fixture?.venue;
+  const referee = fix?.fixture?.referee;
+  const minute = fix?.fixture?.status?.elapsed;
+  const time = fix?.fixture?.date ? new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "--:--";
 
   const events = (eventsData || []) as any[];
   const teamStats = (statsData || []) as any[];
@@ -1011,8 +1019,8 @@ const Match = () => {
   return (
     <Layout>
       <SEOHead
-        title={`${homeTeam.name} vs ${awayTeam.name} Direct, Pronostics & Stats - ${league.name}`}
-        description={`Match ${homeTeam.name} vs ${awayTeam.name} en direct le ${new Date(fix.fixture.date).toLocaleDateString("fr-FR")} sur LiveFoot.fun. Retrouvez les pronostics IA gratuits, les compositions et les statistiques live.`}
+        title={`${homeTeam.name} vs ${awayTeam.name} Direct, Pronostics & Stats - ${league?.name || "LiveFoot"}`}
+        description={`Match ${homeTeam.name} vs ${awayTeam.name} en direct le ${fix?.fixture?.date ? new Date(fix.fixture.date).toLocaleDateString("fr-FR") : ""} sur LiveFoot.fun. Retrouvez les pronostics IA gratuits, les compositions et les statistiques live.`}
         keywords={`${homeTeam.name} vs ${awayTeam.name} direct, prono ${homeTeam.name} ${awayTeam.name}, score ${homeTeam.name} ${awayTeam.name}, stats match foot`}
       />
       <div className="px-2 sm:container py-4 sm:py-8">
@@ -1031,9 +1039,9 @@ const Match = () => {
           
           <div className="relative bg-league-header/80 backdrop-blur-md px-4 sm:px-6 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {league.flag && <img src={league.flag} alt="" className="h-4 w-5 sm:h-5 sm:w-6 object-cover rounded-sm shadow-sm" />}
-              {league.logo && <img src={league.logo} alt="" className="h-5 w-5 sm:h-6 sm:w-6 object-contain drop-shadow-md" />}
-              <span className="font-black text-xs sm:text-sm text-foreground uppercase tracking-wider">{league.name}</span>
+              {league?.flag && <img src={league.flag} alt="" className="h-4 w-5 sm:h-5 sm:w-6 object-cover rounded-sm shadow-sm" />}
+              {league?.logo && <img src={league.logo} alt="" className="h-5 w-5 sm:h-6 sm:w-6 object-contain drop-shadow-md" />}
+              <span className="font-black text-xs sm:text-sm text-foreground uppercase tracking-wider">{league?.name || "Match"}</span>
             </div>
             {isLive && (
               <div className="flex items-center gap-2 bg-live/10 px-3 py-1 rounded-full border border-live/20">
@@ -1053,7 +1061,7 @@ const Match = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex-1 text-center w-full sm:w-auto order-2 sm:order-1"
               >
-                <Link to={`/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}`} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
+                <Link to={fix?.teams?.home?.id ? `/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
                   <div className="relative mb-3 sm:mb-4">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-20 w-20 sm:h-28 sm:w-28 object-contain drop-shadow-2xl" />}
@@ -1091,7 +1099,7 @@ const Match = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex-1 text-center w-full sm:w-auto order-3"
               >
-                <Link to={`/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}`} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
+                <Link to={fix?.teams?.away?.id ? `/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
                   <div className="relative mb-3 sm:mb-4">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-20 w-20 sm:h-28 sm:w-28 object-contain drop-shadow-2xl" />}
