@@ -42,6 +42,7 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
   const [submitting, setSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     loadPredictions();
@@ -49,31 +50,38 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
 
   const loadPredictions = async () => {
     setLoading(true);
+    setLoadError(false);
+    try {
+      // Load aggregated public stats via RPC
+      const { data: statsData, error: statsError } = await supabase.rpc("get_prediction_stats", {
+        _fixture_id: fixtureId,
+      });
+      if (statsError) throw statsError;
+      if (statsData) setServerStats(statsData as unknown as PredictionStats);
 
-    // Load aggregated public stats via RPC
-    const { data: statsData } = await supabase.rpc("get_prediction_stats", {
-      _fixture_id: fixtureId,
-    });
-    if (statsData) setServerStats(statsData as unknown as PredictionStats);
-
-    // Load only the current user's prediction (if any)
-    if (user) {
-      const { data } = await supabase
-        .from("match_predictions")
-        .select("id, user_id, home_score, away_score")
-        .eq("fixture_id", fixtureId)
-        .eq("user_id", user.id);
-
-      const preds = (data || []) as Prediction[];
-      setPredictions(preds);
-      const mine = preds[0];
-      if (mine) {
-        setMyHome(mine.home_score);
-        setMyAway(mine.away_score);
-        setHasSubmitted(true);
+      // Load only the current user's prediction (if any)
+      if (user) {
+        const { data, error: predError } = await supabase
+          .from("match_predictions")
+          .select("id, user_id, home_score, away_score")
+          .eq("fixture_id", fixtureId)
+          .eq("user_id", user.id);
+        if (predError) throw predError;
+        const preds = (data || []) as Prediction[];
+        setPredictions(preds);
+        const mine = preds[0];
+        if (mine) {
+          setMyHome(mine.home_score);
+          setMyAway(mine.away_score);
+          setHasSubmitted(true);
+        }
       }
+    } catch (err) {
+      console.error("[CommunityPredictions] Erreur chargement pronostics:", err);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSubmit = async () => {
@@ -169,6 +177,22 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
           <Trophy className="absolute inset-0 m-auto h-5 w-5 text-primary/40" />
         </div>
         <p className="text-xs font-medium text-muted-foreground animate-pulse">Calcul des tendances...</p>
+      </div>
+    );
+  }
+
+  // Fallback UI dégradé — erreur Supabase/réseau
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+        <Trophy className="h-8 w-8 text-muted-foreground/40" />
+        <p className="text-sm text-muted-foreground">Pronostics temporairement indisponibles.</p>
+        <button
+          onClick={() => loadPredictions()}
+          className="text-xs px-4 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+        >
+          Réessayer
+        </button>
       </div>
     );
   }

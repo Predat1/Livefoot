@@ -8,6 +8,39 @@ import {
 import { format } from "date-fns";
 import { mockLeagues } from "@/data/mockData";
 
+// ─── Resilience Helpers ───────────────────────────────────────
+
+/**
+ * Wraps a promise with an AbortController-based timeout.
+ * Throws a typed Error if the promise does not resolve within `ms` milliseconds.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label = "request"): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Timeout: ${label} exceeded ${ms}ms`));
+    }, ms);
+    promise
+      .then((val) => { clearTimeout(timer); resolve(val); })
+      .catch((err) => { clearTimeout(timer); reject(err); });
+  });
+}
+
+/**
+ * Validates that an AI prediction response has the expected shape.
+ * Returns a safe default if the schema doesn't match (API drift protection).
+ */
+function validateAiPrediction(data: unknown): { analysis: string; predictedScore: string; confidence: number; keyFactor: string } {
+  const DEFAULT = { analysis: "", predictedScore: "? - ?", confidence: 0, keyFactor: "" };
+  if (!data || typeof data !== "object") return DEFAULT;
+  const d = data as Record<string, unknown>;
+  return {
+    analysis:       typeof d.analysis       === "string" ? d.analysis       : DEFAULT.analysis,
+    predictedScore: typeof d.predictedScore === "string" ? d.predictedScore : DEFAULT.predictedScore,
+    confidence:     typeof d.confidence     === "number" ? d.confidence     : DEFAULT.confidence,
+    keyFactor:      typeof d.keyFactor      === "string" ? d.keyFactor      : DEFAULT.keyFactor,
+  };
+}
+
 // ─── Types matching existing component interfaces ─────────────
 
 export interface MatchTeam {
@@ -830,11 +863,19 @@ export function useFixturePredictions(fixtureId: string) {
   return useQuery({
     queryKey: ["predictions", fixtureId],
     queryFn: async () => {
-      const res = await getPredictions(fixtureId);
-      if (!res.response || res.response.length === 0) return null;
-      return res.response[0];
+      try {
+        const res = await withTimeout(getPredictions(fixtureId), 12_000, "predictions");
+        if (!res?.response || res.response.length === 0) return null;
+        return res.response[0];
+      } catch (err) {
+        console.warn("[useFixturePredictions] Prédictions API Football indisponibles:", err);
+        // Retourne null — le composant doit gérer l'état null sans crasher
+        return null;
+      }
     },
     staleTime: 12 * 60 * 60 * 1000, // 12 hours
+    retry: false,           // pas de retry automatique — API Football est quotée
+    throwOnError: false,    // ne pas propager l'erreur vers une ErrorBoundary parente
     enabled: !!fixtureId,
   });
 }
@@ -843,13 +884,31 @@ export function useAiExpert(params: { fixtureId: string; homeTeam: string; awayT
   return useQuery({
     queryKey: ["ai-expert", params.fixtureId],
     queryFn: async () => {
-      const { getAiPrediction } = await import("@/services/apiFootball");
-      const { data, error } = await getAiPrediction(params);
-      if (error) throw error;
-      return data as { analysis: string; predictedScore: string; confidence: number; keyFactor: string };
+      try {
+        const { getAiPrediction } = await import("@/services/apiFootball");
+        // Timeout 15s — l'Edge Function OpenRouter peut être lente en cold start
+        const { data, error } = await withTimeout(
+          getAiPrediction(params),
+          15_000,
+          `ai-prediction[${params.fixtureId}]`
+        );
+        if (error) {
+          // FunctionsHttpError peut ne pas être une instance d'Error — on normalise
+          const msg = (error as { message?: string })?.message ?? "AI Edge Function error";
+          throw new Error(msg);
+        }
+        // Validation du schéma JSON — protection contre l'API drift OpenRouter
+        return validateAiPrediction(data);
+      } catch (err) {
+        console.warn("[useAiExpert] Service IA indisponible:", err);
+        // Retourne null proprement — la page continue de fonctionner sans IA
+        return null;
+      }
     },
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours (one prediction per match)
-    enabled: !!params.fixtureId,
+    staleTime: 24 * 60 * 60 * 1000, // 24h — une prédiction par match
+    retry: false,        // circuit breaker: 0 retry sur une API IA externe instable
+    throwOnError: false, // isolation — pas de cascade d'erreur vers la page
+    enabled: !!params.fixtureId && !!params.homeTeam && !!params.awayTeam,
   });
 }
 
