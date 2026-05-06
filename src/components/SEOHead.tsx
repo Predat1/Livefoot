@@ -19,6 +19,7 @@ interface SEOHeadProps {
 
 const SITE_URL = "https://livefoot.fun";
 const DEFAULT_OG_IMAGE = "https://livefoot.fun/og-image.png";
+const LOGO_URL = "https://livefoot.fun/logo.png";
 
 const SEOHead = ({
   title,
@@ -44,6 +45,31 @@ const SEOHead = ({
       ? jsonLd
       : [jsonLd]
     : [];
+
+  // Add specialized AI Citation / Prediction Schema if this is a match page with prediction
+  if (title.toLowerCase().includes("vs") && !noIndex) {
+    jsonLdArray.push({
+      "@context": "https://schema.org",
+      "@type": "AnalysisNewsArticle",
+      "headline": `Analyse et Pronostic IA : ${title}`,
+      "description": desc,
+      "author": {
+        "@type": "Organization",
+        "name": "LiveFoot AI Oracle",
+        "url": SITE_URL
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "LiveFoot",
+        "logo": {
+          "@type": "ImageObject",
+          "url": LOGO_URL
+        }
+      },
+      "datePublished": articleMeta?.publishedTime || new Date().toISOString(),
+      "image": image
+    });
+  }
 
   // Always include Organization schema on homepage
   const isHome = location.pathname === "/";

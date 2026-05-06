@@ -1,18 +1,21 @@
 import { useEffect } from "react";
-import { useTopScorers, useTeamsByLeague } from "@/hooks/useApiFootball";
+import { useTopScorers, useTeamsByLeague, useFixturesByDate } from "@/hooks/useApiFootball";
 import { buildEntitySlug } from "@/utils/slugify";
 
-const LEAGUES = ["39", "140", "135", "78", "61"]; // PL, Liga, Serie A, BuLi, L1
-const BASE = "https://livefoot.app";
+const LEAGUES = ["39", "140", "135", "78", "61", "2", "3"]; // PL, Liga, Serie A, BuLi, L1, CL, EL
+const BASE = "https://livefoot.fun";
 const SEASON = "2024";
 
 const DynamicSitemap = () => {
   const teamQueries = LEAGUES.map(id => useTeamsByLeague(id, SEASON));
   const scorerQueries = LEAGUES.map(id => useTopScorers(id, SEASON));
+  const { data: fixtures, isLoading: fixturesLoading } = useFixturesByDate(new Date());
 
   const allTeams = teamQueries.flatMap(q => q.data || []);
   const allPlayers = scorerQueries.flatMap(q => q.data || []);
-  const isLoading = teamQueries.some(q => q.isLoading) || scorerQueries.some(q => q.isLoading);
+  const allMatches = (fixtures || []).flatMap((l: any) => l.matches || []);
+
+  const isLoading = teamQueries.some(q => q.isLoading) || scorerQueries.some(q => q.isLoading) || fixturesLoading;
 
   // Deduplicate players by id
   const uniquePlayers = Array.from(new Map(allPlayers.map(p => [p.id, p])).values());
@@ -52,7 +55,13 @@ const DynamicSitemap = () => {
       freq: "weekly",
     }));
 
-    const allUrls = [...staticUrls, ...teamUrls, ...playerUrls];
+    const matchUrls = allMatches.map((m: any) => ({
+      loc: `/match/${buildEntitySlug(m.id, `${m.homeTeam.name}-vs-${m.awayTeam.name}`)}`,
+      priority: "0.9",
+      freq: "hourly",
+    }));
+
+    const allUrls = [...staticUrls, ...teamUrls, ...playerUrls, ...matchUrls];
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
