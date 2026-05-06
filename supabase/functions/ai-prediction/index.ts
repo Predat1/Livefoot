@@ -181,10 +181,29 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
 
 
 function safeParseJSON(text: string): any {
-  try { return JSON.parse(text); } catch {
-    const match = text.match(/\{[\s\S]*\}/);
-    if (match) return JSON.parse(match[0]);
-    throw new Error("Impossible de parser la réponse IA");
+  try { 
+    return JSON.parse(text); 
+  } catch {
+    // Nettoyage agressif des balises Markdown (ex: ```json ... ```)
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith("```json")) {
+      cleanedText = cleanedText.replace(/^```json/, "");
+    } else if (cleanedText.startsWith("```")) {
+      cleanedText = cleanedText.replace(/^```/, "");
+    }
+    if (cleanedText.endsWith("```")) {
+      cleanedText = cleanedText.slice(0, -3);
+    }
+    cleanedText = cleanedText.trim();
+    
+    try {
+      return JSON.parse(cleanedText);
+    } catch {
+      // Fallback ultime avec Regex
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]);
+      throw new Error("Impossible de parser la réponse IA. Format invalide.");
+    }
   }
 }
 
@@ -218,6 +237,17 @@ serve(async (req) => {
     ]);
     const statsData = await statsRes.json();
     const fixtureDataRaw = await fixtureRes.json();
+    
+    // Gestion stricte des erreurs d'API (Quota, Auth, etc.)
+    if (statsData.errors && Object.keys(statsData.errors).length > 0) {
+      console.error("API-Football Error (Predictions):", statsData.errors);
+      throw new Error("Erreur API-Football (Prédictions indisponibles ou Quota atteint)");
+    }
+    if (fixtureDataRaw.errors && Object.keys(fixtureDataRaw.errors).length > 0) {
+      console.error("API-Football Error (Fixtures):", fixtureDataRaw.errors);
+      throw new Error("Erreur API-Football (Détails du match indisponibles)");
+    }
+
     const predictionData = statsData.response?.[0];
     const fixtureDetail = fixtureDataRaw.response?.[0];
 

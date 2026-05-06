@@ -115,7 +115,7 @@ const LiveFootAIPredictionCard = ({
             { type: "AI", label: `Oracle: ${predictedScore}`, confidence: Math.round((aiExpertPrediction.confidence || 0) * 100), emoji: "✨" }
           ],
           isExpert: true,
-          detailedPredictions: (aiExpertPrediction.predictions || {}) as unknown as Record<string, string | number>
+          detailedPredictions: aiExpertPrediction.predictions || {}
         };
       } catch (e) {
         console.error("Error mapping Expert prediction:", e);
@@ -129,10 +129,17 @@ const LiveFootAIPredictionCard = ({
         const h2h = apiPredictions.h2h || [];
         const comp = apiPredictions.comparison;
 
-        // Map API percent strings to numbers
-        const homeProb = parseInt(p.percent.home) || 33;
-        const drawProb = parseInt(p.percent.draw) || 34;
-        const awayProb = parseInt(p.percent.away) || 33;
+        // Map API percent strings to numbers and normalize to 100%
+        let homeProb = parseInt(p.percent.home) || 33;
+        let drawProb = parseInt(p.percent.draw) || 34;
+        let awayProb = parseInt(p.percent.away) || 33;
+
+        const totalProb = homeProb + drawProb + awayProb;
+        if (totalProb > 0 && totalProb !== 100) {
+          homeProb = Math.round((homeProb / totalProb) * 100);
+          drawProb = Math.round((drawProb / totalProb) * 100);
+          awayProb = 100 - homeProb - drawProb; // Ensure exact 100 sum
+        }
 
         const outcome = p.winner.id === parseInt(homeTeamId) ? "home" 
           : p.winner.id === parseInt(awayTeamId) ? "away" : "draw";
