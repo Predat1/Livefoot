@@ -7,10 +7,10 @@ import {
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
 } from "@/hooks/useApiFootball";
-import {
-  ArrowLeft, Clock, MapPin, Target, User, AlertTriangle, Repeat2,
-  Loader2, BarChart3, Swords, Star, DollarSign, HeartPulse, Users as UsersIcon,
-  TrendingUp, Shield, MessageSquare, Calendar, Crosshair, Radar, Flame, Brain, Trophy, Zap, Share2
+import { 
+  Trophy, TrendingUp, Zap, ArrowLeft, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2, 
+  Target, AlertTriangle, Repeat2, MapPin, User, HeartPulse, Clock, MessageSquare, Swords, Radar, Crosshair, 
+  DollarSign, BarChart3, Info
 } from "lucide-react";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import { cn } from "@/lib/utils";
@@ -484,7 +484,7 @@ const Match = () => {
             <div className="bg-league-header px-4 py-2.5 border-b border-border">
               <h3 className="font-bold text-sm text-foreground">Match Statistics</h3>
             </div>
-            <div className="p-4 sm:p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-5">
               {teamStats.length >= 2 ? (teamStats[0]?.statistics || []).map((stat: any, idx: number) => {
                 const home = parseInt(String(stat.value).replace("%", "")) || 0;
                 const awayStat = teamStats[1]?.statistics?.[idx];
@@ -492,16 +492,33 @@ const Match = () => {
                 const total = home + away;
                 const homePercent = total > 0 ? (home / total) * 100 : 50;
                 const suffix = String(stat.value).includes("%") ? "%" : "";
+                
+                // Determine who is leading in this stat
+                const homeLeading = home > away;
+                const awayLeading = away > home;
+
                 return (
-                  <div key={stat.type}>
+                  <div key={stat.type} className="group">
                     <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
-                      <span className="font-bold text-foreground">{home}{suffix}</span>
-                      <span className="text-muted-foreground">{stat.type}</span>
-                      <span className="font-bold text-foreground">{away}{suffix}</span>
+                      <span className={cn("font-black transition-colors", homeLeading ? "text-primary scale-110" : "text-muted-foreground")}>
+                        {home}{suffix}
+                      </span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity">
+                        {stat.type}
+                      </span>
+                      <span className={cn("font-black transition-colors", awayLeading ? "text-destructive scale-110" : "text-muted-foreground")}>
+                        {away}{suffix}
+                      </span>
                     </div>
-                    <div className="flex h-2 rounded-full overflow-hidden bg-muted">
-                      <div className="bg-primary transition-all" style={{ width: `${homePercent}%` }} />
-                      <div className="bg-muted-foreground/30 transition-all" style={{ width: `${100 - homePercent}%` }} />
+                    <div className="flex h-1.5 rounded-full overflow-hidden bg-muted/50 border border-white/5">
+                      <div 
+                        className={cn("transition-all duration-700 ease-out", homeLeading ? "bg-primary" : "bg-primary/40")} 
+                        style={{ width: `${homePercent}%` }} 
+                      />
+                      <div 
+                        className={cn("transition-all duration-700 ease-out", awayLeading ? "bg-destructive" : "bg-destructive/40")} 
+                        style={{ width: `${100 - homePercent}%` }} 
+                      />
                     </div>
                   </div>
                 );
@@ -896,21 +913,36 @@ const Match = () => {
                 ).length;
                 const draws = matches.length - homeWins - awayWins;
                 return (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      <div className="rounded-xl bg-primary/10 p-3">
-                        <p className="text-2xl font-black text-primary">{homeWins}</p>
-                        <p className="text-[10px] text-muted-foreground">{homeTeam.name}</p>
+                  <div className="space-y-6">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between px-2">
+                        <div className="text-center">
+                          <p className="text-2xl sm:text-4xl font-black text-primary leading-none">{homeWins}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">{homeTeam.name}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl sm:text-4xl font-black text-muted-foreground leading-none">{draws}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">Nuls</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl sm:text-4xl font-black text-primary leading-none">{awayWins}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">{awayTeam.name}</p>
+                        </div>
                       </div>
-                      <div className="rounded-xl bg-muted/30 p-3">
-                        <p className="text-2xl font-black text-muted-foreground">{draws}</p>
-                        <p className="text-[10px] text-muted-foreground">Nuls</p>
+                      
+                      <div className="flex h-3 w-full rounded-full overflow-hidden bg-muted/50 border border-white/5">
+                        <div className="bg-primary h-full transition-all" style={{ width: `${(homeWins / matches.length) * 100}%` }} title={`${homeTeam.name} Wins`} />
+                        <div className="bg-muted-foreground/30 h-full transition-all" style={{ width: `${(draws / matches.length) * 100}%` }} title="Draws" />
+                        <div className="bg-primary/60 h-full transition-all" style={{ width: `${(awayWins / matches.length) * 100}%` }} title={`${awayTeam.name} Wins`} />
                       </div>
-                      <div className="rounded-xl bg-primary/10 p-3">
-                        <p className="text-2xl font-black text-primary">{awayWins}</p>
-                        <p className="text-[10px] text-muted-foreground">{awayTeam.name}</p>
+                      
+                      <div className="flex justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-1">
+                        <span>Domination {homeTeam.name}</span>
+                        <span>{( (homeWins / matches.length) * 100 ).toFixed(0)}% de victoires</span>
                       </div>
                     </div>
+                    
+                    <div className="h-px bg-border/50 w-full" />
                     <div className="space-y-2">
                       {matches.map((m: any, i: number) => (
                         <Link key={i} to={`/match/${m.fixture.id}`} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
@@ -964,26 +996,52 @@ const Match = () => {
                 <h3 className="font-bold text-sm text-foreground">Cotes Bookmakers</h3>
               </div>
               <div className="p-4 sm:p-6">
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {odds.length > 0 ? (odds as any[]).slice(0, 5).map((bookmaker: any, bIdx: number) => {
                     const bets = bookmaker.bookmakers?.[0];
                     if (!bets) return null;
+                    
+                    // Helper to get bookmaker logo
+                    const getBookmakerLogo = (name: string) => {
+                      const n = name.toLowerCase();
+                      if (n.includes("1xbet")) return "https://v3.api-sports.io/football/bookmakers/logos/1.png";
+                      if (n.includes("bet365")) return "https://v3.api-sports.io/football/bookmakers/logos/8.png";
+                      if (n.includes("betfair")) return "https://v3.api-sports.io/football/bookmakers/logos/3.png";
+                      if (n.includes("bwin")) return "https://v3.api-sports.io/football/bookmakers/logos/13.png";
+                      if (n.includes("william hill")) return "https://v3.api-sports.io/football/bookmakers/logos/10.png";
+                      if (n.includes("unibet")) return "https://v3.api-sports.io/football/bookmakers/logos/11.png";
+                      if (n.includes("marathonbet")) return "https://v3.api-sports.io/football/bookmakers/logos/2.png";
+                      if (n.includes("pinnacle")) return "https://v3.api-sports.io/football/bookmakers/logos/4.png";
+                      return null;
+                    };
+
+                    const logo = getBookmakerLogo(bets.name);
+
                     return (
-                      <div key={bIdx}>
-                        <p className="text-xs font-bold text-foreground mb-2">{bets.name}</p>
-                        {(bets.bets || []).slice(0, 3).map((bet: any, betIdx: number) => (
-                          <div key={betIdx} className="mb-3">
-                            <p className="text-[10px] text-muted-foreground mb-1.5">{bet.name}</p>
-                            <div className="flex gap-2">
-                              {(bet.values || []).map((val: any, vIdx: number) => (
-                                <div key={vIdx} className="flex-1 rounded-lg bg-muted/30 p-2 text-center">
-                                  <p className="text-[10px] text-muted-foreground">{val.value}</p>
-                                  <p className="text-sm font-black text-foreground">{val.odd}</p>
-                                </div>
-                              ))}
+                      <div key={bIdx} className="p-4 rounded-2xl bg-muted/20 border border-white/5">
+                        <div className="flex items-center gap-3 mb-4">
+                          {logo ? (
+                            <img src={logo} alt={bets.name} className="h-6 w-auto object-contain" />
+                          ) : (
+                            <div className="h-6 px-2 bg-primary/10 text-primary text-[10px] font-black rounded flex items-center">{bets.name}</div>
+                          )}
+                          <div className="h-px flex-1 bg-border/50" />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {(bets.bets || []).slice(0, 4).map((bet: any, betIdx: number) => (
+                            <div key={betIdx} className="space-y-2">
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{bet.name}</p>
+                              <div className="flex gap-2">
+                                {(bet.values || []).map((val: any, vIdx: number) => (
+                                  <div key={vIdx} className="flex-1 rounded-xl bg-card border border-border/50 p-2 text-center group hover:border-primary/50 transition-colors cursor-pointer">
+                                    <p className="text-[9px] text-muted-foreground mb-0.5 truncate">{val.value}</p>
+                                    <p className="text-xs font-black text-primary group-hover:scale-110 transition-transform">{val.odd}</p>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     );
                   }) : (
