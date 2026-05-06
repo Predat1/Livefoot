@@ -294,7 +294,7 @@ const Match = () => {
       { value: "form", label: "Forme" },
       { value: "calendar", label: "Calendrier" },
       { value: "community", label: "Pronos" },
-      ...(odds.length > 0 ? [{ value: "odds", label: "Cotes" }] : []),
+      ...(odds.length > 0 ? [{ value: "odds", label: isMatchLive && liveOdds.length > 0 ? "Cotes 🔴" : "Cotes" }] : []),
       { value: "injuries", label: "Blessures" },
     ];
 
@@ -1000,6 +1000,12 @@ const Match = () => {
               <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-primary" />
                 <h3 className="font-bold text-sm text-foreground">Cotes Bookmakers</h3>
+                {isMatchLive && liveOdds.length > 0 && (
+                  <div className="flex items-center gap-1.5 bg-live/10 px-2.5 py-0.5 rounded-full border border-live/20 ml-auto">
+                    <span className="h-1.5 w-1.5 rounded-full bg-live animate-pulse" />
+                    <span className="text-[10px] font-black text-live uppercase">Live</span>
+                  </div>
+                )}
               </div>
               <div className="p-4 sm:p-6">
                 <div className="space-y-6">
