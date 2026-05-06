@@ -62,7 +62,7 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
       "X-Title": "LiveFoot AI Expert"
     },
     body: JSON.stringify({
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: SYSTEM_INSTRUCTION },
         { role: "user", content: prompt }
