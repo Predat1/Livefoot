@@ -7,19 +7,22 @@ import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
-const TIER_FEATURES = [
-  "Accès illimité à l'IA AnalystePro V3",
-  "Détecteur de matchs truqués & anomalies de cotes",
-  "Value Bets exclusifs (écarts bookmakers > 15%)",
-  "Confiance par marché (BTTS, Over/Under, Buteurs)",
-  "Modèle Double Poisson & Pondération ELO",
-  "Sans publicité, expérience fluide",
+const getTierFeatures = (t: any) => [
+  t("pricing.features_title"),
+  t("pricing.feature_1"),
+  t("pricing.feature_2"),
+  t("pricing.feature_3"),
+  t("pricing.feature_4"),
+  t("pricing.feature_5"),
 ];
 
 export default function Pricing() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const TIER_FEATURES = getTierFeatures(t);
 
   const handleSubscribe = (planName: string) => {
     if (!user) {
@@ -47,8 +50,8 @@ export default function Pricing() {
   return (
     <Layout>
       <SEOHead 
-        title="Club VIP Premium - LiveFoot AnalystePro"
-        description="Rejoignez le Club VIP LiveFoot et débloquez l'AnalystePro V3, le détecteur d'anomalies de cotes et les Value Bets."
+        title={t("pricing.title")}
+        description={t("pricing.subtitle")}
       />
       
       <div className="min-h-screen bg-[#06080c] relative overflow-hidden pb-24">
@@ -61,11 +64,8 @@ export default function Pricing() {
           {/* Header */}
           <div className="flex justify-between items-center mb-12">
             <Link to="/" className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm font-bold bg-white/5 px-4 py-2 rounded-xl border border-white/10 hover:bg-white/10">
-              <ArrowLeft className="h-4 w-4" /> Retour
+              <ArrowLeft className="h-4 w-4" /> {t("common.back_home")}
             </Link>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest">
-              <Star className="h-3 w-3" /> Accès Privé
-            </div>
           </div>
 
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -86,9 +86,9 @@ export default function Pricing() {
               transition={{ delay: 0.1 }}
               className="text-4xl sm:text-6xl font-black text-white mb-6 tracking-tight leading-[1.1]"
             >
-              Pariez comme un Pro.<br/>
+              {t("pricing.title")}<br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600">
-                Gagnez comme un bookmaker.
+                {t("pricing.subtitle")}
               </span>
             </motion.h1>
             
@@ -111,13 +111,13 @@ export default function Pricing() {
               transition={{ delay: 0.3 }}
               className="rounded-3xl p-6 border bg-[#0a0d14] border-white/10 hover:border-white/20 transition-all flex flex-col"
             >
-              <h3 className="text-xl font-black text-white mb-2">Hebdomadaire</h3>
-              <p className="text-xs text-white/50 mb-6">Testez l'IA sur un week-end complet.</p>
+              <h3 className="text-xl font-black text-white mb-2">{t("pricing.weekly_name")}</h3>
+              <p className="text-xs text-white/50 mb-6">{t("pricing.weekly_desc")}</p>
               
               <div className="flex flex-col mb-8">
                 <div className="flex items-end gap-2">
-                  <span className="text-4xl font-black text-white">9,99€</span>
-                  <span className="text-sm text-white/40 font-bold pb-1">/sem.</span>
+                  <span className="text-4xl font-black text-white">{t("pricing.weekly_price")}</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.weekly_period")}</span>
                 </div>
                 <div className="mt-1 text-[11px] font-medium text-white/30">
                   ≈ 6 550 FCFA
@@ -129,7 +129,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sélectionner"}
+                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
 
               <div className="space-y-3">
@@ -152,15 +152,15 @@ export default function Pricing() {
               className="rounded-3xl p-6 border bg-[#0a0d14] border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.05)] transition-all flex flex-col relative"
             >
               <div className="absolute top-0 right-0 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl z-20">
-                Populaire
+                {t("pricing.popular")}
               </div>
-              <h3 className="text-xl font-black text-white mb-2">Mensuel</h3>
-              <p className="text-xs text-white/50 mb-6">Flexibilité totale, annulez quand vous voulez.</p>
+              <h3 className="text-xl font-black text-white mb-2">{t("pricing.monthly_name")}</h3>
+              <p className="text-xs text-white/50 mb-6">{t("pricing.monthly_desc")}</p>
               
               <div className="flex flex-col mb-8">
                 <div className="flex items-end gap-2">
-                  <span className="text-4xl font-black text-white">19,99€</span>
-                  <span className="text-sm text-white/40 font-bold pb-1">/mois</span>
+                  <span className="text-4xl font-black text-white">{t("pricing.monthly_price")}</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.monthly_period")}</span>
                 </div>
                 <div className="mt-1 text-[11px] font-medium text-white/30">
                   ≈ 13 100 FCFA
@@ -172,7 +172,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Commencer"}
+                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.start")}
               </button>
 
               <div className="space-y-3">
@@ -194,13 +194,13 @@ export default function Pricing() {
               transition={{ delay: 0.5 }}
               className="rounded-3xl p-6 border bg-[#0a0d14] border-white/10 hover:border-white/20 transition-all flex flex-col relative"
             >
-              <h3 className="text-xl font-black text-white mb-2">Trimestriel</h3>
-              <p className="text-xs text-white/50 mb-6">Engagement de 3 mois pour construire un capital.</p>
+              <h3 className="text-xl font-black text-white mb-2">{t("pricing.quarterly_name")}</h3>
+              <p className="text-xs text-white/50 mb-6">{t("pricing.quarterly_desc")}</p>
               
               <div className="flex flex-col mb-8">
                 <div className="flex items-end gap-2">
-                  <span className="text-4xl font-black text-white">49,99€</span>
-                  <span className="text-sm text-white/40 font-bold pb-1">/3 mois</span>
+                  <span className="text-4xl font-black text-white">{t("pricing.quarterly_price")}</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.quarterly_period")}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[11px] font-medium text-white/30">≈ 32 800 FCFA</span>
@@ -213,7 +213,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sélectionner"}
+                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
 
               <div className="space-y-3">
@@ -236,17 +236,17 @@ export default function Pricing() {
               className="rounded-3xl p-6 border bg-[#0a0d14] border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.15)] relative overflow-hidden transition-all z-10 flex flex-col scale-100 sm:scale-105"
             >
               <div className="absolute top-0 right-0 bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl z-20">
-                Meilleur Choix
+                {t("pricing.best_choice")}
               </div>
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
               
-              <h3 className="text-xl font-black text-white mb-2 relative z-10">Annuel</h3>
-              <p className="text-xs text-white/50 mb-6 relative z-10">L'offre investisseur. Rentabilisé en un pari.</p>
+              <h3 className="text-xl font-black text-white mb-2 relative z-10">{t("pricing.annual_name")}</h3>
+              <p className="text-xs text-white/50 mb-6 relative z-10">{t("pricing.annual_desc")}</p>
               
               <div className="flex flex-col mb-8 relative z-10">
                 <div className="flex items-end gap-2">
-                  <span className="text-4xl font-black text-amber-400">149,99€</span>
-                  <span className="text-sm text-white/40 font-bold pb-1">/an</span>
+                  <span className="text-4xl font-black text-amber-400">{t("pricing.annual_price")}</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.annual_period")}</span>
                 </div>
                 <div className="flex flex-col gap-1 mt-1">
                   <span className="text-[11px] font-medium text-amber-500/50">≈ 98 400 FCFA</span>
@@ -259,7 +259,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
               >
-                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rejoindre l'Élite"}
+                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.join")}
               </button>
 
               <div className="space-y-3 relative z-10">

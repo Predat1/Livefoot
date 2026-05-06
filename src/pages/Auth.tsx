@@ -9,8 +9,10 @@ import SEOHead from "@/components/SEOHead";
 import livefootLogo from "@/assets/livefoot-logo.png";
 import { Loader2, Mail, Lock, User } from "lucide-react";
 import { livefootToast } from "@/components/ui/sonner";
+import { useTranslation } from "react-i18next";
 
 const Auth = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -61,8 +63,8 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-[#06080c] relative flex items-center justify-center p-4 overflow-hidden">
       <SEOHead
-        title="Connexion - LiveFoot VIP"
-        description="Connectez-vous pour accéder à vos favoris et à l'AnalystePro V3."
+        title={`${t("auth.login")} - LiveFoot VIP`}
+        description={t("auth.subtitle")}
       />
 
       {/* Background Effects */}
@@ -77,8 +79,8 @@ const Auth = () => {
             <img src="/logo.svg" alt="LiveFoot" className="h-10 w-10 brightness-0 invert" />
           </div>
           <div className="text-center">
-            <h1 className="text-3xl font-black text-white tracking-tight">LIVEFOOT<span className="text-amber-400">AI</span></h1>
-            <p className="text-sm text-white/50 mt-1">L'intelligence artificielle au service des parieurs</p>
+            <h1 className="text-3xl font-black text-white tracking-tight">{t("auth.title").replace(" AI", "")}<span className="text-amber-400">AI</span></h1>
+            <p className="text-sm text-white/50 mt-1">{t("auth.subtitle")}</p>
           </div>
         </div>
 
@@ -88,15 +90,15 @@ const Auth = () => {
           
           <Tabs defaultValue="login">
             <TabsList className="w-full grid grid-cols-2 mb-8 bg-white/5 p-1 rounded-xl">
-              <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">Connexion</TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">Inscription</TabsTrigger>
+              <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">{t("auth.login")}</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">{t("auth.signup")}</TabsTrigger>
             </TabsList>
 
             {/* LOGIN */}
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email" className="text-white/70 text-xs font-bold uppercase tracking-wider">Email</Label>
+                  <Label htmlFor="login-email" className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("auth.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
@@ -112,8 +114,8 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="login-password" className="text-white/70 text-xs font-bold uppercase tracking-wider">Mot de passe</Label>
-                    <a href="#" className="text-xs font-medium text-amber-500 hover:text-amber-400">Mot de passe oublié ?</a>
+                    <Label htmlFor="login-password" className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("auth.password")}</Label>
+                    <a href="#" className="text-xs font-medium text-amber-500 hover:text-amber-400">{t("auth.forgot_password")}</a>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
@@ -133,7 +135,7 @@ const Auth = () => {
                   className="w-full h-12 mt-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black shadow-lg shadow-amber-500/20 text-sm transition-all" 
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Se Connecter"}
+                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : t("auth.submit_login")}
                 </Button>
               </form>
             </TabsContent>
@@ -142,7 +144,7 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name" className="text-white/70 text-xs font-bold uppercase tracking-wider">Nom d'utilisateur</Label>
+                  <Label htmlFor="signup-name" className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("auth.username")}</Label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
@@ -157,7 +159,7 @@ const Auth = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email" className="text-white/70 text-xs font-bold uppercase tracking-wider">Email</Label>
+                  <Label htmlFor="signup-email" className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("auth.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
@@ -172,7 +174,7 @@ const Auth = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password" className="text-white/70 text-xs font-bold uppercase tracking-wider">Mot de passe</Label>
+                  <Label htmlFor="signup-password" className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("auth.password")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
@@ -186,14 +188,14 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <p className="text-[10px] text-white/40 mt-1.5 ml-1">Au moins 6 caractères.</p>
+                  <p className="text-[10px] text-white/40 mt-1.5 ml-1">{t("auth.min_chars")}</p>
                 </div>
                 <Button 
                   type="submit" 
                   className="w-full h-12 mt-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:to-amber-500 text-black font-black shadow-lg shadow-amber-500/20 text-sm transition-all" 
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Créer mon compte VIP"}
+                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : t("auth.submit_signup")}
                 </Button>
               </form>
             </TabsContent>

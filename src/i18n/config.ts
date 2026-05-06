@@ -14,6 +14,10 @@ i18n
       en: { translation: en },
     },
     fallbackLng: "fr",
+    detection: {
+      order: ["localStorage", "navigator"],
+      caches: ["localStorage"],
+    },
     interpolation: {
       escapeValue: false,
     },

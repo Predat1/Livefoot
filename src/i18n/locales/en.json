@@ -10,7 +10,9 @@
     "results": "Results",
     "coach": "Coach",
     "sidelined": "Absences",
-    "liveOdds": "Live Odds"
+    "liveOdds": "Live Odds",
+    "view_all": "View All",
+    "all": "All"
   },
   "nav": {
     "matches": "Matches",
@@ -23,6 +25,22 @@
     "profile": "Profile",
     "install": "Install"
   },
+  "home": {
+    "title": "Live Football Results",
+    "subtitle": "Scores, Stats and AI Predictions in Real Time",
+    "filter_all": "All",
+    "filter_tv": "TV",
+    "filter_live": "Live",
+    "stats_competitions": "Leagues",
+    "stats_live": "Live",
+    "stats_matches": "Matches",
+    "trending_news": "Trending News",
+    "top_scorers": "Top Scorers",
+    "no_matches": "No matches for this date.",
+    "ai_badge": "100% Free Expert AI",
+    "ai_title": "Discover LiveFoot AI Predictions",
+    "ai_desc": "Our models analyze millions of data points to provide the most reliable predictions."
+  },
   "match": {
     "summary": "Summary",
     "stats": "Stats",
@@ -31,7 +49,7 @@
     "h2h": "H2H",
     "form": "Form",
     "odds": "Odds",
-    "predictions_ia": "AI Predictions",
+    "predictions_ia": "AI Picks",
     "community_arena": "Community Arena",
     "pressure_graph": "Pressure Graph",
     "domination_radar": "Domination Radar"
@@ -52,6 +70,46 @@
     "no_results": "No competitions found.",
     "countries": "countries",
     "standings": "Standings",
-    "scorers": "Top Scorers"
+    "scorers": "Scorers"
+  },
+  "auth": {
+    "login": "Sign In",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "submit_login": "Sign In",
+    "submit_signup": "Create VIP Account",
+    "forgot_password": "Forgot password?",
+    "min_chars": "At least 6 characters.",
+    "title": "LIVEFOOT AI",
+    "subtitle": "AI-powered football intelligence"
+  },
+  "pricing": {
+    "title": "Bet like a Pro.",
+    "subtitle": "Win like a bookmaker.",
+    "weekly_name": "Weekly",
+    "weekly_price": "9.99€",
+    "weekly_period": "/wk.",
+    "monthly_name": "Monthly",
+    "monthly_price": "19.99€",
+    "monthly_period": "/mo.",
+    "quarterly_name": "Quarterly",
+    "quarterly_price": "49.99€",
+    "quarterly_period": "/3 mo.",
+    "annual_name": "Annual",
+    "annual_price": "149.99€",
+    "annual_period": "/yr",
+    "select": "Select",
+    "start": "Start Now",
+    "join": "Join the Elite",
+    "popular": "Popular",
+    "best_choice": "Best Choice",
+    "features_title": "Unlimited access to AnalystePro V3",
+    "feature_1": "Match-fixing & odds anomaly detector",
+    "feature_2": "Exclusive Value Bets",
+    "feature_3": "Market confidence scores",
+    "feature_4": "Double Poisson & ELO weighting",
+    "feature_5": "No ads"
   }
 }

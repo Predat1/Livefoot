@@ -10,7 +10,9 @@
     "results": "Résultats",
     "coach": "Entraîneur",
     "sidelined": "Absences",
-    "liveOdds": "Cotes Live"
+    "liveOdds": "Cotes Live",
+    "view_all": "Tout voir",
+    "all": "Tout"
   },
   "nav": {
     "matches": "Matchs",
@@ -22,6 +24,22 @@
     "bonuses": "Bonus",
     "profile": "Profil",
     "install": "Installer"
+  },
+  "home": {
+    "title": "Résultats de Foot en Direct",
+    "subtitle": "Scores, Stats et Pronos IA en Temps Réel",
+    "filter_all": "Tous",
+    "filter_tv": "TV",
+    "filter_live": "Live",
+    "stats_competitions": "Compétitions",
+    "stats_live": "Live",
+    "stats_matches": "Matchs",
+    "trending_news": "Actualités Tendances",
+    "top_scorers": "Meilleurs Buteurs",
+    "no_matches": "Aucun match pour cette date.",
+    "ai_badge": "IA Expert 100% Gratuit",
+    "ai_title": "Découvrez les Pronostics de l'IA LiveFoot",
+    "ai_desc": "Nos modèles analysent des millions de données pour vous offrir les prédictions les plus fiables."
   },
   "match": {
     "summary": "Résumé",
@@ -53,5 +71,45 @@
     "countries": "pays",
     "standings": "Classement",
     "scorers": "Buteurs"
+  },
+  "auth": {
+    "login": "Connexion",
+    "signup": "Inscription",
+    "email": "Email",
+    "password": "Mot de passe",
+    "username": "Nom d'utilisateur",
+    "submit_login": "Se Connecter",
+    "submit_signup": "Créer mon compte VIP",
+    "forgot_password": "Mot de passe oublié ?",
+    "min_chars": "Au moins 6 caractères.",
+    "title": "LIVEFOOT AI",
+    "subtitle": "L'intelligence artificielle au service des parieurs"
+  },
+  "pricing": {
+    "title": "Pariez comme un Pro.",
+    "subtitle": "Gagnez comme un bookmaker.",
+    "weekly_name": "Hebdomadaire",
+    "weekly_price": "9,99€",
+    "weekly_period": "/sem.",
+    "monthly_name": "Mensuel",
+    "monthly_price": "19,99€",
+    "monthly_period": "/mois",
+    "quarterly_name": "Trimestriel",
+    "quarterly_price": "49,99€",
+    "quarterly_period": "/3 mois",
+    "annual_name": "Annuel",
+    "annual_price": "149,99€",
+    "annual_period": "/an",
+    "select": "Sélectionner",
+    "start": "Commencer",
+    "join": "Rejoindre l'Élite",
+    "popular": "Populaire",
+    "best_choice": "Meilleur Choix",
+    "features_title": "Accès illimité à l'IA AnalystePro V3",
+    "feature_1": "Détecteur de matchs truqués & anomalies de cotes",
+    "feature_2": "Value Bets exclusifs",
+    "feature_3": "Confiance par marché",
+    "feature_4": "Modèle Double Poisson & Pondération ELO",
+    "feature_5": "Sans publicité"
   }
 }
