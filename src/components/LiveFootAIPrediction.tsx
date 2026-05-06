@@ -63,9 +63,10 @@ const LiveFootAIPredictionCard = ({
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
   
-  // Fetch AI Expert Prediction if not provided (and we have enough info)
+  // Only fetch AI Expert if not already provided by parent (avoids double API call)
+  const shouldFetchAi = !initialAiExpertPrediction && !!fixtureId;
   const { data: fetchedAiExpertData } = useAiExpert({
-    fixtureId: fixtureId || (homeTeamId + awayTeamId), 
+    fixtureId: shouldFetchAi ? (fixtureId || "") : "",
     homeTeam: homeTeamName,
     awayTeam: awayTeamName,
     leagueName: leagueName

@@ -27,32 +27,69 @@ Calibration confiance :
 - Moyenne -> 0.55-0.75
 - Forte / Match avancé avec score clair -> 0.65-0.95`;
 
+// In-memory cache for predictions (5 minute TTL for live, 1h for pre-match)
+const cache = new Map<string, { data: any; timestamp: number; matchStatus: string }>();
+const CACHE_TTL_PREMATCH = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_LIVE = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_FINISHED = 24 * 60 * 60 * 1000; // 24 hours
+
+function getCachedPrediction(fixtureId: string): any | null {
+  const entry = cache.get(fixtureId);
+  if (!entry) return null;
+
+  const ttl = entry.matchStatus === "Match Finished" ? CACHE_TTL_FINISHED
+    : entry.matchStatus?.includes("Half") || entry.matchStatus?.includes("progress") ? CACHE_TTL_LIVE
+    : CACHE_TTL_PREMATCH;
+
+  if (Date.now() - entry.timestamp > ttl) {
+    cache.delete(fixtureId);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCachedPrediction(fixtureId: string, data: any, matchStatus: string) {
+  // Limit cache size to 200 entries
+  if (cache.size > 200) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey) cache.delete(firstKey);
+  }
+  cache.set(fixtureId, { data, timestamp: Date.now(), matchStatus });
+}
+
 function buildPrompt(homeTeam: string, awayTeam: string, leagueName: string, predictionData: any, h2hData: any[], fixtureDetail: any) {
   const matchStatus = fixtureDetail?.fixture?.status?.long || 'Not Started';
   const currentMinute = fixtureDetail?.fixture?.status?.elapsed || 0;
-  const currentScore = \`\${fixtureDetail?.goals?.home ?? 0}-\${fixtureDetail?.goals?.away ?? 0}\`;
-  
-  return \`
+  const currentScore = `${fixtureDetail?.goals?.home ?? 0}-${fixtureDetail?.goals?.away ?? 0}`;
+
+  return `
 📊 DATA (Contexte Injecté)
 
 # MATCH CONTEXT
-\${homeTeam} vs \${awayTeam} (\${leagueName})
-Date: \${fixtureDetail?.fixture?.date ? new Date(fixtureDetail.fixture.date).toLocaleString() : 'N/A'}
-Stade: \${fixtureDetail?.fixture?.venue?.name || 'Inconnu'}
-Statut: \${matchStatus}
-Minute Actuelle: \${currentMinute}
-Score Actuel: \${currentScore}
+${homeTeam} vs ${awayTeam} (${leagueName})
+Date: ${fixtureDetail?.fixture?.date ? new Date(fixtureDetail.fixture.date).toLocaleString() : 'N/A'}
+Stade: ${fixtureDetail?.fixture?.venue?.name || 'Inconnu'}
+Statut: ${matchStatus}
+Minute Actuelle: ${currentMinute}
+Score Actuel: ${currentScore}
 
 # POISSON MODEL
-Probabilités: Home \${predictionData?.predictions?.percent?.home || '?'} | Draw \${predictionData?.predictions?.percent?.draw || '?'} | Away \${predictionData?.predictions?.percent?.away || '?'}
+Probabilités: Home ${predictionData?.predictions?.percent?.home || '?'} | Draw ${predictionData?.predictions?.percent?.draw || '?'} | Away ${predictionData?.predictions?.percent?.away || '?'}
+Goals Predicted: Home ${predictionData?.predictions?.goals?.home || '?'} | Away ${predictionData?.predictions?.goals?.away || '?'}
+Advice: ${predictionData?.predictions?.advice || 'N/A'}
+Winner: ${predictionData?.predictions?.winner?.name || '?'} (${predictionData?.predictions?.winner?.comment || ''})
 
 # TEAM STATS
-HOME: Forme \${predictionData?.comparison?.form?.home || '?'} | Attaque \${predictionData?.comparison?.att?.home || '?'} | Défense \${predictionData?.comparison?.def?.home || '?'}
-AWAY: Forme \${predictionData?.comparison?.form?.away || '?'} | Attaque \${predictionData?.comparison?.att?.away || '?'} | Défense \${predictionData?.comparison?.def?.away || '?'}
+HOME: Forme ${predictionData?.comparison?.form?.home || '?'} | Attaque ${predictionData?.comparison?.att?.home || '?'} | Défense ${predictionData?.comparison?.def?.home || '?'} | Poisson ${predictionData?.comparison?.poisson_distribution?.home || '?'} | Total ${predictionData?.comparison?.total?.home || '?'}
+AWAY: Forme ${predictionData?.comparison?.form?.away || '?'} | Attaque ${predictionData?.comparison?.att?.away || '?'} | Défense ${predictionData?.comparison?.def?.away || '?'} | Poisson ${predictionData?.comparison?.poisson_distribution?.away || '?'} | Total ${predictionData?.comparison?.total?.away || '?'}
+
+# TEAM DETAILS
+HOME Last 5: ${predictionData?.teams?.home?.last_5?.form || '?'} | Goals Avg ${predictionData?.teams?.home?.last_5?.goals?.for?.average || '?'} scored / ${predictionData?.teams?.home?.last_5?.goals?.against?.average || '?'} conceded
+AWAY Last 5: ${predictionData?.teams?.away?.last_5?.form || '?'} | Goals Avg ${predictionData?.teams?.away?.last_5?.goals?.for?.average || '?'} scored / ${predictionData?.teams?.away?.last_5?.goals?.against?.average || '?'} conceded
 
 # STANDINGS & H2H
 H2H (Derniers 5 matchs):
-\${h2hData.map((m: any) => \`- \${m.teams.home.name} \${m.goals.home}-\${m.goals.away} \${m.teams.away.name}\`).join('\\n')}
+${h2hData.map((m: any) => `- ${m.teams.home.name} ${m.goals.home}-${m.goals.away} ${m.teams.away.name}`).join('\\n')}
 
 ---
 
@@ -104,30 +141,40 @@ Génère une analyse précise en tenant compte :
   },
   
   "vipClub": "Bientôt disponible"
-}\`;
+}`;
 }
 
 async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://livefoot.fun",
-      "X-Title": "LiveFoot AI Expert"
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.0-flash-001",
-      messages: [
-        { role: "system", content: SYSTEM_INSTRUCTION },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" }
-    })
-  });
-  const data = await res.json();
-  if (!res.ok || data.error) throw new Error(`OpenRouter: ${data.error?.message || res.status}`);
-  return data.choices[0].message.content;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout
+
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://livefoot.fun",
+        "X-Title": "LiveFoot AI Expert"
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.0-flash-001",
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3, // Lower temp for more consistent predictions
+        max_tokens: 1200,
+      }),
+      signal: controller.signal,
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(`OpenRouter: ${data.error?.message || res.status}`);
+    return data.choices[0].message.content;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function callLovableAI(prompt: string, apiKey: string): Promise<string> {
@@ -165,6 +212,14 @@ serve(async (req) => {
     const { fixtureId, homeTeam, awayTeam, leagueName } = await req.json();
     if (!fixtureId) throw new Error("Fixture ID requis");
 
+    // Check cache first
+    const cached = getCachedPrediction(fixtureId);
+    if (cached) {
+      return new Response(JSON.stringify({ ...cached, _cached: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const apiFootballKey = Deno.env.get("API_FOOTBALL_KEY");
@@ -174,6 +229,7 @@ serve(async (req) => {
 
     const headers = { "x-apisports-key": apiFootballKey };
 
+    // Fetch prediction data and fixture details in parallel
     const [statsRes, fixtureRes] = await Promise.all([
       fetch(`https://v3.football.api-sports.io/predictions?fixture=${fixtureId}`, { headers }),
       fetch(`https://v3.football.api-sports.io/fixtures?id=${fixtureId}`, { headers }),
@@ -183,6 +239,7 @@ serve(async (req) => {
     const predictionData = statsData.response?.[0];
     const fixtureDetail = fixtureDataRaw.response?.[0];
 
+    // Fetch H2H only if we have team IDs
     let h2hData: any[] = [];
     if (fixtureDetail?.teams?.home?.id && fixtureDetail?.teams?.away?.id) {
       const h2hRes = await fetch(`https://v3.football.api-sports.io/fixtures/headtohead?h2h=${fixtureDetail.teams.home.id}-${fixtureDetail.teams.away.id}&last=5`, { headers });
@@ -205,7 +262,13 @@ serve(async (req) => {
     }
 
     const aiPrediction = safeParseJSON(content);
-    return new Response(JSON.stringify({ ...aiPrediction, _provider: provider }), {
+    const result = { ...aiPrediction, _provider: provider };
+
+    // Cache the result
+    const matchStatus = fixtureDetail?.fixture?.status?.long || "Not Started";
+    setCachedPrediction(fixtureId, result, matchStatus);
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
