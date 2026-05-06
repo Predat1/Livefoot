@@ -44,6 +44,7 @@ function validateAiPrediction(data: unknown): { analysis: string; predictedScore
 // ─── Types matching existing component interfaces ─────────────
 
 export interface MatchTeam {
+  id: string;
   name: string;
   logo?: string;
   score?: number;
@@ -142,11 +143,13 @@ function transformFixturesToLeagues(fixtures: any[] = []): LeagueData[] {
     const match: MatchData = {
       id: String(fix.fixture.id),
       homeTeam: {
+        id: String(fix.teams.home.id),
         name: fix.teams.home.name,
         logo: fix.teams.home.logo,
         score: status !== "scheduled" ? fix.goals.home : undefined,
       },
       awayTeam: {
+        id: String(fix.teams.away.id),
         name: fix.teams.away.name,
         logo: fix.teams.away.logo,
         score: status !== "scheduled" ? fix.goals.away : undefined,

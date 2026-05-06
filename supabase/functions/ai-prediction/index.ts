@@ -62,7 +62,7 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
       "X-Title": "LiveFoot AI Expert"
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-2.0-flash-001",
       messages: [
         { role: "system", content: SYSTEM_INSTRUCTION },
         { role: "user", content: prompt }
@@ -83,7 +83,7 @@ async function callLovableAI(prompt: string, apiKey: string): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-2.0-flash-001",
       messages: [
         { role: "system", content: SYSTEM_INSTRUCTION },
         { role: "user", content: prompt }

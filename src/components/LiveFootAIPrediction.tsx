@@ -13,6 +13,7 @@ import { getRandomPartner } from "@/data/partnersData";
 import PartnerCard from "@/components/PartnerCard";
 
 interface LiveFootAIPredictionCardProps {
+  fixtureId?: string;
   homeTeamId: string;
   awayTeamId: string;
   homeTeamName: string;
@@ -55,7 +56,7 @@ const riskColors = {
 };
 
 const LiveFootAIPredictionCard = ({
-  homeTeamId, awayTeamId, homeTeamName, awayTeamName,
+  fixtureId, homeTeamId, awayTeamId, homeTeamName, awayTeamName,
   homeLogo, awayLogo, standings, injuries, apiPredictions,
   aiExpertPrediction: initialAiExpertPrediction,
   leagueName = "Football",
@@ -64,7 +65,7 @@ const LiveFootAIPredictionCard = ({
   
   // Fetch AI Expert Prediction if not provided (and we have enough info)
   const { data: fetchedAiExpertData } = useAiExpert({
-    fixtureId: homeTeamId + awayTeamId, // Fallback if no real fixtureId, but better if passed
+    fixtureId: fixtureId || (homeTeamId + awayTeamId), 
     homeTeam: homeTeamName,
     awayTeam: awayTeamName,
     leagueName: leagueName

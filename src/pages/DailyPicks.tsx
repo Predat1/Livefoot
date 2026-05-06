@@ -156,8 +156,9 @@ const DailyPicks = () => {
                 </div>
                 
                 <LiveFootAIPrediction
-                  homeTeamId={(match.homeTeam as any).id ?? ""}
-                  awayTeamId={(match.awayTeam as any).id ?? ""}
+                  fixtureId={match.id}
+                  homeTeamId={match.homeTeam.id}
+                  awayTeamId={match.awayTeam.id}
                   homeTeamName={match.homeTeam.name}
                   awayTeamName={match.awayTeam.name}
                   homeLogo={match.homeTeam.logo}
