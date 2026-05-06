@@ -114,9 +114,14 @@ export default function Pricing() {
               <h3 className="text-xl font-black text-white mb-2">Hebdomadaire</h3>
               <p className="text-xs text-white/50 mb-6">Testez l'IA sur un week-end complet.</p>
               
-              <div className="flex items-end gap-2 mb-8">
-                <span className="text-4xl font-black text-white">9,99€</span>
-                <span className="text-sm text-white/40 font-bold pb-1">/sem.</span>
+              <div className="flex flex-col mb-8">
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-black text-white">9,99€</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">/sem.</span>
+                </div>
+                <div className="mt-1 text-[11px] font-medium text-white/30">
+                  ≈ 6 550 FCFA
+                </div>
               </div>
 
               <button 
@@ -152,9 +157,14 @@ export default function Pricing() {
               <h3 className="text-xl font-black text-white mb-2">Mensuel</h3>
               <p className="text-xs text-white/50 mb-6">Flexibilité totale, annulez quand vous voulez.</p>
               
-              <div className="flex items-end gap-2 mb-8">
-                <span className="text-4xl font-black text-white">19,99€</span>
-                <span className="text-sm text-white/40 font-bold pb-1">/mois</span>
+              <div className="flex flex-col mb-8">
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-black text-white">19,99€</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">/mois</span>
+                </div>
+                <div className="mt-1 text-[11px] font-medium text-white/30">
+                  ≈ 13 100 FCFA
+                </div>
               </div>
 
               <button 
@@ -192,8 +202,9 @@ export default function Pricing() {
                   <span className="text-4xl font-black text-white">49,99€</span>
                   <span className="text-sm text-white/40 font-bold pb-1">/3 mois</span>
                 </div>
-                <div className="mt-2 text-[10px] font-bold text-emerald-400">
-                  Économisez 10€
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[11px] font-medium text-white/30">≈ 32 800 FCFA</span>
+                  <span className="text-[10px] font-bold text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 rounded">Économisez 10€</span>
                 </div>
               </div>
 
@@ -237,8 +248,9 @@ export default function Pricing() {
                   <span className="text-4xl font-black text-amber-400">149,99€</span>
                   <span className="text-sm text-white/40 font-bold pb-1">/an</span>
                 </div>
-                <div className="mt-2 text-[10px] font-bold text-emerald-400">
-                  Soit 12,49€ par mois (-40%)
+                <div className="flex flex-col gap-1 mt-1">
+                  <span className="text-[11px] font-medium text-amber-500/50">≈ 98 400 FCFA</span>
+                  <span className="text-[10px] font-bold text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 rounded w-fit">Soit 12,49€ par mois (-40%)</span>
                 </div>
               </div>
 
