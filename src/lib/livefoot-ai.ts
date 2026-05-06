@@ -34,6 +34,20 @@ export interface LiveFootAIPrediction {
   risk: "low" | "medium" | "high";
   /** Best bet suggestions */
   bestBets: BetSuggestion[];
+  /** Expected Goals Home (AnalystePro) */
+  xgHome?: number;
+  /** Expected Goals Away (AnalystePro) */
+  xgAway?: number;
+  /** Value bet detection */
+  valueBet?: string | null;
+  /** Real-time match state context */
+  matchState?: string;
+  /** 1-5 confidence scale */
+  confidenceStars?: number;
+  /** Detailed reasoning */
+  reasoning?: string;
+  /** Extra detailed predictions from AI */
+  detailedPredictions?: Record<string, string | number>;
 }
 
 export interface PredictionFactor {

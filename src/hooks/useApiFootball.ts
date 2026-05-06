@@ -898,10 +898,37 @@ export function useAiExpert(params: {
       const { data, error } = await getAiPrediction(params);
       if (error) throw error;
       return data as {
+        matchState: string;
         analysis: string;
+        reasoning: string;
         predictedScore: string;
         confidence: number;
+        confidenceStars: number;
         keyFactor: string;
+        xgHome: number;
+        xgAway: number;
+        valueBet: string | null;
+        predictions: {
+          winner: string;
+          btts: string;
+          bttsConfidence: number;
+          overUnder25: string;
+          overUnder25Confidence: number;
+          overUnder35: string;
+          doubleChance: string;
+          corners: string;
+          cards: string;
+          possession: string;
+          firstScorerTeam: string;
+          anytimeScorer: string;
+          penalty: string;
+          var: string;
+          cleanSheet: string;
+          timingFirstGoal: string;
+          highestScoringHalf: string;
+          winningMargin: string;
+        };
+        vipClub: string;
       };
     },
     staleTime: 24 * 60 * 60 * 1000,

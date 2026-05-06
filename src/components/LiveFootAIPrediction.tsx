@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy, TrendingUp, Zap, Sparkles, Target, Share2, Copy, Check,
   AlertTriangle, Eye, User, Clock, Calendar, Swords, Video, ShieldCheck,
-  Grid3X3, Flame, Shield, Loader2, Brain
+  Grid3X3, Flame, Shield, Loader2, Brain, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generatePrediction, type LiveFootAIPrediction, type TeamFormData } from "@/lib/livefoot-ai";
@@ -90,21 +90,27 @@ const LiveFootAIPredictionCard = ({
           outcome,
           confidence: Math.round(aiExpertPrediction.confidence * 100),
           predictedScore: { home: homeScore, away: awayScore },
-          probabilities: { home: 0, draw: 0, away: 0 }, // We might not have these from expert but we can estimate or leave as 0
+          probabilities: { home: 0, draw: 0, away: 0 }, 
           factors: [{
             icon: "🧠",
-            label: "Analyse Expert",
+            label: aiExpertPrediction.matchState === "En direct" ? "Analyse Live" : "Analyse Expert",
             description: aiExpertPrediction.keyFactor,
             impact: "neutral",
             team: "both"
           }],
           advice: aiExpertPrediction.analysis,
+          reasoning: aiExpertPrediction.reasoning,
           risk: aiExpertPrediction.confidence > 0.7 ? "low" : "medium",
+          matchState: aiExpertPrediction.matchState,
+          confidenceStars: aiExpertPrediction.confidenceStars || Math.round(aiExpertPrediction.confidence * 5),
+          xgHome: aiExpertPrediction.xgHome,
+          xgAway: aiExpertPrediction.xgAway,
+          valueBet: aiExpertPrediction.valueBet && aiExpertPrediction.valueBet.toLowerCase() !== "null" ? aiExpertPrediction.valueBet : null,
           bestBets: [
             { type: "AI", label: `Oracle: ${aiExpertPrediction.predictedScore}`, confidence: Math.round(aiExpertPrediction.confidence * 100), emoji: "✨" }
           ],
           isExpert: true,
-          detailedPredictions: aiExpertPrediction.predictions
+          detailedPredictions: aiExpertPrediction.predictions as unknown as Record<string, string | number>
         };
       } catch (e) {
         console.error("Error mapping Expert prediction:", e);
@@ -252,14 +258,24 @@ const LiveFootAIPredictionCard = ({
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[8px] font-black uppercase tracking-tighter">
                   100% GRATUIT
                 </span>
-                {isValueBet && (
+                {prediction.valueBet && (
                   <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black uppercase tracking-tighter">
-                    <Zap className="h-2 w-2" /> Value
+                    <Zap className="h-2 w-2" /> Value Bet
+                  </span>
+                )}
+                {prediction.matchState && (
+                  <span className={cn(
+                    "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-tighter",
+                    prediction.matchState === "En direct" ? "bg-red-500/20 text-red-400 border border-red-500/30" :
+                    prediction.matchState === "Terminé" ? "bg-white/10 text-white/60 border border-white/20" :
+                    "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                  )}>
+                    {prediction.matchState}
                   </span>
                 )}
               </div>
               <p className="text-[9px] sm:text-[10px] text-emerald-300/60">
-                {(prediction as any).isExpert ? "Analyse LiveFoot Expert" : "Analyse intelligente"}
+                {(prediction as any).isExpert ? "Analyse AnalystePro" : "Analyse intelligente"}
               </p>
             </div>
           </div>
@@ -298,8 +314,43 @@ const LiveFootAIPredictionCard = ({
             >
               {winnerName}
             </motion.h4>
-            <p className="text-xs text-emerald-300/60">{prediction.advice}</p>
+            <p className="text-xs text-emerald-300/80 font-medium mb-1">{prediction.advice}</p>
+            {prediction.reasoning && (
+              <p className="text-[10px] sm:text-xs text-emerald-300/50 italic mt-2 border-t border-emerald-500/10 pt-2">
+                "{prediction.reasoning}"
+              </p>
+            )}
+            
+            {/* Confidence Stars */}
+            {prediction.confidenceStars !== undefined && (
+              <div className="flex justify-center gap-0.5 mt-3">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star 
+                    key={star} 
+                    className={cn(
+                      "h-3 w-3 sm:h-4 sm:w-4", 
+                      star <= prediction.confidenceStars! ? "fill-amber-400 text-amber-400" : "fill-white/10 text-white/10"
+                    )} 
+                  />
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Value Bet Banner */}
+          {prediction.valueBet && (
+             <motion.div
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="mb-6 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 sm:p-4 flex items-start gap-3"
+             >
+               <Zap className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+               <div>
+                 <h5 className="text-xs font-black text-amber-400 uppercase tracking-wider mb-1">Value Bet Détecté</h5>
+                 <p className="text-sm font-medium text-amber-100">{prediction.valueBet}</p>
+               </div>
+             </motion.div>
+          )}
 
           {/* Score prediction */}
           <motion.div
@@ -308,9 +359,12 @@ const LiveFootAIPredictionCard = ({
             transition={{ delay: 0.4, duration: 0.5 }}
             className="flex items-center justify-center gap-3 sm:gap-5 mb-6"
           >
-            <div className="flex flex-col items-center gap-1.5">
+            <div className="flex flex-col items-center gap-1.5 w-24">
               {homeLogo && <img src={homeLogo} alt="" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />}
-              <span className="text-[10px] font-medium text-white/60 truncate max-w-[80px] text-center">{homeTeamName}</span>
+              <span className="text-[10px] font-medium text-white/60 truncate max-w-full text-center">{homeTeamName}</span>
+              {prediction.xgHome !== undefined && (
+                <span className="text-[9px] font-bold text-white/40 bg-white/5 px-1.5 py-0.5 rounded">xG: {prediction.xgHome}</span>
+              )}
             </div>
             
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
@@ -329,9 +383,12 @@ const LiveFootAIPredictionCard = ({
               </span>
             </div>
 
-            <div className="flex flex-col items-center gap-1.5">
+            <div className="flex flex-col items-center gap-1.5 w-24">
               {awayLogo && <img src={awayLogo} alt="" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />}
-              <span className="text-[10px] font-medium text-white/60 truncate max-w-[80px] text-center">{awayTeamName}</span>
+              <span className="text-[10px] font-medium text-white/60 truncate max-w-full text-center">{awayTeamName}</span>
+              {prediction.xgAway !== undefined && (
+                <span className="text-[9px] font-bold text-white/40 bg-white/5 px-1.5 py-0.5 rounded">xG: {prediction.xgAway}</span>
+              )}
             </div>
           </motion.div>
 

@@ -5,51 +5,106 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_INSTRUCTION = `Tu es l'expert ultime en pronostics football de "LiveFoot". Réponds UNIQUEMENT en JSON strict valide.`;
+const SYSTEM_INSTRUCTION = `Tu es AnalystePro, expert en data football et paris sportifs (15+ ans).
+
+Spécialités :
+- Modélisation Poisson & xG
+- Analyse tactique + forme
+- Lecture des cotes bookmakers
+- Détection de value bets
+- Analyse en Temps Réel (Pré-match, Live, Post-match)
+
+Règles strictes :
+- ADAPTATION TEMPS RÉEL : Lis attentivement le "Statut du match". Si le match est "Terminé", ton analyse doit être un bilan. S'il est "En direct", ajuste radicalement tes prédictions et ta confiance en fonction du score actuel et de la minute. S'il "N'a pas commencé", fais une prédiction classique.
+- Utilise UNIQUEMENT les données fournies.
+- Priorise les données quantitatives (Poisson, stats).
+- Ajuste avec contexte (forme, blessures, H2H).
+- Si données faibles ou match en direct très avancé -> ajuste la confiance (baisse si incertain, monte si le résultat est presque acquis).
+- Ne fais AUCUNE explication hors JSON.
+
+Calibration confiance :
+- Faible data / Forte incertitude -> 0.45-0.60
+- Moyenne -> 0.55-0.75
+- Forte / Match avancé avec score clair -> 0.65-0.95`;
 
 function buildPrompt(homeTeam: string, awayTeam: string, leagueName: string, predictionData: any, h2hData: any[], fixtureDetail: any) {
-  return `
-MATCH : ${homeTeam} vs ${awayTeam} (${leagueName})
+  const matchStatus = fixtureDetail?.fixture?.status?.long || 'Not Started';
+  const currentMinute = fixtureDetail?.fixture?.status?.elapsed || 0;
+  const currentScore = \`\${fixtureDetail?.goals?.home ?? 0}-\${fixtureDetail?.goals?.away ?? 0}\`;
+  
+  return \`
+📊 DATA (Contexte Injecté)
 
-DONNÉES DE PRÉDICTION OFFICIELLES :
-- Conseil : ${predictionData?.predictions?.advice || 'N/A'}
-- Comparaison Forme : ${predictionData?.comparison?.form?.home || '?'} vs ${predictionData?.comparison?.form?.away || '?'}
-- Comparaison Attaque : ${predictionData?.comparison?.att?.home || '?'} vs ${predictionData?.comparison?.att?.away || '?'}
-- Comparaison Défense : ${predictionData?.comparison?.def?.home || '?'} vs ${predictionData?.comparison?.def?.away || '?'}
-- Probabilités : Victoire ${homeTeam} ${predictionData?.predictions?.percent?.home || '?'}, Nul ${predictionData?.predictions?.percent?.draw || '?'}, Victoire ${awayTeam} ${predictionData?.predictions?.percent?.away || '?'}
+# MATCH CONTEXT
+\${homeTeam} vs \${awayTeam} (\${leagueName})
+Date: \${fixtureDetail?.fixture?.date ? new Date(fixtureDetail.fixture.date).toLocaleString() : 'N/A'}
+Stade: \${fixtureDetail?.fixture?.venue?.name || 'Inconnu'}
+Statut: \${matchStatus}
+Minute Actuelle: \${currentMinute}
+Score Actuel: \${currentScore}
 
-HISTORIQUE H2H (Derniers 5 matchs) :
-${h2hData.map((m: any) => `- ${m.teams.home.name} ${m.goals.home}-${m.goals.away} ${m.teams.away.name} (${new Date(m.fixture.date).toLocaleDateString()})`).join('\n')}
+# POISSON MODEL
+Probabilités: Home \${predictionData?.predictions?.percent?.home || '?'} | Draw \${predictionData?.predictions?.percent?.draw || '?'} | Away \${predictionData?.predictions?.percent?.away || '?'}
 
-DÉTAILS DU MATCH :
-- Statut : ${fixtureDetail?.fixture?.status?.long || 'N/A'}
-- Stade : ${fixtureDetail?.fixture?.venue?.name || 'Inconnu'}
-- Arbitre : ${fixtureDetail?.fixture?.referee || 'Inconnu'}
+# TEAM STATS
+HOME: Forme \${predictionData?.comparison?.form?.home || '?'} | Attaque \${predictionData?.comparison?.att?.home || '?'} | Défense \${predictionData?.comparison?.def?.home || '?'}
+AWAY: Forme \${predictionData?.comparison?.form?.away || '?'} | Attaque \${predictionData?.comparison?.att?.away || '?'} | Défense \${predictionData?.comparison?.def?.away || '?'}
 
-Réponds UNIQUEMENT au format JSON strict suivant :
+# STANDINGS & H2H
+H2H (Derniers 5 matchs):
+\${h2hData.map((m: any) => \`- \${m.teams.home.name} \${m.goals.home}-\${m.goals.away} \${m.teams.away.name}\`).join('\\n')}
+
+---
+
+# TASK
+
+Génère une analyse précise en tenant compte :
+1. Du STATUT DU MATCH (Crucial : adapte tout le JSON si le match est en cours ou terminé).
+2. Du Modèle Poisson (prioritaire en pré-match).
+3. De la Forme, des stats, blessures et H2H.
+4. De la comparaison avec les cotes pour extraire un value bet (si pertinent).
+
+---
+
+# OUTPUT (JSON STRICT)
+
 {
-  "analysis": "analyse captivante 3-4 phrases en français",
+  "matchState": "Pré-match|En direct|Terminé",
+  "analysis": "4 phrases max, style expert. Adapter le temps (futur, présent ou passé) selon le matchState.",
+  "reasoning": "2 insights clés (inclure l'impact de la minute/score si en direct)",
   "predictedScore": "X-Y",
   "confidence": 0.85,
-  "keyFactor": "facteur clé du match",
+  "confidenceStars": 4,
+  "keyFactor": "facteur décisif",
+  
+  "xgHome": 1.5,
+  "xgAway": 1.1,
+  
+  "valueBet": "pari sous-côté précis ou null",
+  
   "predictions": {
-    "winner": "1, X ou 2",
-    "btts": "Oui/Non",
-    "overUnder25": "Over/Under",
-    "doubleChance": "1X, X2 ou 12",
+    "winner": "1|X|2",
+    "btts": "Oui|Non",
+    "bttsConfidence": 0.75,
+    "overUnder25": "Over|Under",
+    "overUnder25Confidence": 0.80,
+    "overUnder35": "Over|Under",
+    "doubleChance": "1X|X2|12",
     "corners": "ex: 8-10",
     "cards": "ex: 3-5",
-    "possession": "ex: 55%-45%",
-    "firstScorer": "joueur probable",
-    "anytimeScorer": "joueur probable",
-    "penalty": "Faible/Moyenne/Haute",
-    "var": "Faible/Moyenne/Haute",
-    "cleanSheet": "Équipe ou Aucune",
-    "timingFirstGoal": "ex: 15-30 min",
-    "highestScoringHalf": "1ère ou 2ème",
-    "winningMargin": "ex: 1 but"
-  }
-}`;
+    "possession": "XX%-XX%",
+    "firstScorerTeam": "home|away|none",
+    "anytimeScorer": "nom ou Inconnu",
+    "penalty": "Faible|Moyenne|Haute",
+    "var": "Faible|Moyenne|Haute",
+    "cleanSheet": "Home|Away|None",
+    "timingFirstGoal": "1-30|31-45|46-60|61-90|Already Scored",
+    "highestScoringHalf": "1st|2nd|Equal",
+    "winningMargin": "Draw|1|2|3+"
+  },
+  
+  "vipClub": "Bientôt disponible"
+}\`;
 }
 
 async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
