@@ -724,7 +724,7 @@ const LiveFootAIPredictionCard = ({
                 Accédez aux Value Bets, aux {prediction.bestBets.length - 2}+ suggestions de paris supplémentaires, aux facteurs clés complets et à l'analyse xG avancée.
               </p>
               <Link
-                to="/auth"
+                to="/pricing"
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-xs shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-105 transition-all"
               >
                 <Crown className="h-3.5 w-3.5" />

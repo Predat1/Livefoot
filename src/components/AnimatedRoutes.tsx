@@ -37,6 +37,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const DynamicSitemap = lazy(() => import("@/pages/DynamicSitemap"));
 const DailyPicks = lazy(() => import("@/pages/DailyPicks"));
 const Bonuses = lazy(() => import("@/pages/Bonuses"));
+const Pricing = lazy(() => import("@/pages/Pricing"));
 
 const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
 
@@ -95,6 +96,7 @@ const AnimatedRoutes = () => {
             <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
             <Route path="/bonuses" element={<PageTransition><Bonuses /></PageTransition>} />
             <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
+            <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
             <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
           </Routes>
         </Suspense>

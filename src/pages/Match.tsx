@@ -1347,7 +1347,7 @@ const Match = () => {
               Alors que nos prédictions de base sont <strong>100% gratuites</strong>, le Club VIP vous donne accès aux "Value Bets" détectés par nos algorithmes avancés et aux alertes exclusives en temps réel.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <Link to="/auth" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 text-center">
+              <Link to="/pricing" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 text-center">
                 REJOINDRE LE CLUB VIP
               </Link>
               <span className="text-xs font-bold text-muted-foreground">Analyses avancées & Communauté VIP</span>
