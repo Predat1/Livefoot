@@ -59,44 +59,51 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#06080c] relative flex items-center justify-center p-4 overflow-hidden">
       <SEOHead
-        title="Sign In - LiveFoot"
-        description="Sign in to LiveFoot to save your favorite teams, players and matches."
+        title="Connexion - LiveFoot VIP"
+        description="Connectez-vous pour accéder à vos favoris et à l'AnalystePro V3."
       />
 
-      <div className="w-full max-w-md">
+      {/* Background Effects */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-amber-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8 gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30">
-            <img src={livefootLogo} alt="LiveFoot" className="h-full w-full object-cover" />
+        <div className="flex flex-col items-center mb-8 gap-4">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0a0d14] to-[#121620] border border-white/10 shadow-[0_0_30px_rgba(245,158,11,0.15)] relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <img src="/logo.svg" alt="LiveFoot" className="h-10 w-10 brightness-0 invert" />
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-black text-foreground tracking-tight">LIVEFOOT</h1>
-            <p className="text-sm text-muted-foreground">Your football companion</p>
+            <h1 className="text-3xl font-black text-white tracking-tight">LIVEFOOT<span className="text-amber-400">AI</span></h1>
+            <p className="text-sm text-white/50 mt-1">L'intelligence artificielle au service des parieurs</p>
           </div>
         </div>
 
         {/* Auth card */}
-        <div className="rounded-2xl bg-card border border-border/50 shadow-xl p-6">
+        <div className="rounded-3xl bg-[#0a0d14] border border-white/10 shadow-2xl p-6 sm:p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-amber-500 to-amber-500 opacity-50" />
+          
           <Tabs defaultValue="login">
-            <TabsList className="w-full grid grid-cols-2 mb-6">
-              <TabsTrigger value="login">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Create Account</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-2 mb-8 bg-white/5 p-1 rounded-xl">
+              <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">Connexion</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">Inscription</TabsTrigger>
             </TabsList>
 
             {/* LOGIN */}
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email" className="text-white/70 text-xs font-bold uppercase tracking-wider">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder="you@example.com"
-                      className="pl-9"
+                      placeholder="vous@email.com"
+                      className="pl-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500/50 rounded-xl"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
@@ -104,39 +111,45 @@ const Auth = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password" className="text-white/70 text-xs font-bold uppercase tracking-wider">Mot de passe</Label>
+                    <a href="#" className="text-xs font-medium text-amber-500 hover:text-amber-400">Mot de passe oublié ?</a>
+                  </div>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
                       id="login-password"
                       type="password"
                       placeholder="••••••••"
-                      className="pl-9"
+                      className="pl-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500/50 rounded-xl"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Sign In
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 mt-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black shadow-lg shadow-amber-500/20 text-sm transition-all" 
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Se Connecter"}
                 </Button>
               </form>
             </TabsContent>
 
             {/* SIGNUP */}
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
+              <form onSubmit={handleSignup} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Display Name</Label>
+                  <Label htmlFor="signup-name" className="text-white/70 text-xs font-bold uppercase tracking-wider">Nom d'utilisateur</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
                       id="signup-name"
                       type="text"
-                      placeholder="Your name"
-                      className="pl-9"
+                      placeholder="Alexandre"
+                      className="pl-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500/50 rounded-xl"
                       value={signupName}
                       onChange={(e) => setSignupName(e.target.value)}
                       required
@@ -144,14 +157,14 @@ const Auth = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-white/70 text-xs font-bold uppercase tracking-wider">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="you@example.com"
-                      className="pl-9"
+                      placeholder="vous@email.com"
+                      className="pl-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500/50 rounded-xl"
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
                       required
@@ -159,28 +172,29 @@ const Auth = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password" className="text-white/70 text-xs font-bold uppercase tracking-wider">Mot de passe</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Min. 6 characters"
-                      className="pl-9"
+                      placeholder="••••••••"
+                      className="pl-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500/50 rounded-xl"
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       minLength={6}
                       required
                     />
                   </div>
+                  <p className="text-[10px] text-white/40 mt-1.5 ml-1">Au moins 6 caractères.</p>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Create Account
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 mt-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:to-amber-500 text-black font-black shadow-lg shadow-amber-500/20 text-sm transition-all" 
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Créer mon compte VIP"}
                 </Button>
-                <p className="text-[10px] text-center text-muted-foreground">
-                  You'll receive a confirmation email. Check your inbox.
-                </p>
               </form>
             </TabsContent>
           </Tabs>
