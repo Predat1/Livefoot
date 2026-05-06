@@ -85,7 +85,7 @@ const LiveFootAIPredictionCard = ({
 
   const prediction = useMemo<LiveFootAIPrediction | null>(() => {
     // Priority 0: Use AI Expert Prediction from OpenRouter if available
-    if (aiExpertPrediction) {
+    if (aiExpertPrediction && aiExpertPrediction.status !== "processing" && !aiExpertPrediction.error) {
       try {
         const predictedScore = aiExpertPrediction.predictedScore || "0-0";
         const [homeScore, awayScore] = predictedScore.includes("-") 
@@ -281,14 +281,20 @@ const LiveFootAIPredictionCard = ({
   }, [homeFormData, awayFormData, h2hData, standings, homeTeamId, awayTeamId, homeTeamName, awayTeamName, injuries, apiPredictions, aiExpertPrediction]);
 
   if (!prediction) {
+    const isProcessing = aiExpertPrediction?.status === "processing";
     return (
       <div className="rounded-2xl bg-gradient-to-br from-primary/5 via-card to-emerald-500/5 border border-primary/20 p-6 text-center">
         <div className="animate-pulse flex flex-col items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Brain className="h-6 w-6 text-primary" />
           </div>
-          <p className="text-sm text-muted-foreground">LiveFoot AI analyse le match...</p>
-          <div className="flex gap-1">
+          <p className="text-sm font-bold text-foreground">
+            {isProcessing ? "Initialisation de l'AnalystePro V3..." : "LiveFoot AI rassemble les données..."}
+          </p>
+          {isProcessing && (
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Génération du rapport en cours</p>
+          )}
+          <div className="flex gap-1 mt-2">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}

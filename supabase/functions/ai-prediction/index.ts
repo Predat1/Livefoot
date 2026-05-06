@@ -58,14 +58,26 @@ function getSupabaseClient() {
   );
 }
 
-async function getCachedPredictionDB(fixtureId: string, supabase: any): Promise<any | null> {
+async function getCachedPredictionDB(fixtureId: string, supabase: any): Promise<{ data: any, status: 'fresh' | 'stale' | 'missing' | 'processing' }> {
   const { data, error } = await supabase
     .from('ai_predictions_cache')
     .select('*')
     .eq('fixture_id', fixtureId)
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) return { data: null, status: 'missing' };
+
+  // Vérifier si un verrou de traitement est actif (Mutex Lock)
+  if (data.data && data.data._isProcessing) {
+      const lockAge = Date.now() - (data.data._lockedAt || 0);
+      // Le verrou est valide pendant 25 secondes max
+      if (lockAge < 25000) { 
+          // Stale-While-Revalidate : On retourne l'ancienne prédiction périmée si elle existe,
+          // sinon on signale que c'est en cours de calcul
+          return { data: data.data._staleData || null, status: 'processing' };
+      }
+      // Si le verrou est expiré (crash ou timeout API), on l'ignore et on retente
+  }
 
   const age = Date.now() - new Date(data.updated_at).getTime();
   const ttl = data.match_status === "Match Finished" ? CACHE_TTL_FINISHED
@@ -73,9 +85,24 @@ async function getCachedPredictionDB(fixtureId: string, supabase: any): Promise<
     : CACHE_TTL_PREMATCH;
 
   if (age > ttl) {
-    return null; // Expired, will be overwritten
+    return { data: data.data, status: 'stale' };
   }
-  return data.data;
+  
+  return { data: data.data, status: 'fresh' };
+}
+
+async function acquireLockDB(fixtureId: string, staleData: any, matchStatus: string, supabase: any) {
+  const lockPayload = { _isProcessing: true, _lockedAt: Date.now(), _staleData: staleData };
+  const { error } = await supabase
+    .from('ai_predictions_cache')
+    .upsert({
+      fixture_id: fixtureId,
+      data: lockPayload,
+      match_status: matchStatus,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'fixture_id' });
+    
+  if (error) console.error("Error acquiring lock in DB:", error);
 }
 
 async function setCachedPredictionDB(fixtureId: string, predictionData: any, matchStatus: string, supabase: any) {
@@ -261,12 +288,35 @@ serve(async (req) => {
     const supabase = getSupabaseClient();
 
     // Check DB cache first
-    const cached = await getCachedPredictionDB(fixtureId, supabase);
-    if (cached) {
-      return new Response(JSON.stringify({ ...cached, _cached: true }), {
+    const cacheResult = await getCachedPredictionDB(fixtureId, supabase);
+    
+    // 1. FRESH: Return immediately
+    if (cacheResult.status === 'fresh' && cacheResult.data) {
+      return new Response(JSON.stringify({ ...cacheResult.data, _cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // 2. PROCESSING: A worker is already computing it
+    if (cacheResult.status === 'processing') {
+      if (cacheResult.data) {
+        // Stale-While-Revalidate: Return stale data to user immediately
+        return new Response(JSON.stringify({ ...cacheResult.data, _cached: true, _stale: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } else {
+        // First ever request is processing, tell client to wait
+        return new Response(JSON.stringify({ status: "processing", message: "Analyse IA en cours d'initialisation..." }), {
+          status: 202, // Accepted
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // 3. MISSING or STALE: We become the Leader and compute
+    // Fire-and-forget: Acquire the lock immediately before calling external APIs
+    const currentMatchStatus = "Unknown"; // Will be updated later, lock is temporary
+    await acquireLockDB(fixtureId, cacheResult.data, currentMatchStatus, supabase);
 
     const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
     const apiFootballKey = Deno.env.get("API_FOOTBALL_KEY");

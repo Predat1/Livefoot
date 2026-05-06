@@ -929,12 +929,21 @@ export function useAiExpert(params: {
           winningMargin: string;
         };
         vipClub: string;
+        status?: string; // Ajouté pour gérer le 202 Accepted (processing)
+        message?: string;
       };
     },
     staleTime: 24 * 60 * 60 * 1000,
     // ✅ N'appelle l'IA que quand toutes les données sont présentes
     enabled: !!params.fixtureId && !!params.homeTeam && !!params.awayTeam,
     retry: 1,
+    // Poll toutes les 3 secondes si l'Edge Function nous dit que l'IA est en cours d'initialisation (Cache Lock)
+    refetchInterval: (query) => {
+      // Dans React Query v5, la data est accessible via query.state.data
+      const data = query.state?.data as any;
+      if (data?.status === "processing") return 3000;
+      return false;
+    },
   });
 }
 
