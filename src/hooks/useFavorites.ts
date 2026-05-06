@@ -128,5 +128,7 @@ export const useFavorites = () => {
 
   const isFavorite = useCallback((type: keyof Favorites, id: string) => favorites[type].includes(id), [favorites]);
 
-  return { favorites, toggleFavorite, isFavorite, loading };
+  const totalFavorites = favorites.teams.length + favorites.players.length + favorites.competitions.length;
+
+  return { favorites, toggleFavorite, isFavorite, loading, totalFavorites };
 };
