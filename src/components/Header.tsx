@@ -1,4 +1,4 @@
-import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift, ArrowRight } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift, ArrowRight, Crown } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -24,6 +24,7 @@ const Header = () => {
 
   const mainNav = [
     { label: "MATCHS", href: "/" },
+    { label: "VIP", href: "/vip" },
     { label: "PRONOS IA", href: "/daily-picks" },
     { label: "LIVE", href: "/live" },
     { label: "COMPÉTITIONS", href: "/competitions" },
@@ -192,6 +193,7 @@ const Header = () => {
                     : "text-header-foreground/70 hover:text-header-foreground"
                 )}
               >
+                {item.label === "VIP" && <Crown className="h-3 w-3 text-amber-400" />}
                 {item.label === "BONUS" && <Gift className="h-3 w-3 text-primary animate-pulse" />}
                 {item.label}
                 {isActive(item.href) && (

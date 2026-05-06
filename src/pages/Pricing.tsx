@@ -19,7 +19,6 @@ const TIER_FEATURES = [
 
 export default function Pricing() {
   const { user } = useAuth();
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   const handleSubscribe = (planName: string) => {
@@ -103,82 +102,116 @@ export default function Pricing() {
             </motion.p>
           </div>
 
-          {/* Billing Toggle */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex justify-center mb-16"
-          >
-            <div className="bg-white/5 p-1.5 rounded-2xl border border-white/10 flex items-center gap-1 relative z-20 backdrop-blur-sm">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={cn(
-                  "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-                  billingCycle === "monthly" 
-                    ? "bg-white/10 text-white shadow-lg" 
-                    : "text-white/40 hover:text-white/80"
-                )}
-              >
-                Mensuel
-              </button>
-              <button
-                onClick={() => setBillingCycle("annual")}
-                className={cn(
-                  "px-6 py-2.5 rounded-xl text-sm font-bold transition-all relative flex items-center gap-2",
-                  billingCycle === "annual" 
-                    ? "bg-gradient-to-r from-amber-500/20 to-amber-600/10 text-amber-400 border border-amber-500/30 shadow-lg" 
-                    : "text-white/40 hover:text-white/80"
-                )}
-              >
-                Annuel
-                <span className="bg-emerald-500 text-black text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase">
-                  -40%
-                </span>
-              </button>
-            </div>
-          </motion.div>
-
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center mb-20">
-            {/* Standard Tier */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch mb-20">
+            {/* Weekly Tier */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className={cn(
-                "rounded-3xl p-8 border bg-[#0a0d14] transition-all relative",
-                billingCycle === "monthly" ? "border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.05)] scale-100" : "border-white/5 scale-95 opacity-60 hover:opacity-100"
-              )}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="rounded-3xl p-6 border bg-[#0a0d14] border-white/10 hover:border-white/20 transition-all flex flex-col"
             >
-              <h3 className="text-2xl font-black text-white mb-2">Mensuel</h3>
-              <p className="text-sm text-white/50 mb-6">Flexibilité totale, annulez quand vous voulez.</p>
+              <h3 className="text-xl font-black text-white mb-2">Hebdomadaire</h3>
+              <p className="text-xs text-white/50 mb-6">Testez l'IA sur un week-end complet.</p>
               
               <div className="flex items-end gap-2 mb-8">
-                <span className="text-5xl font-black text-white">19,99€</span>
-                <span className="text-lg text-white/40 font-bold pb-1">/mois</span>
+                <span className="text-4xl font-black text-white">9,99€</span>
+                <span className="text-sm text-white/40 font-bold pb-1">/sem.</span>
+              </div>
+
+              <button 
+                onClick={() => handleSubscribe("weekly")}
+                disabled={isProcessing !== null}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
+              >
+                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sélectionner"}
+              </button>
+
+              <div className="space-y-3">
+                {TIER_FEATURES.slice(0, 3).map((feature, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="h-4 w-4 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-2.5 w-2.5 text-amber-400" />
+                    </div>
+                    <span className="text-xs text-white/80">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Monthly Tier */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="rounded-3xl p-6 border bg-[#0a0d14] border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.05)] transition-all flex flex-col relative"
+            >
+              <div className="absolute top-0 right-0 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl z-20">
+                Populaire
+              </div>
+              <h3 className="text-xl font-black text-white mb-2">Mensuel</h3>
+              <p className="text-xs text-white/50 mb-6">Flexibilité totale, annulez quand vous voulez.</p>
+              
+              <div className="flex items-end gap-2 mb-8">
+                <span className="text-4xl font-black text-white">19,99€</span>
+                <span className="text-sm text-white/40 font-bold pb-1">/mois</span>
               </div>
 
               <button 
                 onClick={() => handleSubscribe("monthly")}
                 disabled={isProcessing !== null}
-                className={cn(
-                  "w-full py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2",
-                  billingCycle === "monthly"
-                    ? "bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20"
-                    : "bg-white/10 hover:bg-white/20 text-white"
-                )}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "monthly" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Commencer maintenant"}
+                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Commencer"}
               </button>
 
-              <div className="mt-8 space-y-4">
+              <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-amber-400" />
+                    <div className="h-4 w-4 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-2.5 w-2.5 text-amber-400" />
                     </div>
-                    <span className="text-sm text-white/80">{feature}</span>
+                    <span className="text-xs text-white/80">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Quarterly Tier */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="rounded-3xl p-6 border bg-[#0a0d14] border-white/10 hover:border-white/20 transition-all flex flex-col relative"
+            >
+              <h3 className="text-xl font-black text-white mb-2">Trimestriel</h3>
+              <p className="text-xs text-white/50 mb-6">Engagement de 3 mois pour construire un capital.</p>
+              
+              <div className="flex flex-col mb-8">
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-black text-white">49,99€</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">/3 mois</span>
+                </div>
+                <div className="mt-2 text-[10px] font-bold text-emerald-400">
+                  Économisez 10€
+                </div>
+              </div>
+
+              <button 
+                onClick={() => handleSubscribe("quarterly")}
+                disabled={isProcessing !== null}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
+              >
+                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sélectionner"}
+              </button>
+
+              <div className="space-y-3">
+                {TIER_FEATURES.map((feature, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="h-4 w-4 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-2.5 w-2.5 text-amber-400" />
+                    </div>
+                    <span className="text-xs text-white/80">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -186,62 +219,52 @@ export default function Pricing() {
 
             {/* Premium Tier (Annual) */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className={cn(
-                "rounded-3xl p-8 border bg-[#0a0d14] relative overflow-hidden transition-all z-10",
-                billingCycle === "annual" ? "border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.15)] scale-105" : "border-white/5 scale-100"
-              )}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="rounded-3xl p-6 border bg-[#0a0d14] border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.15)] relative overflow-hidden transition-all z-10 flex flex-col scale-100 sm:scale-105"
             >
-              {billingCycle === "annual" && (
-                <div className="absolute top-0 right-0 bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-bl-xl z-20">
-                  Meilleur Choix
-                </div>
-              )}
+              <div className="absolute top-0 right-0 bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl z-20">
+                Meilleur Choix
+              </div>
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
               
-              <h3 className="text-2xl font-black text-white mb-2">Le Pack Investisseur</h3>
-              <p className="text-sm text-white/50 mb-6">Engagement annuel. Rentabilisé en un pari.</p>
+              <h3 className="text-xl font-black text-white mb-2 relative z-10">Annuel</h3>
+              <p className="text-xs text-white/50 mb-6 relative z-10">L'offre investisseur. Rentabilisé en un pari.</p>
               
-              <div className="flex flex-col mb-8">
+              <div className="flex flex-col mb-8 relative z-10">
                 <div className="flex items-end gap-2">
-                  <span className="text-5xl font-black text-amber-400">149,99€</span>
-                  <span className="text-lg text-white/40 font-bold pb-1">/an</span>
+                  <span className="text-4xl font-black text-amber-400">149,99€</span>
+                  <span className="text-sm text-white/40 font-bold pb-1">/an</span>
                 </div>
-                <div className="mt-2 text-sm font-bold text-emerald-400">
-                  Soit seulement 12,49€ par mois (-40%)
+                <div className="mt-2 text-[10px] font-bold text-emerald-400">
+                  Soit 12,49€ par mois (-40%)
                 </div>
               </div>
 
               <button 
                 onClick={() => handleSubscribe("annual")}
                 disabled={isProcessing !== null}
-                className={cn(
-                  "w-full py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2",
-                  billingCycle === "annual"
-                    ? "bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 scale-100 hover:scale-[1.02]"
-                    : "bg-white/10 hover:bg-white/20 text-white"
-                )}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
               >
-                {isProcessing === "annual" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Rejoindre l'Élite"}
+                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rejoindre l'Élite"}
               </button>
 
-              <div className="mt-8 space-y-4 relative z-10">
+              <div className="space-y-3 relative z-10">
                 {TIER_FEATURES.map((feature, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-amber-400" />
+                    <div className="h-4 w-4 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-2.5 w-2.5 text-amber-400" />
                     </div>
-                    <span className="text-sm text-white/90 font-medium">{feature}</span>
+                    <span className="text-xs text-white/90 font-medium">{feature}</span>
                   </div>
                 ))}
                 {/* Extra Annual Feature */}
-                <div className="flex items-start gap-3 pt-4 border-t border-white/5">
-                  <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                    <Zap className="h-3 w-3 text-emerald-400" />
+                <div className="flex items-start gap-3 pt-3 border-t border-white/5">
+                  <div className="h-4 w-4 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <Zap className="h-2.5 w-2.5 text-emerald-400" />
                   </div>
-                  <span className="text-sm text-emerald-400 font-bold">Économie instantanée de 90€</span>
+                  <span className="text-xs text-emerald-400 font-bold">Économie instantanée de 90€</span>
                 </div>
               </div>
             </motion.div>
