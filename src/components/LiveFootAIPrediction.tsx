@@ -3,14 +3,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy, TrendingUp, Zap, Sparkles, Target, Share2, Copy, Check,
   AlertTriangle, Eye, User, Clock, Calendar, Swords, Video, ShieldCheck,
-  Grid3X3, Flame, Shield, Loader2, Brain, Star
+  Grid3X3, Flame, Shield, Loader2, Brain, Star, Crown, Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generatePrediction, type LiveFootAIPrediction, type TeamFormData } from "@/lib/livefoot-ai";
 import { useTeamForm, useHeadToHead, useAiExpert } from "@/hooks/useApiFootball";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { getRandomPartner } from "@/data/partnersData";
 import PartnerCard from "@/components/PartnerCard";
+import { Link } from "react-router-dom";
 
 interface LiveFootAIPredictionCardProps {
   fixtureId?: string;
@@ -62,6 +64,7 @@ const LiveFootAIPredictionCard = ({
   leagueName = "Football",
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
+  const { isVip, user } = useAuth();
   
   // Only fetch AI Expert if not already provided by parent (avoids double API call)
   const shouldFetchAi = !initialAiExpertPrediction && !!fixtureId;
@@ -350,8 +353,13 @@ const LiveFootAIPredictionCard = ({
                   LiveFoot AI
                   <Sparkles className="h-3 w-3 text-primary" />
                 </h3>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[8px] font-black uppercase tracking-tighter">
-                  100% GRATUIT
+                <span className={cn(
+                  "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-tighter",
+                  isVip 
+                    ? "bg-gradient-to-r from-amber-500/30 to-amber-600/20 border-amber-500/40 text-amber-300" 
+                    : "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                )}>
+                  {isVip ? <><Crown className="h-2 w-2" /> VIP</> : "GRATUIT"}
                 </span>
                 {prediction.valueBet && (
                   <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black uppercase tracking-tighter">
@@ -370,7 +378,7 @@ const LiveFootAIPredictionCard = ({
                 )}
               </div>
               <p className="text-[9px] sm:text-[10px] text-emerald-300/60">
-                {(prediction as any).isExpert ? "Analyse AnalystePro" : "Analyse intelligente"}
+                {isVip ? "AnalystePro V3 — Précision VIP" : (prediction as any).isExpert ? "Analyse AnalystePro" : "Analyse intelligente"}
               </p>
             </div>
           </div>
@@ -432,13 +440,21 @@ const LiveFootAIPredictionCard = ({
             )}
           </div>
 
-          {/* Value Bet Banner */}
+          {/* Value Bet Banner — VIP ONLY */}
           {prediction.valueBet && (
              <motion.div
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="mb-6 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 sm:p-4 flex items-start gap-3"
+               className={cn("mb-6 rounded-xl p-3 sm:p-4 flex items-start gap-3 relative overflow-hidden", isVip ? "bg-amber-500/10 border border-amber-500/20" : "bg-white/5 border border-white/10")}
              >
+               {!isVip && (
+                 <>
+                   <div className="absolute inset-0 backdrop-blur-md bg-black/40 z-10 flex flex-col items-center justify-center gap-2">
+                     <Lock className="h-5 w-5 text-amber-400" />
+                     <p className="text-[10px] font-black text-amber-400 uppercase">Réservé VIP</p>
+                   </div>
+                 </>
+               )}
                <Zap className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                <div>
                  <h5 className="text-xs font-black text-amber-400 uppercase tracking-wider mb-1">Value Bet Détecté</h5>
@@ -559,7 +575,7 @@ const LiveFootAIPredictionCard = ({
             </div>
           </motion.div>
 
-          {/* Detailed Expert Predictions Grid */}
+          {/* Detailed Expert Predictions Grid — FREE: first 3 visible, rest blurred. VIP: all visible */}
           {(prediction as any).detailedPredictions && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -569,9 +585,10 @@ const LiveFootAIPredictionCard = ({
               <div className="flex items-center gap-2 mb-3">
                 <Grid3X3 className="h-4 w-4 text-primary" />
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider">Événements du Match</h4>
+                {!isVip && <span className="ml-auto text-[8px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-black"><Crown className="h-2 w-2 inline mr-0.5" />VIP</span>}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {Object.entries((prediction as any).detailedPredictions).map(([key, value]) => {
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 relative">
+                {Object.entries((prediction as any).detailedPredictions).map(([key, value], idx) => {
                   const labels: Record<string, { label: string, icon: any }> = {
                     winner: { label: "Vainqueur", icon: Trophy },
                     btts: { label: "BTTS", icon: Zap },
@@ -592,10 +609,20 @@ const LiveFootAIPredictionCard = ({
                   const config = labels[key];
                   if (!config) return null;
                   const Icon = config.icon;
+                  const isLocked = !isVip && idx >= 3;
                   
                   return (
-                    <div key={key} className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center text-center group hover:bg-white/10 transition-colors">
-                      <Icon className="h-4 w-4 text-primary/60 mb-2 group-hover:text-primary transition-colors" />
+                    <div key={key} className={cn(
+                      "bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center text-center group transition-colors relative overflow-hidden",
+                      isLocked ? "" : "hover:bg-white/10",
+                      isVip && "border-amber-500/10 hover:border-amber-500/30"
+                    )}>
+                      {isLocked && (
+                        <div className="absolute inset-0 backdrop-blur-[6px] bg-black/30 z-10 flex items-center justify-center">
+                          <Lock className="h-3.5 w-3.5 text-amber-400/60" />
+                        </div>
+                      )}
+                      <Icon className={cn("h-4 w-4 mb-2 transition-colors", isVip ? "text-amber-400/70 group-hover:text-amber-400" : "text-primary/60 group-hover:text-primary")} />
                       <p className="text-[9px] text-white/40 uppercase font-bold mb-1">{config.label}</p>
                       <p className="text-xs font-black text-white">{value as string}</p>
                     </div>
@@ -605,14 +632,15 @@ const LiveFootAIPredictionCard = ({
             </motion.div>
           )}
 
-          {/* Key Factors */}
+          {/* Key Factors — FREE: 1 factor. VIP: all */}
           <div className="space-y-1.5 sm:space-y-2 mb-5">
             <p className="text-[9px] sm:text-[10px] font-bold text-white/40 uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <Zap className="h-3 w-3 text-primary" />
               Facteurs clés
+              {!isVip && prediction.factors.length > 1 && <span className="text-amber-400 text-[8px] ml-1">+{prediction.factors.length - 1} VIP</span>}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {prediction.factors.map((factor, i) => (
+              {(isVip ? prediction.factors : prediction.factors.slice(0, 1)).map((factor, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -10 }}
@@ -635,41 +663,75 @@ const LiveFootAIPredictionCard = ({
             </div>
           </div>
 
-          {/* Best Bets */}
+          {/* Best Bets — FREE: 2 visible + blur. VIP: all visible */}
           <div className="space-y-2">
             <p className="text-[9px] sm:text-[10px] font-bold text-white/40 uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <Target className="h-3 w-3 text-cyan-400" />
               Suggestions de paris
+              {!isVip && prediction.bestBets.length > 2 && <span className="text-amber-400 text-[8px] ml-1">+{prediction.bestBets.length - 2} VIP</span>}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {prediction.bestBets.map((bet, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2 + i * 0.1 }}
-                  className={cn(
-                    "rounded-xl bg-white/5 border border-white/5 p-2.5 sm:p-3 text-center hover:bg-white/8 transition-colors",
-                    i === 2 && "col-span-2 sm:col-span-1" // Third bet takes full width on mobile for better balance
-                  )}
-                >
-                  <span className="text-base sm:text-lg">{bet.emoji}</span>
-                  <p className="text-[9px] sm:text-[10px] font-bold text-white mt-1">{bet.label}</p>
-                  <div className="flex items-center justify-center gap-1 mt-1.5">
-                    <div className="h-1 flex-1 rounded-full bg-white/10 overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${bet.confidence}%` }}
-                        transition={{ duration: 0.8, delay: 1.4 + i * 0.1 }}
-                      />
+              {prediction.bestBets.map((bet, i) => {
+                const isLocked = !isVip && i >= 2;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2 + i * 0.1 }}
+                    className={cn(
+                      "rounded-xl border p-2.5 sm:p-3 text-center transition-colors relative overflow-hidden",
+                      isVip ? "bg-gradient-to-b from-amber-500/5 to-transparent border-amber-500/10 hover:border-amber-500/30" : "bg-white/5 border-white/5 hover:bg-white/8",
+                      i === 2 && "col-span-2 sm:col-span-1"
+                    )}
+                  >
+                    {isLocked && (
+                      <div className="absolute inset-0 backdrop-blur-[6px] bg-black/40 z-10 flex items-center justify-center">
+                        <Lock className="h-3.5 w-3.5 text-amber-400/60" />
+                      </div>
+                    )}
+                    <span className="text-base sm:text-lg">{bet.emoji}</span>
+                    <p className="text-[9px] sm:text-[10px] font-bold text-white mt-1">{bet.label}</p>
+                    <div className="flex items-center justify-center gap-1 mt-1.5">
+                      <div className="h-1 flex-1 rounded-full bg-white/10 overflow-hidden">
+                        <motion.div
+                          className={cn("h-full rounded-full", isVip ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-gradient-to-r from-primary to-emerald-500")}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${bet.confidence}%` }}
+                          transition={{ duration: 0.8, delay: 1.4 + i * 0.1 }}
+                        />
+                      </div>
+                      <span className={cn("text-[8px] sm:text-[9px] font-bold", isVip ? "text-amber-400" : "text-primary")}>{bet.confidence}%</span>
                     </div>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-primary">{bet.confidence}%</span>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
+
+          {/* VIP CTA for Free Users */}
+          {!isVip && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.6 }}
+              className="mt-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-transparent border border-amber-500/20 p-4 sm:p-5 text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-500/10 rounded-full blur-2xl" />
+              <Crown className="h-8 w-8 text-amber-400 mx-auto mb-2 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
+              <h4 className="text-sm font-black text-amber-300 mb-1">Débloquer toutes les prédictions</h4>
+              <p className="text-[10px] text-amber-100/60 mb-3 max-w-xs mx-auto">
+                Accédez aux Value Bets, aux {prediction.bestBets.length - 2}+ suggestions de paris supplémentaires, aux facteurs clés complets et à l'analyse xG avancée.
+              </p>
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-xs shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-105 transition-all"
+              >
+                <Crown className="h-3.5 w-3.5" />
+                DEVENIR VIP
+              </Link>
+            </motion.div>
+          )}
 
           {/* Affiliate CTA */}
           <motion.div
@@ -689,7 +751,7 @@ const LiveFootAIPredictionCard = ({
         <div className="px-4 sm:px-6 py-3 border-t border-white/5 flex items-center justify-between bg-white/[0.02]">
           <div className="flex flex-col gap-0.5">
             <p className="text-[9px] text-white/20">
-              Analyse LiveFoot AI v2.0
+              {isVip ? "AnalystePro V3 — Précision VIP" : "Analyse LiveFoot AI v3.0"}
             </p>
             <p className="text-[8px] text-white/10 uppercase tracking-tighter">Données Temps Réel</p>
           </div>

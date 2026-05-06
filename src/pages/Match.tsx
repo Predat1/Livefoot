@@ -1245,8 +1245,16 @@ const Match = () => {
                 let probHome = 0, probDraw = 0, probAway = 0;
                 let hasProbs = false;
 
-                // Source 1: API Predictions (most reliable)
-                if (apiPredictions?.predictions?.percent) {
+                // Source 0: Direct AI V3 probabilities (most precise)
+                if (aiExpertPrediction?.homeWinProb && aiExpertPrediction?.awayWinProb) {
+                  probHome = aiExpertPrediction.homeWinProb;
+                  probDraw = aiExpertPrediction.drawProb || (100 - aiExpertPrediction.homeWinProb - aiExpertPrediction.awayWinProb);
+                  probAway = aiExpertPrediction.awayWinProb;
+                  hasProbs = probHome + probDraw + probAway > 0;
+                }
+
+                // Source 1: API Predictions
+                if (!hasProbs && apiPredictions?.predictions?.percent) {
                   probHome = parseInt(apiPredictions.predictions.percent.home) || 0;
                   probDraw = parseInt(apiPredictions.predictions.percent.draw) || 0;
                   probAway = parseInt(apiPredictions.predictions.percent.away) || 0;

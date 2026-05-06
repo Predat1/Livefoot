@@ -10,6 +10,7 @@ interface Profile {
   avatar_url: string | null;
   bio: string | null;
   favorite_team: string | null;
+  is_vip?: boolean;
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  isVip: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -42,6 +44,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = async () => {
     if (user) await fetchProfile(user.id);
   };
+
+  // Derive VIP status from profile column or user metadata
+  const isVip = !!(
+    profile?.is_vip ||
+    user?.user_metadata?.is_vip ||
+    user?.app_metadata?.is_vip
+  );
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
@@ -70,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isVip, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
