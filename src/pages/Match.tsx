@@ -14,6 +14,7 @@ import {
   DollarSign, BarChart3, Info
 } from "lucide-react";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
+import OddsAnomalyDetector from "@/components/OddsAnomalyDetector";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug, extractIdFromSlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -879,7 +880,18 @@ const Match = () => {
         </TabsContent>
 
 
-        <TabsContent value="predictions" className="mt-0">
+        <TabsContent value="predictions" className="mt-0 space-y-6">
+          <SectionErrorBoundary sectionName="Odds Anomaly Detector">
+            <OddsAnomalyDetector
+              oddsData={oddsData || []}
+              liveOddsData={liveOddsData || []}
+              apiPredictions={apiPredictions}
+              homeTeamName={homeTeam.name}
+              awayTeamName={awayTeam.name}
+              leagueName={league?.name}
+            />
+          </SectionErrorBoundary>
+
           <SectionErrorBoundary sectionName="AI Predictions">
             <LiveFootAIPrediction
               homeTeamId={homeTeamId}
