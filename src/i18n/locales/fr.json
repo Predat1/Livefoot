@@ -1,0 +1,39 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "back_home": "Retour à l'accueil",
+    "no_data": "Données non disponibles",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  },
+  "nav": {
+    "live": "En Direct",
+    "news": "Actualités",
+    "competitions": "Compétitions",
+    "predictions": "Pronostics",
+    "bonuses": "Bonus",
+    "profile": "Profil"
+  },
+  "match": {
+    "summary": "Résumé",
+    "stats": "Stats",
+    "lineups": "Compos",
+    "momentum": "Momentum",
+    "h2h": "H2H",
+    "form": "Forme",
+    "odds": "Cotes",
+    "predictions_ia": "Pronos IA",
+    "community_arena": "Arène Communauté",
+    "pressure_graph": "Graphique de Pression",
+    "domination_radar": "Radar de Domination"
+  },
+  "predictions": {
+    "submit": "Valider le pronostic",
+    "update": "Modifier mon score",
+    "voted": "Pronostic enregistré !",
+    "login_to_vote": "Connectez-vous pour voter !",
+    "confidence": "Confiance"
+  }
+}

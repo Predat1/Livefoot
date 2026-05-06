@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Home, Star, Zap, Medal, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -6,19 +7,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLiveFixtures } from "@/hooks/useApiFootball";
 import { motion } from "framer-motion";
 
-const navItems = [
-  { href: "/", icon: Home, label: "Matchs" },
-  { href: "/live", icon: Zap, label: "Live", isLive: true },
-  { href: "/daily-picks", icon: Brain, label: "Pronos" },
-  { href: "/rankings", icon: Medal, label: "Ranking" },
-  { href: "/favorites", icon: Star, label: "Favoris" },
-];
-
 const BottomNav = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const { totalFavorites } = useFavorites();
   const { user } = useAuth();
   const { data: liveLeagues } = useLiveFixtures();
+
+  const navItems = [
+    { href: "/", icon: Home, label: t("nav.live") }, // Using live as games/matchs for simplicity or t("nav.games")
+    { href: "/live", icon: Zap, label: "Live", isLive: true },
+    { href: "/daily-picks", icon: Brain, label: t("nav.predictions") },
+    { href: "/rankings", icon: Medal, label: "Ranking" },
+    { href: "/favorites", icon: Star, label: "Favoris" },
+  ];
 
   const liveCount = liveLeagues?.reduce(
     (acc, l) => acc + l.matches.length,

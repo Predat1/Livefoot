@@ -1,0 +1,39 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "back_home": "Back to Home",
+    "no_data": "No data available",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "nav": {
+    "live": "Live",
+    "news": "News",
+    "competitions": "Competitions",
+    "predictions": "Predictions",
+    "bonuses": "Bonuses",
+    "profile": "Profile"
+  },
+  "match": {
+    "summary": "Summary",
+    "stats": "Stats",
+    "lineups": "Lineups",
+    "momentum": "Momentum",
+    "h2h": "H2H",
+    "form": "Form",
+    "odds": "Odds",
+    "predictions_ia": "AI Predictions",
+    "community_arena": "Community Arena",
+    "pressure_graph": "Pressure Graph",
+    "domination_radar": "Domination Radar"
+  },
+  "predictions": {
+    "submit": "Submit Prediction",
+    "update": "Update my score",
+    "voted": "Prediction saved!",
+    "login_to_vote": "Log in to vote!",
+    "confidence": "Confidence"
+  }
+}

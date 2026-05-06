@@ -18,6 +18,7 @@ import ShareWidget from "@/components/ShareWidget";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { MatchSkeleton } from "@/components/BrandedLoader";
 import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";

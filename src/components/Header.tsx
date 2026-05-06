@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useSearch } from "@/hooks/useSearch";
 import { useAppLogo } from "@/hooks/useAppLogo";
 
@@ -237,6 +238,7 @@ const Header = () => {
             </Button>
 
             <ThemeToggle />
+            <LanguageSwitcher />
 
 
             {/* Hamburger */}

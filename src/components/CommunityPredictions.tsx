@@ -100,10 +100,26 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
           .eq("fixture_id", fixtureId);
         toast.success("Pronostic mis à jour !");
       } else {
+        // Insert prediction
         await supabase
           .from("match_predictions")
           .insert({ user_id: user.id, fixture_id: fixtureId, home_score: myHome, away_score: myAway });
-        toast.success("Pronostic validé ! +1 pt de participation");
+        
+        // Award points (+10 for participation)
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("points")
+          .eq("id", user.id)
+          .single();
+        
+        const newPoints = (profile?.points || 0) + 10;
+        
+        await supabase
+          .from("profiles")
+          .update({ points: newPoints })
+          .eq("id", user.id);
+
+        toast.success("Pronostic validé ! +10 pts de participation");
       }
 
       setHasSubmitted(true);
