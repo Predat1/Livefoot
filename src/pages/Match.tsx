@@ -1240,20 +1240,67 @@ const Match = () => {
 
             <div className="mt-6 sm:mt-8 flex flex-col items-center w-full max-w-lg mx-auto">
               {/* Win Probability Bar */}
-              {aiExpertPrediction?.predictions && (
-                <div className="w-full mb-6">
-                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 px-1">
-                    <span className="text-primary">{aiExpertPrediction.predictions.homeWin}%</span>
-                    <span>Probabilité de Victoire (IA)</span>
-                    <span className="text-accent">{aiExpertPrediction.predictions.awayWin}%</span>
+              {(() => {
+                // Compute probabilities from available data
+                let probHome = 0, probDraw = 0, probAway = 0;
+                let hasProbs = false;
+
+                // Source 1: API Predictions (most reliable)
+                if (apiPredictions?.predictions?.percent) {
+                  probHome = parseInt(apiPredictions.predictions.percent.home) || 0;
+                  probDraw = parseInt(apiPredictions.predictions.percent.draw) || 0;
+                  probAway = parseInt(apiPredictions.predictions.percent.away) || 0;
+                  hasProbs = probHome + probDraw + probAway > 0;
+                }
+                
+                // Source 2: AI Expert confidence + predicted score
+                if (!hasProbs && aiExpertPrediction?.confidence && aiExpertPrediction?.predictedScore) {
+                  const conf = Math.round((aiExpertPrediction.confidence || 0) * 100);
+                  const [h, a] = (aiExpertPrediction.predictedScore || "0-0").split("-").map(Number);
+                  if (h > a) {
+                    probHome = conf;
+                    probDraw = Math.round((100 - conf) * 0.45);
+                    probAway = 100 - probHome - probDraw;
+                  } else if (a > h) {
+                    probAway = conf;
+                    probDraw = Math.round((100 - conf) * 0.45);
+                    probHome = 100 - probAway - probDraw;
+                  } else {
+                    probDraw = conf;
+                    probHome = Math.round((100 - conf) * 0.55);
+                    probAway = 100 - probDraw - probHome;
+                  }
+                  hasProbs = true;
+                }
+
+                if (!hasProbs) return null;
+
+                // Normalize
+                const total = probHome + probDraw + probAway;
+                if (total > 0 && total !== 100) {
+                  probHome = Math.round((probHome / total) * 100);
+                  probDraw = Math.round((probDraw / total) * 100);
+                  probAway = 100 - probHome - probDraw;
+                }
+
+                return (
+                  <div className="w-full mb-6">
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 px-1">
+                      <span className="text-primary">{probHome}%</span>
+                      <span>Probabilité de Victoire</span>
+                      <span className="text-accent">{probAway}%</span>
+                    </div>
+                    <div className="flex h-2 w-full rounded-full overflow-hidden bg-background/50 border border-white/5 backdrop-blur-sm">
+                      <div className="bg-primary h-full transition-all duration-700" style={{ width: `${probHome}%` }} />
+                      <div className="bg-muted-foreground/40 h-full transition-all duration-700" style={{ width: `${probDraw}%` }} />
+                      <div className="bg-accent h-full transition-all duration-700" style={{ width: `${probAway}%` }} />
+                    </div>
+                    <div className="flex justify-center mt-1">
+                      <span className="text-[9px] text-muted-foreground/50">Nul: {probDraw}%</span>
+                    </div>
                   </div>
-                  <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-background/50 border border-white/5 backdrop-blur-sm">
-                    <div className="bg-primary h-full transition-all" style={{ width: `${aiExpertPrediction.predictions.homeWin}%` }} />
-                    <div className="bg-muted-foreground/30 h-full transition-all" style={{ width: `${aiExpertPrediction.predictions.draw}%` }} />
-                    <div className="bg-accent h-full transition-all" style={{ width: `${aiExpertPrediction.predictions.awayWin}%` }} />
-                  </div>
-                </div>
-              )}
+                );
+              })()}
               
               <div className="flex items-center justify-center gap-4 sm:gap-8 text-[11px] sm:text-sm font-medium text-muted-foreground flex-wrap">
                 {venue?.name && <div className="flex items-center gap-1.5 bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-sm"><MapPin className="h-3.5 w-3.5 text-primary" /><span>{venue.name}</span></div>}

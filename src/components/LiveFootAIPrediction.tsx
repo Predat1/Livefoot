@@ -91,29 +91,98 @@ const LiveFootAIPredictionCard = ({
         
         const outcome = homeScore > awayScore ? "home" : homeScore < awayScore ? "away" : "draw";
         
-        return {
-          outcome,
-          confidence: Math.round((aiExpertPrediction.confidence || 0) * 100),
-          predictedScore: { home: homeScore || 0, away: awayScore || 0 },
-          probabilities: { home: 0, draw: 0, away: 0 }, 
-          factors: [{
-            icon: "🧠",
-            label: aiExpertPrediction.matchState === "En direct" ? "Analyse Live" : "Analyse Expert",
-            description: aiExpertPrediction.keyFactor || "Analyse en cours...",
+        const extractedBets: { type: string; label: string; confidence: number; emoji: string }[] = [];
+        const baseConf = Math.round((aiExpertPrediction.confidence || 0) * 100);
+        
+        // Compute real probabilities from AI confidence + outcome
+        let homeProb = 0, drawProb = 0, awayProb = 0;
+        if (outcome === "home") {
+          homeProb = baseConf;
+          drawProb = Math.round((100 - baseConf) * 0.45);
+          awayProb = 100 - homeProb - drawProb;
+        } else if (outcome === "away") {
+          awayProb = baseConf;
+          drawProb = Math.round((100 - baseConf) * 0.45);
+          homeProb = 100 - awayProb - drawProb;
+        } else {
+          drawProb = baseConf;
+          homeProb = Math.round((100 - baseConf) * 0.55);
+          awayProb = 100 - drawProb - homeProb;
+        }
+        // Clamp
+        homeProb = Math.max(5, Math.min(90, homeProb));
+        awayProb = Math.max(5, Math.min(90, awayProb));
+        drawProb = Math.max(5, 100 - homeProb - awayProb);
+
+        // Extract rich betting suggestions from AI predictions
+        if (aiExpertPrediction.predictions) {
+          const p = aiExpertPrediction.predictions;
+          if (p.winner && p.winner !== "N/A") extractedBets.push({ type: "1X2", label: `Vainqueur: ${p.winner}`, confidence: baseConf, emoji: "🏆" });
+          if (p.btts && p.btts !== "N/A") extractedBets.push({ type: "BTTS", label: `Les 2 marquent: ${p.btts}`, confidence: Math.max(55, baseConf - 5), emoji: "⚽" });
+          if (p.overUnder25 && p.overUnder25 !== "N/A") extractedBets.push({ type: "O/U", label: `Buts 2.5: ${p.overUnder25}`, confidence: Math.max(50, baseConf - 10), emoji: "🔥" });
+          if (p.doubleChance && p.doubleChance !== "N/A") extractedBets.push({ type: "DC", label: `Double Chance: ${p.doubleChance}`, confidence: Math.min(95, baseConf + 15), emoji: "🛡️" });
+          if (p.cleanSheet && p.cleanSheet !== "N/A" && p.cleanSheet !== "None") extractedBets.push({ type: "CS", label: `Clean Sheet: ${p.cleanSheet}`, confidence: Math.max(40, baseConf - 15), emoji: "🧤" });
+          if (p.corners && p.corners !== "N/A") extractedBets.push({ type: "Corners", label: `Corners: ${p.corners}`, confidence: Math.max(45, baseConf - 20), emoji: "📐" });
+          if (p.highestScoringHalf && p.highestScoringHalf !== "N/A") extractedBets.push({ type: "Half", label: `Mi-temps +: ${p.highestScoringHalf}`, confidence: Math.max(45, baseConf - 15), emoji: "⏱️" });
+          if (p.winningMargin && p.winningMargin !== "N/A") extractedBets.push({ type: "Marge", label: `Marge: ${p.winningMargin}`, confidence: Math.max(35, baseConf - 25), emoji: "📊" });
+        }
+        if (extractedBets.length === 0) {
+          extractedBets.push({ type: "AI", label: `Score prédit: ${predictedScore}`, confidence: baseConf, emoji: "✨" });
+        }
+        // Always add the exact score as a bet
+        extractedBets.push({ type: "Score Exact", label: `${homeScore}-${awayScore}`, confidence: Math.max(15, baseConf - 30), emoji: "🎯" });
+
+        // Extract multiple factors from AI data
+        const factors: any[] = [{
+          icon: "🧠",
+          label: aiExpertPrediction.matchState === "En direct" ? "Analyse Live" : "Analyse Expert IA",
+          description: aiExpertPrediction.keyFactor || "Analyse en cours...",
+          impact: "neutral",
+          team: "both"
+        }];
+        if (aiExpertPrediction.reasoning) {
+          factors.push({
+            icon: "📊",
+            label: "Raisonnement",
+            description: aiExpertPrediction.reasoning,
             impact: "neutral",
             team: "both"
-          }],
+          });
+        }
+        if (aiExpertPrediction.xgHome != null && aiExpertPrediction.xgAway != null) {
+          factors.push({
+            icon: "📈",
+            label: "Expected Goals (xG)",
+            description: `xG: ${aiExpertPrediction.xgHome.toFixed(1)} - ${aiExpertPrediction.xgAway.toFixed(1)}`,
+            impact: aiExpertPrediction.xgHome > aiExpertPrediction.xgAway ? "positive" : "negative",
+            team: aiExpertPrediction.xgHome > aiExpertPrediction.xgAway ? "home" : "away"
+          });
+        }
+        if (aiExpertPrediction.valueBet && typeof aiExpertPrediction.valueBet === 'string' && aiExpertPrediction.valueBet.toLowerCase() !== "null") {
+          factors.push({
+            icon: "💎",
+            label: "Value Bet détecté",
+            description: aiExpertPrediction.valueBet,
+            impact: "positive",
+            team: "both"
+          });
+        }
+
+        return {
+          outcome,
+          confidence: baseConf,
+          predictedScore: { home: homeScore || 0, away: awayScore || 0 },
+          probabilities: { home: homeProb, draw: drawProb, away: awayProb },
+          factors: factors.slice(0, 5),
           advice: aiExpertPrediction.analysis || "",
           reasoning: aiExpertPrediction.reasoning,
-          risk: (aiExpertPrediction.confidence || 0) > 0.7 ? "low" : "medium",
+          risk: baseConf > 70 ? "low" : baseConf > 50 ? "medium" : "high",
           matchState: aiExpertPrediction.matchState,
           confidenceStars: aiExpertPrediction.confidenceStars || Math.round((aiExpertPrediction.confidence || 0) * 5),
           xgHome: aiExpertPrediction.xgHome,
           xgAway: aiExpertPrediction.xgAway,
           valueBet: (aiExpertPrediction.valueBet && typeof aiExpertPrediction.valueBet === 'string' && aiExpertPrediction.valueBet.toLowerCase() !== "null") ? aiExpertPrediction.valueBet : null,
-          bestBets: [
-            { type: "AI", label: `Oracle: ${predictedScore}`, confidence: Math.round((aiExpertPrediction.confidence || 0) * 100), emoji: "✨" }
-          ],
+          bestBets: extractedBets.slice(0, 6),
           isExpert: true,
           detailedPredictions: aiExpertPrediction.predictions || {}
         };
@@ -158,6 +227,22 @@ const LiveFootAIPredictionCard = ({
           }
         }
 
+        const fallbackBets = [
+          { type: "API", label: p.advice, confidence: Math.max(homeProb, drawProb, awayProb), emoji: "🎯" }
+        ];
+
+        if (parseInt(p.goals.home) + parseInt(p.goals.away) > 2.5) {
+          fallbackBets.push({ type: "API", label: "+2.5 Buts", confidence: 65, emoji: "🔥" });
+        } else {
+          fallbackBets.push({ type: "API", label: "-2.5 Buts", confidence: 60, emoji: "🛡️" });
+        }
+        
+        if (parseInt(p.goals.home) > 0 && parseInt(p.goals.away) > 0) {
+          fallbackBets.push({ type: "API", label: "Les 2 marquent: Oui", confidence: 55, emoji: "⚽" });
+        } else {
+          fallbackBets.push({ type: "API", label: "Clean Sheet probable", confidence: 55, emoji: "⛔" });
+        }
+
         return {
           outcome,
           confidence: Math.max(homeProb, drawProb, awayProb),
@@ -169,9 +254,7 @@ const LiveFootAIPredictionCard = ({
           factors: factors.slice(0, 5),
           advice: p.advice,
           risk: (Math.max(homeProb, drawProb, awayProb) > 60) ? "low" : "medium",
-          bestBets: [
-            { type: "API", label: p.advice, confidence: Math.max(homeProb, drawProb, awayProb), emoji: "✅" }
-          ]
+          bestBets: fallbackBets.slice(0, 3)
         };
       } catch (e) {
         console.error("Error mapping API prediction:", e);
