@@ -145,7 +145,7 @@ const Match = () => {
         e?.time?.elapsed >= i && e?.time?.elapsed < i + 2
       );
       eventsInWindow.forEach((e: any) => {
-        const isHome = e.team?.id === fix.teams.home.id;
+        const isHome = e.team?.id === fix?.teams?.home?.id;
         const multiplier = isHome ? 1 : -1;
         if (e.type === "Goal") currentValue += 40 * multiplier;
         if (e.type === "Card" && e.detail === "Red Card") currentValue -= 50 * multiplier;
@@ -216,19 +216,29 @@ const Match = () => {
     );
   }
 
-  // ─── Dérivation des données (pas des hooks, OK après les guards) ─
-  const status = mapFixtureStatus(fix.fixture.status.short);
+  // ─── Dérivation des données (sécurisée avec optionnal chaining) ─
+  const status = fix?.fixture?.status?.short ? mapFixtureStatus(fix.fixture.status.short) : "scheduled";
   const isLive = status === "live";
   const isFinished = status === "finished";
   const hasStats = isLive || isFinished;
 
-  const homeTeam = { name: fix.teams.home.name, logo: fix.teams.home.logo, score: fix.goals?.home ?? 0 };
-  const awayTeam = { name: fix.teams.away.name, logo: fix.teams.away.logo, score: fix.goals?.away ?? 0 };
-  const league = fix.league;
-  const venue = fix.fixture.venue;
-  const referee = fix.fixture.referee;
-  const minute = fix.fixture.status.elapsed;
-  const time = new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const homeTeam = { 
+    name: fix?.teams?.home?.name || "Équipe domicile", 
+    logo: fix?.teams?.home?.logo || "", 
+    score: fix?.goals?.home ?? 0 
+  };
+  const awayTeam = { 
+    name: fix?.teams?.away?.name || "Équipe extérieur", 
+    logo: fix?.teams?.away?.logo || "", 
+    score: fix?.goals?.away ?? 0 
+  };
+  const league = fix?.league || {};
+  const venue = fix?.fixture?.venue || {};
+  const referee = fix?.fixture?.referee || "Arbitre non communiqué";
+  const minute = fix?.fixture?.status?.elapsed;
+  const time = fix?.fixture?.date 
+    ? new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) 
+    : "--:--";
 
   const events = (eventsData || []) as any[];
   const teamStats = (statsData || []) as any[];
@@ -251,12 +261,12 @@ const Match = () => {
   };
 
   const tacticalData = lineups.length >= 2 ? {
-    home: (lineups[0].startXI || []).map((item: any) => ({
+    home: (lineups[0]?.startXI || []).map((item: any) => ({
       name: item.player?.name || "",
       number: item.player?.number || 0,
       pos: item.player?.pos || "MID",
     })),
-    away: (lineups[1].startXI || []).map((item: any) => ({
+    away: (lineups[1]?.startXI || []).map((item: any) => ({
       name: item.player?.name || "",
       number: item.player?.number || 0,
       pos: item.player?.pos || "MID",
@@ -955,7 +965,7 @@ const Match = () => {
               </div>
               <div className="p-4 sm:p-6">
                 <div className="space-y-4">
-                  {odds.slice(0, 5).map((bookmaker: any, bIdx: number) => {
+                  {odds.length > 0 ? (odds as any[]).slice(0, 5).map((bookmaker: any, bIdx: number) => {
                     const bets = bookmaker.bookmakers?.[0];
                     if (!bets) return null;
                     return (
@@ -976,7 +986,9 @@ const Match = () => {
                         ))}
                       </div>
                     );
-                  })}
+                  }) : (
+                    <p className="text-center text-muted-foreground py-8 text-sm">Cotes non disponibles</p>
+                  )}
                 </div>
               </div>
             </div>

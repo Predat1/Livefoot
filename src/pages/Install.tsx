@@ -1,62 +1,19 @@
-import { useState, useEffect } from "react";
-import { Download, Check, Smartphone, Share, Plus, MoreVertical } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Header from "@/components/Header";
+import Layout from "@/components/Layout";
+import SEOHead from "@/components/SEOHead";
+import { Smartphone, Zap, Globe, Bell, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAppLogo } from "@/hooks/useAppLogo";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
 
 const Install = () => {
   const livefootLogo = useAppLogo();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
-
-  useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-    }
-
-    // Detect platform
-    const userAgent = navigator.userAgent.toLowerCase();
-    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
-    setIsAndroid(/android/.test(userAgent));
-
-    // Listen for install prompt
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === "accepted") {
-      setIsInstalled(true);
-    }
-    setDeferredPrompt(null);
-  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container py-8 sm:py-12">
+    <Layout>
+      <SEOHead
+        title="Application LiveFoot"
+        description="Accédez à LiveFoot depuis votre navigateur pour des scores en direct, pronostics IA et statistiques de football."
+      />
+      <div className="container py-8 sm:py-12">
         <div className="mx-auto max-w-2xl text-center">
           {/* Hero */}
           <div className="mb-8 flex justify-center">
@@ -66,108 +23,59 @@ const Install = () => {
           </div>
 
           <h1 className="mb-4 text-3xl sm:text-4xl font-black text-foreground">
-            Installer LiveFoot
+            LiveFoot
           </h1>
           
           <p className="mb-8 text-base sm:text-lg text-muted-foreground">
-            Profitez de la meilleure expérience football. Installez notre application pour un accès instantané aux scores en direct, 
-            aux pronostics IA et bien plus encore - même hors ligne !
+            Accédez à tous les scores en direct, pronostics IA et statistiques directement
+            depuis votre navigateur — aucune installation requise !
           </p>
 
-          {isInstalled ? (
-            <div className="mb-8 flex flex-col items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
-                <Check className="h-8 w-8 text-primary" />
-              </div>
-              <p className="text-lg font-semibold text-primary">Application Installée !</p>
-              <p className="text-sm text-muted-foreground">
-                Vous pouvez maintenant accéder à LiveFoot depuis votre écran d'accueil.
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Android / Chrome install button */}
-              {deferredPrompt && (
-                <Button
-                  onClick={handleInstall}
-                  size="lg"
-                  className="mb-8 h-14 rounded-2xl gradient-primary px-8 text-lg font-bold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
-                >
-                  <Download className="mr-3 h-6 w-6" />
-                  Installer l'Appli
-                </Button>
-              )}
-
-              {/* iOS Instructions */}
-              {isIOS && !deferredPrompt && (
-                <div className="mb-8 rounded-2xl border border-border bg-card p-6 text-left">
-                  <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
-                    <Smartphone className="h-5 w-5 text-primary" />
-                    Installer sur iPhone/iPad
-                  </h3>
-                  <ol className="space-y-4 text-muted-foreground">
-                    <li className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span>
-                      <span>Appuyez sur le bouton Partager <Share className="inline h-4 w-4 mx-1" /> dans Safari</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span>
-                      <span>Faites défiler et appuyez sur <Plus className="inline h-4 w-4 mx-1" /> "Sur l'écran d'accueil"</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span>
-                      <span>Appuyez sur "Ajouter" pour installer</span>
-                    </li>
-                  </ol>
-                </div>
-              )}
-
-              {/* Android fallback instructions */}
-              {isAndroid && !deferredPrompt && (
-                <div className="mb-8 rounded-2xl border border-border bg-card p-6 text-left">
-                  <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
-                    <Smartphone className="h-5 w-5 text-primary" />
-                    Installer sur Android
-                  </h3>
-                  <ol className="space-y-4 text-muted-foreground">
-                    <li className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span>
-                      <span>Appuyez sur le menu <MoreVertical className="inline h-4 w-4 mx-1" /> dans Chrome</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span>
-                      <span>Appuyez sur "Installer l'application"</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span>
-                      <span>Confirmez en appuyant sur "Installer"</span>
-                    </li>
-                  </ol>
-                </div>
-              )}
-            </>
-          )}
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-2xl gradient-primary px-8 py-4 text-lg font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
+          >
+            Accéder à LiveFoot <ArrowRight className="h-5 w-5" />
+          </Link>
 
           {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left mt-12">
             {[
-              { icon: "⚡", title: "Rapide", desc: "Chargement instantané" },
-              { icon: "📱", title: "Expérience Native", desc: "Comme une vraie appli" },
-              { icon: "📡", title: "Hors Ligne", desc: "Accès même sans internet" },
+              { icon: Zap, title: "Ultra Rapide", desc: "Chargement instantané, données en temps réel" },
+              { icon: Globe, title: "Toujours à Jour", desc: "Dernière version automatiquement" },
+              { icon: Bell, title: "Notifications", desc: "Alertes en temps réel sur les matchs" },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-xl border border-border bg-card p-4 text-center"
+                className="rounded-xl border border-border bg-card p-5 text-center"
               >
-                <span className="text-2xl">{feature.icon}</span>
-                <h4 className="mt-2 font-semibold text-foreground">{feature.title}</h4>
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary mx-auto mb-3 shadow-md shadow-primary/20">
+                  <feature.icon className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <h4 className="font-bold text-foreground mb-1">{feature.title}</h4>
                 <p className="text-xs text-muted-foreground">{feature.desc}</p>
               </div>
             ))}
           </div>
+
+          {/* Mobile tip */}
+          <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-left">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 flex-shrink-0">
+                <Smartphone className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground mb-1">Astuce Mobile</h3>
+                <p className="text-sm text-muted-foreground">
+                  Ajoutez un raccourci vers <span className="font-semibold text-primary">livefoot.app</span> sur
+                  votre écran d'accueil pour y accéder en un tap, comme une application native.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 };
 

@@ -10,10 +10,6 @@ import CookieConsent from "@/components/CookieConsent";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
 
 import { useEffect } from "react";
-import { useRegisterSW } from "virtual:pwa-register/react";
-import { toast } from "sonner";
-
-import InstallPWA from "@/components/InstallPWA";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,24 +22,11 @@ const queryClient = new QueryClient({
   },
 });
 
-// Versioning pour forcer la mise à jour du cache en cas de changement majeur
-const APP_VERSION = "1.0.2";
+// Versioning pour forcer la purge finale du SW (PWA désactivé depuis v2.0.0)
+const APP_VERSION = "2.0.0";
 const STORAGE_KEY = "livefoot_version";
 
 const App = () => {
-  const {
-    offlineReady: [offlineReady, _setOfflineReady],
-    needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegistered(r) {
-      console.log("SW Registered:", r);
-    },
-    onRegisterError(error) {
-      console.error("SW registration error:", error);
-    },
-  });
-
   useEffect(() => {
     const savedVersion = localStorage.getItem(STORAGE_KEY);
     if (savedVersion !== APP_VERSION) {
@@ -67,23 +50,9 @@ const App = () => {
         });
       } else {
         localStorage.setItem(STORAGE_KEY, APP_VERSION);
-        window.location.reload();
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (needRefresh) {
-      toast("Nouvelle version disponible", {
-        description: "Rechargez pour profiter des dernières améliorations.",
-        duration: Infinity,
-        action: {
-          label: "Recharger",
-          onClick: () => updateServiceWorker(true),
-        },
-      });
-    }
-  }, [needRefresh, updateServiceWorker]);
 
   return (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
@@ -96,7 +65,6 @@ const App = () => {
             <ScrollToTop />
             <CookieConsent />
             <AnimatedRoutes />
-            <InstallPWA />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

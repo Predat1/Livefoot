@@ -764,7 +764,7 @@ export function usePlayerDetailApi(playerId: string, season = "2024") {
       const res = await getPlayerById(playerId, season);
       return parsePlayerResponse(res);
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000, // 1 hour for standings
     enabled: !!playerId && isNumeric,
   });
 
@@ -782,7 +782,7 @@ export function usePlayerDetailApi(playerId: string, season = "2024") {
       ) || res.response[0];
       return parsePlayerResponse({ response: [best] });
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000, // 1 hour for squad
     enabled: !!playerId && !isNumeric,
   });
 
@@ -934,7 +934,7 @@ export function useTeamForm(teamId: string) {
         };
       });
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 mins for team form
     enabled: !!teamId,
   });
 }
@@ -966,7 +966,7 @@ export function useFixtureOdds(fixtureId: string) {
       const res = await getOdds({ fixture: fixtureId });
       return (res.response || []) as any[];
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 20 * 60 * 1000, // 20 mins for odds
     enabled: !!fixtureId,
   });
 }

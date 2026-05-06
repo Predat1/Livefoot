@@ -1,4 +1,4 @@
-import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift, ArrowRight } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -139,8 +139,15 @@ const Header = () => {
           </Link>
         </>
       ) : query.length >= 3 ? (
-        <div className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">Aucun résultat pour "{query}"</p>
+        <div className="py-8 text-center px-4">
+          <p className="text-sm text-muted-foreground mb-3">Aucun résultat pour "{query}"</p>
+          <Link
+            to={`/search?q=${encodeURIComponent(query)}`}
+            className="inline-flex items-center gap-1.5 text-xs font-black text-primary hover:underline uppercase tracking-widest"
+            onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
+          >
+            Recherche avancée <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
       ) : (
         <div className="py-6 text-center">
