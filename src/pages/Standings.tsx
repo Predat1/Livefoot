@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import TeamLogo from "@/components/TeamLogo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const LEAGUES = [
   { id: "61", name: "Ligue 1", season: "2024" },
@@ -24,16 +25,28 @@ const Standings = () => {
 
   const { data: standings, isLoading, isError } = useStandings(selectedLeague.id, selectedLeague.season);
 
-  const getFormBadge = (char: string) => {
-    const colors: Record<string, string> = {
-      W: "bg-emerald-500 text-white shadow-sm shadow-emerald-500/20",
-      D: "bg-amber-500 text-white shadow-sm shadow-amber-500/20",
-      L: "bg-destructive text-white shadow-sm shadow-destructive-500/20",
+  const getFormBadge = (char: string, index: number) => {
+    const data: Record<string, { color: string, label: string }> = {
+      W: { color: "bg-emerald-500 text-white shadow-sm shadow-emerald-500/20", label: "Victoire" },
+      D: { color: "bg-amber-500 text-white shadow-sm shadow-amber-500/20", label: "Match Nul" },
+      L: { color: "bg-destructive text-white shadow-sm shadow-destructive/20", label: "Défaite" },
     };
+    
+    const info = data[char] || { color: "bg-muted text-muted-foreground", label: "Inconnu" };
+    
     return (
-      <span className={cn("w-4 h-4 sm:w-5 sm:h-5 rounded-md text-[10px] sm:text-xs font-black flex items-center justify-center", colors[char] || "bg-muted text-muted-foreground")}>
-        {char === "W" ? "V" : char === "L" ? "D" : "N"}
-      </span>
+      <TooltipProvider key={index}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className={cn("w-4 h-4 sm:w-5 sm:h-5 rounded-md text-[10px] sm:text-xs font-black flex items-center justify-center cursor-help hover:scale-110 transition-transform", info.color)}>
+              {char === "W" ? "V" : char === "L" ? "D" : "N"}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs font-bold">
+            <p>{info.label}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   };
 
@@ -112,30 +125,35 @@ const Standings = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto scrollbar-hide">
-              <table className="w-full min-w-[600px]">
-                <thead>
+            <div className="overflow-x-auto scrollbar-hide max-h-[70vh]">
+              <table className="w-full min-w-[600px] border-collapse relative">
+                <thead className="sticky top-0 bg-card z-10 shadow-sm">
                   <tr className="border-b border-border text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
-                    <th className="px-2 sm:px-4 py-3 text-left font-bold">#</th>
+                    <th className="px-2 sm:px-4 py-3 text-left font-bold w-12">#</th>
                     <th className="px-2 sm:px-4 py-3 text-left font-bold">Équipe</th>
                     <th className="px-2 sm:px-4 py-3 text-center font-bold">J</th>
                     <th className="px-2 sm:px-4 py-3 text-center font-bold">V</th>
                     <th className="px-2 sm:px-4 py-3 text-center font-bold">N</th>
                     <th className="px-2 sm:px-4 py-3 text-center font-bold">D</th>
-                    <th className="px-2 sm:px-4 py-3 text-center font-bold">BP</th>
-                    <th className="px-2 sm:px-4 py-3 text-center font-bold">BC</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold hidden sm:table-cell">BP</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold hidden sm:table-cell">BC</th>
                     <th className="px-2 sm:px-4 py-3 text-center font-bold">+/-</th>
-                    <th className="px-2 sm:px-4 py-3 text-center font-bold">Pts</th>
-                    <th className="px-2 sm:px-4 py-3 text-center font-bold hidden sm:table-cell">Forme</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-black text-foreground">Pts</th>
+                    <th className="px-2 sm:px-4 py-3 text-center font-bold hidden sm:table-cell w-32">Forme</th>
                   </tr>
                 </thead>
                 <tbody>
                   {standings.map((team, idx) => (
                     <tr key={team.team.id} className={cn("border-b border-border/50 last:border-0 transition-colors hover:bg-muted/30", idx < 4 && "bg-primary/5")}>
                       <td className="px-2 sm:px-4 py-2 sm:py-3">
-                        <span className={cn("w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold", idx < 4 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                          {team.rank}
-                        </span>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <span className={cn("w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold", idx < 4 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                            {team.rank}
+                          </span>
+                          {team.status === "up" && <ArrowUp className="h-3 w-3 text-emerald-500" />}
+                          {team.status === "down" && <ArrowDown className="h-3 w-3 text-destructive" />}
+                          {team.status === "same" && <Minus className="h-3 w-3 text-muted-foreground/30" />}
+                        </div>
                       </td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3">
                         <Link to={`/teams/${buildEntitySlug(team.team.id, team.team.name)}`} className="flex items-center gap-2 hover:text-primary transition-colors">
@@ -151,8 +169,8 @@ const Standings = () => {
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm text-muted-foreground">{team.win}</td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm text-muted-foreground">{team.draw}</td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm text-muted-foreground">{team.lose}</td>
-                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm text-muted-foreground">{team.goalsFor}</td>
-                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm text-muted-foreground">{team.goalsAgainst}</td>
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm text-muted-foreground hidden sm:table-cell">{team.goalsFor}</td>
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm text-muted-foreground hidden sm:table-cell">{team.goalsAgainst}</td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
                         <span className={cn("text-xs sm:text-sm font-medium", team.goalsDiff > 0 ? "text-primary" : team.goalsDiff < 0 ? "text-destructive" : "text-muted-foreground")}>
                           {team.goalsDiff > 0 ? "+" : ""}{team.goalsDiff}
@@ -161,7 +179,7 @@ const Standings = () => {
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-center font-bold text-xs sm:text-sm text-foreground">{team.points}</td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3 hidden sm:table-cell">
                         <div className="flex items-center justify-center gap-0.5 sm:gap-1">
-                          {team.form?.split("").map((char, i) => <span key={i}>{getFormBadge(char)}</span>)}
+                          {team.form?.split("").map((char, i) => getFormBadge(char, i))}
                         </div>
                       </td>
                     </tr>

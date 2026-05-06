@@ -1175,16 +1175,40 @@ const Match = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center flex-shrink-0 px-2 sm:px-0"
+                className="text-center flex-shrink-0 px-2 sm:px-0 z-10 w-full sm:w-auto"
               >
                 {hasStats ? (
                   <div className="flex flex-col items-center gap-1 sm:gap-2">
-                    <div className="flex items-center justify-center gap-2 sm:gap-6 px-3 py-2 sm:px-10 sm:py-6 bg-background/50 backdrop-blur-md rounded-xl sm:rounded-3xl border border-white/5 shadow-inner">
-                      <span className={cn("text-2xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
-                      <span className="text-sm sm:text-4xl font-bold text-muted-foreground/50">-</span>
-                      <span className={cn("text-2xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
+                    <div className="flex flex-col items-center justify-center gap-2 px-3 py-2 sm:px-10 sm:py-6 bg-background/80 backdrop-blur-md rounded-xl sm:rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                      <div className="flex items-center gap-2 sm:gap-6 z-10">
+                        <span className={cn("text-3xl sm:text-7xl font-black drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
+                        <span className="text-sm sm:text-3xl font-bold text-muted-foreground/50">-</span>
+                        <span className={cn("text-3xl sm:text-7xl font-black drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
+                      </div>
+                      
+                      {/* Momentum Graph inside Scoreboard */}
+                      {momentumTimeline.length > 0 && (
+                        <div className="absolute inset-x-0 bottom-0 h-1/2 opacity-30 pointer-events-none">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={momentumTimeline} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="colorHome" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={1}/>
+                                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorAway" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={1}/>
+                                  <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <Area type="monotone" dataKey={(d) => d.value > 0 ? d.value : 0} stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorHome)" strokeWidth={0} />
+                              <Area type="monotone" dataKey={(d) => d.value < 0 ? Math.abs(d.value) : 0} stroke="hsl(var(--accent))" fillOpacity={1} fill="url(#colorAway)" strokeWidth={0} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
                     </div>
-                    {isLive && <span className="text-[10px] font-black text-live animate-pulse">{minute}'</span>}
+                    {isLive && <span className="text-[10px] font-black text-live animate-pulse mt-1">{minute}'</span>}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center rounded-xl sm:rounded-3xl bg-primary/10 border border-primary/20 px-4 py-3 sm:px-8 sm:py-6 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.2)]">
@@ -1214,9 +1238,27 @@ const Match = () => {
               </motion.div>
             </div>
 
-            <div className="mt-6 sm:mt-10 flex items-center justify-center gap-4 sm:gap-8 text-[11px] sm:text-sm font-medium text-muted-foreground flex-wrap">
-              {venue?.name && <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-full"><MapPin className="h-3.5 w-3.5 text-primary" /><span>{venue.name}</span></div>}
-              {referee && <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-full"><User className="h-3.5 w-3.5 text-primary" /><span>{referee}</span></div>}
+            <div className="mt-6 sm:mt-8 flex flex-col items-center w-full max-w-lg mx-auto">
+              {/* Win Probability Bar */}
+              {aiExpertPrediction?.predictions && (
+                <div className="w-full mb-6">
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 px-1">
+                    <span className="text-primary">{aiExpertPrediction.predictions.homeWin}%</span>
+                    <span>Probabilité de Victoire (IA)</span>
+                    <span className="text-accent">{aiExpertPrediction.predictions.awayWin}%</span>
+                  </div>
+                  <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-background/50 border border-white/5 backdrop-blur-sm">
+                    <div className="bg-primary h-full transition-all" style={{ width: `${aiExpertPrediction.predictions.homeWin}%` }} />
+                    <div className="bg-muted-foreground/30 h-full transition-all" style={{ width: `${aiExpertPrediction.predictions.draw}%` }} />
+                    <div className="bg-accent h-full transition-all" style={{ width: `${aiExpertPrediction.predictions.awayWin}%` }} />
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-center gap-4 sm:gap-8 text-[11px] sm:text-sm font-medium text-muted-foreground flex-wrap">
+                {venue?.name && <div className="flex items-center gap-1.5 bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-sm"><MapPin className="h-3.5 w-3.5 text-primary" /><span>{venue.name}</span></div>}
+                {referee && <div className="flex items-center gap-1.5 bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-sm"><User className="h-3.5 w-3.5 text-primary" /><span>{referee}</span></div>}
+              </div>
             </div>
           </div>
         </div>

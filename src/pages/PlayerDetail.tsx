@@ -429,16 +429,22 @@ const PlayerDetail = () => {
                   <h3 className="font-bold text-foreground">Radar {comparePlayer ? "comparatif" : "de compétences"}</h3>
                 </div>
                 <div className="p-4">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <RadarChart data={radarData}>
-                      <PolarGrid stroke="hsl(var(--border))" />
-                      <PolarAngleAxis dataKey="skill" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                  <ResponsiveContainer width="100%" height={320}>
+                    <RadarChart data={radarData} style={{ filter: 'drop-shadow(0 0 10px rgba(var(--primary-rgb), 0.3))' }}>
+                      <defs>
+                        <linearGradient id="colorA" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                        </linearGradient>
+                      </defs>
+                      <PolarGrid stroke="hsl(var(--border))" gridType="polygon" />
+                      <PolarAngleAxis dataKey="skill" tick={{ fill: "hsl(var(--foreground))", fontSize: 13, fontWeight: "bold" }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar name={player.name.split(" ").slice(-1)[0]} dataKey="A" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} strokeWidth={2} />
+                      <Radar name={player.name.split(" ").slice(-1)[0]} dataKey="A" stroke="hsl(var(--primary))" fill="url(#colorA)" fillOpacity={0.5} strokeWidth={3} />
                       {comparePlayer && (
                         <Radar name={comparePlayer.name.split(" ").slice(-1)[0]} dataKey="B" stroke="hsl(var(--accent-foreground))" fill="hsl(var(--accent))" fillOpacity={0.2} strokeWidth={2} strokeDasharray="4 4" />
                       )}
-                      {comparePlayer && <Legend wrapperStyle={{ fontSize: 12 }} />}
+                      {comparePlayer && <Legend wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />}
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
@@ -552,16 +558,19 @@ const PlayerDetail = () => {
           <div className="rounded-2xl bg-card border border-border/50 overflow-hidden mb-6">
             <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
               <Trophy className="h-4 w-4 text-primary" />
-              <h3 className="font-bold text-foreground">Palmarès ({wonTrophies.length})</h3>
+              <h3 className="font-bold text-foreground">Vitrine des Trophées ({wonTrophies.length})</h3>
             </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {wonTrophies.map((trophy, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                    <Trophy className="h-5 w-5 text-primary flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{trophy.league}</p>
-                      <p className="text-xs text-muted-foreground">{trophy.season} · {trophy.country}</p>
+                  <div key={i} className="group relative flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-b from-muted/50 to-muted/10 border border-border/50 hover:border-amber-500/50 transition-all duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-110 transition-transform duration-500">
+                      <Trophy className="h-6 w-6 text-white drop-shadow-md" />
+                    </div>
+                    <div className="text-center z-10 w-full mt-2">
+                      <p className="text-xs sm:text-sm font-black text-foreground line-clamp-2 leading-tight" title={trophy.league}>{trophy.league}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 font-medium">{trophy.season}</p>
                     </div>
                   </div>
                 ))}
