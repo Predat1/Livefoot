@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,34 +29,51 @@ Règles de fonctionnement strictes :
 - Scénario probable / Données cohérentes -> 0.56 à 0.70
 - Certitude / Match très déséquilibré ou en fin de live -> 0.71 à 0.95`;
 
-// In-memory cache for predictions (5 minute TTL for live, 1h for pre-match)
-const cache = new Map<string, { data: any; timestamp: number; matchStatus: string }>();
+// Cache TTLs in milliseconds
 const CACHE_TTL_PREMATCH = 60 * 60 * 1000; // 1 hour
 const CACHE_TTL_LIVE = 5 * 60 * 1000; // 5 minutes
 const CACHE_TTL_FINISHED = 24 * 60 * 60 * 1000; // 24 hours
 
-function getCachedPrediction(fixtureId: string): any | null {
-  const entry = cache.get(fixtureId);
-  if (!entry) return null;
-
-  const ttl = entry.matchStatus === "Match Finished" ? CACHE_TTL_FINISHED
-    : entry.matchStatus?.includes("Half") || entry.matchStatus?.includes("progress") ? CACHE_TTL_LIVE
-    : CACHE_TTL_PREMATCH;
-
-  if (Date.now() - entry.timestamp > ttl) {
-    cache.delete(fixtureId);
-    return null;
-  }
-  return entry.data;
+// Supabase client initialization helper
+function getSupabaseClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
 }
 
-function setCachedPrediction(fixtureId: string, data: any, matchStatus: string) {
-  // Limit cache size to 200 entries
-  if (cache.size > 200) {
-    const firstKey = cache.keys().next().value;
-    if (firstKey) cache.delete(firstKey);
+async function getCachedPredictionDB(fixtureId: string, supabase: any): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('ai_predictions_cache')
+    .select('*')
+    .eq('fixture_id', fixtureId)
+    .single();
+
+  if (error || !data) return null;
+
+  const age = Date.now() - new Date(data.updated_at).getTime();
+  const ttl = data.match_status === "Match Finished" ? CACHE_TTL_FINISHED
+    : data.match_status?.includes("Half") || data.match_status?.includes("progress") ? CACHE_TTL_LIVE
+    : CACHE_TTL_PREMATCH;
+
+  if (age > ttl) {
+    return null; // Expired, will be overwritten
   }
-  cache.set(fixtureId, { data, timestamp: Date.now(), matchStatus });
+  return data.data;
+}
+
+async function setCachedPredictionDB(fixtureId: string, predictionData: any, matchStatus: string, supabase: any) {
+  const { error } = await supabase
+    .from('ai_predictions_cache')
+    .upsert({
+      fixture_id: fixtureId,
+      data: predictionData,
+      match_status: matchStatus,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'fixture_id' });
+    
+  if (error) console.error("Error caching prediction in DB:", error);
 }
 
 function buildPrompt(homeTeam: string, awayTeam: string, leagueName: string, predictionData: any, h2hData: any[], fixtureDetail: any) {
@@ -214,8 +232,10 @@ serve(async (req) => {
     const { fixtureId, homeTeam, awayTeam, leagueName } = await req.json();
     if (!fixtureId) throw new Error("Fixture ID requis");
 
-    // Check cache first
-    const cached = getCachedPrediction(fixtureId);
+    const supabase = getSupabaseClient();
+
+    // Check DB cache first
+    const cached = await getCachedPredictionDB(fixtureId, supabase);
     if (cached) {
       return new Response(JSON.stringify({ ...cached, _cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -270,9 +290,10 @@ serve(async (req) => {
     const aiPrediction = safeParseJSON(content);
     const result = { ...aiPrediction, _provider: provider };
 
-    // Cache the result
+    // Cache the result in DB
     const matchStatus = fixtureDetail?.fixture?.status?.long || "Not Started";
-    setCachedPrediction(fixtureId, result, matchStatus);
+    // Fire and forget caching to not block response
+    setCachedPredictionDB(fixtureId, result, matchStatus, supabase).catch(console.error);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

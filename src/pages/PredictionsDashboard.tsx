@@ -15,6 +15,8 @@ interface PredictionRow {
   fixture_id: string;
   home_score: number;
   away_score: number;
+  points_earned: number;
+  status: string;
   created_at: string;
 }
 
@@ -55,12 +57,12 @@ const PredictionsDashboard = () => {
     if (userIds.length > 0) {
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url")
+        .select("user_id, display_name, avatar_url, points")
         .in("user_id", userIds);
 
-      const map = new Map<string, { display_name: string; avatar_url: string | null }>();
+      const map = new Map<string, { display_name: string; avatar_url: string | null; points: number }>();
       (profilesData || []).forEach((p: any) => {
-        map.set(p.user_id, { display_name: p.display_name || "Anonyme", avatar_url: p.avatar_url });
+        map.set(p.user_id, { display_name: p.display_name || "Anonyme", avatar_url: p.avatar_url, points: p.points || 0 });
       });
       setProfiles(map);
     }
@@ -76,19 +78,25 @@ const PredictionsDashboard = () => {
     const avgGoals = total > 0
       ? ((myPredictions.reduce((s, p) => s + p.home_score + p.away_score, 0)) / total).toFixed(1)
       : "0";
-    // Points: 1 pt per prediction (participation) - real scoring calculated after matches
-    const points = total; 
-    return { total, homeWins, draws, awayWins, avgGoals, points };
+    
+    // Calculate total points earned
+    const points = myPredictions.reduce((sum, p) => sum + (p.points_earned || 0), 0); 
+    
+    // Count Exact Scores and Correct Results
+    const exactScores = myPredictions.filter(p => p.status === 'evaluated' && p.points_earned === 15).length;
+    const correctResults = myPredictions.filter(p => p.status === 'evaluated' && p.points_earned === 5).length;
+
+    return { total, homeWins, draws, awayWins, avgGoals, points, exactScores, correctResults };
   }, [myPredictions]);
 
   const myBadges = useMemo(() => {
     return computeBadges({
       totalPredictions: myStats.total,
-      exactScores: 0, // Would need actual match results to compute
-      correctResults: 0,
+      exactScores: myStats.exactScores,
+      correctResults: myStats.correctResults,
       streak: 0,
     });
-  }, [myStats.total]);
+  }, [myStats]);
 
   // Leaderboard with points
   const leaderboard = useMemo(() => {
@@ -100,7 +108,8 @@ const PredictionsDashboard = () => {
     const entries: LeaderboardEntry[] = [];
     for (const [userId, total] of userMap) {
       const profile = profiles.get(userId);
-      const points = total; // 1 pt par participation
+      // Real points calculated by Edge Function and stored in profile.points
+      const points = profile?.points || 0; 
       entries.push({
         user_id: userId,
         display_name: profile?.display_name || "Anonyme",
