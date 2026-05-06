@@ -847,7 +847,7 @@ const Match = () => {
 
 
         <TabsContent value="predictions" className="mt-0">
-          <SectionErrorBoundary name="AI Predictions">
+          <SectionErrorBoundary sectionName="AI Predictions">
             <LiveFootAIPrediction
               homeTeamId={homeTeamId}
               awayTeamId={awayTeamId}
