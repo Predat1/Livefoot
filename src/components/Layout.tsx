@@ -60,6 +60,18 @@ const Layout = ({ children }: LayoutProps) => {
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">Instagram</a>
             <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">YouTube</a>
           </div>
+          <div className="mt-8 flex flex-col items-center text-[10px] text-muted-foreground/60 gap-1 border border-border/50 bg-muted/10 p-4 rounded-xl max-w-2xl mx-auto text-center">
+            <p className="font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1">
+              <span className="flex items-center justify-center h-4 w-4 rounded-full border border-current text-[8px]">18+</span>
+              Interdit aux mineurs
+            </p>
+            <p>
+              Jouer comporte des risques : endettement, isolement, dépendance. Pour être aidé, appelez le 09-74-75-13-13 (appel non surtaxé).
+            </p>
+            <p className="mt-1">
+              LiveFoot n'est pas un site de paris sportifs et n'accepte aucun dépôt d'argent. Nos contenus et pronostics IA sont fournis à titre strictement informatif.
+            </p>
+          </div>
           <p className="mt-6 text-xs text-muted-foreground/60">
             © {new Date().getFullYear()} LiveFoot. Tous droits réservés.
           </p>
