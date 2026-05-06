@@ -5,27 +5,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_INSTRUCTION = `Tu es AnalystePro, expert en data football et paris sportifs (15+ ans).
+const SYSTEM_INSTRUCTION = `Tu es AnalystePro, le meilleur expert mondial en data science appliquée au football et aux paris sportifs (20+ ans d'expérience).
 
 Spécialités :
-- Modélisation Poisson & xG
-- Analyse tactique + forme
-- Lecture des cotes bookmakers
-- Détection de value bets
-- Analyse en Temps Réel (Pré-match, Live, Post-match)
+- Modélisation mathématique (Loi de Poisson, Expected Goals xG)
+- Analyse tactique avancée et dynamique de forme
+- Décryptage des cotes bookmakers et détection de Value Bets
+- Analyse psychologique et contextuelle des équipes
+- Expertise Temps Réel (Pré-match, Live, Analyse Post-match)
 
-Règles strictes :
-- ADAPTATION TEMPS RÉEL : Lis attentivement le "Statut du match". Si le match est "Terminé", ton analyse doit être un bilan. S'il est "En direct", ajuste radicalement tes prédictions et ta confiance en fonction du score actuel et de la minute. S'il "N'a pas commencé", fais une prédiction classique.
-- Utilise UNIQUEMENT les données fournies.
-- Priorise les données quantitatives (Poisson, stats).
-- Ajuste avec contexte (forme, blessures, H2H).
-- Si données faibles ou match en direct très avancé -> ajuste la confiance (baisse si incertain, monte si le résultat est presque acquis).
-- Ne fais AUCUNE explication hors JSON.
+Règles de fonctionnement strictes :
+1. ADAPTATION TEMPS RÉEL (CRITIQUE) : Lis très attentivement le "Statut du match". 
+   - Si "Terminé", ton analyse DOIT être un bilan passé. 
+   - Si "En direct", tu DOIS ajuster radicalement tes prédictions, le score, et ta confiance en fonction du score actuel et de la minute de jeu. Le score prédit ne peut pas être inférieur au score actuel.
+   - Si "N'a pas commencé", fais une prédiction pré-match classique.
+2. OBJECTIVITÉ ABSOLUE : Utilise UNIQUEMENT les données fournies dans le prompt. Ne te base jamais sur des a priori ou la réputation passée des équipes.
+3. DATA-DRIVEN : Priorise toujours les données quantitatives (Poisson, stats offensives/défensives) avant d'ajuster avec le qualitatif (forme, H2H).
+4. SÉCURITÉ : Ne fais AUCUNE explication textuelle en dehors du format JSON demandé. Ton output doit être parsable à 100%.
 
-Calibration confiance :
-- Faible data / Forte incertitude -> 0.45-0.60
-- Moyenne -> 0.55-0.75
-- Forte / Match avancé avec score clair -> 0.65-0.95`;
+Échelle de Confiance Exigée (0.01 à 0.99) :
+- Incertitude majeure / Faibles données -> 0.45 à 0.55
+- Scénario probable / Données cohérentes -> 0.56 à 0.70
+- Certitude / Match très déséquilibré ou en fin de live -> 0.71 à 0.95`;
 
 // In-memory cache for predictions (5 minute TTL for live, 1h for pre-match)
 const cache = new Map<string, { data: any; timestamp: number; matchStatus: string }>();
@@ -177,25 +178,7 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
   }
 }
 
-async function callLovableAI(prompt: string, apiKey: string): Promise<string> {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.0-flash-001",
-      messages: [
-        { role: "system", content: SYSTEM_INSTRUCTION },
-        { role: "user", content: prompt }
-      ],
-    })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(`Lovable AI: ${res.status} ${JSON.stringify(data)}`);
-  return data.choices[0].message.content;
-}
+
 
 function safeParseJSON(text: string): any {
   try { return JSON.parse(text); } catch {
@@ -221,11 +204,10 @@ serve(async (req) => {
     }
 
     const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const apiFootballKey = Deno.env.get("API_FOOTBALL_KEY");
 
     if (!apiFootballKey) throw new Error("API_FOOTBALL_KEY non configurée");
-    if (!openRouterKey && !lovableKey) throw new Error("Aucune clé IA configurée");
+    if (!openRouterKey) throw new Error("OPENROUTER_API_KEY non configurée");
 
     const headers = { "x-apisports-key": apiFootballKey };
 
@@ -251,15 +233,9 @@ serve(async (req) => {
 
     let content: string;
     let provider = "openrouter";
-    try {
-      if (!openRouterKey) throw new Error("Pas de clé OpenRouter");
-      content = await callOpenRouter(prompt, openRouterKey);
-    } catch (err) {
-      console.warn("OpenRouter échec, fallback Lovable AI:", (err as Error).message);
-      if (!lovableKey) throw err;
-      content = await callLovableAI(prompt, lovableKey);
-      provider = "lovable";
-    }
+    
+    if (!openRouterKey) throw new Error("Pas de clé OpenRouter");
+    content = await callOpenRouter(prompt, openRouterKey);
 
     const aiPrediction = safeParseJSON(content);
     const result = { ...aiPrediction, _provider: provider };
