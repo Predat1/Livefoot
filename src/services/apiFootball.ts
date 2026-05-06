@@ -119,6 +119,9 @@ export const getTransfers = (params: Record<string, string>) =>
 export const getOdds = (params: Record<string, string>) =>
   callApi("odds", params);
 
+export const getLiveOdds = (params: Record<string, string>) =>
+  callApi("odds/live", params);
+
 // ─── Injuries ─────────────────────────────────────────────────
 export const getInjuries = (params: Record<string, string>) =>
   callApi("injuries", params);
@@ -177,6 +180,7 @@ export default {
   getTopRedCards,
   getTransfers,
   getOdds,
+  getLiveOdds,
   getInjuries,
   getCoach,
   getVenues,

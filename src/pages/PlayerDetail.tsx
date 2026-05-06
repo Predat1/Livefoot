@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { usePlayerDetailApi, usePlayerTrophies, usePlayerSeasons, useTopScorers } from "@/hooks/useApiFootball";
+import { usePlayerDetailApi, usePlayerTrophies, usePlayerSeasons, useTopScorers, usePlayerSidelined } from "@/hooks/useApiFootball";
 import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar, ChevronDown, ChevronUp, Timer, Footprints, Crosshair, Shield, Zap, Trophy, Loader2, GitCompare, Search, X, Activity } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import TeamLogo from "@/components/TeamLogo";
@@ -52,6 +52,7 @@ const PlayerDetail = () => {
   const { data: player, isLoading, isError } = usePlayerDetailApi(resolvedParam);
   const resolvedId = player?.id || (/^\d+$/.test(resolvedParam) ? resolvedParam : "");
   const { data: trophies, isLoading: trophiesLoading } = usePlayerTrophies(resolvedId);
+  const { data: sidelined, isLoading: sidelinedLoading } = usePlayerSidelined(resolvedId);
   const { data: seasonHistory, isLoading: seasonsLoading } = usePlayerSeasons(resolvedId);
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -387,6 +388,7 @@ const PlayerDetail = () => {
             <TabsTrigger value="attacking" className="rounded-lg text-[10px] sm:text-sm">{isGK ? "Gardien" : "Attaque"}</TabsTrigger>
             <TabsTrigger value="defensive" className="rounded-lg text-[10px] sm:text-sm">Défense</TabsTrigger>
             <TabsTrigger value="passing" className="rounded-lg text-[10px] sm:text-sm">Passes</TabsTrigger>
+            <TabsTrigger value="sidelined" className="rounded-lg text-[10px] sm:text-sm">Absences</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-0">
@@ -514,6 +516,32 @@ const PlayerDetail = () => {
                   <StatCard label="Passes clés" value={player.passesKey} highlight />
                   <StatCard label="Passes déc." value={player.assists} highlight />
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="sidelined" className="mt-0">
+            <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
+                <Activity className="h-4 w-4 text-destructive" />
+                <h3 className="font-bold text-foreground">Historique des absences</h3>
+              </div>
+              <div className="p-4">
+                {sidelined && sidelined.length > 0 ? (
+                  <div className="space-y-2">
+                    {sidelined.map((item: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full bg-destructive" />
+                          <p className="text-sm font-bold text-foreground">{item.type || "Blessure"}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{item.start} ➔ {item.end || "Présent"}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-8 text-sm text-muted-foreground">Aucune absence majeure signalée</p>
+                )}
               </div>
             </div>
           </TabsContent>

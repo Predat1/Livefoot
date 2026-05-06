@@ -6,7 +6,11 @@
     "back_home": "Back to Home",
     "no_data": "No data available",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "results": "Results",
+    "coach": "Coach",
+    "sidelined": "Absences",
+    "liveOdds": "Live Odds"
   },
   "nav": {
     "live": "Live",
@@ -35,5 +39,16 @@
     "voted": "Prediction saved!",
     "login_to_vote": "Log in to vote!",
     "confidence": "Confidence"
+  },
+  "competitions": {
+    "title": "Competitions",
+    "subtitle": "All leagues and tournaments from around the world",
+    "search": "Search leagues or countries...",
+    "popular": "Popular",
+    "all": "All Competitions",
+    "no_results": "No competitions found.",
+    "countries": "countries",
+    "standings": "Standings",
+    "scorers": "Top Scorers"
   }
 }

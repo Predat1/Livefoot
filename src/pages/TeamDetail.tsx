@@ -1,8 +1,8 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { useTeamDetail, useTeamSquad, useTeamFixtures, useTeamNextFixtures } from "@/hooks/useApiFootball";
-import { ArrowLeft, MapPin, Users, Calendar, Star, Shirt, TrendingUp } from "lucide-react";
+import { useTeamDetail, useTeamSquad, useTeamFixtures, useTeamNextFixtures, useTeamCoach } from "@/hooks/useApiFootball";
+import { ArrowLeft, MapPin, Users, Calendar, Star, Shirt, TrendingUp, User } from "lucide-react";
 import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareButton from "@/components/ShareButton";
@@ -22,6 +22,7 @@ const TeamDetail = () => {
   const { data: team, isLoading: loadingTeam } = useTeamDetail(resolvedParam);
   const finalId = team?.id || (/^\d+$/.test(resolvedParam) ? resolvedParam : "");
   const { data: squad, isLoading: loadingSquad } = useTeamSquad(finalId);
+  const { data: coach } = useTeamCoach(finalId);
   const { data: recentResults, isLoading: loadingResults } = useTeamFixtures(finalId, "2024");
   const { data: nextFixtures } = useTeamNextFixtures(finalId);
 
@@ -133,9 +134,17 @@ const TeamDetail = () => {
           {/* Squad */}
           <TabsContent value="squad" className="mt-0">
             <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
-              <div className="bg-league-header px-5 py-3 border-b border-border flex items-center gap-2">
-                <Shirt className="h-4 w-4 text-primary" />
-                <h3 className="font-bold text-foreground">Squad ({squad?.length || 0} players)</h3>
+              <div className="bg-league-header px-5 py-3 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shirt className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-foreground">Squad ({squad?.length || 0} players)</h3>
+                </div>
+                {coach && (
+                  <div className="flex items-center gap-2 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                    <User className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-xs font-bold text-primary">Coach: {coach.name}</span>
+                  </div>
+                )}
               </div>
               {loadingSquad ? (
                 <div className="p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

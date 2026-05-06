@@ -10,7 +10,7 @@ export const CONTINENTS: { value: Continent; label: string; icon: string }[] = [
 ];
 
 const COUNTRY_CONTINENT: Record<string, Continent> = {
-  // Europe
+  // Europe (UEFA)
   England: "europe", Spain: "europe", Italy: "europe", Germany: "europe", France: "europe",
   Portugal: "europe", Netherlands: "europe", Belgium: "europe", Turkey: "europe", Scotland: "europe",
   Austria: "europe", Switzerland: "europe", Greece: "europe", Denmark: "europe", Sweden: "europe",
@@ -22,12 +22,13 @@ const COUNTRY_CONTINENT: Record<string, Continent> = {
   "North-Macedonia": "europe", Kosovo: "europe", Estonia: "europe", Latvia: "europe", Lithuania: "europe",
   Georgia: "europe", Armenia: "europe", Azerbaijan: "europe", Moldova: "europe", Belarus: "europe",
   "Faroe-Islands": "europe", Gibraltar: "europe", Andorra: "europe", "San-Marino": "europe",
-  Liechtenstein: "europe", Monaco: "europe",
+  Liechtenstein: "europe", Monaco: "europe", Israel: "europe", Kazakhstan: "europe",
+  "Republic-of-Ireland": "europe",
 
-  // Africa
+  // Africa (CAF)
   Morocco: "africa", Egypt: "africa", Tunisia: "africa", Algeria: "africa", Nigeria: "africa",
   "South-Africa": "africa", Ghana: "africa", Senegal: "africa", Cameroon: "africa",
-  "Ivory-Coast": "africa", "Côte d'Ivoire": "africa", Mali: "africa", "Burkina-Faso": "africa",
+  "Ivory-Coast": "africa", "Côte-d'Ivoire": "africa", Mali: "africa", "Burkina-Faso": "africa",
   "DR-Congo": "africa", Congo: "africa", Kenya: "africa", Tanzania: "africa", Uganda: "africa",
   Ethiopia: "africa", Sudan: "africa", Libya: "africa", Zambia: "africa", Zimbabwe: "africa",
   Mozambique: "africa", Angola: "africa", Namibia: "africa", Botswana: "africa", Rwanda: "africa",
@@ -36,9 +37,10 @@ const COUNTRY_CONTINENT: Record<string, Continent> = {
   "Sierra-Leone": "africa", Liberia: "africa", Gambia: "africa", "Equatorial-Guinea": "africa",
   Malawi: "africa", Burundi: "africa", Djibouti: "africa", Somalia: "africa", Eritrea: "africa",
   Comoros: "africa", "São-Tomé-and-Príncipe": "africa", Seychelles: "africa", Lesotho: "africa",
-  Eswatini: "africa", "Central-African-Republic": "africa", Chad: "africa",
+  Eswatini: "africa", "Central-African-Republic": "africa", Chad: "africa", Liberia: "africa",
+  South_Africa: "africa", Cote_d_Ivoire: "africa",
 
-  // Americas
+  // Americas (CONCACAF + CONMEBOL)
   Brazil: "americas", Argentina: "americas", Colombia: "americas", Chile: "americas",
   Mexico: "americas", USA: "americas", Canada: "americas", Uruguay: "americas", Paraguay: "americas",
   Peru: "americas", Ecuador: "americas", Bolivia: "americas", Venezuela: "americas",
@@ -46,23 +48,29 @@ const COUNTRY_CONTINENT: Record<string, Continent> = {
   Guatemala: "americas", Jamaica: "americas", "Trinidad-and-Tobago": "americas", Haiti: "americas",
   "Dominican-Republic": "americas", Cuba: "americas", Nicaragua: "americas", Bermuda: "americas",
   Suriname: "americas", Guyana: "americas", Belize: "americas", Barbados: "americas",
-  Curaçao: "americas",
+  Curaçao: "americas", Panama: "americas", Puerto_Rico: "americas", "Antigua-and-Barbuda": "americas",
+  "Saint-Kitts-and-Nevis": "americas", "Saint-Lucia": "americas", "Saint-Vincent-and-the-Grenadines": "americas",
+  Grenada: "americas", Dominica: "americas", Anguilla: "americas", "British-Virgin-Islands": "americas",
+  "US-Virgin-Islands": "americas", "Cayman-Islands": "americas", "Turks-and-Caicos-Islands": "americas",
+  Montserrat: "americas", "Bahamas": "americas", "Aruba": "americas",
 
-  // Asia
+  // Asia (AFC)
   Japan: "asia", "South-Korea": "asia", China: "asia", "Saudi-Arabia": "asia",
   "United-Arab-Emirates": "asia", Qatar: "asia", Iran: "asia", Iraq: "asia", Bahrain: "asia",
   Oman: "asia", Kuwait: "asia", Jordan: "asia", Lebanon: "asia", Syria: "asia", Palestine: "asia",
-  Israel: "asia", India: "asia", Thailand: "asia", Vietnam: "asia", Indonesia: "asia",
+  India: "asia", Thailand: "asia", Vietnam: "asia", Indonesia: "asia",
   Malaysia: "asia", Singapore: "asia", Philippines: "asia", Myanmar: "asia", Cambodia: "asia",
-  Uzbekistan: "asia", Kazakhstan: "asia", Tajikistan: "asia", Kyrgyzstan: "asia",
+  Uzbekistan: "asia", Tajikistan: "asia", Kyrgyzstan: "asia",
   Turkmenistan: "asia", Bangladesh: "asia", "Sri-Lanka": "asia", Nepal: "asia",
   "Hong-Kong": "asia", Taiwan: "asia", Macao: "asia", Mongolia: "asia", Laos: "asia",
-  Yemen: "asia",
+  Yemen: "asia", Australia: "asia", Afghanistan: "asia", Maldives: "asia", "Brunei-Darussalam": "asia",
+  "Timor-Leste": "asia", Guam: "asia", "Northern-Mariana-Islands": "asia",
 
-  // Oceania
-  Australia: "oceania", "New-Zealand": "oceania", Fiji: "oceania", "Papua-New-Guinea": "oceania",
+  // Oceania (OFC)
+  "New-Zealand": "oceania", Fiji: "oceania", "Papua-New-Guinea": "oceania",
   Samoa: "oceania", Tonga: "oceania", Vanuatu: "oceania", "New-Caledonia": "oceania",
-  Tahiti: "oceania", "Solomon-Islands": "oceania",
+  Tahiti: "oceania", "Solomon-Islands": "oceania", "Cook-Islands": "oceania",
+  "American-Samoa": "oceania", Kiribati: "oceania", Tuvalu: "oceania",
 };
 
 /**

@@ -15,9 +15,11 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Target } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { getContinent, type Continent, CONTINENTS } from "@/utils/continents";
 
 const Competitions = () => {
+  const { t } = useTranslation();
   const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [continent, setContinent] = useState<Continent>("all");
@@ -103,9 +105,9 @@ const Competitions = () => {
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
-            <h1 className="text-xl sm:text-3xl font-black text-foreground">Competitions</h1>
+            <h1 className="text-xl sm:text-3xl font-black text-foreground">{t("competitions.title")}</h1>
           </div>
-          <p className="text-xs sm:text-base text-muted-foreground ml-3 sm:ml-4">All leagues and tournaments from around the world</p>
+          <p className="text-xs sm:text-base text-muted-foreground ml-3 sm:ml-4">{t("competitions.subtitle")}</p>
           {!isLoading && (
             <motion.div
               key={totalCount}
@@ -122,7 +124,7 @@ const Competitions = () => {
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search leagues or countries..."
+            placeholder={t("competitions.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -171,7 +173,7 @@ const Competitions = () => {
               <section>
                 <div className="flex items-center gap-2 mb-4">
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <h2 className="text-lg font-bold text-foreground">Populaires</h2>
+                  <h2 className="text-lg font-bold text-foreground">{t("competitions.popular")}</h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   {popularLeagues.map((comp) => (
@@ -197,13 +199,13 @@ const Competitions = () => {
               <div className="flex items-center gap-2 mb-4">
                 <Trophy className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-bold text-foreground">
-                  {search ? `Results for "${search}"` : "All Competitions"}
+                  {search ? `${t("common.results")} for "${search}"` : t("competitions.all")}
                 </h2>
-                <span className="text-sm text-muted-foreground">({countries.length} countries)</span>
+                <span className="text-sm text-muted-foreground">({countries.length} {t("competitions.countries")})</span>
               </div>
 
               {countries.length === 0 ? (
-                <div className="py-8 text-center text-muted-foreground text-sm">No competitions found.</div>
+                <div className="py-8 text-center text-muted-foreground text-sm">{t("competitions.no_results")}</div>
               ) : (
                 <Accordion type="multiple" className="space-y-1">
                   {countries.map((country) => (
@@ -325,10 +327,10 @@ function CompetitionDetail({ leagueId, season }: { leagueId: string; season: str
         <div className="bg-league-header px-3 sm:px-5 py-2 sm:py-3 border-b border-border">
           <TabsList className="bg-transparent h-auto p-0 gap-1 sm:gap-2">
             <TabsTrigger value="standings" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md sm:rounded-lg">
-              <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />Standings
+              <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />{t("competitions.standings")}
             </TabsTrigger>
             <TabsTrigger value="scorers" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md sm:rounded-lg">
-              <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />Top Scorers
+              <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />{t("competitions.scorers")}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -344,7 +346,7 @@ function CompetitionDetail({ leagueId, season }: { leagueId: string; season: str
                 <thead>
                   <tr className="border-b border-border text-[10px] sm:text-xs text-muted-foreground">
                     <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium">#</th>
-                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium">Team</th>
+                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium">{t("match.summary")}</th>
                     <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">P</th>
                     <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">W</th>
                     <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-medium">D</th>

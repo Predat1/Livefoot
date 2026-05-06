@@ -6,7 +6,11 @@
     "back_home": "Retour à l'accueil",
     "no_data": "Données non disponibles",
     "save": "Enregistrer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "results": "Résultats",
+    "coach": "Entraîneur",
+    "sidelined": "Absences",
+    "liveOdds": "Cotes Live"
   },
   "nav": {
     "live": "En Direct",
@@ -35,5 +39,16 @@
     "voted": "Pronostic enregistré !",
     "login_to_vote": "Connectez-vous pour voter !",
     "confidence": "Confiance"
+  },
+  "competitions": {
+    "title": "Compétitions",
+    "subtitle": "Toutes les ligues et tournois du monde entier",
+    "search": "Rechercher des ligues ou des pays...",
+    "popular": "Populaires",
+    "all": "Toutes les Compétitions",
+    "no_results": "Aucune compétition trouvée.",
+    "countries": "pays",
+    "standings": "Classement",
+    "scorers": "Buteurs"
   }
 }

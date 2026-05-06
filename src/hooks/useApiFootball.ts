@@ -1002,7 +1002,6 @@ export function useFixtureOdds(fixtureId: string) {
 }
 
 // ─── Injuries ────────────────────────────────────────────────
-
 export function useFixtureInjuries(fixtureId: string) {
   return useQuery({
     queryKey: ["fixture-injuries", fixtureId],
@@ -1012,6 +1011,49 @@ export function useFixtureInjuries(fixtureId: string) {
       return (res.response || []) as any[];
     },
     staleTime: 5 * 60 * 1000,
+    enabled: !!fixtureId,
+  });
+}
+
+// ─── Coaches ─────────────────────────────────────────────────
+export function useTeamCoach(teamId: string) {
+  return useQuery({
+    queryKey: ["team-coach", teamId],
+    queryFn: async () => {
+      const { getCoach } = await import("@/services/apiFootball");
+      const res = await getCoach({ team: teamId });
+      return (res.response?.[0] || null) as any;
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    enabled: !!teamId,
+  });
+}
+
+// ─── Sidelined ───────────────────────────────────────────────
+export function usePlayerSidelined(playerId: string) {
+  return useQuery({
+    queryKey: ["player-sidelined", playerId],
+    queryFn: async () => {
+      const { getSidelined } = await import("@/services/apiFootball");
+      const res = await getSidelined({ player: playerId });
+      return (res.response || []) as any[];
+    },
+    staleTime: 60 * 60 * 1000,
+    enabled: !!playerId,
+  });
+}
+
+// ─── Live Odds ───────────────────────────────────────────────
+export function useLiveOdds(fixtureId: string) {
+  return useQuery({
+    queryKey: ["live-odds", fixtureId],
+    queryFn: async () => {
+      const { getLiveOdds } = await import("@/services/apiFootball");
+      const res = await getLiveOdds({ fixture: fixtureId });
+      return (res.response || []) as any[];
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 30 * 1000,
     enabled: !!fixtureId,
   });
 }

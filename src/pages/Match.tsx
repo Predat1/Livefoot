@@ -6,6 +6,7 @@ import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
+  useLiveOdds,
 } from "@/hooks/useApiFootball";
 import { 
   Trophy, TrendingUp, Zap, ArrowLeft, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2, 
@@ -106,11 +107,14 @@ const Match = () => {
   const { data: lineupsData } = useFixtureLineups(matchId);
   const { data: statsData } = useFixtureStatistics(matchId);
   const { data: playersData } = useFixturePlayers(matchId);
+  const fix = fixtureData as any;
+  const statusRaw = fix?.fixture?.status?.short || "";
+  const isMatchLive = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(statusRaw);
+
   const { data: oddsData } = useFixtureOdds(matchId);
   const { data: injuriesData } = useFixtureInjuries(matchId);
   const { data: apiPredictions } = useFixturePredictions(matchId);
-
-  const fix = fixtureData as any;
+  const { data: liveOddsData } = useLiveOdds(isMatchLive ? matchId : "");
   const homeTeamId = fix?.teams?.home?.id ? String(fix.teams.home.id) : "";
   const awayTeamId = fix?.teams?.away?.id ? String(fix.teams.away.id) : "";
 
@@ -245,7 +249,9 @@ const Match = () => {
   const lineups = (lineupsData || []) as any[];
   const injuries = (injuriesData || []) as any[];
   const players = (playersData || []) as any[];
-  const odds = (oddsData || []) as any[];
+  const preMatchOdds = (oddsData || []) as any[];
+  const liveOdds = (liveOddsData || []) as any[];
+  const odds = isLive && liveOdds.length > 0 ? liveOdds : preMatchOdds;
 
 
   const getEventIcon = (type: string, detail?: string) => {
