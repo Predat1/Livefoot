@@ -13,12 +13,15 @@
     "liveOdds": "Cotes Live"
   },
   "nav": {
+    "matches": "Matchs",
+    "vip": "VIP",
     "live": "En Direct",
     "news": "Actualités",
     "competitions": "Compétitions",
-    "predictions": "Pronostics",
+    "predictions": "Pronos IA",
     "bonuses": "Bonus",
-    "profile": "Profil"
+    "profile": "Profil",
+    "install": "Installer"
   },
   "match": {
     "summary": "Résumé",

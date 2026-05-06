@@ -9,6 +9,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useSearch } from "@/hooks/useSearch";
 import { useAppLogo } from "@/hooks/useAppLogo";
+import { useTranslation } from "react-i18next";
 
 const Header = () => {
   const logoUrl = useAppLogo();
@@ -18,19 +19,20 @@ const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { query, setQuery, results, isLoading } = useSearch();
+  const { t } = useTranslation();
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const mainNav = [
-    { label: "MATCHS", href: "/" },
-    { label: "VIP", href: "/vip" },
-    { label: "PRONOS IA", href: "/daily-picks" },
-    { label: "LIVE", href: "/live" },
-    { label: "COMPÉTITIONS", href: "/competitions" },
-    { label: "ACTUALITÉS", href: "/news" },
-    { label: "BONUS", href: "/bonuses" },
-    { label: "INSTALLER", href: "/install" },
+    { label: t("nav.matches"), href: "/" },
+    { label: t("nav.vip"), href: "/vip" },
+    { label: t("nav.predictions"), href: "/daily-picks" },
+    { label: t("nav.live"), href: "/live" },
+    { label: t("nav.competitions"), href: "/competitions" },
+    { label: t("nav.news"), href: "/news" },
+    { label: t("nav.bonuses"), href: "/bonuses" },
+    { label: t("nav.install"), href: "/install" },
   ];
 
   const location = useLocation();
@@ -193,8 +195,8 @@ const Header = () => {
                     : "text-header-foreground/70 hover:text-header-foreground"
                 )}
               >
-                {item.label === "VIP" && <Crown className="h-3 w-3 text-amber-400" />}
-                {item.label === "BONUS" && <Gift className="h-3 w-3 text-primary animate-pulse" />}
+                {item.href === "/vip" && <Crown className="h-3 w-3 text-amber-400" />}
+                {item.href === "/bonuses" && <Gift className="h-3 w-3 text-primary animate-pulse" />}
                 {item.label}
                 {isActive(item.href) && (
                   <motion.div

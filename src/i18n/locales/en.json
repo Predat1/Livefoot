@@ -13,12 +13,15 @@
     "liveOdds": "Live Odds"
   },
   "nav": {
+    "matches": "Matches",
+    "vip": "VIP",
     "live": "Live",
     "news": "News",
     "competitions": "Competitions",
-    "predictions": "Predictions",
+    "predictions": "AI Picks",
     "bonuses": "Bonuses",
-    "profile": "Profile"
+    "profile": "Profile",
+    "install": "Install"
   },
   "match": {
     "summary": "Summary",
