@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
 import CookieConsent from "@/components/CookieConsent";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
+import OfflineNotification from "@/components/OfflineNotification";
 
 import { useEffect } from "react";
 
@@ -61,6 +62,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <OfflineNotification />
           <BrowserRouter>
             <ScrollToTop />
             <CookieConsent />
