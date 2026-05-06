@@ -205,7 +205,7 @@ const SEO_LD = [
               </p>
               <div className="flex items-center gap-4">
                 <Button asChild className="rounded-xl px-6 py-5 font-black text-sm">
-                  <Link to="/match/recent">VOIR LES PRONOS</Link>
+                  <Link to="/daily-picks">VOIR LES PRONOS</Link>
                 </Button>
                 <div className="flex -space-x-2">
                   {[1, 2, 3].map((i) => (

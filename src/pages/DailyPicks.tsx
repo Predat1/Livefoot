@@ -162,6 +162,7 @@ const DailyPicks = () => {
                   awayTeamName={match.awayTeam.name}
                   homeLogo={match.homeTeam.logo}
                   awayLogo={match.awayTeam.logo}
+                  leagueName={match.leagueName}
                 />
               </div>
             ))}

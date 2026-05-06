@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generatePrediction, type LiveFootAIPrediction, type TeamFormData } from "@/lib/livefoot-ai";
-import { useTeamForm, useHeadToHead } from "@/hooks/useApiFootball";
+import { useTeamForm, useHeadToHead, useAiExpert } from "@/hooks/useApiFootball";
 import { toast } from "sonner";
 import { getRandomPartner } from "@/data/partnersData";
 import PartnerCard from "@/components/PartnerCard";
@@ -22,6 +22,7 @@ interface LiveFootAIPredictionCardProps {
   standings?: any[];
   injuries?: { home: number; away: number };
   apiPredictions?: any;
+  leagueName?: string;
   aiExpertPrediction?: {
     analysis: string;
     predictedScore: string;
@@ -56,9 +57,21 @@ const riskColors = {
 const LiveFootAIPredictionCard = ({
   homeTeamId, awayTeamId, homeTeamName, awayTeamName,
   homeLogo, awayLogo, standings, injuries, apiPredictions,
-  aiExpertPrediction,
+  aiExpertPrediction: initialAiExpertPrediction,
+  leagueName = "Football",
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
+  
+  // Fetch AI Expert Prediction if not provided (and we have enough info)
+  const { data: fetchedAiExpertData } = useAiExpert({
+    fixtureId: homeTeamId + awayTeamId, // Fallback if no real fixtureId, but better if passed
+    homeTeam: homeTeamName,
+    awayTeam: awayTeamName,
+    leagueName: leagueName
+  });
+
+  const aiExpertPrediction = initialAiExpertPrediction || fetchedAiExpertData;
+
   const { data: homeFormData } = useTeamForm(homeTeamId);
   const { data: awayFormData } = useTeamForm(awayTeamId);
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);

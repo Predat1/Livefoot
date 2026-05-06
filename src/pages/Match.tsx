@@ -1079,23 +1079,23 @@ const Match = () => {
             {!isLive && !isFinished && <span className="text-xs font-black text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full">À venir</span>}
           </div>
 
-          <div className="relative p-6 sm:p-10">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4">
+          <div className="relative p-4 sm:p-10">
+            <div className="flex flex-row items-center justify-between gap-2 sm:gap-4">
               
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex-1 text-center w-full sm:w-auto order-2 sm:order-1"
+                className="flex-1 text-center min-w-0"
               >
                 <Link to={fix?.teams?.home?.id ? `/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
-                  <div className="relative mb-3 sm:mb-4">
+                  <div className="relative mb-2 sm:mb-4">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-20 w-20 sm:h-28 sm:w-28 object-contain drop-shadow-2xl" />}
+                    {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-12 w-12 sm:h-28 sm:w-28 object-contain drop-shadow-xl" />}
                   </div>
-                  <h2 className="text-lg sm:text-2xl font-black text-foreground truncate max-w-[200px]">{homeTeam.name}</h2>
+                  <h2 className="text-[10px] sm:text-2xl font-black text-foreground truncate w-full px-1">{homeTeam.name}</h2>
                 </Link>
                 {homeTeamId && (
-                  <div className="mt-3 flex justify-center">
+                  <div className="mt-2 hidden sm:flex justify-center">
                     <TeamFormInline teamId={homeTeamId} teamName={homeTeam.name} />
                   </div>
                 )}
@@ -1104,18 +1104,21 @@ const Match = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center flex-shrink-0 order-1 sm:order-2 w-full sm:w-auto"
+                className="text-center flex-shrink-0 px-2 sm:px-0"
               >
                 {hasStats ? (
-                  <div className="flex items-center justify-center gap-3 sm:gap-6 px-6 sm:px-10 py-4 sm:py-6 bg-background/50 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/5 shadow-inner">
-                    <span className={cn("text-5xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
-                    <span className="text-2xl sm:text-4xl font-bold text-muted-foreground/50 mb-2">-</span>
-                    <span className={cn("text-5xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
+                  <div className="flex flex-col items-center gap-1 sm:gap-2">
+                    <div className="flex items-center justify-center gap-2 sm:gap-6 px-3 py-2 sm:px-10 sm:py-6 bg-background/50 backdrop-blur-md rounded-xl sm:rounded-3xl border border-white/5 shadow-inner">
+                      <span className={cn("text-2xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{homeTeam.score}</span>
+                      <span className="text-sm sm:text-4xl font-bold text-muted-foreground/50">-</span>
+                      <span className={cn("text-2xl sm:text-7xl font-black drop-shadow-lg", isLive ? "text-live" : "text-foreground")}>{awayTeam.score}</span>
+                    </div>
+                    {isLive && <span className="text-[10px] font-black text-live animate-pulse">{minute}'</span>}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center rounded-2xl sm:rounded-3xl bg-primary/10 border border-primary/20 px-8 py-6 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.2)]">
-                    <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary mb-2 animate-pulse" />
-                    <span className="text-3xl sm:text-5xl font-black text-primary drop-shadow-md">{time}</span>
+                  <div className="flex flex-col items-center justify-center rounded-xl sm:rounded-3xl bg-primary/10 border border-primary/20 px-4 py-3 sm:px-8 sm:py-6 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.2)]">
+                    <Clock className="h-4 w-4 sm:h-8 sm:w-8 text-primary mb-1 animate-pulse" />
+                    <span className="text-lg sm:text-5xl font-black text-primary drop-shadow-md">{time}</span>
                   </div>
                 )}
               </motion.div>
@@ -1123,17 +1126,17 @@ const Match = () => {
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex-1 text-center w-full sm:w-auto order-3"
+                className="flex-1 text-center min-w-0"
               >
                 <Link to={fix?.teams?.away?.id ? `/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
-                  <div className="relative mb-3 sm:mb-4">
+                  <div className="relative mb-2 sm:mb-4">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-20 w-20 sm:h-28 sm:w-28 object-contain drop-shadow-2xl" />}
+                    {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-12 w-12 sm:h-28 sm:w-28 object-contain drop-shadow-xl" />}
                   </div>
-                  <h2 className="text-lg sm:text-2xl font-black text-foreground truncate max-w-[200px]">{awayTeam.name}</h2>
+                  <h2 className="text-[10px] sm:text-2xl font-black text-foreground truncate w-full px-1">{awayTeam.name}</h2>
                 </Link>
                 {awayTeamId && (
-                  <div className="mt-3 flex justify-center">
+                  <div className="mt-2 hidden sm:flex justify-center">
                     <TeamFormInline teamId={awayTeamId} teamName={awayTeam.name} />
                   </div>
                 )}
