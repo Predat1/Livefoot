@@ -83,34 +83,38 @@ const LiveFootAIPredictionCard = ({
     // Priority 0: Use AI Expert Prediction from OpenRouter if available
     if (aiExpertPrediction) {
       try {
-        const [homeScore, awayScore] = aiExpertPrediction.predictedScore.split("-").map(Number);
+        const predictedScore = aiExpertPrediction.predictedScore || "0-0";
+        const [homeScore, awayScore] = predictedScore.includes("-") 
+          ? predictedScore.split("-").map(Number)
+          : [0, 0];
+        
         const outcome = homeScore > awayScore ? "home" : homeScore < awayScore ? "away" : "draw";
         
         return {
           outcome,
-          confidence: Math.round(aiExpertPrediction.confidence * 100),
-          predictedScore: { home: homeScore, away: awayScore },
+          confidence: Math.round((aiExpertPrediction.confidence || 0) * 100),
+          predictedScore: { home: homeScore || 0, away: awayScore || 0 },
           probabilities: { home: 0, draw: 0, away: 0 }, 
           factors: [{
             icon: "🧠",
             label: aiExpertPrediction.matchState === "En direct" ? "Analyse Live" : "Analyse Expert",
-            description: aiExpertPrediction.keyFactor,
+            description: aiExpertPrediction.keyFactor || "Analyse en cours...",
             impact: "neutral",
             team: "both"
           }],
-          advice: aiExpertPrediction.analysis,
+          advice: aiExpertPrediction.analysis || "",
           reasoning: aiExpertPrediction.reasoning,
-          risk: aiExpertPrediction.confidence > 0.7 ? "low" : "medium",
+          risk: (aiExpertPrediction.confidence || 0) > 0.7 ? "low" : "medium",
           matchState: aiExpertPrediction.matchState,
-          confidenceStars: aiExpertPrediction.confidenceStars || Math.round(aiExpertPrediction.confidence * 5),
+          confidenceStars: aiExpertPrediction.confidenceStars || Math.round((aiExpertPrediction.confidence || 0) * 5),
           xgHome: aiExpertPrediction.xgHome,
           xgAway: aiExpertPrediction.xgAway,
-          valueBet: aiExpertPrediction.valueBet && aiExpertPrediction.valueBet.toLowerCase() !== "null" ? aiExpertPrediction.valueBet : null,
+          valueBet: (aiExpertPrediction.valueBet && typeof aiExpertPrediction.valueBet === 'string' && aiExpertPrediction.valueBet.toLowerCase() !== "null") ? aiExpertPrediction.valueBet : null,
           bestBets: [
-            { type: "AI", label: `Oracle: ${aiExpertPrediction.predictedScore}`, confidence: Math.round(aiExpertPrediction.confidence * 100), emoji: "✨" }
+            { type: "AI", label: `Oracle: ${predictedScore}`, confidence: Math.round((aiExpertPrediction.confidence || 0) * 100), emoji: "✨" }
           ],
           isExpert: true,
-          detailedPredictions: aiExpertPrediction.predictions as unknown as Record<string, string | number>
+          detailedPredictions: (aiExpertPrediction.predictions || {}) as unknown as Record<string, string | number>
         };
       } catch (e) {
         console.error("Error mapping Expert prediction:", e);
