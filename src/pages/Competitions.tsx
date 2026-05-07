@@ -313,6 +313,7 @@ function LeagueRow({
 
 // Sub-component for competition details (standings + top scorers)
 function CompetitionDetail({ leagueId, season }: { leagueId: string; season: string }) {
+  const { t } = useTranslation();
   const { data: standings, isLoading: loadingStandings } = useStandings(leagueId, season);
   const { data: scorers, isLoading: loadingScorers } = useTopScorers(leagueId, season);
 
