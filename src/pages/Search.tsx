@@ -189,8 +189,6 @@ const ResultRow = ({ result }: { result: SearchResult }) => {
             <Newspaper className="h-4 w-4 text-primary" />
           </div>
         )}
-      </div>
-
       </Link>
 
       <Link to={result.href} className="min-w-0 flex-1">
