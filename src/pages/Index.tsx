@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo, Fragment } from "react";
 import { Link } from "react-router-dom";
-import Layout from "@/components/Layout";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import DatePicker from "@/components/DatePicker";
@@ -28,7 +27,6 @@ import PartnerBanner from "@/components/PartnerBanner";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 const Index = () => {
-  const livefootLogo = useAppLogo();
   const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState("all");
@@ -196,7 +194,6 @@ const SEO_LD = [
             ))}
           </div>
 
-          {/* AI Promo Banner */}
           <section className="mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '300ms' }}>
             <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1a12] via-[#050f0a] to-[#0c0d12] border border-primary/20 overflow-hidden group">
               <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
@@ -212,111 +209,58 @@ const SEO_LD = [
                 <p className="text-xs sm:text-sm text-emerald-300/60 max-w-lg mb-6">
                   {t("home.ai_desc")}
                 </p>
-                <Link to="/competitions" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity">
-                  {t("home.stats_competitions")} <ArrowRight className="h-4 w-4" />
+                <Link
+                  key={`${news.id}-${index}`}
+                  to={`/news/${news.id}`}
+                  className="group rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden hover-lift transition-all animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="relative h-32 sm:h-40 overflow-hidden">
+                    <img
+                      src={news.image}
+                      alt={news.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+                    <span className="absolute bottom-2 left-2 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                      {news.category}
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-xs sm:text-sm font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                      {news.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-1"><Calendar className="h-2.5 w-2.5" /> {news.date}</span>
+                      <span className="flex items-center gap-1"><Eye className="h-2.5 w-2.5" /> {news.views?.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </Link>
-              </div>
-            </div>
-          </section>
-
-          {/* Top Scorers Widget — Premier League */}
-          <TopScorersWidget leagueId="39" season="2024" title="Premier League" />
-          {/* Top Scorers Widget — La Liga */}
-          <TopScorersWidget leagueId="140" season="2024" title="La Liga" />
-
-          {/* Favorites Feed */}
-          <FavoritesFeed />
-
-          {/* Trending News */}
-          {trendingNews.length > 0 && (
-            <section className="mb-6 sm:mb-8">
-              <div className="mb-3 flex items-center gap-2">
-                <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
-                <Flame className="h-4 w-4 text-primary" />
-                <h2 className="text-sm sm:text-base font-bold text-foreground">{t("home.trending_news", "Trending")}</h2>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-                {trendingNews.map((news, index) => (
-                  <Link
-                    key={`${news.id}-${index}`}
-                    to={`/news/${news.id}`}
-                    className="group rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden hover-lift transition-all animate-fade-in"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="relative h-32 sm:h-40 overflow-hidden">
-                      <img
-                        src={news.image}
-                        alt={news.title}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
-                      <span className="absolute bottom-2 left-2 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-                        {news.category}
-                      </span>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="text-xs sm:text-sm font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                        {news.title}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1"><Calendar className="h-2.5 w-2.5" /> {news.date}</span>
-                        <span className="flex items-center gap-1"><Eye className="h-2.5 w-2.5" /> {news.views?.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Match Listings */}
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <MatchSkeleton key={i} />
               ))}
             </div>
-          ) : isError ? (
-            <div className="py-12 text-center">
-              <WifiOff className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">{t("home.error", "Impossible de charger les matchs.")}</p>
-              <Button variant="outline" className="mt-4" onClick={() => refetch()}>{t("common.retry", "Réessayer")}</Button>
-            </div>
-          ) : visibleLeagues.length === 0 ? (
-            <div className="py-12 text-center">
-              <Trophy className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">{t("home.no_matches", "Aucun match trouvé pour cette date.")}</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {visibleLeagues.map((league) => (
-                <LeagueSection key={league.id} league={league} />
-              ))}
-              <InfiniteScrollLoader ref={loadMoreRef} hasMore={hasMore} isLoading={isLoadingMore} />
-            </div>
-          )}
-
-          {/* Viral Share Section */}
-          <section className="mt-12 mb-8 animate-fade-in">
-            <div className="rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border border-primary/20 p-6 sm:p-10 text-center">
-              <div className="mx-auto h-16 w-16 rounded-2xl gradient-primary flex items-center justify-center mb-6 shadow-xl shadow-primary/20 rotate-3">
-                <Share2 className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Tu aimes LiveFoot ?</h2>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
-                Partage l'application avec tes amis parieurs et fans de foot pour les aider à gagner grâce à nos pronos IA !
-              </p>
-              <div className="max-w-sm mx-auto">
-                <ShareWidget 
-                  title="LiveFoot - Scores & Pronos IA"
-                  text="Je te conseille LiveFoot pour suivre les scores en direct et avoir des pronostics IA de fou ! C'est 100% gratuit."
-                  url="/"
-                />
-              </div>
-            </div>
           </section>
-        </main>
+        )}
+        {/* Viral Share Section */}
+        <section className="mt-12 mb-8 animate-fade-in">
+          <div className="rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border border-primary/20 p-6 sm:p-10 text-center">
+            <div className="mx-auto h-16 w-16 rounded-2xl gradient-primary flex items-center justify-center mb-6 shadow-xl shadow-primary/20 rotate-3">
+              <Share2 className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Tu aimes LiveFoot ?</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
+              Partage l'application avec tes amis parieurs et fans de foot pour les aider à gagner grâce à nos pronos IA !
+            </p>
+            <div className="max-w-sm mx-auto">
+              <ShareWidget 
+                title="LiveFoot - Scores & Pronos IA"
+                text="Je te conseille LiveFoot pour suivre les scores en direct et avoir des pronostics IA de fou ! C'est 100% gratuit."
+                url="/"
+              />
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* Footer - hidden on mobile */}
       <footer className="hidden lg:block border-t border-border bg-card py-12 mt-8">
@@ -351,7 +295,6 @@ const SEO_LD = [
           </p>
         </div>
       </footer>
-      </Layout>
     </div>
   );
 };

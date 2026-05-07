@@ -1175,7 +1175,7 @@ const Match = () => {
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-12 w-12 sm:h-28 sm:w-28 object-contain drop-shadow-xl" />}
                   </div>
-                  <h2 className="text-xs sm:text-2xl font-black text-foreground truncate w-full px-1">{homeTeam.name}</h2>
+                  <h2 className="text-[10px] sm:text-2xl font-black text-foreground truncate w-full px-1">{homeTeam.name}</h2>
                 </Link>
                 {homeTeamId && (
                   <div className="mt-2 hidden sm:flex justify-center">
@@ -1187,7 +1187,7 @@ const Match = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center flex-shrink-0 px-2 sm:px-0 z-10 w-auto"
+                className="text-center flex-shrink-0 px-2 sm:px-0 z-10 w-full sm:w-auto"
               >
                 {hasStats ? (
                   <div className="flex flex-col items-center gap-1 sm:gap-2">
@@ -1240,7 +1240,7 @@ const Match = () => {
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-12 w-12 sm:h-28 sm:w-28 object-contain drop-shadow-xl" />}
                   </div>
-                  <h2 className="text-xs sm:text-2xl font-black text-foreground truncate w-full px-1">{awayTeam.name}</h2>
+                  <h2 className="text-[10px] sm:text-2xl font-black text-foreground truncate w-full px-1">{awayTeam.name}</h2>
                 </Link>
                 {awayTeamId && (
                   <div className="mt-2 hidden sm:flex justify-center">
