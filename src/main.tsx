@@ -22,6 +22,9 @@ if ('serviceWorker' in navigator) {
 // Suppression de l'indicateur de chargement initial une fois que le JS a démarré
 const rootElement = document.getElementById("root");
 const loadingElement = document.getElementById("root-loading");
+const failsafeLog = document.getElementById("failsafe-log");
+
+if (failsafeLog) failsafeLog.innerText += ' JS STARTED...';
 
 // Handler d'erreur global pour attraper les crashs au démarrage
 window.onerror = (message, source, lineno, colno, error) => {
