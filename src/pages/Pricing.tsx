@@ -223,7 +223,18 @@ export default function Pricing() {
                 {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
 
-              <div id="chariow-weekly" data-product-id="prd_ec21i6" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
+              <div id="chariow-weekly" 
+                data-product-id="prd_ec21i6" 
+                data-store-domain="nhvjjgbn.mychariow.shop" 
+                data-style="tap" 
+                data-border-style="rounded"
+                data-cta-width="xs"
+                data-background-color="#FFFFFF"
+                data-cta-animation="shine"
+                data-locale="fr"
+                data-primary-color="#ffcc00"
+                style={{ display: 'none' }}
+              ></div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.slice(0, 3).map((feature, i) => (
@@ -271,7 +282,18 @@ export default function Pricing() {
                 {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.start")}
               </button>
 
-              <div id="chariow-monthly" data-product-id="prd_gjr4pb" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
+              <div id="chariow-monthly" 
+                data-product-id="prd_gjr4pb" 
+                data-store-domain="nhvjjgbn.mychariow.shop" 
+                data-style="tap" 
+                data-border-style="rounded"
+                data-cta-width="xs"
+                data-background-color="#FFFFFF"
+                data-cta-animation="shine"
+                data-locale="fr"
+                data-primary-color="#ffcc00"
+                style={{ display: 'none' }}
+              ></div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -317,7 +339,18 @@ export default function Pricing() {
                 {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
 
-              <div id="chariow-quarterly" data-product-id="prd_g3msqc" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
+              <div id="chariow-quarterly" 
+                data-product-id="prd_g3msqc" 
+                data-store-domain="nhvjjgbn.mychariow.shop" 
+                data-style="tap" 
+                data-border-style="rounded"
+                data-cta-width="xs"
+                data-background-color="#FFFFFF"
+                data-cta-animation="shine"
+                data-locale="fr"
+                data-primary-color="#ffcc00"
+                style={{ display: 'none' }}
+              ></div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -368,7 +401,18 @@ export default function Pricing() {
                 {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.join")}
               </button>
 
-              <div id="chariow-annual" data-product-id="prd_c84m5a" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
+              <div id="chariow-annual" 
+                data-product-id="prd_c84m5a" 
+                data-store-domain="nhvjjgbn.mychariow.shop" 
+                data-style="tap" 
+                data-border-style="rounded"
+                data-cta-width="xs"
+                data-background-color="#FFFFFF"
+                data-cta-animation="shine"
+                data-locale="fr"
+                data-primary-color="#ffcc00"
+                style={{ display: 'none' }}
+              ></div>
 
               <div className="space-y-3 relative z-10">
                 {TIER_FEATURES.map((feature, i) => (
