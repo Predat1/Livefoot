@@ -149,6 +149,27 @@ export default function Pricing() {
                 </div>
               </div>
 
+              <button 
+                onClick={() => {
+                  if (user) {
+                    const widget = document.getElementById("chariow-widget");
+                    const button = widget?.querySelector("button, .chariow-cta, [role='button']");
+                    if (button) {
+                      (button as HTMLElement).click();
+                    } else {
+                      // Fallback if widget not yet loaded
+                      handleSubscribe("weekly");
+                    }
+                  } else {
+                    handleSubscribe("weekly");
+                  }
+                }}
+                disabled={isProcessing !== null}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
+              >
+                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
+              </button>
+
               <div 
                 id="chariow-widget" 
                 data-product-id="prd_ec21i6"
@@ -160,7 +181,7 @@ export default function Pricing() {
                 data-locale="en"
                 data-primary-color="#ffcc00"
                 data-background-color="#FFFFFF"
-                className="mt-auto mb-6 min-h-[48px]"
+                style={{ display: 'none' }}
               ></div>
 
               <div className="space-y-3">
