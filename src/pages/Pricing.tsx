@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 
-import { Check, Shield, Zap, Target, Lock, Crown, Star, ArrowLeft, Loader2, Play } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Check, Shield, Zap, Target, Lock, Crown, ArrowLeft, Loader2 } from "lucide-react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,81 +25,56 @@ export default function Pricing() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
-
   const TIER_FEATURES = getTierFeatures(t);
   const [licenseKey, setLicenseKey] = useState("");
   const [isActivating, setIsActivating] = useState(false);
 
-  useEffect(() => {
-    // Chariow Widget Loader
-    const script = document.createElement('script');
-    script.src = 'https://js.chariowcdn.com/v1/widget.min.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://js.chariowcdn.com/v1/widget.min.css';
-    document.head.appendChild(link);
-
-    return () => {
-      try {
-        if (document.head.contains(script)) document.head.removeChild(script);
-        if (document.head.contains(link)) document.head.removeChild(link);
-      } catch (e) {
-        console.error("Cleanup error:", e);
-      }
-    };
-  }, []);
-
-  const triggerChariow = (planId: string) => {
+  // ─── Checkout via Chariow API (server-side, fiable à 100%) ────
+  const handleCheckout = async (planId: string, productId: string) => {
     if (!user) {
       toast.error(t("auth.login_required"));
       navigate("/auth");
       return;
     }
 
-    // Map planId to product ID
-    const productIds: Record<string, string> = {
-      weekly: "prd_ec21i6",
-      monthly: "prd_gjr4pb",
-      quarterly: "prd_g3msqc",
-      annual: "prd_c84m5a"
-    };
-    const productId = productIds[planId];
-
     setIsProcessing(planId);
-    let attempts = 0;
 
-    const tryClick = () => {
-      // Find the widget container by product ID
-      const widget = document.querySelector(`[data-product-id="${productId}"]`);
-      
-      // Look for the button inside the widget. Chariow usually injects a button or an iframe.
-      // We try to find the button or the first child of the widget.
-      const clickable = widget?.querySelector("button, a, [role='button'], .chariow-btn, .chariow-cta") || widget?.firstElementChild;
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { product_id: productId },
+      });
 
-      if (clickable) {
-        console.log(`Chariow widget for ${productId} found, clicking...`);
-        (clickable as HTMLElement).click();
-        setTimeout(() => setIsProcessing(null), 2000);
-      } else {
-        attempts++;
-        if (attempts < 50) { // Try for 5 seconds
-          setTimeout(tryClick, 100);
-        } else {
-          console.error(`Chariow widget ${productId} failed to load after 5s`);
-          setIsProcessing(null);
-          toast.error("Le module de paiement n'a pas pu être chargé. Veuillez réessayer ou rafraîchir la page.");
-        }
+      if (error) throw new Error(error.message || "Erreur serveur");
+
+      if (data.step === "payment" && data.checkout_url) {
+        // Redirect to Chariow secure payment page
+        window.location.href = data.checkout_url;
+        return;
       }
-    };
 
-    tryClick();
+      if (data.step === "completed") {
+        toast.success(data.message || "Accès VIP activé !");
+        setTimeout(() => window.location.reload(), 1500);
+        return;
+      }
+
+      if (data.step === "already_purchased") {
+        toast.info(data.message || "Vous avez déjà acheté ce produit.");
+        return;
+      }
+
+      // Fallback
+      toast.error("Réponse inattendue du serveur de paiement.");
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toast.error(err.message || "Impossible de lancer le paiement. Réessayez.");
+    } finally {
+      setIsProcessing(null);
+    }
   };
 
+  // ─── License key activation ───────────────────────────────────
   const handleActivateLicense = async (e: React.FormEvent) => {
-
     e.preventDefault();
     if (!licenseKey.trim()) return;
     if (!user) {
@@ -108,7 +82,6 @@ export default function Pricing() {
       navigate("/auth");
       return;
     }
-
 
     setIsActivating(true);
     try {
@@ -120,8 +93,6 @@ export default function Pricing() {
       
       toast.success(t("pricing.license_success"));
       setLicenseKey("");
-      
-      // Update local state or reload to reflect VIP status
       setTimeout(() => window.location.reload(), 1500);
     } catch (error: any) {
       console.error("License activation error:", error);
@@ -188,6 +159,7 @@ export default function Pricing() {
 
           {/* Pricing Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch mb-20">
+            
             {/* Weekly Tier */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -206,13 +178,11 @@ export default function Pricing() {
                   <span className="text-4xl font-black text-white">{t("pricing.weekly_price")}</span>
                   <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.weekly_period")}</span>
                 </div>
-                <div className="mt-1 text-[11px] font-medium text-white/30">
-                  ≈ 6 550 FCFA
-                </div>
+                <div className="mt-1 text-[11px] font-medium text-white/30">≈ 6 550 FCFA</div>
               </div>
 
               <button 
-                onClick={() => triggerChariow("weekly")}
+                onClick={() => handleCheckout("weekly", "prd_ec21i6")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
@@ -252,13 +222,11 @@ export default function Pricing() {
                   <span className="text-4xl font-black text-white">{t("pricing.monthly_price")}</span>
                   <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.monthly_period")}</span>
                 </div>
-                <div className="mt-1 text-[11px] font-medium text-white/30">
-                  ≈ 13 100 FCFA
-                </div>
+                <div className="mt-1 text-[11px] font-medium text-white/30">≈ 13 100 FCFA</div>
               </div>
 
               <button 
-                onClick={() => triggerChariow("monthly")}
+                onClick={() => handleCheckout("monthly", "prd_gjr4pb")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
               >
@@ -302,7 +270,7 @@ export default function Pricing() {
               </div>
 
               <button 
-                onClick={() => triggerChariow("quarterly")}
+                onClick={() => handleCheckout("quarterly", "prd_g3msqc")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
@@ -351,7 +319,7 @@ export default function Pricing() {
               </div>
 
               <button 
-                onClick={() => triggerChariow("annual")}
+                onClick={() => handleCheckout("annual", "prd_c84m5a")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
               >
@@ -367,7 +335,6 @@ export default function Pricing() {
                     <span className="text-xs text-white/90 font-medium">{feature}</span>
                   </div>
                 ))}
-                {/* Extra Annual Feature */}
                 <div className="flex items-start gap-3 pt-3 border-t border-white/5">
                   <div className="h-4 w-4 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
                     <Zap className="h-2.5 w-2.5 text-emerald-400" />
@@ -445,14 +412,6 @@ export default function Pricing() {
                 <p className="text-sm text-white/60 leading-relaxed">L'AnalystePro V3 n'est pas un robot de conseils aléatoires. Il effectue des millions de calculs ELO, compare les marges et tourne sur des serveurs d'intelligence artificielle surpuissants (Double Poisson Model). Ce coût d'infrastructure garantit la meilleure précision du marché. Un seul pari Value Bet suffit généralement à rentabiliser le mois.</p>
               </div>
             </div>
-          </div>
-
-          {/* Hidden stable Chariow containers - Positioned off-screen but "visible" to the script */}
-          <div style={{ position: 'absolute', left: '-9999px', top: 0, height: '1px', width: '1px', overflow: 'hidden' }}>
-            <div id="chariow-weekly" data-product-id="prd_ec21i6" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
-            <div id="chariow-monthly" data-product-id="prd_gjr4pb" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
-            <div id="chariow-quarterly" data-product-id="prd_g3msqc" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
-            <div id="chariow-annual" data-product-id="prd_c84m5a" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
           </div>
         </div>
       </div>

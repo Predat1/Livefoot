@@ -174,13 +174,15 @@ const ResultRow = ({ result }: { result: SearchResult }) => {
   const isFav = favType ? isFavorite(favType as "teams" | "players" | "competitions", result.id) : false;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors group">
-      <Link to={result.href} className="flex-shrink-0">
-
+    <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/40 transition-all group border-b border-border/10 last:border-0 relative overflow-hidden">
+      {/* Subtle background glow on hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      
+      <Link to={result.href} className="flex-shrink-0 relative z-10">
         {result.type === "team" && <TeamLogo teamName={result.name} size="sm" />}
         {result.type === "player" && <PlayerAvatar name={result.name} size="sm" />}
         {result.type === "competition" && (
-          <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10 shadow-sm group-hover:border-primary/30 transition-colors">
             <LeagueLogo leagueId={result.id} size="sm" />
           </div>
         )}
@@ -191,7 +193,7 @@ const ResultRow = ({ result }: { result: SearchResult }) => {
         )}
       </Link>
 
-      <Link to={result.href} className="min-w-0 flex-1">
+      <Link to={result.href} className="min-w-0 flex-1 relative z-10">
         <p className="font-semibold text-sm text-foreground truncate group-hover:text-primary transition-colors">
           {result.name}
         </p>
@@ -200,13 +202,13 @@ const ResultRow = ({ result }: { result: SearchResult }) => {
 
 
       {/* Meta badges */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0 relative z-10">
         {result.type === "player" && result.meta?.rating && (
           <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-black text-primary">
             {result.meta.rating}
           </span>
         )}
-        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", cfg.color)}>
+        <span className={cn("rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wider uppercase", cfg.color)}>
           {cfg.tag}
         </span>
         {favType && (
@@ -243,6 +245,7 @@ const SearchPage = () => {
     updateFilter,
     resetFilters,
     activeFilterCount,
+    isLoading
   } = useSearch(200);
 
   useEffect(() => {
@@ -485,77 +488,124 @@ const SearchPage = () => {
           </div>
         )}
 
-        {/* Results */}
-        {showResults ? (
-          results.length > 0 ? (
-            <div className="space-y-4">
-              {typeOrder
-                .filter((t) => groupedResults[t]?.length)
-                .map((type) => {
-                  const items = groupedResults[type];
-                  const cfg = typeConfig[type];
-                  return (
-                    <div key={type} className="rounded-2xl bg-card border border-border/50 overflow-hidden">
-                      <div className="bg-muted/30 px-4 py-2.5 border-b border-border flex items-center gap-2">
-                        {cfg.icon}
-                        <h3 className="font-bold text-sm text-foreground">
-                          {cfg.label}
-                        </h3>
-                        <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                          {items.length}
-                        </span>
-                      </div>
-                      <div className="divide-y divide-border/40">
-                        {items.map((r) => (
-                          <ResultRow key={`${r.type}-${r.id}`} result={r} />
-                        ))}
-                      </div>
+        {/* Empty state: Suggestions & Categories */}
+        {!query && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-12 space-y-12 pb-20"
+          >
+            {/* Popular Categories */}
+            <section>
+              <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-6 px-1 flex items-center gap-2">
+                <TrendingUp className="h-3 w-3 text-primary" />
+                Championnats Populaires
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { id: "39", name: "Premier League", country: "Angleterre", color: "from-purple-500/20" },
+                  { id: "140", name: "La Liga", country: "Espagne", color: "from-amber-500/20" },
+                  { id: "61", name: "Ligue 1", country: "France", color: "from-blue-500/20" },
+                  { id: "135", name: "Serie A", country: "Italie", color: "from-emerald-500/20" },
+                ].map((league) => (
+                  <button
+                    key={league.id}
+                    onClick={() => setQuery(league.name)}
+                    className={cn(
+                      "flex flex-col items-center gap-3 p-6 rounded-2xl border border-border/40 bg-card hover:bg-muted/30 transition-all hover:scale-[1.02] hover:border-primary/30 group text-center bg-gradient-to-b to-transparent",
+                      league.color
+                    )}
+                  >
+                    <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center p-2 group-hover:scale-110 transition-transform duration-500">
+                      <LeagueLogo leagueId={league.id} size="md" />
                     </div>
-                  );
-                })}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
-                <SearchIcon className="h-8 w-8 text-muted-foreground/40" />
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{league.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{league.country}</p>
+                    </div>
+                  </button>
+                ))}
               </div>
-              <p className="font-semibold text-foreground">Aucun résultat</p>
-              <p className="text-sm text-muted-foreground text-center max-w-xs">
-                {query ? `Aucun résultat pour "${query}"` : "Aucun résultat avec ces filtres."}
+            </section>
+
+            {/* Quick Filters */}
+            <section>
+              <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-6 px-1 flex items-center gap-2">
+                <Zap className="h-3 w-3 text-primary" />
+                Raccourcis de recherche
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Kylian Mbappé", "Cristiano Ronaldo", "Lionel Messi", 
+                  "Real Madrid", "Paris Saint Germain", "Manchester City",
+                  "Champions League", "Europa League", "CAN 2025"
+                ].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setQuery(q)}
+                    className="px-4 py-2 rounded-full bg-muted/50 border border-border/50 text-xs font-medium hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Help tip */}
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary-foreground/80">
+              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <Star className="h-4 w-4 text-primary" />
+              </div>
+              <p className="text-xs leading-relaxed">
+                <span className="font-bold text-primary">Conseil :</span> Ajoutez des équipes ou des joueurs à vos favoris en cliquant sur l'étoile pour les retrouver rapidement dans votre espace personnel.
               </p>
-              {activeFilterCount > 0 && (
-                <button
-                  onClick={resetFilters}
-                  className="mt-1 rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 transition-colors"
-                >
-                  Réinitialiser les filtres
-                </button>
-              )}
             </div>
-          )
-        ) : (
-          /* Empty state with suggestions */
-          <div className="space-y-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Suggestions
-            </p>
-            {[
-              { label: "Joueurs de Ligue 1", action: () => { updateFilter("types", ["player"]); updateFilter("league", "Ligue 1"); setFiltersOpen(false); } },
-              { label: "Équipes d'Espagne", action: () => { updateFilter("types", ["team"]); updateFilter("country", "Spain"); setFiltersOpen(false); } },
-              { label: "Attaquants > €100M", action: () => { updateFilter("types", ["player"]); updateFilter("position", "Forward"); updateFilter("marketValueMin", 100); setFiltersOpen(false); } },
-              { label: "Compétitions européennes", action: () => { updateFilter("types", ["competition"]); setFiltersOpen(false); } },
-            ].map(({ label, action }) => (
-              <button
-                key={label}
-                onClick={action}
-                className="flex w-full items-center gap-3 rounded-xl bg-card border border-border/50 px-4 py-3 text-left hover:border-primary/40 hover:bg-muted/30 transition-colors group"
+          </motion.div>
+        )}
+
+        {/* Results section */}
+        {query && (
+          <div className="mt-6 space-y-6 pb-20">
+            {Object.entries(groupedResults).map(([type, items]) => (
+              <motion.section 
+                key={type}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="rounded-2xl border border-border/50 bg-card/50 overflow-hidden backdrop-blur-sm"
               >
-                <SearchIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                  {label}
-                </span>
-              </button>
+                <div className="px-4 py-3 bg-muted/30 border-b border-border/50 flex items-center gap-2">
+                  <div className="p-1 rounded-md bg-primary/10">
+                    {typeConfig[type as keyof typeof typeConfig]?.icon}
+                  </div>
+                  <h3 className="text-xs font-black text-foreground uppercase tracking-wider">
+                    {typeConfig[type as keyof typeof typeConfig]?.label} ({items.length})
+                  </h3>
+                </div>
+                <div className="divide-y divide-border/10">
+                  {items.map((result) => (
+                    <ResultRow key={`${result.type}-${result.id}`} result={result} />
+                  ))}
+                </div>
+              </motion.section>
             ))}
+
+            {results.length === 0 && !isLoading && query.length >= 2 && (
+              <div className="text-center py-20">
+                <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
+                  <Search className="h-8 w-8 text-muted-foreground/40" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground">Aucun résultat</h3>
+                <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                  Nous n'avons rien trouvé pour "{query}". Essayez d'autres mots-clés ou vérifiez l'orthographe.
+                </p>
+                <button 
+                  onClick={resetFilters}
+                  className="mt-6 text-sm font-bold text-primary hover:underline"
+                >
+                  Effacer les filtres
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
