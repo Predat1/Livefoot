@@ -902,7 +902,7 @@ const Match = () => {
               awayLogo={awayTeam.logo}
               standings={standingsData || []}
               apiPredictions={apiPredictions}
-              aiExpertPrediction={aiExpertPrediction}
+              aiExpertPrediction={aiExpertPrediction as any}
               injuries={{
                 home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
                 away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
