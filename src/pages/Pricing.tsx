@@ -42,8 +42,8 @@ export default function Pricing() {
     }
   }, [t]);
 
-  // ─── Checkout via Chariow API (server-side, fiable à 100%) ────
-  const handleCheckout = async (planId: string, productId: string) => {
+  // ─── Checkout via Chariow Direct Link (Requested by user) ────
+  const handleCheckout = (planId: string, productId: string) => {
     if (!user) {
       toast.error(t("auth.login_required"));
       navigate("/auth");
@@ -51,47 +51,20 @@ export default function Pricing() {
     }
 
     setIsProcessing(planId);
-
+    
     try {
-      console.log("Invoking create-checkout for product:", productId);
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { product_id: productId },
-      });
-
-      console.log("Create-checkout response data:", data);
-
-      if (error) {
-        const errorMsg = error instanceof Error ? error.message : typeof error === 'object' ? JSON.stringify(error) : "Erreur serveur";
-        throw new Error(errorMsg);
-      }
-
-      if (!data) throw new Error("Aucune donnée reçue du serveur.");
-
-      if (data.step === "payment" && data.checkout_url) {
-        console.log("Redirecting to:", data.checkout_url);
-        // Redirect to Chariow secure payment page
-        window.location.href = data.checkout_url;
-        return;
-      }
-
-      if (data.step === "completed") {
-        toast.success(data.message || "Accès VIP activé !");
-        setTimeout(() => window.location.reload(), 1500);
-        return;
-      }
-
-      if (data.step === "already_purchased") {
-        toast.info(data.message || "Vous avez déjà acheté ce produit.");
-        return;
-      }
-
-      // Fallback
-      console.warn("Unexpected step or missing URL:", data);
-      toast.error("Réponse inattendue du serveur de paiement.");
+      // The user provided specific URLs: https://nhvjjgbn.mychariow.shop/prd_xxxxxx/checkout
+      const storeDomain = "nhvjjgbn.mychariow.shop";
+      
+      // Append metadata to query string for the Pulse (webhook) to pick it up if configured
+      // Format: https://store.mychariow.shop/product_id/checkout?metadata[user_id]=xxx&email=xxx
+      const checkoutUrl = `https://${storeDomain}/${productId}/checkout?email=${encodeURIComponent(user.email || "")}&metadata[user_id]=${encodeURIComponent(user.id)}&metadata[plan]=${planId}`;
+      
+      console.log("Redirecting to direct checkout:", checkoutUrl);
+      window.location.href = checkoutUrl;
     } catch (err: any) {
-      console.error("Checkout error:", err);
-      toast.error(err.message || "Impossible de lancer le paiement. Réessayez.");
-    } finally {
+      console.error("Checkout redirection error:", err);
+      toast.error("Impossible d'ouvrir la page de paiement. Réessayez.");
       setIsProcessing(null);
     }
   };

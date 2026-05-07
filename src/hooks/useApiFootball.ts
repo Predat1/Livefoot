@@ -126,6 +126,8 @@ function transformFixturesToLeagues(fixtures: any[] = []): LeagueData[] {
   if (!fixtures || !Array.isArray(fixtures)) return [];
 
   for (const fix of fixtures) {
+    if (!fix || !fix.league || !fix.teams || !fix.fixture) continue;
+
     const leagueId = fix.league.id;
     if (!leagueMap.has(leagueId)) {
       leagueMap.set(leagueId, {

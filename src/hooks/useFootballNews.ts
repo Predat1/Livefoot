@@ -34,21 +34,27 @@ export function useFootballNews() {
 }
 
 // Extract unique categories from live data
-export function useNewsCategories(articles: NewsArticle[]) {
-  const categories = ["All", ...new Set(articles.map((a) => a.category))];
+export function useNewsCategories(articles: NewsArticle[] = []) {
+  if (!articles || !Array.isArray(articles)) return ["All"];
+  const categories = ["All", ...new Set(articles.map((a) => a?.category).filter(Boolean))];
   return categories;
 }
 
-export function usePersonalizedNews(favorites: { teams: any[], competitions: any[] }) {
+export function usePersonalizedNews(favorites: { teams?: any[], competitions?: any[] } = {}) {
   const { data: articles, ...rest } = useFootballNews();
   
+  const teams = favorites?.teams || [];
+  const competitions = favorites?.competitions || [];
+  
   const personalized = articles?.filter(article => {
+    if (!article) return false;
     // Check if article content or title matches any favorite team/competition name
-    const matches = [...favorites.teams, ...favorites.competitions].some(fav => {
+    const matches = [...teams, ...competitions].some(fav => {
+      if (!fav) return false;
       const name = String(fav).toLowerCase();
-      return article.title.toLowerCase().includes(name) || 
-             article.content.toLowerCase().includes(name) ||
-             article.summary.toLowerCase().includes(name);
+      return (article.title?.toLowerCase().includes(name) || 
+             article.content?.toLowerCase().includes(name) ||
+             article.summary?.toLowerCase().includes(name));
     });
     return matches;
   }) || [];
