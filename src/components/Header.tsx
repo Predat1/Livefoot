@@ -1,4 +1,4 @@
-import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift, ArrowRight, Crown } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift, ArrowRight, Crown, LogIn, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useSearch } from "@/hooks/useSearch";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const logoUrl = useAppLogo();
@@ -20,6 +21,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { query, setQuery, results, isLoading } = useSearch();
   const { t } = useTranslation();
+  const { user, profile, signOut } = useAuth();
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -244,6 +246,41 @@ const Header = () => {
             <ThemeToggle />
             <LanguageSwitcher />
 
+            {/* Auth Button */}
+            {user ? (
+              <div className="flex items-center gap-1">
+                <Link
+                  to="/profile"
+                  className="h-8 w-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors"
+                  title={profile?.display_name || user.email || "Profil"}
+                >
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="h-full w-full rounded-lg object-cover" />
+                  ) : (
+                    <span className="text-xs font-black">
+                      {(profile?.display_name || user.email || "U").charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg text-header-foreground/50 hover:text-red-400 hover:bg-red-500/10 hidden lg:flex"
+                  onClick={() => signOut()}
+                  title="Déconnexion"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Link
+                to="/auth"
+                className="h-8 rounded-lg bg-primary/20 border border-primary/30 px-3 flex items-center gap-1.5 text-primary hover:bg-primary/30 transition-colors text-xs font-bold"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Connexion</span>
+              </Link>
+            )}
 
             {/* Hamburger */}
             <Button
@@ -311,6 +348,38 @@ const Header = () => {
                   )}
                 </Link>
               ))}
+
+              {/* Auth section in mobile menu */}
+              <div className="border-t border-header-foreground/10 mt-2 pt-2">
+                {user ? (
+                  <>
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3 text-header-foreground/70 hover:bg-header-foreground/10 hover:text-header-foreground"
+                    >
+                      <User className="h-4 w-4" />
+                      {profile?.display_name || "Mon Profil"}
+                    </Link>
+                    <button
+                      onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                      className="w-full px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3 text-red-400 hover:bg-red-500/10"
+                    >
+                      <X className="h-4 w-4" />
+                      Déconnexion
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/auth"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3 text-primary hover:bg-primary/10"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Connexion / Inscription
+                  </Link>
+                )}
+              </div>
 
             </nav>
           </div>

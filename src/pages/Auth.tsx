@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,21 @@ import livefootLogo from "@/assets/livefoot-logo.png";
 import { Loader2, Mail, Lock, User } from "lucide-react";
 import { livefootToast } from "@/components/ui/sonner";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
 
   // Login state
   const [loginEmail, setLoginEmail] = useState("");

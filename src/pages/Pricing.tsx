@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import { Check, Shield, Zap, Target, Lock, Crown, Star, ArrowLeft, Loader2, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Layout from "@/components/Layout";
@@ -23,7 +24,9 @@ const getTierFeatures = (t: any) => [
 export default function Pricing() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+
   const TIER_FEATURES = getTierFeatures(t);
   const [licenseKey, setLicenseKey] = useState("");
   const [isActivating, setIsActivating] = useState(false);
@@ -53,8 +56,10 @@ export default function Pricing() {
   const triggerChariow = (planId: string) => {
     if (!user) {
       toast.error(t("auth.login_required"));
+      navigate("/auth");
       return;
     }
+
     const widget = document.getElementById(`chariow-${planId}`);
     const button = widget?.querySelector("button, .chariow-cta, [role='button']");
     if (button) {
@@ -70,8 +75,10 @@ export default function Pricing() {
     if (!licenseKey.trim()) return;
     if (!user) {
       toast.error(t("auth.login_required"));
+      navigate("/auth");
       return;
     }
+
 
     setIsActivating(true);
     try {
@@ -96,9 +103,11 @@ export default function Pricing() {
 
   const handleSubscribe = (planName: string) => {
     if (!user) {
-      toast.error("Veuillez créer un compte ou vous connecter avant de vous abonner.");
+      toast.error(t("auth.login_required"));
+      navigate("/auth");
       return;
     }
+
     
     setIsProcessing(planName);
     
