@@ -36,6 +36,7 @@ const Explorer = lazy(() => import("@/pages/Explorer"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const DynamicSitemap = lazy(() => import("@/pages/DynamicSitemap"));
 const DailyPicks = lazy(() => import("@/pages/DailyPicks"));
+const PredictionsHistory = lazy(() => import("@/pages/PredictionsHistory"));
 const Bonuses = lazy(() => import("@/pages/Bonuses"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const VipDashboard = lazy(() => import("@/pages/VipDashboard"));
@@ -87,6 +88,7 @@ const AnimatedRoutes = () => {
             <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
             <Route path="/predictions" element={<PageTransition><PredictionsDashboard /></PageTransition>} />
             <Route path="/daily-picks" element={<PageTransition><DailyPicks /></PageTransition>} />
+            <Route path="/history" element={<PageTransition><PredictionsHistory /></PageTransition>} />
             <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
             <Route path="/about" element={<PageTransition><About /></PageTransition>} />
             <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />

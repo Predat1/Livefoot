@@ -32,26 +32,8 @@ const App = () => {
     const savedVersion = localStorage.getItem(STORAGE_KEY);
     if (savedVersion !== APP_VERSION) {
       console.log(`Mise à jour de version détectée: ${savedVersion} -> ${APP_VERSION}`);
-      
-      // Dés-enregistre tous les Service Workers pour purger le cache
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (let registration of registrations) {
-            registration.unregister();
-          }
-          // Efface tous les caches Workbox
-          if ('caches' in window) {
-            caches.keys().then(keys => {
-              keys.forEach(key => caches.delete(key));
-            });
-          }
-          // Sauvegarde la nouvelle version PUIS reload
-          localStorage.setItem(STORAGE_KEY, APP_VERSION);
-          window.location.reload();
-        });
-      } else {
-        localStorage.setItem(STORAGE_KEY, APP_VERSION);
-      }
+      localStorage.setItem(STORAGE_KEY, APP_VERSION);
+      window.location.reload();
     }
   }, []);
 

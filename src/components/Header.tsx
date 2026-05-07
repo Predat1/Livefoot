@@ -281,16 +281,21 @@ const Header = () => {
               <div className="flex items-center gap-1">
                 <Link
                   to="/profile"
-                  className="h-8 w-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors"
-                  title={profile?.display_name || user.email || "Profil"}
+                  className="group flex items-center gap-2"
                 >
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="h-full w-full rounded-lg object-cover" />
-                  ) : (
-                    <span className="text-xs font-black">
-                      {(profile?.display_name || user.email || "U").charAt(0).toUpperCase()}
-                    </span>
-                  )}
+                  <div className="hidden sm:flex flex-col items-end gap-0.5 mr-1">
+                    <span className="text-[10px] font-black text-primary leading-none uppercase">{profile?.rank_title || "Débutant"}</span>
+                    <span className="text-[9px] font-bold text-header-foreground/40 leading-none">{profile?.points || 0} pts</span>
+                  </div>
+                  <div className="h-8 w-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="h-full w-full rounded-lg object-cover" />
+                    ) : (
+                      <span className="text-xs font-black">
+                        {(profile?.display_name || user.email || "U").charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
                 </Link>
                 <Button
                   variant="ghost"

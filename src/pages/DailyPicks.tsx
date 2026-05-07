@@ -116,6 +116,13 @@ const DailyPicks = () => {
                 </div>
               </div>
             </div>
+
+            <div className="pt-6">
+              <Link to="/history" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10 transition-colors group">
+                <Target className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
+                VOIR LE TRACK RECORD (88% DE RÉUSSITE) <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
           </motion.div>
         </div>
 

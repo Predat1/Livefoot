@@ -10,7 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserCircle, Save, LogOut, Star, ArrowLeft, Shield } from "lucide-react";
+import { UserCircle, Save, LogOut, Star, ArrowLeft, Shield, Crown, Zap, Calendar, TrendingUp, Bell } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
+import { fr } from "date-fns/locale";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import LogoGenerator from "@/components/LogoGenerator";
 import { mockTeams } from "@/data/teamsData";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -102,22 +105,98 @@ const Profile = () => {
           </div>
 
           {/* Quick stats */}
-          <div className="grid grid-cols-2 divide-x divide-border">
+          <div className="grid grid-cols-3 divide-x divide-border">
             <div className="p-4 text-center">
               <div className="flex items-center justify-center gap-2">
-                <Star className="h-4 w-4 text-primary" />
+                <Zap className="h-4 w-4 text-primary" />
+                <span className="text-2xl font-black text-foreground">{profile?.points || 0}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">Points</p>
+            </div>
+            <div className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <TrendingUp className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm font-black text-foreground truncate">{profile?.rank_title || "Débutant"}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">Rang</p>
+            </div>
+            <div className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <Star className="h-4 w-4 text-amber-500" />
                 <span className="text-2xl font-black text-foreground">{totalFavorites}</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Favorites</p>
-            </div>
-            <div className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <Shield className="h-4 w-4 text-primary" />
-                <span className="text-sm font-bold text-foreground truncate">{favoriteTeam || "—"}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Favourite Team</p>
+              <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">Favoris</p>
             </div>
           </div>
+        </div>
+
+        {/* VIP Status Card */}
+        <div className={cn(
+          "rounded-2xl border mb-6 p-5 sm:p-6 overflow-hidden relative",
+          profile?.is_vip ? "bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-transparent border-amber-500/20" : "bg-card border-border/50"
+        )}>
+          {profile?.is_vip && <div className="absolute top-0 right-0 p-4 opacity-10"><Crown className="h-16 w-16 text-amber-500" /></div>}
+          
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "h-10 w-10 rounded-xl flex items-center justify-center",
+                profile?.is_vip ? "bg-amber-500/20 text-amber-500" : "bg-primary/10 text-primary"
+              )}>
+                {profile?.is_vip ? <Crown className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
+              </div>
+              <div>
+                <h3 className="font-black text-foreground uppercase tracking-tight">
+                  Statut {profile?.is_vip ? "VIP Premium" : "Utilisateur Gratuit"}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {profile?.is_vip ? "Accès illimité à l'IA AnalystePro V3" : "Passez au VIP pour débloquer l'IA"}
+                </p>
+              </div>
+            </div>
+            {profile?.is_vip && (
+              <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase">Actif</span>
+            )}
+          </div>
+
+          {profile?.is_vip ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>Expire le :</span>
+                </div>
+                <span className="font-bold text-foreground">
+                  {profile.vip_expires_at 
+                    ? format(new Date(profile.vip_expires_at), "d MMMM yyyy", { locale: fr })
+                    : "Illimité"}
+                </span>
+              </div>
+              
+              {profile.vip_expires_at && (
+                <div className="h-2 w-full bg-black/20 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "65%" }} // Simulation, ideally calculated
+                    className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full"
+                  />
+                </div>
+              )}
+              
+              <Link to="/pricing" className="block text-center text-xs font-bold text-amber-500 hover:underline">
+                Renouveler ou changer d'offre
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-muted-foreground italic bg-black/5 p-3 rounded-xl">
+                "Débloquez les pronostics Score Exact, les Value Bets et les analyses en direct en devenant VIP."
+              </p>
+              <Button asChild className="w-full gradient-primary rounded-xl font-bold">
+                <Link to="/pricing">DEVENIR VIP MAINTENANT</Link>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Edit Form */}
@@ -205,6 +284,20 @@ const Profile = () => {
         {/* Logo Generator */}
         <div className="mb-6">
           <LogoGenerator />
+        </div>
+
+        {/* Push Notifications */}
+        <div className="rounded-2xl bg-card border border-border/50 p-5 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-primary" />
+              <h3 className="font-bold text-foreground">Notifications</h3>
+            </div>
+            <NotificationsBell />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Recevez des alertes en temps réel pour les buts, cartons rouges et résultats des matchs.
+          </p>
         </div>
 
         {/* Sign out */}

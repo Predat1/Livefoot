@@ -10,6 +10,15 @@ import ErrorBoundary from "./components/ErrorBoundary";
 // Initialisation de Sentry pour le monitoring des erreurs
 initSentry();
 
+// Enregistrement du Service Worker pour les notifications Push
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw-goal-notifications.js')
+      .then(reg => console.log('SW Registered!', reg))
+      .catch(err => console.log('SW Register failed!', err));
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <HelmetProvider>

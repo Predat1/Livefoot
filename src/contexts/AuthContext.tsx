@@ -11,6 +11,9 @@ interface Profile {
   bio: string | null;
   favorite_team: string | null;
   is_vip?: boolean;
+  points?: number;
+  rank_title?: string;
+  vip_expires_at?: string | null;
 }
 
 interface AuthContextType {

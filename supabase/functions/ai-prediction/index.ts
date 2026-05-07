@@ -26,17 +26,22 @@ const SYSTEM_INSTRUCTION = `Tu es AnalystePro V3, le système d'intelligence art
 - Si ton modèle donne Home 65% mais les cotes impliquent Home 45%, c'est un signal fort → ajuste ou identifie un Value Bet
 - Un écart > 15% entre ton modèle et les cotes = Value Bet potentiel
 
-### Étape 4 — Calibration Confiance
+### Étape 4 — Facteurs Environnementaux & Humains (V4)
+- **Arbitre** : Analyse sa tendance (cartons/penaltys). Un arbitre "sévère" favorise les Under en buts mais les Over en cartons.
+- **Météo** : Pluie/Vent = Moins de buts, plus de fautes tactiques.
+- **Enjeu** : Motivation selon le classement (Lutte relégation vs Titre).
+- **Absences** : Évalue l'impact de l'absence des joueurs clés (impact sur le xG et la solidité défensive).
+
+### Étape 5 — Calibration Confiance
 - Confiance = min(Poisson_conf, Form_conf, Historical_conf)
 - Si les 3 modèles convergent → confiance 0.75-0.92
-- Si 2/3 convergent → confiance 0.60-0.74
 - Si divergence → confiance 0.45-0.59
 - JAMAIS au-dessus de 0.95 (aucun match n'est certain)
 
 ## ADAPTATION TEMPS RÉEL (CRITIQUE)
 - Si "Terminé" → analyse post-match au passé, confiance basée sur la justesse du résultat
-- Si "En direct" → le score ACTUEL est la base. Le score prédit ne peut PAS être inférieur au score actuel. Ajuste la confiance en fonction de la minute (90e min avec 3-0 = confiance 0.95)
-- Si "N'a pas commencé" → prédiction pré-match classique avec le modèle complet
+- Si "En direct" → le score ACTUEL est la base. Le score prédit ne peut PAS être inférieur au score actuel.
+- Si "N'a pas commencé" → prédiction pré-match complète.
 
 ## RÈGLES ABSOLUES
 1. OBJECTIVITÉ : Utilise UNIQUEMENT les données fournies. Pas d'a priori sur la réputation.
@@ -118,10 +123,22 @@ async function setCachedPredictionDB(fixtureId: string, predictionData: any, mat
   if (error) console.error("Error caching prediction in DB:", error);
 }
 
-function buildPrompt(homeTeam: string, awayTeam: string, leagueName: string, predictionData: any, h2hData: any[], fixtureDetail: any) {
+function buildPrompt(
+  homeTeam: string, 
+  awayTeam: string, 
+  leagueName: string, 
+  predictionData: any, 
+  h2hData: any[], 
+  fixtureDetail: any,
+  oddsData: any,
+  injuriesData: any[],
+  standingsData: any[],
+  weatherData: any
+) {
   const matchStatus = fixtureDetail?.fixture?.status?.long || 'Not Started';
   const currentMinute = fixtureDetail?.fixture?.status?.elapsed || 0;
   const currentScore = `${fixtureDetail?.goals?.home ?? 0}-${fixtureDetail?.goals?.away ?? 0}`;
+  const referee = fixtureDetail?.fixture?.referee || "Inconnu";
 
   return `
 📊 DATA (Contexte Injecté)
@@ -151,6 +168,18 @@ AWAY Last 5: ${predictionData?.teams?.away?.last_5?.form || '?'} | Goals Avg ${p
 # STANDINGS & H2H
 H2H (Derniers 5 matchs):
 ${h2hData.map((m: any) => `- ${m.teams.home.name} ${m.goals.home}-${m.goals.away} ${m.teams.away.name}`).join('\\n')}
+
+CLASSEMENT :
+${standingsData.map((s: any) => `- Pos ${s.rank}: ${s.team.name} | Pts: ${s.points} | Form: ${s.form}`).join('\\n')}
+
+# MARKET (ODDS)
+${oddsData ? JSON.stringify(oddsData) : 'Cotes non disponibles'}
+
+# HUMAN & ENVIRONMENT
+Referee: ${referee}
+Weather: ${weatherData ? `${weatherData.temperature}°C, ${weatherData.condition}` : 'Inconnu'}
+Injuries:
+${injuriesData.length > 0 ? injuriesData.map((i: any) => `- ${i.team.name}: ${i.player.name} (${i.type})`).join('\\n') : 'Aucune absence majeure signalée'}
 
 ---
 
@@ -357,7 +386,59 @@ serve(async (req) => {
       h2hData = h2hJson.response || [];
     }
 
-    const prompt = buildPrompt(homeTeam, awayTeam, leagueName, predictionData, h2hData, fixtureDetail);
+    // V4: Fetch extra context
+    const [oddsRes, injuriesRes, standingsRes] = await Promise.all([
+      fetch(`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`, { headers }),
+      fetch(`https://v3.football.api-sports.io/injuries?fixture=${fixtureId}`, { headers }),
+      fetch(`https://v3.football.api-sports.io/standings?league=${fixtureDetail?.league?.id}&season=${fixtureDetail?.league?.season}`, { headers }),
+    ]);
+
+    const [oddsJson, injuriesJson, standingsJson] = await Promise.all([
+      oddsRes.json(),
+      injuriesRes.json(),
+      standingsRes.json(),
+    ]);
+
+    const oddsData = oddsJson.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === "Match Winner");
+    const injuriesData = injuriesJson.response || [];
+    const leagueStandings = standingsJson.response?.[0]?.league?.standings?.[0] || [];
+    const teamStandings = leagueStandings.filter((s: any) => 
+      s.team.id === fixtureDetail?.teams?.home?.id || s.team.id === fixtureDetail?.teams?.away?.id
+    );
+
+    // Weather: Open-Meteo (Free)
+    let weatherData = null;
+    if (fixtureDetail?.fixture?.venue?.city) {
+      try {
+        const city = fixtureDetail.fixture.venue.city;
+        const weatherRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+        const cityData = await weatherRes.json();
+        if (cityData.results?.[0]) {
+          const { latitude, longitude } = cityData.results[0];
+          const forecastRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+          const forecastData = await forecastRes.json();
+          weatherData = {
+            temperature: forecastData.current_weather.temperature,
+            condition: "Code " + forecastData.current_weather.weathercode, // simplified
+          };
+        }
+      } catch (e) {
+        console.warn("Weather fetch failed", e);
+      }
+    }
+
+    const prompt = buildPrompt(
+      homeTeam, 
+      awayTeam, 
+      leagueName, 
+      predictionData, 
+      h2hData, 
+      fixtureDetail,
+      oddsData,
+      injuriesData,
+      teamStandings,
+      weatherData
+    );
 
     let content: string;
     let provider = "openrouter";
@@ -372,6 +453,25 @@ serve(async (req) => {
     const matchStatus = fixtureDetail?.fixture?.status?.long || "Not Started";
     // Fire and forget caching to not block response
     setCachedPredictionDB(fixtureId, result, matchStatus, supabase).catch(console.error);
+
+    // V4: Store in history if match is finished
+    if (matchStatus === "Match Finished" || fixtureDetail?.fixture?.status?.short === "FT") {
+      const homeScore = fixtureDetail?.goals?.home ?? 0;
+      const awayScore = fixtureDetail?.goals?.away ?? 0;
+      const actualResult = homeScore > awayScore ? "1" : homeScore < awayScore ? "2" : "X";
+      const predictedResult = result.predictions?.winner;
+      
+      supabase.from("ai_predictions_history").upsert({
+        fixture_id: fixtureId,
+        home_team: homeTeam,
+        away_team: awayTeam,
+        predicted_score: result.predictedScore,
+        actual_score: `${homeScore}-${awayScore}`,
+        is_correct: result.predictedScore === `${homeScore}-${awayScore}`,
+        market_1x2_correct: predictedResult === actualResult,
+        prediction_data: result
+      }, { onConflict: 'fixture_id' }).catch(console.error);
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
