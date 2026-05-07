@@ -83,7 +83,8 @@
     "forgot_password": "Forgot password?",
     "min_chars": "At least 6 characters.",
     "title": "LIVEFOOT AI",
-    "subtitle": "AI-powered football intelligence"
+    "subtitle": "AI-powered football intelligence",
+    "login_required": "Please log in to continue."
   },
   "pricing": {
     "title": "Bet like a Pro.",
@@ -125,6 +126,7 @@
     "feature_2": "Exclusive Value Bets",
     "feature_3": "Market confidence scores",
     "feature_4": "Double Poisson & ELO weighting",
-    "feature_5": "No ads"
+    "feature_5": "No ads",
+    "faq_why_expensive_title": "Why such a high price?"
   }
 }

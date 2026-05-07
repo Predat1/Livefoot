@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Check, Shield, Zap, Target, Lock, Crown, Star, ArrowLeft, Loader2, Play } from "lucide-react";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 
 const getTierFeatures = (t: any) => [
   t("pricing.features_title"),
@@ -101,19 +102,14 @@ export default function Pricing() {
     
     setIsProcessing(planName);
     
-    // Simulate Stripe Checkout delay
-    setTimeout(() => {
-      setIsProcessing(null);
-      toast.success(
-        <div className="flex flex-col gap-1">
-          <span className="font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-            <Crown className="h-4 w-4" /> Mode VIP Simulé
-          </span>
-          <span className="text-white text-sm">Ceci est une simulation de paiement. Intégration Stripe à venir.</span>
-        </div>,
-        { duration: 5000 }
-      );
-    }, 1500);
+    // Fallback message if Chariow widget is not loaded
+    toast.error(
+      <div className="flex flex-col gap-1">
+        <span className="font-bold text-red-400">Erreur de Paiement</span>
+        <span className="text-white text-sm">Le module de paiement Chariow n'a pas pu être chargé. Veuillez rafraîchir la page ou contacter le support.</span>
+      </div>
+    );
+    setIsProcessing(null);
   };
 
   return (
@@ -434,7 +430,7 @@ export default function Pricing() {
                 <p className="text-sm text-white/60 leading-relaxed">Oui, absolument. Vous pouvez annuler votre abonnement à tout moment d'un simple clic dans votre espace client. Vous continuerez d'avoir accès jusqu'à la fin de la période facturée.</p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <h4 className="text-base font-bold text-white mb-2">Pourquoi un prix si élevé ?</h4>
+                <h4 className="text-base font-bold text-white mb-2">{t("pricing.faq_why_expensive_title")}</h4>
                 <p className="text-sm text-white/60 leading-relaxed">L'AnalystePro V3 n'est pas un robot de conseils aléatoires. Il effectue des millions de calculs ELO, compare les marges et tourne sur des serveurs d'intelligence artificielle surpuissants (Double Poisson Model). Ce coût d'infrastructure garantit la meilleure précision du marché. Un seul pari Value Bet suffit généralement à rentabiliser le mois.</p>
               </div>
             </div>

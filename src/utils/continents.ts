@@ -37,7 +37,7 @@ const COUNTRY_CONTINENT: Record<string, Continent> = {
   "Sierra-Leone": "africa", Liberia: "africa", Gambia: "africa", "Equatorial-Guinea": "africa",
   Malawi: "africa", Burundi: "africa", Djibouti: "africa", Somalia: "africa", Eritrea: "africa",
   Comoros: "africa", "São-Tomé-and-Príncipe": "africa", Seychelles: "africa", Lesotho: "africa",
-  Eswatini: "africa", "Central-African-Republic": "africa", Chad: "africa", Liberia: "africa",
+  Eswatini: "africa", "Central-African-Republic": "africa", Chad: "africa",
   South_Africa: "africa", Cote_d_Ivoire: "africa",
 
   // Americas (CONCACAF + CONMEBOL)
@@ -48,7 +48,7 @@ const COUNTRY_CONTINENT: Record<string, Continent> = {
   Guatemala: "americas", Jamaica: "americas", "Trinidad-and-Tobago": "americas", Haiti: "americas",
   "Dominican-Republic": "americas", Cuba: "americas", Nicaragua: "americas", Bermuda: "americas",
   Suriname: "americas", Guyana: "americas", Belize: "americas", Barbados: "americas",
-  Curaçao: "americas", Panama: "americas", Puerto_Rico: "americas", "Antigua-and-Barbuda": "americas",
+  Curaçao: "americas", Puerto_Rico: "americas", "Antigua-and-Barbuda": "americas",
   "Saint-Kitts-and-Nevis": "americas", "Saint-Lucia": "americas", "Saint-Vincent-and-the-Grenadines": "americas",
   Grenada: "americas", Dominica: "americas", Anguilla: "americas", "British-Virgin-Islands": "americas",
   "US-Virgin-Islands": "americas", "Cayman-Islands": "americas", "Turks-and-Caicos-Islands": "americas",

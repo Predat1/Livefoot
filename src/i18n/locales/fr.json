@@ -83,7 +83,8 @@
     "forgot_password": "Mot de passe oublié ?",
     "min_chars": "Au moins 6 caractères.",
     "title": "LIVEFOOT AI",
-    "subtitle": "L'intelligence artificielle au service des parieurs"
+    "subtitle": "L'intelligence artificielle au service des parieurs",
+    "login_required": "Veuillez vous connecter pour continuer."
   },
   "pricing": {
     "title": "Pariez comme un Pro.",
@@ -125,6 +126,7 @@
     "feature_2": "Value Bets exclusifs",
     "feature_3": "Confiance par marché",
     "feature_4": "Modèle Double Poisson & Pondération ELO",
-    "feature_5": "Sans publicité"
+    "feature_5": "Sans publicité",
+    "faq_why_expensive_title": "Pourquoi un prix si élevé ?"
   }
 }
