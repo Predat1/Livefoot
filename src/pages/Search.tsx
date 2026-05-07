@@ -12,10 +12,12 @@ import {
   X,
   ChevronDown,
   RotateCcw,
+  Star,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSearch, LEAGUES, COUNTRIES, POSITIONS, DEFAULT_FILTERS } from "@/hooks/useSearch";
 import type { SearchResult, SearchFilters } from "@/hooks/useSearch";
+import { useFavorites } from "@/hooks/useFavorites";
 import TeamLogo from "@/components/TeamLogo";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import LeagueLogo from "@/components/LeagueLogo";
@@ -158,12 +160,23 @@ const typeConfig = {
 
 const ResultRow = ({ result }: { result: SearchResult }) => {
   const cfg = typeConfig[result.type];
+  const { isFavorite, toggleFavorite } = useFavorites();
+  
+  // Map search result types to favorite types
+  const getFavoriteType = (type: string) => {
+    if (type === "team") return "teams";
+    if (type === "player") return "players";
+    if (type === "competition") return "competitions";
+    return null;
+  };
+  
+  const favType = getFavoriteType(result.type);
+  const isFav = favType ? isFavorite(favType as "teams" | "players" | "competitions", result.id) : false;
+
   return (
-    <Link
-      to={result.href}
-      className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors group"
-    >
-      <div className="flex-shrink-0">
+    <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors group">
+      <Link to={result.href} className="flex-shrink-0">
+
         {result.type === "team" && <TeamLogo teamName={result.name} size="sm" />}
         {result.type === "player" && <PlayerAvatar name={result.name} size="sm" />}
         {result.type === "competition" && (
@@ -178,12 +191,15 @@ const ResultRow = ({ result }: { result: SearchResult }) => {
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
+      </Link>
+
+      <Link to={result.href} className="min-w-0 flex-1">
         <p className="font-semibold text-sm text-foreground truncate group-hover:text-primary transition-colors">
           {result.name}
         </p>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{result.subtitle}</p>
-      </div>
+      </Link>
+
 
       {/* Meta badges */}
       <div className="flex items-center gap-2 flex-shrink-0">
@@ -195,9 +211,22 @@ const ResultRow = ({ result }: { result: SearchResult }) => {
         <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", cfg.color)}>
           {cfg.tag}
         </span>
+        {favType && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleFavorite(favType as "teams" | "players" | "competitions", result.id, result.name);
+            }}
+            className="ml-2 p-1.5 rounded-full hover:bg-muted transition-colors"
+          >
+            <Star className={cn("h-4 w-4", isFav ? "fill-amber-400 text-amber-400" : "text-muted-foreground")} />
+          </button>
+        )}
       </div>
-    </Link>
+    </div>
   );
+
 };
 
 /* ─── Main page ─── */

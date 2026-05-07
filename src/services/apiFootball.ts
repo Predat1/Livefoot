@@ -68,6 +68,10 @@ export const getLeagueById = (id: string) =>
 export const getLeagueSeasons = () =>
   callApi("leagues/seasons");
 
+export const searchLeagueByName = (name: string) =>
+  callApi("leagues", { search: name });
+
+
 // ─── Standings ────────────────────────────────────────────────
 export const getStandings = (league: string, season: string) =>
   callApi("standings", { league, season });

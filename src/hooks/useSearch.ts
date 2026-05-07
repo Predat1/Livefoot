@@ -3,7 +3,7 @@ import { mockTeams } from "@/data/teamsData";
 import { mockPlayers } from "@/data/playersData";
 import { mockCompetitions } from "@/data/competitionsData";
 import { mockNews } from "@/data/newsData";
-import { searchTeamByName, searchPlayerByName } from "@/services/apiFootball";
+import { searchTeamByName, searchPlayerByName, searchLeagueByName } from "@/services/apiFootball";
 
 export interface SearchResult {
   type: "team" | "player" | "competition" | "news";
@@ -74,10 +74,12 @@ export const useSearch = (debounceMs = 300) => {
 
       setIsLoading(true);
       try {
-        const [teamsRes, playersRes] = await Promise.allSettled([
+        const [teamsRes, playersRes, leaguesRes] = await Promise.allSettled([
           searchTeamByName(q),
-          searchPlayerByName(q, "2024")
+          searchPlayerByName(q, "2024"),
+          searchLeagueByName(q)
         ]);
+
 
         const newResults: SearchResult[] = [];
 
@@ -107,6 +109,20 @@ export const useSearch = (debounceMs = 300) => {
           });
         }
 
+        if (leaguesRes.status === "fulfilled" && leaguesRes.value.response) {
+          leaguesRes.value.response.slice(0, 5).forEach((l: any) => {
+            newResults.push({
+              type: "competition",
+              id: String(l.league.id),
+              name: l.league.name,
+              subtitle: `${l.country.name || ""} • Compétition`,
+              image: l.league.logo,
+              href: `/competitions`,
+            });
+          });
+        }
+
+
         setApiResults(newResults);
       } catch (err) {
         console.error("Search API error:", err);
@@ -124,21 +140,8 @@ export const useSearch = (debounceMs = 300) => {
 
     const out: SearchResult[] = [...apiResults];
 
-    // Competitions (Mock fallback)
-    if (filters.types.includes("competition")) {
-      mockCompetitions
-        .filter((c) => normalize(c.name).includes(q) || normalize(c.country).includes(q))
-        .slice(0, 3)
-        .forEach((c) =>
-          out.push({
-            type: "competition",
-            id: c.id,
-            name: c.name,
-            subtitle: `${c.country} • Compétition`,
-            href: `/competitions`,
-          })
-        );
-    }
+    // Competitions fallback removed since we use API
+
 
     // News (Mock fallback)
     if (filters.types.includes("news")) {

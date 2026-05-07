@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useSearch } from "@/hooks/useSearch";
+import { useFavorites } from "@/hooks/useFavorites";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+
 
 const Header = () => {
   const logoUrl = useAppLogo();
@@ -20,8 +22,10 @@ const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { query, setQuery, results, isLoading } = useSearch();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { t } = useTranslation();
   const { user, profile, signOut } = useAuth();
+
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -107,7 +111,15 @@ const Header = () => {
     setQuery("");
   };
 
+  const getFavoriteType = (type: string) => {
+    if (type === "team") return "teams";
+    if (type === "player") return "players";
+    if (type === "competition") return "competitions";
+    return null;
+  };
+
   const searchResults = (
+
     <div className="bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50">
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-8 gap-3">
@@ -116,26 +128,44 @@ const Header = () => {
         </div>
       ) : results.length > 0 ? (
         <>
-          {results.map((r) => (
-            <button
-              key={`${r.type}-${r.id}`}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left group"
-              onClick={() => handleSearchSelect(r.href)}
-            >
-              <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border/50 group-hover:border-primary/30 transition-colors">
-                {r.image ? (
-                  <img src={r.image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  getResultIcon(r.type)
+          {results.map((r) => {
+            const favType = getFavoriteType(r.type);
+            const isFav = favType ? isFavorite(favType as "teams" | "players" | "competitions", r.id) : false;
+
+            return (
+              <button
+                key={`${r.type}-${r.id}`}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left group"
+                onClick={() => handleSearchSelect(r.href)}
+              >
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border/50 group-hover:border-primary/30 transition-colors">
+                  {r.image ? (
+                    <img src={r.image} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    getResultIcon(r.type)
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{r.name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate uppercase tracking-tight">{r.subtitle}</p>
+                </div>
+                {favType && (
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleFavorite(favType as "teams" | "players" | "competitions", r.id, r.name);
+                    }}
+                    className="p-1 rounded-full hover:bg-muted transition-colors mr-1"
+                  >
+                    <Star className={cn("h-3.5 w-3.5", isFav ? "fill-amber-400 text-amber-400" : "text-muted-foreground")} />
+                  </div>
                 )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{r.name}</p>
-                <p className="text-[10px] text-muted-foreground truncate uppercase tracking-tight">{r.subtitle}</p>
-              </div>
-              <span className="text-[9px] font-black uppercase text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">{r.type}</span>
-            </button>
-          ))}
+                <span className="text-[9px] font-black uppercase text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">{r.type}</span>
+              </button>
+            );
+          })}
+
           <Link
             to={`/search?q=${encodeURIComponent(query)}`}
             className="block text-center py-2.5 text-xs font-black text-primary hover:bg-primary/5 border-t border-border uppercase tracking-widest"
