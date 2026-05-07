@@ -115,6 +115,9 @@ export default function Pricing() {
               <p className="text-xs text-white/50 mb-6">{t("pricing.weekly_desc")}</p>
               
               <div className="flex flex-col mb-8">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-white/30 line-through font-medium">14,99€</span>
+                </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-white">{t("pricing.weekly_price")}</span>
                   <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.weekly_period")}</span>
@@ -158,6 +161,9 @@ export default function Pricing() {
               <p className="text-xs text-white/50 mb-6">{t("pricing.monthly_desc")}</p>
               
               <div className="flex flex-col mb-8">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-white/30 line-through font-medium">29,99€</span>
+                </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-white">{t("pricing.monthly_price")}</span>
                   <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.monthly_period")}</span>
@@ -198,6 +204,9 @@ export default function Pricing() {
               <p className="text-xs text-white/50 mb-6">{t("pricing.quarterly_desc")}</p>
               
               <div className="flex flex-col mb-8">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-white/30 line-through font-medium">79,99€</span>
+                </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-white">{t("pricing.quarterly_price")}</span>
                   <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.quarterly_period")}</span>
@@ -244,6 +253,9 @@ export default function Pricing() {
               <p className="text-xs text-white/50 mb-6 relative z-10">{t("pricing.annual_desc")}</p>
               
               <div className="flex flex-col mb-8 relative z-10">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-amber-500/30 line-through font-medium">249,99€</span>
+                </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-amber-400">{t("pricing.annual_price")}</span>
                   <span className="text-sm text-white/40 font-bold pb-1">{t("pricing.annual_period")}</span>
