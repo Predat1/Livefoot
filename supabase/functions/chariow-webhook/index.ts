@@ -25,13 +25,33 @@ serve(async (req) => {
     const data = payload.data;
 
     if (event === "successful.sale" || event === "purchase.completed") {
-      const userId = data.custom_metadata?.user_id || data.metadata?.user_id;
+      let userId = data.custom_metadata?.user_id || data.metadata?.user_id;
+      const customerEmail = data.customer?.email || data.email || data.customer_email;
       const productId = data.product_id;
       const expiresAt = data.license?.expires_at || data.expires_at;
 
+      console.log(`Processing ${event} for ${customerEmail || "unknown email"}`);
+
+      if (!userId && customerEmail) {
+        console.log(`Searching for user with email: ${customerEmail}`);
+        // If user_id is missing, try to find user by email
+        // Note: listUsers requires service_role key which we have
+        const { data: { users }, error: listError } = await supabaseClient.auth.admin.listUsers();
+        
+        if (listError) {
+          console.error("Error listing users:", listError);
+        } else {
+          const user = users.find(u => u.email?.toLowerCase() === customerEmail.toLowerCase());
+          if (user) {
+            userId = user.id;
+            console.log(`Found user ID: ${userId} for email: ${customerEmail}`);
+          }
+        }
+      }
+
       if (!userId) {
-        console.error("Missing user_id in Chariow metadata");
-        return new Response(JSON.stringify({ error: "Missing user_id in metadata" }), {
+        console.error("Could not identify user (no user_id and no matching email found)");
+        return new Response(JSON.stringify({ error: "Could not identify user" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
