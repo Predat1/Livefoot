@@ -27,8 +27,13 @@ interface MatchCardProps {
 const MotionLink = motion.create(Link);
 
 const MatchCard = ({ match }: MatchCardProps) => {
+  if (!match || !match.homeTeam || !match.awayTeam) return null;
+  
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
+  
+  const homeScore = match.homeTeam.score ?? 0;
+  const awayScore = match.awayTeam.score ?? 0;
 
   return (
     <MotionLink
@@ -64,14 +69,14 @@ const MatchCard = ({ match }: MatchCardProps) => {
         <span
           className={cn(
             "text-sm sm:text-base font-semibold transition-colors truncate text-right",
-            isFinished && match.homeTeam.score! > match.awayTeam.score!
+            isFinished && homeScore > awayScore
               ? "text-foreground"
               : isFinished
                 ? "text-muted-foreground"
                 : "text-foreground"
           )}
         >
-          {match.homeTeam.name}
+          {match.homeTeam.name || "Équipe Home"}
         </span>
         <motion.div
           className="flex-shrink-0"
@@ -96,7 +101,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           >
             <motion.span
-              key={`home-${match.homeTeam.score}`}
+              key={`home-${homeScore}`}
               initial={{ scale: 1.4, color: "hsl(var(--primary))" }}
               animate={{ scale: 1, color: undefined }}
               transition={{ duration: 0.5 }}
@@ -107,11 +112,11 @@ const MatchCard = ({ match }: MatchCardProps) => {
                   : "bg-score-bg text-primary-foreground"
               )}
             >
-              {match.homeTeam.score}
+              {homeScore}
             </motion.span>
             <span className="text-base sm:text-xl font-bold text-muted-foreground">-</span>
             <motion.span
-              key={`away-${match.awayTeam.score}`}
+              key={`away-${awayScore}`}
               initial={{ scale: 1.4, color: "hsl(var(--primary))" }}
               animate={{ scale: 1, color: undefined }}
               transition={{ duration: 0.5 }}
@@ -122,7 +127,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
                   : "bg-score-bg text-primary-foreground"
               )}
             >
-              {match.awayTeam.score}
+              {awayScore}
             </motion.span>
           </motion.div>
         ) : (
@@ -173,14 +178,14 @@ const MatchCard = ({ match }: MatchCardProps) => {
         <span
           className={cn(
             "text-sm sm:text-base font-semibold transition-colors truncate",
-            isFinished && match.awayTeam.score! > match.homeTeam.score!
+            isFinished && awayScore > homeScore
               ? "text-foreground"
               : isFinished
                 ? "text-muted-foreground"
                 : "text-foreground"
           )}
         >
-          {match.awayTeam.name}
+          {match.awayTeam.name || "Équipe Away"}
         </span>
       </div>
 

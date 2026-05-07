@@ -37,8 +37,8 @@ const Index = () => {
   const { favorites } = useFavorites();
   const { data: userCountry } = useUserCountry();
 
-  const favoriteCompIds = useMemo(() => new Set(favorites.competitions), [favorites.competitions]);
-  const favoriteTeamIds = useMemo(() => new Set(favorites.teams.map(String)), [favorites.teams]);
+  const favoriteCompIds = useMemo(() => new Set(favorites?.competitions || []), [favorites?.competitions]);
+  const favoriteTeamIds = useMemo(() => new Set((favorites?.teams || []).map(String)), [favorites?.teams]);
   const localLeagueIds = useMemo(() => getLeagueIdsForCountry(userCountry), [userCountry]);
 
   // Smart sort: Live > User favorite teams > User favorite leagues > Local league > Tier1 > Tier2 > Tier3 > rest
@@ -47,12 +47,13 @@ const Index = () => {
     return [...raw].sort((a, b) => {
       const score = (league: typeof a) => {
         let s = 0;
+        if (!league || !league.matches) return 0;
+        
         const hasFavoriteTeam = league.matches.some(m => 
-          favoriteTeamIds.has(String(m.homeTeam.id)) || 
-          favoriteTeamIds.has(String(m.awayTeam.id))
+          m && m.homeTeam && m.awayTeam && (favoriteTeamIds.has(String(m.homeTeam.id)) || favoriteTeamIds.has(String(m.awayTeam.id)))
         );
 
-        if (league.matches.some((m) => m.status === "live")) s += 1000;
+        if (league.matches.some((m) => m && m.status === "live")) s += 1000;
         if (hasFavoriteTeam) s += 600; // Even higher priority for favorite teams
         if (favoriteCompIds.has(league.id)) s += 500;
         if (localLeagueIds.has(league.id)) s += 300;

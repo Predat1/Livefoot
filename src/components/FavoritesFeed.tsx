@@ -17,17 +17,20 @@ const FavoritesFeed = ({ leagues, isLoading }: FavoritesFeedProps) => {
   const { favorites } = useFavorites();
 
   const favoriteTeamNames = useMemo(() => {
-    return new Set(favorites.teams.map((t) => t.toLowerCase()));
-  }, [favorites.teams]);
+    if (!favorites?.teams) return new Set<string>();
+    return new Set(favorites.teams.map((t) => (t ? t.toLowerCase() : "")));
+  }, [favorites?.teams]);
 
   const favoriteMatches = useMemo(() => {
-    if (favoriteTeamNames.size === 0) return [];
+    if (favoriteTeamNames.size === 0 || !leagues) return [];
 
     const matches: { match: any; leagueName: string; leagueLogo?: string }[] = [];
     for (const league of leagues) {
+      if (!league || !league.matches) continue;
       for (const match of league.matches) {
-        const homeKey = match.homeTeam.name.toLowerCase();
-        const awayKey = match.awayTeam.name.toLowerCase();
+        if (!match || !match.homeTeam || !match.awayTeam) continue;
+        const homeKey = match.homeTeam.name?.toLowerCase() || "";
+        const awayKey = match.awayTeam.name?.toLowerCase() || "";
         if (favoriteTeamNames.has(homeKey) || favoriteTeamNames.has(awayKey)) {
           matches.push({ match, leagueName: league.name, leagueLogo: league.logo });
         }

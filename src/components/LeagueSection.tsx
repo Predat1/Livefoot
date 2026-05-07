@@ -41,7 +41,9 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const hasLiveMatch = league.matches.some((m) => m.status === "live");
+  if (!league || !league.matches) return null;
+
+  const hasLiveMatch = league.matches.some((m) => m && m.status === "live");
   const isLeagueFavorite = isFavorite("competitions", league.id);
 
   return (
