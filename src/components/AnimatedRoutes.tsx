@@ -67,9 +67,9 @@ const AnimatedRoutes = () => {
     // ✅ FIX: key sur AnimatePresence uniquement, pas sur Suspense
     // Suspense reste stable et ne se démonte pas à chaque navigation
     <AnimatePresence mode="wait">
-      <ErrorBoundary fallback={<RouteErrorFallback />} key={location.pathname}>
+      <ErrorBoundary fallback={<RouteErrorFallback />}>
         <Suspense fallback={<PageLoader />}>
-          <Routes location={location}>
+          <Routes location={location} key={location.pathname}>
             <Route path="/" element={<PageTransition><Index /></PageTransition>} />
             <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
             <Route path="/live" element={<PageTransition><Live /></PageTransition>} />

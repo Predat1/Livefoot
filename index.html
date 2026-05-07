@@ -1,27 +1,18 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <script>
-      // Force update for users stuck with a broken cache
-      (function() {
-        var version = '20240504_v2';
-        if (localStorage.getItem('lf_cv') !== version) {
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-              if (registrations.length > 0) {
-                for (var i = 0; i < registrations.length; i++) {
-                  registrations[i].unregister();
-                }
-                localStorage.setItem('lf_cv', version);
-                window.location.reload();
-              }
-            });
-          }
-          localStorage.setItem('lf_cv', version);
-        }
-      })();
-    </script>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+        script-src 'self' 'unsafe-inline' https://*.sentry.io;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: https: blob:;
+        connect-src 'self' https://*.supabase.co https://openrouter.ai https://v3.football.api-sports.io https://api-football.com https://*.sentry.io;
+        frame-ancestors 'none';" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <title>LiveFoot - Scores Football en Direct | Résultats & Classements</title>
     <meta name="description" content="LiveFoot — Suivez tous les scores de football en direct, résultats, calendriers et classements : Premier League, La Liga, Serie A, Bundesliga, Ligue 1 et 800+ compétitions.">
@@ -47,11 +38,11 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="LiveFoot - Scores Football en Direct | Résultats & Classements" />
     <meta property="og:description" content="Suivez tous les scores de football en direct, résultats, calendriers et classements des meilleures ligues mondiales." />
-    <meta property="og:url" content="https://livefoot.app" />
+    <meta property="og:url" content="https://livefoot.fun" />
     <meta property="og:site_name" content="LiveFoot" />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:locale:alternate" content="en_US" />
-    <meta property="og:image" content="https://livefoot.app/pwa-512x512.png" />
+    <meta property="og:image" content="https://livefoot.fun/pwa-512x512.png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:image:alt" content="LiveFoot - Scores Football en Direct" />
@@ -61,14 +52,14 @@
     <meta name="twitter:site" content="@LiveFootApp" />
     <meta name="twitter:title" content="LiveFoot - Scores Football en Direct" />
     <meta name="twitter:description" content="Suivez tous les scores de football en direct, résultats et classements." />
-    <meta name="twitter:image" content="https://livefoot.app/pwa-512x512.png" />
+    <meta name="twitter:image" content="https://livefoot.fun/pwa-512x512.png" />
     <meta name="twitter:image:alt" content="LiveFoot" />
 
     <!-- Canonical & Hreflang -->
-    <link rel="canonical" href="https://livefoot.app" />
-    <link rel="alternate" hreflang="fr" href="https://livefoot.app" />
-    <link rel="alternate" hreflang="en" href="https://livefoot.app" />
-    <link rel="alternate" hreflang="x-default" href="https://livefoot.app" />
+    <link rel="canonical" href="https://livefoot.fun" />
+    <link rel="alternate" hreflang="fr" href="https://livefoot.fun" />
+    <link rel="alternate" hreflang="en" href="https://livefoot.fun" />
+    <link rel="alternate" hreflang="x-default" href="https://livefoot.fun" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />

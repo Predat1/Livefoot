@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trophy, TrendingUp, Target, BarChart3, ChevronRight, Brain, Sparkles, CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { BrandedLoader } from "@/components/BrandedLoader";
+import { cn } from "@/lib/utils";
 
 const PredictionsHistory = () => {
   const { data: history, isLoading } = useQuery({
@@ -129,7 +130,5 @@ const PredictionsHistory = () => {
     </Layout>
   );
 };
-
-const cn = (...classes: any[]) => classes.filter(Boolean).join(" ");
 
 export default PredictionsHistory;

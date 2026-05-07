@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# Sitemaps
-Sitemap: https://livefoot.fun/dynamic-sitemap.xml
+Sitemap: https://livefoot.fun/sitemap.xml

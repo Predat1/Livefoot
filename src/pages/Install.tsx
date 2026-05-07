@@ -67,7 +67,7 @@ const Install = () => {
               <div>
                 <h3 className="font-bold text-foreground mb-1">Astuce Mobile</h3>
                 <p className="text-sm text-muted-foreground">
-                  Ajoutez un raccourci vers <span className="font-semibold text-primary">livefoot.app</span> sur
+                  Ajoutez un raccourci vers <span className="font-semibold text-primary">livefoot.fun</span> sur
                   votre écran d'accueil pour y accéder en un tap, comme une application native.
                 </p>
               </div>

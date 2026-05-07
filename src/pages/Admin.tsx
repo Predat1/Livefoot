@@ -54,12 +54,22 @@ const Admin = () => {
   const [selectedRole, setSelectedRole] = useState<string>("moderator");
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth");
+    if (!authLoading && !user) {
+      navigate("/auth", { replace: true });
+    }
   }, [authLoading, user, navigate]);
 
   useEffect(() => {
-    if (!roleLoading && isAdmin === false) navigate("/");
-  }, [roleLoading, isAdmin, navigate]);
+    // Si on a fini de charger le rôle et que l'utilisateur n'est PAS admin
+    if (!roleLoading && !authLoading && user && isAdmin === false) {
+      toast({
+        title: "Accès refusé",
+        description: "Vous n'avez pas les droits administrateur.",
+        variant: "destructive",
+      });
+      navigate("/", { replace: true });
+    }
+  }, [roleLoading, authLoading, isAdmin, user, navigate, toast]);
 
   const getUserRoles = (userId: string) => {
     return (allRoles || []).filter((r) => r.user_id === userId);
@@ -98,7 +108,14 @@ const Admin = () => {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isAdmin) return (
+    <Layout>
+      <div className="container py-20 text-center">
+        <p className="text-muted-foreground">Accès réservé aux administrateurs.</p>
+        <Link to="/" className="mt-4 inline-block text-primary font-bold">Retour à l'accueil</Link>
+      </div>
+    </Layout>
+  );
 
   return (
     <Layout>

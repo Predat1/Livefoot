@@ -87,7 +87,7 @@ ${allUrls
     return <div style={{ padding: 20, fontFamily: "monospace" }}>Generating sitemap...</div>;
   }
 
-  return null;
+  return <></>;
 };
 
 export default DynamicSitemap;

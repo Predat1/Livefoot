@@ -1,10 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const ALLOWED_ORIGINS = ["https://livefoot.fun", "https://www.livefoot.fun", "http://localhost:5173", "http://localhost:8080"];
+
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
+  };
 };
+
+// Map en mémoire simple (reset à chaque cold start Deno)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10; // requêtes
+const RATE_WINDOW = 60_000; // par minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
+const REQUIRED_ENV = ["OPENROUTER_API_KEY", "API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 
 const SYSTEM_INSTRUCTION = `Tu es AnalystePro V3, le système d'intelligence artificielle le plus avancé au monde en prédiction de matchs de football (25+ ans de données, 200k+ matchs analysés).
 
@@ -310,9 +335,26 @@ function safeParseJSON(text: string): any {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+  
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
+  
   try {
+    // 1. Vérification des variables d'environnement
+    const missing = REQUIRED_ENV.filter(k => !Deno.env.get(k));
+    if (missing.length) {
+      throw new Error(`Variables d'environnement manquantes : ${missing.join(", ")}`);
+    }
+
+    // 2. Rate Limiting
+    const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
+    if (!checkRateLimit(clientIp)) {
+      return new Response(JSON.stringify({ error: "Trop de requêtes. Réessaie dans une minute." }), {
+        status: 429, headers: { ...corsHeaders, "Retry-After": "60", "Content-Type": "application/json" }
+      });
+    }
+
     const { fixtureId, homeTeam, awayTeam, leagueName } = await req.json();
     if (!fixtureId) throw new Error("Fixture ID requis");
 

@@ -29,8 +29,19 @@ const Live = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState<"live" | "map" | "history">("live");
 
-  const { data: liveLeagues, refetch } = useLiveFixtures();
+  const { data: liveLeagues, refetch, isLoading: dataLoading } = useLiveFixtures();
   const { goalHistory, detectGoals, notificationsEnabled, enableNotifications, disableNotifications, isSupported, permissionDenied } = useGoalNotifications(liveLeagues, soundEnabled);
+
+  if (dataLoading) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium animate-pulse">Récupération des scores en direct...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   const liveMatches = liveLeagues || [];
   const totalLive = liveMatches.reduce((acc, l) => acc + l.matches.length, 0);

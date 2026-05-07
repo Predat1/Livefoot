@@ -62,7 +62,9 @@ function ratingBg(r: number) {
 // ─── Form Widget (inline) ─────────────────────────────────────
 function TeamFormInline({ teamId, teamName }: { teamId: string; teamName: string }) {
   const { data: formData } = useTeamForm(teamId);
-  if (!formData || formData.length === 0) return null;
+  if (!formData || formData.length === 0) return (
+    <p className="text-xs text-muted-foreground text-center py-4">Données de forme indisponibles</p>
+  );
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-[10px] text-muted-foreground mr-1">{teamName.slice(0, 12)}</span>

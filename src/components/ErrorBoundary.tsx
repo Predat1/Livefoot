@@ -31,18 +31,13 @@ class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center gap-4">
           <div className="mb-6 text-6xl">⚽</div>
-          <h1 className="text-2xl font-bold mb-2">Oups ! Quelque chose s'est mal passé.</h1>
-          <p className="text-slate-400 mb-6 text-sm max-w-sm">
-            Une erreur inattendue s'est produite. Notre équipe a été notifiée.
-          </p>
-          <div className="bg-slate-900 border border-red-500/30 rounded-xl p-4 max-w-lg overflow-auto mb-6">
-            <p className="text-red-400 font-mono text-xs">{this.state.error?.message}</p>
-          </div>
-          <button
+          <h1 className="text-2xl font-bold text-white">Une erreur est survenue</h1>
+          <p className="text-red-400 font-mono text-sm max-w-lg">{this.state.error?.message || "Erreur inattendue"}</p>
+          <button 
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-emerald-500 rounded-lg font-bold hover:bg-emerald-600 transition-colors"
+            className="px-6 py-2 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-600 transition-colors"
           >
             Recharger la page
           </button>
@@ -50,7 +45,6 @@ class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    // ✅ CORRECTION : this.props.children (pas this.children)
     return this.props.children;
   }
 }

@@ -50,7 +50,7 @@ const Contact = () => {
 
           <div className="space-y-4">
             {[
-              { icon: Mail, title: "Email", value: "support@livefoot.app", description: "Nous répondons sous 24 heures" },
+              { icon: Mail, title: "Email", value: "support@livefoot.fun", description: "Nous répondons sous 24 heures" },
               { icon: MapPin, title: "Localisation", value: "Paris, France", description: "Notre siège social" },
               { icon: Clock, title: "Horaires de Support", value: "Lun-Ven 9h - 18h CET", description: "Support weekend par email" },
             ].map((item) => (

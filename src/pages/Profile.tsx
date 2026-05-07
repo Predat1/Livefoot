@@ -69,7 +69,14 @@ const Profile = () => {
     }
   };
 
-  if (!user) return null;
+  if (!user) return (
+    <Layout>
+      <div className="container py-20 text-center">
+        <p className="text-muted-foreground">Connecte-toi pour accéder à ton profil.</p>
+        <Link to="/auth" className="mt-4 inline-block text-primary font-bold">Se connecter</Link>
+      </div>
+    </Layout>
+  );
 
   const initials = (displayName || user.email || "?")
     .split(" ")
