@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Check, Shield, Zap, Target, Lock, Crown, Star, ArrowLeft, Loader2, Play } from "lucide-react";
@@ -23,6 +23,28 @@ export default function Pricing() {
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const TIER_FEATURES = getTierFeatures(t);
+  
+  useEffect(() => {
+    // Chariow Widget Loader
+    const script = document.createElement('script');
+    script.src = 'https://js.chariowcdn.com/v1/widget.min.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://js.chariowcdn.com/v1/widget.min.css';
+    document.head.appendChild(link);
+
+    return () => {
+      try {
+        if (document.head.contains(script)) document.head.removeChild(script);
+        if (document.head.contains(link)) document.head.removeChild(link);
+      } catch (e) {
+        console.error("Cleanup error:", e);
+      }
+    };
+  }, []);
 
   const handleSubscribe = (planName: string) => {
     if (!user) {
@@ -127,13 +149,19 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <button 
-                onClick={() => handleSubscribe("weekly")}
-                disabled={isProcessing !== null}
-                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
-              >
-                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
-              </button>
+              <div 
+                id="chariow-widget" 
+                data-product-id="prd_ec21i6"
+                data-store-domain="nhvjjgbn.mychariow.shop"
+                data-style="frame"
+                data-border-style="rounded"
+                data-cta-width="xs"
+                data-cta-animation="shine"
+                data-locale="en"
+                data-primary-color="#ffcc00"
+                data-background-color="#FFFFFF"
+                className="mt-auto mb-6 min-h-[48px]"
+              ></div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.slice(0, 3).map((feature, i) => (
