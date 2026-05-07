@@ -29,8 +29,9 @@ export default function Pricing() {
   const [licenseKey, setLicenseKey] = useState("");
   const [isActivating, setIsActivating] = useState(false);
 
-  // ─── Checkout via Chariow API (server-side, fiable à 100%) ────
-  const handleCheckout = async (planId: string, productId: string) => {
+  // ─── Checkout via redirection directe Chariow (fiable, sans backend) ────
+  const CHARIOW_STORE = "nhvjjgbn.mychariow.shop";
+  const handleCheckout = (planId: string, productId: string) => {
     if (!user) {
       toast.error(t("auth.login_required"));
       navigate("/auth");
@@ -38,38 +39,14 @@ export default function Pricing() {
     }
 
     setIsProcessing(planId);
-
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { product_id: productId },
-      });
-
-      if (error) throw new Error(error.message || "Erreur serveur");
-
-      if (data.step === "payment" && data.checkout_url) {
-        // Redirect to Chariow secure payment page
-        window.location.href = data.checkout_url;
-        return;
-      }
-
-      if (data.step === "completed") {
-        toast.success(data.message || "Accès VIP activé !");
-        setTimeout(() => window.location.reload(), 1500);
-        return;
-      }
-
-      if (data.step === "already_purchased") {
-        toast.info(data.message || "Vous avez déjà acheté ce produit.");
-        return;
-      }
-
-      // Fallback
-      toast.error("Réponse inattendue du serveur de paiement.");
+      const checkoutUrl = `https://${CHARIOW_STORE}/checkout/${productId}?email=${encodeURIComponent(user.email || "")}&metadata[user_id]=${encodeURIComponent(user.id)}`;
+      window.open(checkoutUrl, "_blank", "noopener,noreferrer");
     } catch (err: any) {
       console.error("Checkout error:", err);
-      toast.error(err.message || "Impossible de lancer le paiement. Réessayez.");
+      toast.error("Impossible d'ouvrir la page de paiement. Réessayez.");
     } finally {
-      setIsProcessing(null);
+      setTimeout(() => setIsProcessing(null), 1500);
     }
   };
 
