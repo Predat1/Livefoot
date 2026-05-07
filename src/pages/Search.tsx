@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import {
   Search as SearchIcon,
+  Search,
   Trophy,
   Users,
   User,
@@ -13,7 +14,10 @@ import {
   ChevronDown,
   RotateCcw,
   Star,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { useSearch, LEAGUES, COUNTRIES, POSITIONS, DEFAULT_FILTERS } from "@/hooks/useSearch";
 import type { SearchResult, SearchFilters } from "@/hooks/useSearch";
