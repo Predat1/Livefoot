@@ -164,28 +164,30 @@ export default function Pricing() {
                 </div>
               </div>
 
-              {!user ? (
-                <button 
-                  onClick={() => { toast.error(t("auth.login_required")); navigate("/auth"); }}
-                  className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
-                >
-                  {t("pricing.select")}
-                </button>
-              ) : (
-                <div className="w-full mt-auto mb-6 flex justify-center">
-                  <div id="chariow-weekly" 
-                    data-product-id="prd_ec21i6" 
-                    data-store-domain="nhvjjgbn.mychariow.shop" 
-                    data-style="tap" 
-                    data-border-style="rounded"
-                    data-cta-width="xs"
-                    data-background-color="#FFFFFF"
-                    data-cta-animation="shine"
-                    data-locale="fr"
-                    data-primary-color="#ffcc00"
-                  ></div>
-                </div>
-              )}
+              <div className="relative w-full mt-auto mb-6 flex justify-center">
+                <div id="chariow-weekly" 
+                  data-product-id="prd_ec21i6" 
+                  data-store-domain="nhvjjgbn.mychariow.shop" 
+                  data-style="tap" 
+                  data-border-style="rounded"
+                  data-cta-width="xs"
+                  data-background-color="#FFFFFF"
+                  data-cta-animation="shine"
+                  data-locale="fr"
+                  data-primary-color="#ffcc00"
+                ></div>
+                {!user && (
+                  <div 
+                    className="absolute inset-0 z-50 cursor-pointer"
+                    onClickCapture={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toast.error(t("auth.login_required"));
+                      navigate("/auth");
+                    }}
+                  />
+                )}
+              </div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.slice(0, 3).map((feature, i) => (
@@ -225,28 +227,30 @@ export default function Pricing() {
                 </div>
               </div>
 
-              {!user ? (
-                <button 
-                  onClick={() => { toast.error(t("auth.login_required")); navigate("/auth"); }}
-                  className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
-                >
-                  {t("pricing.start")}
-                </button>
-              ) : (
-                <div className="w-full mt-auto mb-6 flex justify-center">
-                  <div id="chariow-monthly" 
-                    data-product-id="prd_gjr4pb" 
-                    data-store-domain="nhvjjgbn.mychariow.shop" 
-                    data-style="tap" 
-                    data-border-style="rounded"
-                    data-cta-width="xs"
-                    data-background-color="#FFFFFF"
-                    data-cta-animation="shine"
-                    data-locale="fr"
-                    data-primary-color="#ffcc00"
-                  ></div>
-                </div>
-              )}
+              <div className="relative w-full mt-auto mb-6 flex justify-center">
+                <div id="chariow-monthly" 
+                  data-product-id="prd_gjr4pb" 
+                  data-store-domain="nhvjjgbn.mychariow.shop" 
+                  data-style="tap" 
+                  data-border-style="rounded"
+                  data-cta-width="xs"
+                  data-background-color="#FFFFFF"
+                  data-cta-animation="shine"
+                  data-locale="fr"
+                  data-primary-color="#ffcc00"
+                ></div>
+                {!user && (
+                  <div 
+                    className="absolute inset-0 z-50 cursor-pointer"
+                    onClickCapture={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toast.error(t("auth.login_required"));
+                      navigate("/auth");
+                    }}
+                  />
+                )}
+              </div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -284,28 +288,30 @@ export default function Pricing() {
                 </div>
               </div>
 
-              {!user ? (
-                <button 
-                  onClick={() => { toast.error(t("auth.login_required")); navigate("/auth"); }}
-                  className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
-                >
-                  {t("pricing.select")}
-                </button>
-              ) : (
-                <div className="w-full mt-auto mb-6 flex justify-center">
-                  <div id="chariow-quarterly" 
-                    data-product-id="prd_g3msqc" 
-                    data-store-domain="nhvjjgbn.mychariow.shop" 
-                    data-style="tap" 
-                    data-border-style="rounded"
-                    data-cta-width="xs"
-                    data-background-color="#FFFFFF"
-                    data-cta-animation="shine"
-                    data-locale="fr"
-                    data-primary-color="#ffcc00"
-                  ></div>
-                </div>
-              )}
+              <div className="relative w-full mt-auto mb-6 flex justify-center">
+                <div id="chariow-quarterly" 
+                  data-product-id="prd_g3msqc" 
+                  data-store-domain="nhvjjgbn.mychariow.shop" 
+                  data-style="tap" 
+                  data-border-style="rounded"
+                  data-cta-width="xs"
+                  data-background-color="#FFFFFF"
+                  data-cta-animation="shine"
+                  data-locale="fr"
+                  data-primary-color="#ffcc00"
+                ></div>
+                {!user && (
+                  <div 
+                    className="absolute inset-0 z-50 cursor-pointer"
+                    onClickCapture={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toast.error(t("auth.login_required"));
+                      navigate("/auth");
+                    }}
+                  />
+                )}
+              </div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -348,28 +354,30 @@ export default function Pricing() {
                 </div>
               </div>
 
-              {!user ? (
-                <button 
-                  onClick={() => { toast.error(t("auth.login_required")); navigate("/auth"); }}
-                  className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
-                >
-                  {t("pricing.join")}
-                </button>
-              ) : (
-                <div className="w-full mt-auto mb-6 flex justify-center relative z-10">
-                  <div id="chariow-annual" 
-                    data-product-id="prd_c84m5a" 
-                    data-store-domain="nhvjjgbn.mychariow.shop" 
-                    data-style="tap" 
-                    data-border-style="rounded"
-                    data-cta-width="xs"
-                    data-background-color="#FFFFFF"
-                    data-cta-animation="shine"
-                    data-locale="fr"
-                    data-primary-color="#ffcc00"
-                  ></div>
-                </div>
-              )}
+              <div className="relative w-full mt-auto mb-6 flex justify-center z-10">
+                <div id="chariow-annual" 
+                  data-product-id="prd_c84m5a" 
+                  data-store-domain="nhvjjgbn.mychariow.shop" 
+                  data-style="tap" 
+                  data-border-style="rounded"
+                  data-cta-width="xs"
+                  data-background-color="#FFFFFF"
+                  data-cta-animation="shine"
+                  data-locale="fr"
+                  data-primary-color="#ffcc00"
+                ></div>
+                {!user && (
+                  <div 
+                    className="absolute inset-0 z-50 cursor-pointer"
+                    onClickCapture={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toast.error(t("auth.login_required"));
+                      navigate("/auth");
+                    }}
+                  />
+                )}
+              </div>
 
               <div className="space-y-3 relative z-10">
                 {TIER_FEATURES.map((feature, i) => (
