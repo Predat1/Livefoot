@@ -116,7 +116,7 @@ export default function Pricing() {
               
               <div className="flex flex-col mb-8">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm text-white/30 line-through font-medium">14,99€</span>
+                  <span className="text-sm text-white/30 line-through font-medium">{t("pricing.weekly_price_original")}</span>
                 </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-white">{t("pricing.weekly_price")}</span>
@@ -162,7 +162,7 @@ export default function Pricing() {
               
               <div className="flex flex-col mb-8">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm text-white/30 line-through font-medium">29,99€</span>
+                  <span className="text-sm text-white/30 line-through font-medium">{t("pricing.monthly_price_original")}</span>
                 </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-white">{t("pricing.monthly_price")}</span>
@@ -205,7 +205,7 @@ export default function Pricing() {
               
               <div className="flex flex-col mb-8">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm text-white/30 line-through font-medium">79,99€</span>
+                  <span className="text-sm text-white/30 line-through font-medium">{t("pricing.quarterly_price_original")}</span>
                 </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-white">{t("pricing.quarterly_price")}</span>
@@ -254,7 +254,7 @@ export default function Pricing() {
               
               <div className="flex flex-col mb-8 relative z-10">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm text-amber-500/30 line-through font-medium">249,99€</span>
+                  <span className="text-sm text-white/30 line-through font-medium">{t("pricing.annual_price_original")}</span>
                 </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black text-amber-400">{t("pricing.annual_price")}</span>
