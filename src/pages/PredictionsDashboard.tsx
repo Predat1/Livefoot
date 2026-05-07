@@ -109,7 +109,7 @@ const PredictionsDashboard = () => {
     for (const [userId, total] of userMap) {
       const profile = profiles.get(userId);
       // Real points calculated by Edge Function and stored in profile.points
-      const points = profile?.points || 0; 
+      const points = (profile as any)?.points || 0; 
       entries.push({
         user_id: userId,
         display_name: profile?.display_name || "Anonyme",
