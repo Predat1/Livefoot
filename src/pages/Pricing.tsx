@@ -5,6 +5,7 @@ import { Check, Shield, Zap, Target, Lock, Crown, Star, ArrowLeft, Loader2, Play
 import { cn } from "@/lib/utils";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -72,12 +73,24 @@ export default function Pricing() {
     }
 
     setIsActivating(true);
-    // Simulation d'appel API Supabase Edge Function
-    setTimeout(() => {
-      setIsActivating(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("validate-license", {
+        body: { licenseKey: licenseKey.trim() },
+      });
+
+      if (error) throw error;
+      
       toast.success(t("pricing.license_success"));
       setLicenseKey("");
-    }, 2000);
+      
+      // Update local state or reload to reflect VIP status
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error: any) {
+      console.error("License activation error:", error);
+      toast.error(error.message || t("pricing.license_error"));
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   const handleSubscribe = (planName: string) => {
