@@ -60,14 +60,28 @@ export default function Pricing() {
       return;
     }
 
-    const widget = document.getElementById(`chariow-${planId}`);
-    const button = widget?.querySelector("button, .chariow-cta, [role='button']");
-    if (button) {
-      (button as HTMLElement).click();
-    } else {
-      // Fallback
-      handleSubscribe(planId);
-    }
+    setIsProcessing(planId);
+    let attempts = 0;
+
+    const tryClick = () => {
+      const widget = document.getElementById(`chariow-${planId}`);
+      const clickable = widget?.querySelector("button, a, [role='button'], .chariow-btn") || widget?.firstElementChild;
+
+      if (clickable) {
+        (clickable as HTMLElement).click();
+        setTimeout(() => setIsProcessing(null), 1000);
+      } else {
+        attempts++;
+        if (attempts < 30) {
+          setTimeout(tryClick, 100);
+        } else {
+          setIsProcessing(null);
+          handleSubscribe(planId);
+        }
+      }
+    };
+
+    tryClick();
   };
 
   const handleActivateLicense = async (e: React.FormEvent) => {
