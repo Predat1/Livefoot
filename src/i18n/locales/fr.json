@@ -127,6 +127,7 @@
     "feature_3": "Confiance par marché",
     "feature_4": "Modèle Double Poisson & Pondération ELO",
     "feature_5": "Sans publicité",
-    "faq_why_expensive_title": "Pourquoi un prix si élevé ?"
+    "faq_why_expensive_title": "Pourquoi un prix si élevé ?",
+    "payment_success_message": "Paiement réussi ! Votre accès VIP est en cours d'activation."
   }
 }

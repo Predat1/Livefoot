@@ -140,10 +140,7 @@ function inferCountryFromTimezone(): string | null {
 
 async function fetchUserCountry(): Promise<string | null> {
   try {
-    const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal 
-      ? AbortSignal.timeout(3000) 
-      : undefined;
-    const res = await fetch("https://ipapi.co/country/", { signal });
+    const res = await fetch("https://ipapi.co/country/", { signal: AbortSignal.timeout(3000) });
     if (!res.ok) throw new Error("ipapi failed");
     const code = (await res.text()).trim();
     if (code.length === 2) return code;

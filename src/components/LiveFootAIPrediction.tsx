@@ -87,12 +87,15 @@ const LiveFootAIPredictionCard = ({
     // Priority 0: Use AI Expert Prediction from OpenRouter if available
     if (aiExpertPrediction && aiExpertPrediction.status !== "processing" && !aiExpertPrediction.error) {
       try {
-        const predictedScore = aiExpertPrediction.predictedScore || "0-0";
+        const predictedScore = (aiExpertPrediction.predictedScore && typeof aiExpertPrediction.predictedScore === "string") 
+          ? aiExpertPrediction.predictedScore 
+          : "0-0";
+          
         const [homeScore, awayScore] = predictedScore.includes("-") 
           ? predictedScore.split("-").map(Number)
           : [0, 0];
         
-        const outcome = homeScore > awayScore ? "home" : homeScore < awayScore ? "away" : "draw";
+        const outcome = (homeScore > awayScore) ? "home" : (homeScore < awayScore) ? "away" : "draw";
         
         const extractedBets: { type: string; label: string; confidence: number; emoji: string }[] = [];
         const baseConf = Math.round((aiExpertPrediction.confidence || 0) * 100);

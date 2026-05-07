@@ -28,6 +28,19 @@ export default function Pricing() {
   const TIER_FEATURES = getTierFeatures(t);
   const [licenseKey, setLicenseKey] = useState("");
   const [isActivating, setIsActivating] = useState(false);
+  
+  // ─── Handle Redirect from Chariow ─────────────────────────────
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") === "success") {
+      toast.success(t("pricing.payment_success_message") || "Paiement réussi ! Votre accès VIP est en cours d'activation.");
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get("checkout") === "cancel") {
+      toast.error("Paiement annulé.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [t]);
 
   // ─── Checkout via redirection directe Chariow (fiable, sans backend) ────
   const CHARIOW_STORE = "nhvjjgbn.mychariow.shop";

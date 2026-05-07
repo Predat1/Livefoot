@@ -3,6 +3,7 @@
  * e.g. "Manchester United" → "manchester-united"
  */
 export function slugify(text: string): string {
+  if (!text || typeof text !== "string") return "";
   return text
     .toLowerCase()
     .normalize("NFD")

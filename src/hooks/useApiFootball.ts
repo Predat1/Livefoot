@@ -140,26 +140,31 @@ function transformFixturesToLeagues(fixtures: any[] = []): LeagueData[] {
 
     const status = mapFixtureStatus(fix.fixture.status.short);
 
+    const homeTeam = fix.teams?.home;
+    const awayTeam = fix.teams?.away;
+
+    if (!homeTeam || !awayTeam) continue;
+
     const match: MatchData = {
       id: String(fix.fixture.id),
       homeTeam: {
-        id: String(fix.teams.home.id),
-        name: fix.teams.home.name,
-        logo: fix.teams.home.logo,
-        score: status !== "scheduled" ? fix.goals.home : undefined,
+        id: String(homeTeam.id),
+        name: homeTeam.name,
+        logo: homeTeam.logo,
+        score: status !== "scheduled" ? fix.goals?.home : undefined,
       },
       awayTeam: {
-        id: String(fix.teams.away.id),
-        name: fix.teams.away.name,
-        logo: fix.teams.away.logo,
-        score: status !== "scheduled" ? fix.goals.away : undefined,
+        id: String(awayTeam.id),
+        name: awayTeam.name,
+        logo: awayTeam.logo,
+        score: status !== "scheduled" ? fix.goals?.away : undefined,
       },
       time: new Date(fix.fixture.date).toLocaleTimeString("fr-FR", {
         hour: "2-digit",
         minute: "2-digit",
       }),
       status,
-      minute: fix.fixture.status.elapsed || undefined,
+      minute: fix.fixture.status?.elapsed || undefined,
       stadium: fix.fixture.venue?.name,
     };
 
@@ -178,38 +183,42 @@ function transformTopScorers(scorers: any[] = []): PlayerData[] {
   if (!scorers || !Array.isArray(scorers)) return [];
   return scorers.map((item) => {
     const p = item.player;
-    const s = item.statistics[0];
+    const stats = item.statistics || [];
+    const s = stats[0];
+    
+    if (!p || !s) return null as any;
+
     return {
       id: String(p.id),
-      name: p.name,
-      team: s.team.name,
-      teamId: String(s.team.id),
-      teamLogo: s.team.logo,
-      country: p.nationality,
+      name: p.name || "Joueur Inconnu",
+      team: s.team?.name || "Équipe Inconnue",
+      teamId: String(s.team?.id || ""),
+      teamLogo: s.team?.logo,
+      country: p.nationality || "",
       countryFlag: "",
-      position: s.games.position || "Forward",
+      position: s.games?.position || "Forward",
       age: p.age || 0,
-      goals: s.goals.total || 0,
-      assists: s.goals.assists || 0,
-      appearances: s.games.appearences || 0,
-      minutesPlayed: s.games.minutes || 0,
-      rating: parseFloat(s.games.rating) || 0,
+      goals: s.goals?.total || 0,
+      assists: s.goals?.assists || 0,
+      appearances: s.games?.appearences || 0,
+      minutesPlayed: s.games?.minutes || 0,
+      rating: parseFloat(s.games?.rating) || 0,
       marketValue: "",
-      yellowCards: s.cards.yellow || 0,
-      redCards: s.cards.red || 0,
-      shotsPerGame: s.shots.total
+      yellowCards: s.cards?.yellow || 0,
+      redCards: s.cards?.red || 0,
+      shotsPerGame: s.shots?.total
         ? Math.round((s.shots.total / (s.games.appearences || 1)) * 10) / 10
         : 0,
-      passAccuracy: s.passes.accuracy ? parseInt(s.passes.accuracy) : 0,
-      duelsWon: s.duels.won || 0,
-      nationality: p.nationality,
+      passAccuracy: s.passes?.accuracy ? parseInt(s.passes.accuracy) : 0,
+      duelsWon: s.duels?.won || 0,
+      nationality: p.nationality || "",
       height: p.height || "",
       weight: p.weight || "",
       foot: "",
-      jersey: s.games.number || 0,
+      jersey: s.games?.number || 0,
       photoUrl: p.photo || "",
     };
-  });
+  }).filter(Boolean);
 }
 
 // ─── React Query Hooks ────────────────────────────────────────

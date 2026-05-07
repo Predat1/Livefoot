@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo, Fragment } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
-import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import SEOHead from "@/components/SEOHead";
 import DatePicker from "@/components/DatePicker";
 import LeagueSection from "@/components/LeagueSection";
@@ -27,6 +26,7 @@ import TopScorersWidget from "@/components/TopScorersWidget";
 import PartnerBanner from "@/components/PartnerBanner";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
+import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 
 const Index = () => {
   const livefootLogo = useAppLogo();
@@ -319,9 +319,7 @@ const SEO_LD = [
             {visibleLeagues.length > 0 ? (
               visibleLeagues.map((league, index) => (
                 <Fragment key={league.id}>
-                  <SectionErrorBoundary>
-                    <LeagueSection league={league} index={index} />
-                  </SectionErrorBoundary>
+                  <LeagueSection league={league} index={index} />
                   {/* Intercalate Top Scorers Widgets */}
                   {index === 0 && (
                     <SectionErrorBoundary>
@@ -333,13 +331,33 @@ const SEO_LD = [
                       <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" className="my-6" />
                     </SectionErrorBoundary>
                   )}
-                  {index === 2 && <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />}
-                  {index === 3 && <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />}
-                  {index === 4 && <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />}
+                  {index === 2 && (
+                    <SectionErrorBoundary>
+                      <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />
+                    </SectionErrorBoundary>
+                  )}
+                  {index === 3 && (
+                    <SectionErrorBoundary>
+                      <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />
+                    </SectionErrorBoundary>
+                  )}
+                  {index === 4 && (
+                    <SectionErrorBoundary>
+                      <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />
+                    </SectionErrorBoundary>
+                  )}
                   
                   {/* Strategic Affiliate Placement Between Leagues */}
-                  {index === 2 && <PartnerBanner partnerId="1xbet" className="my-8" />}
-                  {index === 5 && <PartnerBanner partnerId="1win" className="my-8" />}
+                  {index === 2 && (
+                    <SectionErrorBoundary>
+                      <PartnerBanner partnerId="1xbet" className="my-8" />
+                    </SectionErrorBoundary>
+                  )}
+                  {index === 5 && (
+                    <SectionErrorBoundary>
+                      <PartnerBanner partnerId="1win" className="my-8" />
+                    </SectionErrorBoundary>
+                  )}
                 </Fragment>
               ))
             ) : (

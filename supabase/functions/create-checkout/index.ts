@@ -49,6 +49,8 @@ serve(async (req) => {
     const lastName = nameParts.slice(1).join(" ") || "LiveFoot";
 
     // Call Chariow Checkout API
+    console.log(`Creating checkout for user ${user.id} and product ${product_id}`);
+    
     const checkoutResponse = await fetch("https://api.chariow.com/v1/checkout", {
       method: "POST",
       headers: {
@@ -60,22 +62,25 @@ serve(async (req) => {
         email,
         first_name: firstName,
         last_name: lastName,
-        redirect_url: `https://livefoot.vercel.app/pricing?checkout=success&sale={sale_id}`,
+        redirect_url: `https://livefoot.fun/pricing?checkout=success&sale={sale_id}`,
+        cancel_url: `https://livefoot.fun/pricing?checkout=cancel`,
         custom_metadata: {
           user_id: user.id,
-          source: "livefoot_pricing",
+          source: "livefoot_pricing_api",
         },
       }),
     });
 
     const result = await checkoutResponse.json();
+    console.log("Chariow API Response Status:", checkoutResponse.status);
+    console.log("Chariow API Response Data:", JSON.stringify(result));
 
     if (!checkoutResponse.ok) {
-      console.error("Chariow checkout error:", result);
+      console.error("Chariow checkout error details:", result);
       return new Response(JSON.stringify({ 
-        error: result.message || "Erreur lors de la création du checkout." 
+        error: result.message || result.error || "Erreur lors de la création du checkout." 
       }), {
-        status: 400,
+        status: checkoutResponse.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
