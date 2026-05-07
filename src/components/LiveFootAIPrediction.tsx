@@ -75,7 +75,7 @@ const LiveFootAIPredictionCard = ({
     leagueName: leagueName
   });
 
-  const aiExpertPrediction = initialAiExpertPrediction || fetchedAiExpertData;
+  const aiExpertPrediction: any = initialAiExpertPrediction || fetchedAiExpertData;
 
   const { data: homeFormData } = useTeamForm(homeTeamId);
   const { data: awayFormData } = useTeamForm(awayTeamId);

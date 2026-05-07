@@ -123,12 +123,13 @@ const Match = () => {
   const { data: standingsData } = useTeamForm(homeTeamId);
 
   // ✅ useAiExpert ici (avant les early returns)
-  const { data: aiExpertPrediction } = useAiExpert({
+  const { data: aiExpertPredictionRaw } = useAiExpert({
     fixtureId: matchId,
     homeTeam: fix?.teams?.home?.name || "",
     awayTeam: fix?.teams?.away?.name || "",
     leagueName: fix?.league?.name || "",
   });
+  const aiExpertPrediction = aiExpertPredictionRaw as any;
 
   // ✅ useMemo ICI — avant tout early return — avec guard interne
   const momentumTimeline = useMemo(() => {
@@ -902,7 +903,7 @@ const Match = () => {
               awayLogo={awayTeam.logo}
               standings={standingsData || []}
               apiPredictions={apiPredictions}
-              aiExpertPrediction={aiExpertPrediction}
+              aiExpertPrediction={aiExpertPrediction as any}
               injuries={{
                 home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
                 away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
@@ -1266,10 +1267,10 @@ const Match = () => {
                 }
 
                 // Source 1: API Predictions
-                if (!hasProbs && apiPredictions?.predictions?.percent) {
-                  probHome = parseInt(apiPredictions.predictions.percent.home) || 0;
-                  probDraw = parseInt(apiPredictions.predictions.percent.draw) || 0;
-                  probAway = parseInt(apiPredictions.predictions.percent.away) || 0;
+                if (!hasProbs && (apiPredictions as any)?.predictions?.percent) {
+                  probHome = parseInt((apiPredictions as any).predictions.percent.home) || 0;
+                  probDraw = parseInt((apiPredictions as any).predictions.percent.draw) || 0;
+                  probAway = parseInt((apiPredictions as any).predictions.percent.away) || 0;
                   hasProbs = probHome + probDraw + probAway > 0;
                 }
                 
