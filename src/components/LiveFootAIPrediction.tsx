@@ -126,11 +126,14 @@ const LiveFootAIPredictionCard = ({
           if (p.winner && p.winner !== "N/A") extractedBets.push({ type: "1X2", label: `Vainqueur: ${p.winner}`, confidence: baseConf, emoji: "🏆" });
           if (p.btts && p.btts !== "N/A") extractedBets.push({ type: "BTTS", label: `Les 2 marquent: ${p.btts}`, confidence: Math.max(55, baseConf - 5), emoji: "⚽" });
           if (p.overUnder25 && p.overUnder25 !== "N/A") extractedBets.push({ type: "O/U", label: `Buts 2.5: ${p.overUnder25}`, confidence: Math.max(50, baseConf - 10), emoji: "🔥" });
+          if (p.overUnder35 && p.overUnder35 !== "N/A") extractedBets.push({ type: "O/U", label: `Buts 3.5: ${p.overUnder35}`, confidence: Math.max(40, baseConf - 20), emoji: "🔥" });
+          if (p.overUnder15 && p.overUnder15 !== "N/A") extractedBets.push({ type: "O/U", label: `Buts 1.5: ${p.overUnder15}`, confidence: Math.max(60, baseConf - 5), emoji: "🛡️" });
           if (p.doubleChance && p.doubleChance !== "N/A") extractedBets.push({ type: "DC", label: `Double Chance: ${p.doubleChance}`, confidence: Math.min(95, baseConf + 15), emoji: "🛡️" });
           if (p.cleanSheet && p.cleanSheet !== "N/A" && p.cleanSheet !== "None") extractedBets.push({ type: "CS", label: `Clean Sheet: ${p.cleanSheet}`, confidence: Math.max(40, baseConf - 15), emoji: "🧤" });
           if (p.corners && p.corners !== "N/A") extractedBets.push({ type: "Corners", label: `Corners: ${p.corners}`, confidence: Math.max(45, baseConf - 20), emoji: "📐" });
           if (p.highestScoringHalf && p.highestScoringHalf !== "N/A") extractedBets.push({ type: "Half", label: `Mi-temps +: ${p.highestScoringHalf}`, confidence: Math.max(45, baseConf - 15), emoji: "⏱️" });
           if (p.winningMargin && p.winningMargin !== "N/A") extractedBets.push({ type: "Marge", label: `Marge: ${p.winningMargin}`, confidence: Math.max(35, baseConf - 25), emoji: "📊" });
+          if (p.exactScore && p.exactScore !== "N/A") extractedBets.push({ type: "Score Exact", label: `Score: ${p.exactScore}`, confidence: Math.max(15, baseConf - 35), emoji: "🎯" });
         }
         if (extractedBets.length === 0) {
           extractedBets.push({ type: "AI", label: `Score prédit: ${predictedScore}`, confidence: baseConf, emoji: "✨" });
@@ -602,7 +605,10 @@ const LiveFootAIPredictionCard = ({
                     winner: { label: "Vainqueur", icon: Trophy },
                     btts: { label: "BTTS", icon: Zap },
                     overUnder25: { label: "Buts +/- 2.5", icon: Flame },
+                    overUnder35: { label: "Buts +/- 3.5", icon: Flame },
+                    overUnder15: { label: "Buts +/- 1.5", icon: Flame },
                     doubleChance: { label: "Double Chance", icon: Shield },
+                    exactScore: { label: "Score Exact", icon: Target },
                     corners: { label: "Corners", icon: TrendingUp },
                     cards: { label: "Cartons", icon: AlertTriangle },
                     possession: { label: "Possession", icon: Eye },

@@ -168,8 +168,8 @@ Génère une analyse précise en tenant compte :
 
 {
   "matchState": "Pré-match|En direct|Terminé",
-  "analysis": "4 phrases max, style expert. Adapter le temps (futur, présent ou passé) selon le matchState.",
-  "reasoning": "3 insights clés data-driven (inclure xG, forme ELO, et impact minute/score si en direct)",
+  "analysis": "4 phrases max, style expert ultra-précis. Adapter le temps (futur, présent ou passé) selon le matchState.",
+  "reasoning": "3 insights clés basés sur la data (inclure xG, forme ELO, et impact du score actuel si en direct)",
   "predictedScore": "X-Y",
   "confidence": 0.85,
   "confidenceStars": 4,
@@ -203,17 +203,19 @@ Génère une analyse précise en tenant compte :
     "cards": "Over 3.5|Under 3.5",
     "cardsConfidence": 0.60,
     "possession": "XX%-XX%",
-    "firstScorerTeam": "home|away",
+    "firstScorer": "nom du joueur ou Inconnu",
     "anytimeScorer": "nom du joueur ou Inconnu",
-    "penalty": "Faible|Moyenne|Haute",
-    "var": "Faible|Moyenne|Haute",
+    "penalty": "Oui|Non",
+    "var": "Oui|Non",
     "cleanSheet": "Home|Away|None",
     "cleanSheetConfidence": 0.55,
     "timingFirstGoal": "0-15|16-30|31-45|46-60|61-75|76-90",
     "highestScoringHalf": "1st|2nd|Equal",
     "winningMargin": "Draw|1|2|3+"
   }
-}`;
+}
+
+IMPORTANT: En direct, utilise le score actuel comme point de départ. Si le score est 2-0 à la 70e, le score prédit DOIT être au moins 2-0. Estime les probabilités de buts supplémentaires basées sur le momentum.`;
 }
 
 async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
