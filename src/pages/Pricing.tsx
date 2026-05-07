@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Check, Shield, Zap, Target, Lock, Crown, Star, ArrowLeft, Loader2, Play } from "lucide-react";
@@ -23,6 +23,62 @@ export default function Pricing() {
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const TIER_FEATURES = getTierFeatures(t);
+  const [licenseKey, setLicenseKey] = useState("");
+  const [isActivating, setIsActivating] = useState(false);
+
+  useEffect(() => {
+    // Chariow Widget Loader
+    const script = document.createElement('script');
+    script.src = 'https://js.chariowcdn.com/v1/widget.min.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://js.chariowcdn.com/v1/widget.min.css';
+    document.head.appendChild(link);
+
+    return () => {
+      try {
+        if (document.head.contains(script)) document.head.removeChild(script);
+        if (document.head.contains(link)) document.head.removeChild(link);
+      } catch (e) {
+        console.error("Cleanup error:", e);
+      }
+    };
+  }, []);
+
+  const triggerChariow = (planId: string) => {
+    if (!user) {
+      toast.error(t("auth.login_required"));
+      return;
+    }
+    const widget = document.getElementById(`chariow-${planId}`);
+    const button = widget?.querySelector("button, .chariow-cta, [role='button']");
+    if (button) {
+      (button as HTMLElement).click();
+    } else {
+      // Fallback
+      handleSubscribe(planId);
+    }
+  };
+
+  const handleActivateLicense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!licenseKey.trim()) return;
+    if (!user) {
+      toast.error(t("auth.login_required"));
+      return;
+    }
+
+    setIsActivating(true);
+    // Simulation d'appel API Supabase Edge Function
+    setTimeout(() => {
+      setIsActivating(false);
+      toast.success(t("pricing.license_success"));
+      setLicenseKey("");
+    }, 2000);
+  };
 
   const handleSubscribe = (planName: string) => {
     if (!user) {
@@ -128,12 +184,14 @@ export default function Pricing() {
               </div>
 
               <button 
-                onClick={() => handleSubscribe("weekly")}
+                onClick={() => triggerChariow("weekly")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
                 {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
+
+              <div id="chariow-weekly" data-product-id="prd_ec21i6" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.slice(0, 3).map((feature, i) => (
@@ -174,12 +232,14 @@ export default function Pricing() {
               </div>
 
               <button 
-                onClick={() => handleSubscribe("monthly")}
+                onClick={() => triggerChariow("monthly")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
               >
                 {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.start")}
               </button>
+
+              <div id="chariow-monthly" data-product-id="prd_gjr4pb" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -218,12 +278,14 @@ export default function Pricing() {
               </div>
 
               <button 
-                onClick={() => handleSubscribe("quarterly")}
+                onClick={() => triggerChariow("quarterly")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
                 {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
+
+              <div id="chariow-quarterly" data-product-id="prd_g3msqc" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -267,12 +329,14 @@ export default function Pricing() {
               </div>
 
               <button 
-                onClick={() => handleSubscribe("annual")}
+                onClick={() => triggerChariow("annual")}
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
               >
                 {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.join")}
               </button>
+
+              <div id="chariow-annual" data-product-id="prd_c84m5a" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" style={{ display: 'none' }}></div>
 
               <div className="space-y-3 relative z-10">
                 {TIER_FEATURES.map((feature, i) => (
@@ -293,6 +357,35 @@ export default function Pricing() {
               </div>
             </motion.div>
           </div>
+
+          {/* License Activation Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-xl mx-auto mb-20 p-8 rounded-3xl bg-white/5 border border-white/10 text-center relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+            <h2 className="text-xl font-black text-white mb-2">{t("pricing.have_license")}</h2>
+            <p className="text-sm text-white/50 mb-6">{t("pricing.license_help")}</p>
+            
+            <form onSubmit={handleActivateLicense} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                value={licenseKey}
+                onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
+                placeholder={t("pricing.license_placeholder")}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-amber-500/50 transition-colors font-mono"
+              />
+              <Button 
+                type="submit"
+                disabled={isActivating || !licenseKey.trim()}
+                className="bg-white text-black hover:bg-white/90 rounded-xl font-black px-6"
+              >
+                {isActivating ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.activate_license")}
+              </Button>
+            </form>
+          </motion.div>
 
           {/* Security / Trust Badges */}
           <motion.div 
