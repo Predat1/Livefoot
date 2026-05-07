@@ -53,7 +53,43 @@ export default function Pricing() {
     };
   }, []);
 
+  const triggerChariow = (planId: string) => {
+    if (!user) {
+      toast.error(t("auth.login_required"));
+      navigate("/auth");
+      return;
+    }
+
+    setIsProcessing(planId);
+    let attempts = 0;
+
+    const tryClick = () => {
+      const widget = document.getElementById(`chariow-${planId}`);
+      // Try to find ANY clickable element inside the widget
+      const clickable = widget?.querySelector("button, a, [role='button'], .chariow-btn, .chariow-cta") || widget?.firstElementChild;
+
+      if (clickable) {
+        console.log("Chariow clickable found, clicking...");
+        (clickable as HTMLElement).click();
+        // Give it some time to open the checkout before clearing state
+        setTimeout(() => setIsProcessing(null), 2000);
+      } else {
+        attempts++;
+        if (attempts < 40) { // Try for 4 seconds
+          setTimeout(tryClick, 100);
+        } else {
+          console.error("Chariow widget failed to load after 4 seconds");
+          setIsProcessing(null);
+          toast.error("Le module de paiement n'a pas pu être chargé. Veuillez réessayer.");
+        }
+      }
+    };
+
+    tryClick();
+  };
+
   const handleActivateLicense = async (e: React.FormEvent) => {
+
     e.preventDefault();
     if (!licenseKey.trim()) return;
     if (!user) {
@@ -164,30 +200,13 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <div className="relative w-full mt-auto mb-6 flex justify-center">
-                <div id="chariow-weekly" 
-                  data-product-id="prd_ec21i6" 
-                  data-store-domain="nhvjjgbn.mychariow.shop" 
-                  data-style="tap" 
-                  data-border-style="rounded"
-                  data-cta-width="xs"
-                  data-background-color="#FFFFFF"
-                  data-cta-animation="shine"
-                  data-locale="fr"
-                  data-primary-color="#ffcc00"
-                ></div>
-                {!user && (
-                  <div 
-                    className="absolute inset-0 z-50 cursor-pointer"
-                    onClickCapture={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toast.error(t("auth.login_required"));
-                      navigate("/auth");
-                    }}
-                  />
-                )}
-              </div>
+              <button 
+                onClick={() => triggerChariow("weekly")}
+                disabled={isProcessing !== null}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
+              >
+                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
+              </button>
 
               <div className="space-y-3">
                 {TIER_FEATURES.slice(0, 3).map((feature, i) => (
@@ -227,30 +246,13 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <div className="relative w-full mt-auto mb-6 flex justify-center">
-                <div id="chariow-monthly" 
-                  data-product-id="prd_gjr4pb" 
-                  data-store-domain="nhvjjgbn.mychariow.shop" 
-                  data-style="tap" 
-                  data-border-style="rounded"
-                  data-cta-width="xs"
-                  data-background-color="#FFFFFF"
-                  data-cta-animation="shine"
-                  data-locale="fr"
-                  data-primary-color="#ffcc00"
-                ></div>
-                {!user && (
-                  <div 
-                    className="absolute inset-0 z-50 cursor-pointer"
-                    onClickCapture={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toast.error(t("auth.login_required"));
-                      navigate("/auth");
-                    }}
-                  />
-                )}
-              </div>
+              <button 
+                onClick={() => triggerChariow("monthly")}
+                disabled={isProcessing !== null}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
+              >
+                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.start")}
+              </button>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -288,30 +290,13 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <div className="relative w-full mt-auto mb-6 flex justify-center">
-                <div id="chariow-quarterly" 
-                  data-product-id="prd_g3msqc" 
-                  data-store-domain="nhvjjgbn.mychariow.shop" 
-                  data-style="tap" 
-                  data-border-style="rounded"
-                  data-cta-width="xs"
-                  data-background-color="#FFFFFF"
-                  data-cta-animation="shine"
-                  data-locale="fr"
-                  data-primary-color="#ffcc00"
-                ></div>
-                {!user && (
-                  <div 
-                    className="absolute inset-0 z-50 cursor-pointer"
-                    onClickCapture={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toast.error(t("auth.login_required"));
-                      navigate("/auth");
-                    }}
-                  />
-                )}
-              </div>
+              <button 
+                onClick={() => triggerChariow("quarterly")}
+                disabled={isProcessing !== null}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
+              >
+                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
+              </button>
 
               <div className="space-y-3">
                 {TIER_FEATURES.map((feature, i) => (
@@ -354,30 +339,13 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <div className="relative w-full mt-auto mb-6 flex justify-center z-10">
-                <div id="chariow-annual" 
-                  data-product-id="prd_c84m5a" 
-                  data-store-domain="nhvjjgbn.mychariow.shop" 
-                  data-style="tap" 
-                  data-border-style="rounded"
-                  data-cta-width="xs"
-                  data-background-color="#FFFFFF"
-                  data-cta-animation="shine"
-                  data-locale="fr"
-                  data-primary-color="#ffcc00"
-                ></div>
-                {!user && (
-                  <div 
-                    className="absolute inset-0 z-50 cursor-pointer"
-                    onClickCapture={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toast.error(t("auth.login_required"));
-                      navigate("/auth");
-                    }}
-                  />
-                )}
-              </div>
+              <button 
+                onClick={() => triggerChariow("annual")}
+                disabled={isProcessing !== null}
+                className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
+              >
+                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.join")}
+              </button>
 
               <div className="space-y-3 relative z-10">
                 {TIER_FEATURES.map((feature, i) => (
@@ -466,6 +434,14 @@ export default function Pricing() {
                 <p className="text-sm text-white/60 leading-relaxed">L'AnalystePro V3 n'est pas un robot de conseils aléatoires. Il effectue des millions de calculs ELO, compare les marges et tourne sur des serveurs d'intelligence artificielle surpuissants (Double Poisson Model). Ce coût d'infrastructure garantit la meilleure précision du marché. Un seul pari Value Bet suffit généralement à rentabiliser le mois.</p>
               </div>
             </div>
+          </div>
+
+          {/* Hidden stable Chariow containers */}
+          <div style={{ position: 'fixed', opacity: 0, pointerEvents: 'none', zIndex: -1 }}>
+            <div id="chariow-weekly" data-product-id="prd_ec21i6" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
+            <div id="chariow-monthly" data-product-id="prd_gjr4pb" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
+            <div id="chariow-quarterly" data-product-id="prd_g3msqc" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
+            <div id="chariow-annual" data-product-id="prd_c84m5a" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
           </div>
         </div>
       </div>
