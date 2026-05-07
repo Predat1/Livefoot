@@ -1267,10 +1267,10 @@ const Match = () => {
                 }
 
                 // Source 1: API Predictions
-                if (!hasProbs && apiPredictions?.predictions?.percent) {
-                  probHome = parseInt(apiPredictions.predictions.percent.home) || 0;
-                  probDraw = parseInt(apiPredictions.predictions.percent.draw) || 0;
-                  probAway = parseInt(apiPredictions.predictions.percent.away) || 0;
+                if (!hasProbs && (apiPredictions as any)?.predictions?.percent) {
+                  probHome = parseInt((apiPredictions as any).predictions.percent.home) || 0;
+                  probDraw = parseInt((apiPredictions as any).predictions.percent.draw) || 0;
+                  probAway = parseInt((apiPredictions as any).predictions.percent.away) || 0;
                   hasProbs = probHome + probDraw + probAway > 0;
                 }
                 
