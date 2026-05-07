@@ -123,12 +123,13 @@ const Match = () => {
   const { data: standingsData } = useTeamForm(homeTeamId);
 
   // ✅ useAiExpert ici (avant les early returns)
-  const { data: aiExpertPrediction } = useAiExpert({
+  const { data: aiExpertPredictionRaw } = useAiExpert({
     fixtureId: matchId,
     homeTeam: fix?.teams?.home?.name || "",
     awayTeam: fix?.teams?.away?.name || "",
     leagueName: fix?.league?.name || "",
   });
+  const aiExpertPrediction = aiExpertPredictionRaw as any;
 
   // ✅ useMemo ICI — avant tout early return — avec guard interne
   const momentumTimeline = useMemo(() => {
