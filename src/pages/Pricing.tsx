@@ -60,27 +60,38 @@ export default function Pricing() {
       return;
     }
 
+    // Map planId to product ID
+    const productIds: Record<string, string> = {
+      weekly: "prd_ec21i6",
+      monthly: "prd_gjr4pb",
+      quarterly: "prd_g3msqc",
+      annual: "prd_c84m5a"
+    };
+    const productId = productIds[planId];
+
     setIsProcessing(planId);
     let attempts = 0;
 
     const tryClick = () => {
-      const widget = document.getElementById(`chariow-${planId}`);
-      // Try to find ANY clickable element inside the widget
+      // Find the widget container by product ID
+      const widget = document.querySelector(`[data-product-id="${productId}"]`);
+      
+      // Look for the button inside the widget. Chariow usually injects a button or an iframe.
+      // We try to find the button or the first child of the widget.
       const clickable = widget?.querySelector("button, a, [role='button'], .chariow-btn, .chariow-cta") || widget?.firstElementChild;
 
       if (clickable) {
-        console.log("Chariow clickable found, clicking...");
+        console.log(`Chariow widget for ${productId} found, clicking...`);
         (clickable as HTMLElement).click();
-        // Give it some time to open the checkout before clearing state
         setTimeout(() => setIsProcessing(null), 2000);
       } else {
         attempts++;
-        if (attempts < 40) { // Try for 4 seconds
+        if (attempts < 50) { // Try for 5 seconds
           setTimeout(tryClick, 100);
         } else {
-          console.error("Chariow widget failed to load after 4 seconds");
+          console.error(`Chariow widget ${productId} failed to load after 5s`);
           setIsProcessing(null);
-          toast.error("Le module de paiement n'a pas pu être chargé. Veuillez réessayer.");
+          toast.error("Le module de paiement n'a pas pu être chargé. Veuillez réessayer ou rafraîchir la page.");
         }
       }
     };
@@ -436,8 +447,8 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* Hidden stable Chariow containers */}
-          <div style={{ position: 'fixed', opacity: 0, pointerEvents: 'none', zIndex: -1 }}>
+          {/* Hidden stable Chariow containers - Positioned off-screen but "visible" to the script */}
+          <div style={{ position: 'absolute', left: '-9999px', top: 0, height: '1px', width: '1px', overflow: 'hidden' }}>
             <div id="chariow-weekly" data-product-id="prd_ec21i6" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
             <div id="chariow-monthly" data-product-id="prd_gjr4pb" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
             <div id="chariow-quarterly" data-product-id="prd_g3msqc" data-store-domain="nhvjjgbn.mychariow.shop" data-style="tap" data-border-style="rounded" data-cta-width="xs" data-background-color="#FFFFFF" data-cta-animation="shine" data-locale="fr" data-primary-color="#ffcc00"></div>
