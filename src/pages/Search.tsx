@@ -4,7 +4,6 @@ import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import {
   Search as SearchIcon,
-  Search,
   Trophy,
   Users,
   User,
@@ -596,7 +595,7 @@ const SearchPage = () => {
             {results.length === 0 && !isLoading && query.length >= 2 && (
               <div className="text-center py-20">
                 <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
-                  <Search className="h-8 w-8 text-muted-foreground/40" />
+                  <SearchIcon className="h-8 w-8 text-muted-foreground/40" />
                 </div>
                 <h3 className="text-lg font-bold text-foreground">Aucun résultat</h3>
                 <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
