@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy"
-      content="default-src 'self';
-        script-src 'self' 'unsafe-inline' https://*.sentry.io;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' data: https: blob:;
-        connect-src 'self' https://*.supabase.co https://openrouter.ai https://v3.football.api-sports.io https://api-football.com https://*.sentry.io;
+      content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; 
+        script-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; 
+        style-src * 'self' 'unsafe-inline'; 
+        connect-src * 'self' 'unsafe-inline' 'unsafe-eval'; 
+        img-src * 'self' data: blob:; 
+        font-src * 'self' data:; 
         frame-ancestors 'none';" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
@@ -21,6 +21,31 @@
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="google" content="notranslate" />
     <meta name="googlebot" content="index, follow" />
+    <style>
+      body { background-color: #020617; margin: 0; padding: 0; }
+      #root-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #020617;
+        color: white;
+        font-family: sans-serif;
+        z-index: 9999;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255,255,255,0.1);
+        border-left-color: #22c55e;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#22c55e" />
@@ -66,7 +91,13 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="root-loading">
+        <div class="spinner"></div>
+        <div style="font-weight: bold; font-size: 1.2rem;">LIVEFOOT</div>
+        <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">Initialisation...</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -29,11 +29,15 @@ const STORAGE_KEY = "livefoot_version";
 
 const App = () => {
   useEffect(() => {
-    const savedVersion = localStorage.getItem(STORAGE_KEY);
-    if (savedVersion !== APP_VERSION) {
-      console.log(`Mise à jour de version détectée: ${savedVersion} -> ${APP_VERSION}`);
-      localStorage.setItem(STORAGE_KEY, APP_VERSION);
-      window.location.reload();
+    try {
+      const savedVersion = localStorage.getItem(STORAGE_KEY);
+      if (savedVersion !== APP_VERSION) {
+        console.log(`Mise à jour de version détectée: ${savedVersion} -> ${APP_VERSION}`);
+        localStorage.setItem(STORAGE_KEY, APP_VERSION);
+        window.location.reload();
+      }
+    } catch (e) {
+      console.warn("Erreur accès localStorage pour versioning:", e);
     }
   }, []);
 
