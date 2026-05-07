@@ -21,8 +21,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['framer-motion', 'lucide-react', 'recharts', 'clsx', 'tailwind-merge'],
+          'vendor-core': ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'lucide-react', 'recharts', 'clsx', 'tailwind-merge'],
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-utils': ['date-fns', 'i18next', 'react-i18next', 'zod'],
         }

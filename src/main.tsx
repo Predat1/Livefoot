@@ -9,10 +9,24 @@ import ErrorBoundary from "./components/ErrorBoundary";
 // Initialisation de Sentry pour le monitoring des erreurs
 initSentry();
 
+// Global error handling for production debugging
+if (import.meta.env.PROD) {
+  window.onerror = (message, source, lineno, colno, error) => {
+    console.error("Global JS Error:", { message, source, lineno, colno, error });
+    return false;
+  };
+
+  window.onunhandledrejection = (event) => {
+    console.error("Unhandled Promise Rejection:", event.reason);
+  };
+}
+
 createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
+  <React.StrictMode>
     <HelmetProvider>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </HelmetProvider>
-  </ErrorBoundary>
+  </React.StrictMode>
 );

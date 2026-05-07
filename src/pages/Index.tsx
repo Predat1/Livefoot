@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, Fragment } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
+import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import SEOHead from "@/components/SEOHead";
 import DatePicker from "@/components/DatePicker";
 import LeagueSection from "@/components/LeagueSection";
@@ -318,10 +319,20 @@ const SEO_LD = [
             {visibleLeagues.length > 0 ? (
               visibleLeagues.map((league, index) => (
                 <Fragment key={league.id}>
-                  <LeagueSection league={league} index={index} />
+                  <SectionErrorBoundary>
+                    <LeagueSection league={league} index={index} />
+                  </SectionErrorBoundary>
                   {/* Intercalate Top Scorers Widgets */}
-                  {index === 0 && <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" className="my-6" />}
-                  {index === 1 && <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" className="my-6" />}
+                  {index === 0 && (
+                    <SectionErrorBoundary>
+                      <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" className="my-6" />
+                    </SectionErrorBoundary>
+                  )}
+                  {index === 1 && (
+                    <SectionErrorBoundary>
+                      <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" className="my-6" />
+                    </SectionErrorBoundary>
+                  )}
                   {index === 2 && <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />}
                   {index === 3 && <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />}
                   {index === 4 && <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />}
