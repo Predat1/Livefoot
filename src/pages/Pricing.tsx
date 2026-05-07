@@ -56,9 +56,7 @@ export default function Pricing() {
       // The user provided specific URLs: https://nhvjjgbn.mychariow.shop/prd_xxxxxx/checkout
       const storeDomain = "nhvjjgbn.mychariow.shop";
       
-      // Append metadata to query string for the Pulse (webhook) to pick it up if configured
-      // Format: https://store.mychariow.shop/product_id/checkout?metadata[user_id]=xxx&email=xxx
-      const checkoutUrl = `https://${storeDomain}/${productId}/checkout?email=${encodeURIComponent(user.email || "")}&metadata[user_id]=${encodeURIComponent(user.id)}&metadata[plan]=${planId}`;
+      const checkoutUrl = `https://${storeDomain}/${productId}/checkout`;
       
       console.log("Redirecting to direct checkout:", checkoutUrl);
       window.location.href = checkoutUrl;
