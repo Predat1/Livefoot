@@ -1174,11 +1174,17 @@ const Match = () => {
                 className="flex-1 text-center min-w-0"
               >
                 <Link to={fix?.teams?.home?.id ? `/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
-                  <div className="relative mb-2 sm:mb-4">
+                  <div className="relative mb-2 sm:mb-4 flex items-center justify-center h-14 w-14 sm:h-28 sm:w-28">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-12 w-12 sm:h-28 sm:w-28 object-contain drop-shadow-xl" />}
+                    {homeTeam.logo ? (
+                      <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-10 w-10 sm:h-24 sm:w-24 object-contain drop-shadow-xl" />
+                    ) : (
+                      <div className="h-10 w-10 sm:h-24 sm:w-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-lg sm:text-3xl">
+                        {homeTeam.name.charAt(0)}
+                      </div>
+                    )}
                   </div>
-                  <h2 className="text-[10px] sm:text-2xl font-black text-foreground truncate w-full px-1">{homeTeam.name}</h2>
+                  <h2 className="text-xs sm:text-xl font-black text-foreground truncate w-full px-1 leading-tight">{homeTeam.name}</h2>
                 </Link>
                 {homeTeamId && (
                   <div className="mt-2 hidden sm:flex justify-center">
@@ -1239,11 +1245,17 @@ const Match = () => {
                 className="flex-1 text-center min-w-0"
               >
                 <Link to={fix?.teams?.away?.id ? `/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
-                  <div className="relative mb-2 sm:mb-4">
+                  <div className="relative mb-2 sm:mb-4 flex items-center justify-center h-14 w-14 sm:h-28 sm:w-28">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-12 w-12 sm:h-28 sm:w-28 object-contain drop-shadow-xl" />}
+                    {awayTeam.logo ? (
+                      <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-10 w-10 sm:h-24 sm:w-24 object-contain drop-shadow-xl" />
+                    ) : (
+                      <div className="h-10 w-10 sm:h-24 sm:w-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-lg sm:text-3xl">
+                        {awayTeam.name.charAt(0)}
+                      </div>
+                    )}
                   </div>
-                  <h2 className="text-[10px] sm:text-2xl font-black text-foreground truncate w-full px-1">{awayTeam.name}</h2>
+                  <h2 className="text-xs sm:text-xl font-black text-foreground truncate w-full px-1 leading-tight">{awayTeam.name}</h2>
                 </Link>
                 {awayTeamId && (
                   <div className="mt-2 hidden sm:flex justify-center">
