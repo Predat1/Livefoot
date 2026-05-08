@@ -7,39 +7,56 @@ import "./i18n/config";
 import { initSentry } from "./integrations/sentry";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-// Initialisation de Sentry pour le monitoring des erreurs
-initSentry();
+// Initialisation de Sentry avec sécurité
+try {
+  initSentry();
+} catch (e) {
+  console.warn("Sentry init failed", e);
+}
 
-// Enregistrement du Service Worker pour les notifications Push
+// Enregistrement du Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw-goal-notifications.js')
-      .then(reg => console.log('SW Registered!', reg))
-      .catch(err => console.log('SW Register failed!', err));
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .then(() => {
+        if ('caches' in window) {
+          return caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))));
+        }
+      })
+      .catch(err => console.log('SW cleanup failed!', err));
   });
 }
 
-// Suppression de l'indicateur de chargement initial une fois que le JS a démarré
 const rootElement = document.getElementById("root");
 const loadingElement = document.getElementById("root-loading");
 const failsafeLog = document.getElementById("failsafe-log");
 
 if (failsafeLog) failsafeLog.innerText += ' JS STARTED...';
 
-// Handler d'erreur global pour attraper les crashs au démarrage
+// Handler d'erreur global amélioré
 window.onerror = (message, source, lineno, colno, error) => {
-  console.error("Global crash detected:", message, error);
-  if (loadingElement) {
-    loadingElement.innerHTML = `
-      <div style="color: #ef4444; font-weight: bold; margin-bottom: 10px;">❌ Erreur critique</div>
-      <div style="font-size: 0.8rem; color: #94a3b8; max-width: 300px;">${message}</div>
-      <button onclick="window.location.reload()" style="margin-top: 20px; padding: 8px 16px; background: #22c55e; border: none; border-radius: 4px; color: white; cursor: pointer;">Réessayer</button>
-    `;
-  }
+  console.error("Critical crash detected:", message, error);
+  const displayElement = document.getElementById("root") || document.body;
+  
+  // Si on crash, on affiche une UI d'urgence stylée inline
+  displayElement.innerHTML = `
+    <div style="background: #0c0f1d; color: white; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; font-family: sans-serif; text-align: center;">
+      <div style="font-size: 60px; margin-bottom: 20px;">⚽</div>
+      <div style="color: #ef4444; font-weight: bold; font-size: 20px; margin-bottom: 10px;">Oups ! Une erreur est survenue</div>
+      <div style="font-size: 0.8rem; color: #94a3b8; max-width: 400px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); word-break: break-word;">
+        ${message}
+      </div>
+      <button onclick="window.location.reload()" style="margin-top: 30px; padding: 12px 24px; background: #22c55e; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);">
+        Recharger LiveFoot
+      </button>
+    </div>
+  `;
   return false;
 };
 
 if (rootElement) {
+  if (failsafeLog) failsafeLog.innerText += ' RENDERING...';
   const root = createRoot(rootElement);
   root.render(
     <ErrorBoundary>
@@ -49,11 +66,18 @@ if (rootElement) {
     </ErrorBoundary>
   );
   
-  // Nettoyage de l'indicateur de chargement
+  // Nettoyage intelligent de l'indicateur de chargement
   if (loadingElement) {
     setTimeout(() => {
       loadingElement.style.opacity = "0";
-      setTimeout(() => loadingElement.remove(), 500);
-    }, 500);
+      setTimeout(() => {
+        if (loadingElement.parentNode) {
+          loadingElement.remove();
+        }
+        if (failsafeLog) failsafeLog.innerText += ' LOADED.';
+      }, 500);
+    }, 800);
   }
+} else {
+  console.error("Root element not found!");
 }
