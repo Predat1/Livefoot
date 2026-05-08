@@ -10,6 +10,26 @@ interface PartnerCardProps {
   variant?: "full" | "compact";
 }
 
+const PartnerLogo: React.FC<{ partner: Partner; className?: string }> = ({ partner, className }) => {
+  const [error, setError] = useState(false);
+  
+  // Use local fallback if external logo fails
+  const logoSrc = error && partner.logo.startsWith('http') 
+    ? `/partners/${partner.id}.png` 
+    : partner.logo;
+  
+  return (
+    <img 
+      src={logoSrc} 
+      alt={partner.name} 
+      className={cn("h-full w-full object-contain", className)}
+      onError={() => setError(true)}
+      loading="lazy"
+      crossOrigin="anonymous"
+    />
+  );
+};
+
 const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full" }) => {
   const [copied, setCopied] = useState(false);
 
@@ -23,8 +43,8 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full" }) 
   if (variant === "compact") {
     return (
       <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-all shadow-sm">
-        <div className="h-10 w-10 flex-shrink-0 bg-white rounded-lg p-1.5 flex items-center justify-center">
-          <img src={partner.logo} alt={partner.name} className="h-full w-full object-contain" />
+        <div className="h-10 w-10 flex-shrink-0 bg-white rounded-lg p-1.5 flex items-center justify-center border border-gray-200">
+          <PartnerLogo partner={partner} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black text-foreground truncate">{partner.name}</p>
@@ -45,8 +65,8 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full" }) 
     <div className="group relative rounded-2xl bg-card border border-border/50 overflow-hidden hover:border-primary/30 transition-all shadow-md hover:shadow-xl hover-lift">
       <div className="p-5 sm:p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="h-12 w-28 sm:h-14 sm:w-32 bg-white rounded-xl p-3 flex items-center justify-center shadow-inner">
-            <img src={partner.logo} alt={partner.name} className="h-full w-full object-contain" />
+          <div className="h-12 w-28 sm:h-14 sm:w-32 bg-white rounded-xl p-3 flex items-center justify-center shadow-inner border border-gray-200">
+            <PartnerLogo partner={partner} />
           </div>
           {partner.bonus && (
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
