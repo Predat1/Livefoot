@@ -4,8 +4,13 @@ import { lazy, Suspense } from "react";
 import BrandedLoader from "./BrandedLoader";
 import PageTransition from "./PageTransition";
 import ErrorBoundary from "./ErrorBoundary";
+import ProtectedRoute from "./ProtectedRoute";
 
 // Eager: core pages
+import AdminLayout from "@/components/Admin/AdminLayout";
+import AdminDashboard from "@/pages/Admin";
+import AdminUsers from "@/pages/Admin/Users";
+import AdminContent from "@/pages/Admin/Content";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 
@@ -96,7 +101,16 @@ const AnimatedRoutes = () => {
             <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
             <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
             <Route path="/explorer" element={<PageTransition><Explorer /></PageTransition>} />
-            <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
+            <Route path="/admin" element={<ProtectedRoute><PageTransition><AdminLayout /></PageTransition></ProtectedRoute>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="content" element={<AdminContent />} />
+              <Route path="ai" element={<div className="p-8 text-center text-slate-400">IA & Prédictions - En construction</div>} />
+              <Route path="monetization" element={<div className="p-8 text-center text-slate-400">Monetisation - En construction</div>} />
+              <Route path="analytics" element={<div className="p-8 text-center text-slate-400">Analytics - En construction</div>} />
+              <Route path="logs" element={<div className="p-8 text-center text-slate-400">Logs - En construction</div>} />
+              <Route path="settings" element={<div className="p-8 text-center text-slate-400">Configuration - En construction</div>} />
+            </Route>
             <Route path="/bonuses" element={<PageTransition><Bonuses /></PageTransition>} />
             <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
             <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
