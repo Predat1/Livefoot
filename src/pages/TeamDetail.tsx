@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/SEOHeadEnhanced";
 import { useTeamDetail, useTeamSquad, useTeamFixtures, useTeamNextFixtures, useTeamCoach, useTransfersByTeam } from "@/hooks/useApiFootball";
 import { ArrowLeft, MapPin, Users, Calendar, Star, Shirt, TrendingUp, User, ArrowRightLeft, Image } from "lucide-react";
 import { useEffect, useMemo } from "react";
@@ -95,8 +95,30 @@ const TeamDetail = () => {
   return (
     <Layout>
       <SEOHead
-        title={`${team.name} - Effectif, Transferts & Résultats`}
-        description={`${team.name} - ${team.country}. Stade: ${team.venue?.name || "N/A"}. Effectif complet, transferts récents et résultats.`}
+        title={`${team.name} - Effectif, Calendrier, Résultats ${new Date().getFullYear()}/${(new Date().getFullYear() + 1).toString().slice(-2)} | LiveFoot`}
+        description={`${team.name} (${team.country}) - Tout sur l'équipe : effectif complet, prochains matchs, derniers résultats, transferts, classement et statistiques. Stade: ${team.venue?.name || "N/A"}. Suivez ${team.name} en direct sur LiveFoot.fun !`}
+        keywords={`${team.name}, ${team.name} effectif, ${team.name} calendrier, ${team.name} résultats, ${team.name} transferts, ${team.country} football, ${team.name} match en direct, composition ${team.name}`}
+        ogImage={team.logo}
+        canonical={`https://livefoot.fun/teams/${teamId}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SportsTeam",
+          name: team.name,
+          sport: "Soccer",
+          area: {
+            "@type": "Place",
+            name: team.country,
+          },
+          member: squad?.map((p: any) => ({
+            "@type": "Person",
+            name: p.name,
+            position: p.position,
+          })),
+        }}
+        breadcrumbs={[
+          { name: "Équipes", url: "/teams" },
+          { name: team.name, url: `/teams/${teamId}` },
+        ]}
       />
       <div className="px-2 sm:container py-4 sm:py-8">
         <EntityBreadcrumbs steps={[

@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useMemo, useEffect } from "react";
 import Layout from "@/components/Layout";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/SEOHeadEnhanced";
 import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
@@ -1205,10 +1205,36 @@ const Match = () => {
   return (
     <Layout>
       <SEOHead
-        title={`${homeTeam.name} vs ${awayTeam.name} Direct, Pronostics & Stats - ${league?.name || "LiveFoot"}`}
-        description={`Match ${homeTeam.name} vs ${awayTeam.name} en direct le ${fix?.fixture?.date ? new Date(fix.fixture.date).toLocaleDateString("fr-FR") : ""} sur LiveFoot.fun. Retrouvez les pronostics IA gratuits, les compositions et les statistiques live.`}
-        keywords={`${homeTeam.name} vs ${awayTeam.name} direct, prono ${homeTeam.name} ${awayTeam.name}, score ${homeTeam.name} ${awayTeam.name}, stats match foot`}
-        ogImage={homeTeam.logo}
+        title={`${homeTeam.name} vs ${awayTeam.name} en Direct Live | ${league?.name || "LiveFoot.fun"}`}
+        description={`${homeTeam.name} vs ${awayTeam.name} EN DIRECT - Pronostics IA gratuits, score live, compositions, stats H2H et analyse complète. Match ${league?.name || ""} en temps réel sur LiveFoot.fun !`}
+        keywords={`${homeTeam.name} vs ${awayTeam.name} direct, ${homeTeam.name} ${awayTeam.name} live, prono ${homeTeam.name} ${awayTeam.name}, score ${homeTeam.name} ${awayTeam.name}, match en direct ${homeTeam.name}, ${league?.name || ""} en direct, football live scores`}
+        ogImage={homeTeam.logo || awayTeam.logo}
+        canonical={`https://livefoot.fun/match/${matchId}`}
+        matchData={{
+          homeTeam: homeTeam.name,
+          awayTeam: awayTeam.name,
+          league: league?.name || "Football",
+          date: fix?.fixture?.date || new Date().toISOString(),
+          status: isLive ? "live" : isFinished ? "finished" : "scheduled"
+        }}
+        faq={[
+          {
+            question: `Quand a lieu le match ${homeTeam.name} vs ${awayTeam.name} ?`,
+            answer: `Le match ${homeTeam.name} contre ${awayTeam.name} ${fix?.fixture?.date ? `a lieu le ${new Date(fix.fixture.date).toLocaleDateString("fr-FR", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : "est programmé prochainement"}. Suivez-le en direct sur LiveFoot.fun.`
+          },
+          {
+            question: `Où regarder ${homeTeam.name} vs ${awayTeam.name} en direct ?`,
+            answer: `Suivez le match ${homeTeam.name} vs ${awayTeam.name} en direct gratuitement sur LiveFoot.fun. Scores live, statistiques en temps réel, pronostics IA et compositions des équipes.`
+          },
+          {
+            question: `Quel est le pronostic pour ${homeTeam.name} vs ${awayTeam.name} ?`,
+            answer: `Consultez notre analyse IA complète avec pronostics gratuits basés sur la forme des équipes, les confrontations H2H, les blessures et les cotes bookmakers. Notre IA a 88% de réussite !`
+          },
+          {
+            question: `Quelle est l'historique H2H entre ${homeTeam.name} et ${awayTeam.name} ?`,
+            answer: `Retrouvez toutes les statistiques des confrontations directes (H2H) sur cette page. Historique complet des matchs précédents avec résultats et performances.`
+          }
+        ]}
       />
       <div className="px-2 sm:container py-4 sm:py-8">
         <div className="flex items-center justify-between mb-4 sm:mb-6">

@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/SEOHeadEnhanced";
 import { usePlayerDetailApi, usePlayerTrophies, usePlayerSeasons, useTopScorers, usePlayerSidelined } from "@/hooks/useApiFootball";
 import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar, ChevronDown, ChevronUp, Timer, Footprints, Crosshair, Shield, Zap, Trophy, Loader2, GitCompare, Search, X, Activity } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
@@ -154,16 +154,33 @@ const PlayerDetail = () => {
   return (
     <Layout>
       <SEOHead
-        title={`${player.name} - Stats & Profil`}
-        description={`${player.name} - ${player.position} au ${player.team}. ${player.goals} buts, ${player.assists} passes déc. en ${player.appearances} matchs.`}
+        title={`${player.name} (${player.team}) - Statistiques, Buts & Profil | LiveFoot`}
+        description={`${player.name} - ${player.position} ${player.team} ${new Date().getFullYear()}/${(new Date().getFullYear() + 1).toString().slice(-2)}. ${player.goals} buts, ${player.assists} passes décisives, ${player.appearances} matchs. Stats complètes, historique, trophées et comparaisons sur LiveFoot.fun !`}
+        keywords={`${player.name}, ${player.name} ${player.team}, ${player.name} stats, ${player.name} buts, ${player.position} ${player.team}, ${player.nationality || ""} football, ${player.name} transfert, ${player.name} performances`}
+        ogImage={player.photo}
+        canonical={`https://livefoot.fun/players/${playerId}`}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Person",
           name: player.name,
-          nationality: player.nationality,
-          jobTitle: `Professional Football Player - ${player.position}`,
-          memberOf: { "@type": "SportsTeam", name: player.team },
+          jobTitle: player.position,
+          worksFor: {
+            "@type": "SportsTeam",
+            name: player.team,
+          },
+          nationality: {
+            "@type": "Country",
+            name: player.nationality || "International",
+          },
+          height: player.height,
+          weight: player.weight,
+          image: player.photo,
         }}
+        breadcrumbs={[
+          { name: "Joueurs", url: "/players" },
+          { name: player.name, url: `/players/${playerId}` },
+        ]}
+        rating={{ value: player.rating ? parseFloat(player.rating) / 2 : 4.5, count: player.appearances || 100 }}
       />
       <div className="px-2 sm:container py-4 sm:py-8">
         <EntityBreadcrumbs steps={[
