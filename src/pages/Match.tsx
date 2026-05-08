@@ -371,7 +371,7 @@ const Match = () => {
                 <TabsTrigger 
                   key={tab.value} 
                   value={tab.value} 
-                  className="relative rounded-lg text-[10px] sm:text-xs whitespace-nowrap px-3 sm:px-4 py-1.5 sm:py-2 data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground z-10 transition-colors"
+                  className="relative rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap px-3 sm:px-4 py-2 sm:py-2.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md z-10 transition-all duration-200 hover:bg-muted/50"
                 >
                   {tab.label}
                 </TabsTrigger>
@@ -488,7 +488,7 @@ const Match = () => {
         </TabsContent>
 
         {/* Stats + Momentum + ShotMap */}
-        <TabsContent value="stats" className="mt-0 space-y-4">
+        <TabsContent value="stats" className="mt-0 space-y-6 focus-visible:outline-none">
           {/* Bar stats */}
           <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="bg-league-header px-4 py-2.5 border-b border-border">
@@ -508,25 +508,25 @@ const Match = () => {
                 const awayLeading = away > home;
 
                 return (
-                  <div key={stat.type} className="group">
-                    <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
-                      <span className={cn("font-black transition-colors", homeLeading ? "text-primary scale-110" : "text-muted-foreground")}>
+                  <div key={stat.type} className="group p-3 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center justify-between text-xs sm:text-sm mb-3">
+                      <span className={cn("font-black text-lg transition-all", homeLeading ? "text-primary scale-110" : "text-muted-foreground")}>
                         {home}{suffix}
                       </span>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 px-3 py-1 rounded-full">
                         {stat.type}
                       </span>
-                      <span className={cn("font-black transition-colors", awayLeading ? "text-destructive scale-110" : "text-muted-foreground")}>
+                      <span className={cn("font-black text-lg transition-all", awayLeading ? "text-destructive scale-110" : "text-muted-foreground")}>
                         {away}{suffix}
                       </span>
                     </div>
-                    <div className="flex h-1.5 rounded-full overflow-hidden bg-muted/50 border border-white/5">
+                    <div className="flex h-2.5 rounded-full overflow-hidden bg-muted border border-border/20">
                       <div 
-                        className={cn("transition-all duration-700 ease-out", homeLeading ? "bg-primary" : "bg-primary/40")} 
+                        className={cn("transition-all duration-700 ease-out", homeLeading ? "bg-primary shadow-[0_0_10px_rgba(34,197,94,0.3)]" : "bg-primary/40")} 
                         style={{ width: `${homePercent}%` }} 
                       />
                       <div 
-                        className={cn("transition-all duration-700 ease-out", awayLeading ? "bg-destructive" : "bg-destructive/40")} 
+                        className={cn("transition-all duration-700 ease-out", awayLeading ? "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.3)]" : "bg-destructive/40")} 
                         style={{ width: `${100 - homePercent}%` }} 
                       />
                     </div>
@@ -740,9 +740,10 @@ const Match = () => {
                       </h4>
                       <div className="space-y-1.5">
                         {(teamLineup.startXI || []).map((item: any, i: number) => (
-                          <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-muted/30">
-                            <span className="w-5 text-center text-[10px] font-bold text-muted-foreground">{item.player?.number}</span>
-                            <span className="text-xs text-foreground flex-1">{item.player?.name}</span>
+                          <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/40 transition-colors">
+                            <span className="w-6 text-center text-xs font-black text-primary bg-primary/10 rounded">{item.player?.number || "-"}</span>
+                            <span className="text-xs font-medium text-foreground flex-1 truncate">{item.player?.name}</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{item.player?.pos}</span>
                           </div>
                         ))}
                       </div>
@@ -1493,13 +1494,13 @@ function NextMatchesColumn({ teamId, teamName, teamLogo }: { teamId: string; tea
                 <p className="text-[9px] text-muted-foreground">{fix.time}</p>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  {fix.homeTeam?.logo && <img src={fix.homeTeam.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />}
-                  <span className="text-xs text-foreground truncate">{fix.homeTeam?.name}</span>
+                <div className="flex items-center gap-2">
+                  {fix.homeTeam?.logo ? <img src={fix.homeTeam.logo} alt="" className="h-5 w-5 object-contain flex-shrink-0" /> : <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[8px] font-bold">{fix.homeTeam?.name?.charAt(0)}</span>}
+                  <span className="text-xs font-medium text-foreground truncate">{fix.homeTeam?.name}</span>
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {fix.awayTeam?.logo && <img src={fix.awayTeam.logo} alt="" className="h-4 w-4 object-contain flex-shrink-0" />}
-                  <span className="text-xs text-foreground truncate">{fix.awayTeam?.name}</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {fix.awayTeam?.logo ? <img src={fix.awayTeam.logo} alt="" className="h-5 w-5 object-contain flex-shrink-0" /> : <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[8px] font-bold">{fix.awayTeam?.name?.charAt(0)}</span>}
+                  <span className="text-xs font-medium text-foreground truncate">{fix.awayTeam?.name}</span>
                 </div>
               </div>
               <span className="text-[9px] text-muted-foreground truncate max-w-16">
