@@ -328,8 +328,14 @@ export function useFixtureDetail(fixtureId: string) {
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 1 * 60 * 1000, // 1 minute
-    refetchInterval: 1 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: (query) => {
+      // Refresh every 30 seconds for live matches, 2 minutes for others
+      const data = query.state.data as any;
+      const isLive = data?.fixture?.status?.short && 
+        ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(data.fixture.status.short);
+      return isLive ? 30 * 1000 : 2 * 60 * 1000;
+    },
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });

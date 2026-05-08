@@ -18,7 +18,8 @@ const queryClient = new QueryClient({
       staleTime: 2 * 60 * 1000,
       gcTime: 30 * 60 * 1000,
       retry: 1,
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true, // Enable real-time updates when user returns to app
+      refetchOnReconnect: true,   // Refresh when network reconnects
     },
   },
 });
