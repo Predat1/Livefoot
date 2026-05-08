@@ -30,9 +30,6 @@ if ('serviceWorker' in navigator) {
 
 const rootElement = document.getElementById("root");
 const loadingElement = document.getElementById("root-loading");
-const failsafeLog = document.getElementById("failsafe-log");
-
-if (failsafeLog) failsafeLog.innerText += ' JS STARTED...';
 
 // Handler d'erreur global amélioré
 window.onerror = (message, source, lineno, colno, error) => {
@@ -56,7 +53,6 @@ window.onerror = (message, source, lineno, colno, error) => {
 };
 
 if (rootElement) {
-  if (failsafeLog) failsafeLog.innerText += ' RENDERING...';
   const root = createRoot(rootElement);
   root.render(
     <ErrorBoundary>
@@ -74,7 +70,6 @@ if (rootElement) {
         if (loadingElement.parentNode) {
           loadingElement.remove();
         }
-        if (failsafeLog) failsafeLog.innerText += ' LOADED.';
       }, 500);
     }, 800);
   }
