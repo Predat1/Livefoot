@@ -69,41 +69,64 @@ export interface BetSuggestion {
 
 const AI_CONFIG = {
   WEIGHTS: {
-    FORM: 0.35,
-    H2H: 0.20,
-    RANK: 0.25,
-    INJURIES: 0.20,
-    HOME_BONUS: 8,
+    FORM: 0.30,
+    H2H: 0.15,
+    RANK: 0.20,
+    INJURIES: 0.15,
+    HOME_BONUS: 6,
+    MOMENTUM: 0.12,
+    GOAL_DIFF: 0.08,
   },
   BASE_PROBS: {
-    HOME: 40,
-    DRAW: 28,
-    AWAY: 32,
+    HOME: 38,
+    DRAW: 26,
+    AWAY: 36,
+  },
+  THRESHOLDS: {
+    HIGH_CONFIDENCE: 60,
+    MEDIUM_CONFIDENCE: 45,
+    FORM_DOMINANCE: 12,
+    RANK_DOMINANCE: 4,
   }
 };
 
 
-// ─── Form Analysis ───────────────────────────────────────────
+// ─── Advanced Form Analysis ─────────────────────────────────
 
-function analyzeForm(form: TeamFormData[]): {
+interface FormAnalysis {
   winRate: number;
   avgGoalsScored: number;
   avgGoalsConceded: number;
   streak: string;
   streakLength: number;
   formScore: number;
-} {
+  momentum: number; // -1 to 1, positive = trending up
+  consistency: number; // 0-1, higher = more consistent
+  goalDifference: number;
+  xG: number; // Expected goals proxy
+  defensiveStrength: number; // 0-100
+  attackingStrength: number; // 0-100
+}
+
+function analyzeForm(form: TeamFormData[]): FormAnalysis {
   if (form.length === 0) {
-    return { winRate: 0.33, avgGoalsScored: 1.2, avgGoalsConceded: 1.2, streak: "N", streakLength: 0, formScore: 50 };
+    return { 
+      winRate: 0.33, avgGoalsScored: 1.2, avgGoalsConceded: 1.2, 
+      streak: "N", streakLength: 0, formScore: 50,
+      momentum: 0, consistency: 0.5, goalDifference: 0,
+      xG: 1.2, defensiveStrength: 50, attackingStrength: 50
+    };
   }
 
   const wins = form.filter(m => m.result === "W").length;
   const draws = form.filter(m => m.result === "D").length;
+  const losses = form.filter(m => m.result === "L").length;
   const total = form.length;
 
   const winRate = wins / total;
   const avgGoalsScored = form.reduce((s, m) => s + m.goalsFor, 0) / total;
   const avgGoalsConceded = form.reduce((s, m) => s + m.goalsAgainst, 0) / total;
+  const goalDifference = form.reduce((s, m) => s + (m.goalsFor - m.goalsAgainst), 0);
 
   // Calculate streak
   let streak = form[0]?.result || "N";
@@ -114,20 +137,97 @@ function analyzeForm(form: TeamFormData[]): {
     } else break;
   }
 
-  // Form score (0-100) — weighted by recency
-  const weights = [3, 2.5, 2, 1.5, 1]; // Most recent match = most important
+  // Advanced form score with recency weights
+  const weights = [5, 4, 3, 2, 1.5, 1, 0.8, 0.6, 0.4, 0.3];
   let formScore = 0;
   let totalWeight = 0;
-  for (let i = 0; i < Math.min(form.length, 5); i++) {
-    const w = weights[i] || 1;
+  
+  for (let i = 0; i < Math.min(form.length, 10); i++) {
+    const w = weights[i] || 0.2;
     totalWeight += w;
     if (form[i].result === "W") formScore += w * 100;
-    else if (form[i].result === "D") formScore += w * 40;
-    else formScore += w * 0;
+    else if (form[i].result === "D") formScore += w * 50;
+    else formScore += w * 15; // Loss still gives some points for playing
   }
   formScore = totalWeight > 0 ? Math.round(formScore / totalWeight) : 50;
 
-  return { winRate, avgGoalsScored, avgGoalsConceded, streak, streakLength, formScore };
+  // Calculate momentum (trend over last 3 vs previous matches)
+  const recent3 = form.slice(0, Math.min(3, form.length));
+  const previous = form.slice(3, Math.min(6, form.length));
+  
+  const recentScore = recent3.reduce((s, m) => s + (m.result === "W" ? 3 : m.result === "D" ? 1 : 0), 0) / (recent3.length * 3);
+  const prevScore = previous.length > 0 
+    ? previous.reduce((s, m) => s + (m.result === "W" ? 3 : m.result === "D" ? 1 : 0), 0) / (previous.length * 3)
+    : recentScore;
+  
+  const momentum = prevScore > 0 ? Math.min(1, Math.max(-1, (recentScore - prevScore) * 2)) : 0;
+
+  // Calculate consistency (lower variance = higher consistency)
+  const results = form.map(m => m.result === "W" ? 3 : m.result === "D" ? 1 : 0);
+  const mean = results.reduce((a, b) => a + b, 0) / results.length;
+  const variance = results.reduce((s, r) => s + Math.pow(r - mean, 2), 0) / results.length;
+  const consistency = Math.max(0, 1 - (variance / 4));
+
+  // Calculate xG proxy based on shot quality indicators
+  const xG = (avgGoalsScored * 0.7) + (form.filter(m => m.goalsFor >= 2).length / total * 1.5);
+
+  // Defensive/Attacking strength (0-100)
+  const defensiveStrength = Math.min(100, Math.max(20, 100 - (avgGoalsConceded * 25)));
+  const attackingStrength = Math.min(100, Math.max(20, avgGoalsScored * 35));
+
+  return { 
+    winRate, avgGoalsScored, avgGoalsConceded, 
+    streak, streakLength, formScore,
+    momentum, consistency, goalDifference,
+    xG, defensiveStrength, attackingStrength
+  };
+}
+
+// ─── Poisson Distribution for Score Prediction ────────────────
+
+function poissonProbability(lambda: number, k: number): number {
+  return (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
+}
+
+function factorial(n: number): number {
+  if (n <= 1) return 1;
+  let result = 1;
+  for (let i = 2; i <= n; i++) result *= i;
+  return result;
+}
+
+function predictScoreWithPoisson(
+  homeAttack: number, 
+  homeDefense: number,
+  awayAttack: number, 
+  awayDefense: number,
+  homeBonus: number
+): { home: number; away: number; probability: number } {
+  // Adjusted attack/defense ratings
+  const homeStrength = (homeAttack / 50) * (2 - awayDefense / 50) * (1 + homeBonus / 100);
+  const awayStrength = (awayAttack / 50) * (2 - homeDefense / 50);
+  
+  // Base lambda for Poisson
+  const lambdaHome = Math.max(0.3, homeStrength * 1.4);
+  const lambdaAway = Math.max(0.3, awayStrength * 1.2);
+  
+  // Find most likely score
+  let maxProb = 0;
+  let bestHome = 0;
+  let bestAway = 0;
+  
+  for (let h = 0; h <= 5; h++) {
+    for (let a = 0; a <= 5; a++) {
+      const prob = poissonProbability(lambdaHome, h) * poissonProbability(lambdaAway, a);
+      if (prob > maxProb) {
+        maxProb = prob;
+        bestHome = h;
+        bestAway = a;
+      }
+    }
+  }
+  
+  return { home: bestHome, away: bestAway, probability: maxProb };
 }
 
 // ─── H2H Analysis ────────────────────────────────────────────
@@ -414,30 +514,49 @@ export function generatePrediction(params: {
     confidence = drawProb;
   }
 
-  // ─── Predict Score ─────────────────────────────────────────
-  const avgHomeGoals = (hForm.avgGoalsScored * 0.6 + aForm.avgGoalsConceded * 0.4);
-  const avgAwayGoals = (aForm.avgGoalsScored * 0.6 + hForm.avgGoalsConceded * 0.4);
-
-  let predictedHome = Math.round(avgHomeGoals * (1 + (totalWeight > 0 ? 0.1 : -0.1)));
-  let predictedAway = Math.round(avgAwayGoals * (1 + (totalWeight < 0 ? 0.1 : -0.1)));
-
-  // Ensure score consistency with outcome
+  // ─── Advanced Score Prediction with Poisson ────────────────
+  const poissonPrediction = predictScoreWithPoisson(
+    hForm.attackingStrength,
+    hForm.defensiveStrength,
+    aForm.attackingStrength,
+    aForm.defensiveStrength,
+    AI_CONFIG.WEIGHTS.HOME_BONUS
+  );
+  
+  let predictedHome = poissonPrediction.home;
+  let predictedAway = poissonPrediction.away;
+  
+  // Adjust based on momentum
+  if (hForm.momentum > 0.3) predictedHome = Math.min(5, predictedHome + 1);
+  if (aForm.momentum > 0.3) predictedAway = Math.min(5, predictedAway + 1);
+  
+  // Ensure score consistency with outcome probability
   if (outcome === "home" && predictedHome <= predictedAway) {
-    predictedHome = predictedAway + 1;
+    predictedHome = Math.min(5, predictedAway + Math.max(1, Math.round((homeProb - drawProb) / 20)));
   } else if (outcome === "away" && predictedAway <= predictedHome) {
-    predictedAway = predictedHome + 1;
+    predictedAway = Math.min(5, predictedHome + Math.max(1, Math.round((awayProb - drawProb) / 20)));
   } else if (outcome === "draw") {
+    // Find closest equal score to prediction
+    const avg = Math.round((predictedHome + predictedAway) / 2);
+    predictedHome = Math.min(5, avg);
     predictedAway = predictedHome;
   }
 
-  // Clamp to reasonable score
+  // Clamp to reasonable score range
   predictedHome = Math.max(0, Math.min(5, predictedHome));
   predictedAway = Math.max(0, Math.min(5, predictedAway));
+  
+  // Calculate expected goals (xG) for display
+  const xgHome = Number(((hForm.avgGoalsScored * 0.6 + aForm.avgGoalsConceded * 0.4) * (1 + (hForm.momentum * 0.2))).toFixed(2));
+  const xgAway = Number(((aForm.avgGoalsScored * 0.6 + hForm.avgGoalsConceded * 0.4) * (1 + (aForm.momentum * 0.2))).toFixed(2));
 
-  // ─── Risk Level ────────────────────────────────────────────
+  // ─── Risk Level with Consistency Factor ────────────────────
   let risk: "low" | "medium" | "high";
-  if (confidence >= 55) risk = "low";
-  else if (confidence >= 40) risk = "medium";
+  const avgConsistency = (hForm.consistency + aForm.consistency) / 2;
+  const adjustedConfidence = confidence * (0.8 + avgConsistency * 0.2);
+  
+  if (adjustedConfidence >= AI_CONFIG.THRESHOLDS.HIGH_CONFIDENCE) risk = "low";
+  else if (adjustedConfidence >= AI_CONFIG.THRESHOLDS.MEDIUM_CONFIDENCE) risk = "medium";
   else risk = "high";
 
   // ─── Advice ────────────────────────────────────────────────
@@ -528,14 +647,17 @@ export function generatePrediction(params: {
     bestBets.push({ type: "Special", label: `${homeTeamName} Clean Sheet`, confidence: 65, emoji: "🔒" });
   }
 
+  // Add xG to result
   return {
     outcome,
-    confidence,
+    confidence: Math.round(adjustedConfidence),
     predictedScore: { home: predictedHome, away: predictedAway },
     probabilities: { home: homeProb, draw: drawProb, away: awayProb },
-    factors: factors.slice(0, 5), // Max 5 factors
+    factors: factors.slice(0, 6),
     advice,
     risk,
     bestBets,
+    xgHome,
+    xgAway,
   };
 }
