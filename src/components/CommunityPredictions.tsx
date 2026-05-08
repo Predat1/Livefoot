@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Send, Loader2, Trophy, Minus, Plus, TrendingUp, BarChart3, Sparkles, Swords } from "lucide-react";
+import { Users, Send, Loader2, Trophy, Minus, Plus, TrendingUp, BarChart3, Sparkles, Swords, Crown, Target, Medal, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface CommunityPredictionsProps {
   fixtureId: string;
@@ -20,6 +22,12 @@ interface Prediction {
   user_id: string;
   home_score: number;
   away_score: number;
+  created_at?: string;
+  profiles?: {
+    display_name: string;
+    avatar_url?: string;
+    points?: number;
+  };
 }
 
 interface PredictionStats {
@@ -43,10 +51,18 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [recentPredictions, setRecentPredictions] = useState<Prediction[]>([]);
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [totalParticipants, setTotalParticipants] = useState(0);
 
   useEffect(() => {
     loadPredictions();
-  }, [fixtureId]);
+    // Auto-refresh toutes les 30 secondes pour les matchs en cours
+    const interval = setInterval(() => {
+      loadPredictions();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [fixtureId, user]);
 
   const loadPredictions = async () => {
     setLoading(true);
@@ -57,7 +73,22 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
         _fixture_id: fixtureId,
       });
       if (statsError) throw statsError;
-      if (statsData) setServerStats(statsData as unknown as PredictionStats);
+      if (statsData) {
+        setServerStats(statsData as unknown as PredictionStats);
+        setTotalParticipants((statsData as any).total || 0);
+      }
+
+      // Load recent predictions with user info (top 5)
+      const { data: recentData } = await supabase
+        .from("match_predictions")
+        .select("id, user_id, home_score, away_score, created_at, profiles(display_name, avatar_url, points)")
+        .eq("fixture_id", fixtureId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      
+      if (recentData) {
+        setRecentPredictions(recentData as unknown as Prediction[]);
+      }
 
       // Load only the current user's prediction (if any)
       if (user) {
@@ -74,6 +105,15 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
           setMyHome(mine.home_score);
           setMyAway(mine.away_score);
           setHasSubmitted(true);
+        }
+
+        // Get user rank
+        const { data: rankData } = await supabase.rpc("get_prediction_rank", {
+          _fixture_id: fixtureId,
+          _user_id: user.id
+        });
+        if (rankData !== null) {
+          setUserRank(rankData as number);
         }
       }
     } catch (err) {
@@ -276,6 +316,20 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
           </div>
 
           <div className="mt-8 sm:mt-10 max-w-sm mx-auto">
+            {/* User Rank Badge */}
+            {user && userRank && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20"
+              >
+                <Medal className="h-4 w-4 text-amber-500" />
+                <span className="text-xs font-bold text-amber-500">
+                  Votre rang: #{userRank} sur {totalParticipants}
+                </span>
+              </motion.div>
+            )}
+
             {!user ? (
               <div className="text-center space-y-4">
                 <p className="text-[10px] sm:text-xs text-muted-foreground">Rejoignez l'arène pour soumettre votre prono et gagner des points !</p>
@@ -301,12 +355,12 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : justSubmitted ? (
                   <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5" /> PRONO ENREGISTRÉ !
+                    <Trophy className="h-5 w-5" /> PRONO ENREGISTRÉ ! +10 PTS
                   </motion.div>
                 ) : (
                   <>
                     <Send className="h-4 w-4" /> 
-                    {hasSubmitted ? "MODIFIER MON SCORE" : "VALIDER LE PRONOSTIC"}
+                    {hasSubmitted ? "MODIFIER MON PRONOSTIC" : "VALIDER MON PRONOSTIC"}
                   </>
                 )}
               </motion.button>
@@ -314,6 +368,53 @@ const CommunityPredictions = ({ fixtureId, homeTeamName, awayTeamName, homeLogo,
           </div>
         </div>
       </div>
+
+      {/* Recent Predictions Feed */}
+      {recentPredictions.length > 0 && (
+        <div className="rounded-3xl bg-card border border-border/50 p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h5 className="text-xs sm:text-sm font-black text-foreground flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" /> Derniers pronostics
+            </h5>
+            <span className="text-[10px] text-muted-foreground">En temps réel</span>
+          </div>
+          <div className="space-y-2">
+            <AnimatePresence>
+              {recentPredictions.map((pred, i) => (
+                <motion.div
+                  key={pred.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-center gap-3 p-2 rounded-xl bg-muted/30"
+                >
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    {pred.profiles?.avatar_url ? (
+                      <img src={pred.profiles.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <User className="h-4 w-4 text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-foreground truncate">
+                      {pred.profiles?.display_name || "Anonyme"}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">
+                      {pred.created_at && formatDistanceToNow(new Date(pred.created_at), { addSuffix: true, locale: fr })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50">
+                    <span className="text-sm font-black text-primary">{pred.home_score}</span>
+                    <span className="text-xs text-muted-foreground">-</span>
+                    <span className="text-sm font-black text-accent">{pred.away_score}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
 
       {/* Enhanced Community Trends */}
       {stats && (
