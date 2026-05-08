@@ -4,7 +4,7 @@ import SEOHead from "@/components/SEOHead";
 import { useFixturesByDate, TIER1_IDS, TIER2_IDS, TIER3_IDS } from "@/hooks/useApiFootball";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
-import { Brain, Calendar, Sparkles, TrendingUp, Trophy, Zap, ChevronRight, Filter, Shield, Gift, ChevronLeft, Loader2 } from "lucide-react";
+import { Brain, Calendar, Sparkles, TrendingUp, Trophy, Zap, ChevronRight, Filter, Shield, Gift, ChevronLeft, Loader2, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { format, addDays, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -61,7 +61,22 @@ const DailyPicks = () => {
     <Layout>
       <SEOHead
         title={`Pronostics IA du ${format(selectedDate, "d MMMM yyyy", { locale: fr })} — LiveFoot AI`}
-        description="Découvrez les prédictions ultra-fiables générées par l'intelligence artificielle LiveFoot pour les matchs de football du jour."
+        description={`Découvrez les prédictions ultra-fiables générées par l'IA LiveFoot pour les matchs de football du ${format(selectedDate, "d MMMM yyyy", { locale: fr })}. Analyse des cotes, formes, blessures et H2H. 88% de réussite !`}
+        keywords="pronostics foot, pronos IA, prédictions football, paris sportifs, cotes bookmakers, analyse matchs, LiveFoot AI"
+        canonical={`https://livefoot.fun/daily-picks?date=${format(selectedDate, "yyyy-MM-dd")}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": `Pronostics IA du ${format(selectedDate, "d MMMM yyyy", { locale: fr })}`,
+          "description": "Prédictions de football générées par intelligence artificielle",
+          "url": `https://livefoot.fun/daily-picks?date=${format(selectedDate, "yyyy-MM-dd")}`,
+          "datePublished": selectedDate.toISOString(),
+          "publisher": {
+            "@type": "Organization",
+            "name": "LiveFoot AI",
+            "logo": "https://livefoot.fun/pwa-512x512.png"
+          }
+        }}
       />
 
       <div className="container max-w-5xl py-6 sm:py-10">
