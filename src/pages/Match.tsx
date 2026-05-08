@@ -1165,26 +1165,26 @@ const Match = () => {
             {!isLive && !isFinished && <span className="text-xs font-black text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full">À venir</span>}
           </div>
 
-          <div className="relative p-4 sm:p-10">
-            <div className="flex flex-row items-center justify-between gap-2 sm:gap-4">
+          <div className="relative px-2 py-4 sm:p-10">
+            <div className="flex flex-row items-center justify-center gap-3 sm:gap-8">
               
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex-1 text-center min-w-0"
+                className="flex-1 text-center min-w-0 max-w-[35%]"
               >
                 <Link to={fix?.teams?.home?.id ? `/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
-                  <div className="relative mb-2 sm:mb-4 flex items-center justify-center h-14 w-14 sm:h-28 sm:w-28">
+                  <div className="relative mb-1 sm:mb-4 flex items-center justify-center h-16 w-16 sm:h-28 sm:w-28">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {homeTeam.logo ? (
-                      <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-10 w-10 sm:h-24 sm:w-24 object-contain drop-shadow-xl" />
+                      <img src={homeTeam.logo} alt={homeTeam.name} className="relative h-12 w-12 sm:h-24 sm:w-24 object-contain drop-shadow-xl" />
                     ) : (
-                      <div className="h-10 w-10 sm:h-24 sm:w-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-lg sm:text-3xl">
+                      <div className="h-12 w-12 sm:h-24 sm:w-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-xl sm:text-3xl">
                         {homeTeam.name.charAt(0)}
                       </div>
                     )}
                   </div>
-                  <h2 className="text-xs sm:text-xl font-black text-foreground truncate w-full px-1 leading-tight">{homeTeam.name}</h2>
+                  <h2 className="text-sm sm:text-xl font-black text-foreground truncate w-full leading-tight">{homeTeam.name}</h2>
                 </Link>
                 {homeTeamId && (
                   <div className="mt-2 hidden sm:flex justify-center">
@@ -1196,7 +1196,7 @@ const Match = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center flex-shrink-0 px-2 sm:px-0 z-10 w-full sm:w-auto"
+                className="text-center flex-shrink-0 px-1 sm:px-0 z-10"
               >
                 {hasStats ? (
                   <div className="flex flex-col items-center gap-1 sm:gap-2">
@@ -1242,20 +1242,20 @@ const Match = () => {
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex-1 text-center min-w-0"
+                className="flex-1 text-center min-w-0 max-w-[35%]"
               >
                 <Link to={fix?.teams?.away?.id ? `/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
-                  <div className="relative mb-2 sm:mb-4 flex items-center justify-center h-14 w-14 sm:h-28 sm:w-28">
+                  <div className="relative mb-1 sm:mb-4 flex items-center justify-center h-16 w-16 sm:h-28 sm:w-28">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {awayTeam.logo ? (
-                      <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-10 w-10 sm:h-24 sm:w-24 object-contain drop-shadow-xl" />
+                      <img src={awayTeam.logo} alt={awayTeam.name} className="relative h-12 w-12 sm:h-24 sm:w-24 object-contain drop-shadow-xl" />
                     ) : (
-                      <div className="h-10 w-10 sm:h-24 sm:w-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-lg sm:text-3xl">
+                      <div className="h-12 w-12 sm:h-24 sm:w-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-xl sm:text-3xl">
                         {awayTeam.name.charAt(0)}
                       </div>
                     )}
                   </div>
-                  <h2 className="text-xs sm:text-xl font-black text-foreground truncate w-full px-1 leading-tight">{awayTeam.name}</h2>
+                  <h2 className="text-sm sm:text-xl font-black text-foreground truncate w-full leading-tight">{awayTeam.name}</h2>
                 </Link>
                 {awayTeamId && (
                   <div className="mt-2 hidden sm:flex justify-center">
