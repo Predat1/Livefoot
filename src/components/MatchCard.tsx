@@ -65,10 +65,10 @@ const MatchCard = ({ match }: MatchCardProps) => {
       </motion.button>
 
       {/* Home Team */}
-      <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
+      <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
         <span
           className={cn(
-            "text-sm sm:text-base font-semibold transition-colors truncate text-right",
+            "text-xs sm:text-sm font-semibold transition-colors truncate text-right max-w-[80px] sm:max-w-none",
             isFinished && homeScore > awayScore
               ? "text-foreground"
               : isFinished
@@ -80,11 +80,11 @@ const MatchCard = ({ match }: MatchCardProps) => {
         </span>
         <motion.div
           className="flex-shrink-0"
-          whileHover={{ scale: 1.15, rotate: -5 }}
+          whileHover={{ scale: 1.1 }}
           transition={{ type: "spring", stiffness: 400, damping: 15 }}
         >
           {match.homeTeam.logo?.startsWith("http") ? (
-            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
+            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
           ) : (
             <TeamLogo teamName={match.homeTeam.name} size="sm" />
           )}
@@ -92,7 +92,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
       </div>
 
       {/* Score / Time */}
-      <div className="mx-3 sm:mx-6 flex min-w-[80px] sm:min-w-[110px] flex-col items-center flex-shrink-0">
+      <div className="mx-2 sm:mx-6 flex min-w-[70px] sm:min-w-[110px] flex-col items-center flex-shrink-0">
         {isLive || isFinished ? (
           <motion.div
             className="flex items-center gap-1.5 sm:gap-2.5"
@@ -163,21 +163,21 @@ const MatchCard = ({ match }: MatchCardProps) => {
       </div>
 
       {/* Away Team */}
-      <div className="flex flex-1 items-center gap-1.5 sm:gap-3 min-w-0">
+      <div className="flex flex-1 items-center gap-2 sm:gap-3 min-w-0">
         <motion.div
           className="flex-shrink-0"
-          whileHover={{ scale: 1.15, rotate: 5 }}
+          whileHover={{ scale: 1.1 }}
           transition={{ type: "spring", stiffness: 400, damping: 15 }}
         >
           {match.awayTeam.logo?.startsWith("http") ? (
-            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
+            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
           ) : (
             <TeamLogo teamName={match.awayTeam.name} size="sm" />
           )}
         </motion.div>
         <span
           className={cn(
-            "text-sm sm:text-base font-semibold transition-colors truncate",
+            "text-xs sm:text-sm font-semibold transition-colors truncate max-w-[80px] sm:max-w-none",
             isFinished && awayScore > homeScore
               ? "text-foreground"
               : isFinished
