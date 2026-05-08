@@ -22,7 +22,20 @@
     <meta name="google" content="notranslate" />
     <meta name="googlebot" content="index, follow" />
     <style>
-      body { background-color: #0c0f1d !important; margin: 0; padding: 0; color: white; }
+      /* Theme-aware loader styles */
+      :root {
+        --loader-bg: #f8fafc;
+        --loader-text: #0f172a;
+        --loader-spinner: #22c55e;
+      }
+      .dark {
+        --loader-bg: #0c0f1d;
+        --loader-text: #ffffff;
+        --loader-spinner: #22c55e;
+      }
+      
+      html, body { margin: 0; padding: 0; }
+      
       #root-loading {
         position: fixed;
         inset: 0;
@@ -30,19 +43,37 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background-color: #0c0f1d;
+        background-color: var(--loader-bg);
         z-index: 9999;
+        transition: background-color 0.3s ease;
+      }
+      #root-loading > div:last-child {
+        color: var(--loader-text);
       }
       .spinner {
         width: 32px;
         height: 32px;
-        border: 3px solid rgba(255,255,255,0.05);
-        border-left-color: #22c55e;
+        border: 3px solid rgba(128,128,128,0.15);
+        border-left-color: var(--loader-spinner);
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
       @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+    
+    <!-- Theme initialization script - prevents flash -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const resolvedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+        if (resolvedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#22c55e" />
@@ -87,7 +118,7 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   </head>
 
-  <body>
+  <body class="bg-background text-foreground antialiased">
     <div id="root">
       <div id="root-loading">
         <div class="spinner"></div>
