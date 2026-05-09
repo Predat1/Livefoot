@@ -16,6 +16,11 @@ import {
 } from "lucide-react";
 import LiveFootAIPrediction from "@/components/LiveFootAIPrediction";
 import OddsAnomalyDetector from "@/components/OddsAnomalyDetector";
+import ValueBetDetector from "@/components/ValueBetDetector";
+import MatchAIChat from "@/components/MatchAIChat";
+import LiveScenarioSimulator from "@/components/LiveScenarioSimulator";
+import BettingProfileWidget from "@/components/BettingProfileWidget";
+import PredictiveAlerts from "@/components/PredictiveAlerts";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug, extractIdFromSlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -925,6 +930,59 @@ const Match = () => {
               }}
             />
           </SectionErrorBoundary>
+
+          {/* Value Bet Detector */}
+          <SectionErrorBoundary sectionName="Value Bet">
+            <ValueBetDetector
+              odds={oddsData || []}
+              prediction={aiExpertPrediction as any}
+              homeTeamName={homeTeam.name}
+              awayTeamName={awayTeam.name}
+            />
+          </SectionErrorBoundary>
+
+          {/* IA Conversationnelle */}
+          <SectionErrorBoundary sectionName="AI Chat">
+            <MatchAIChat
+              fixtureId={matchId}
+              homeTeamName={homeTeam.name}
+              awayTeamName={awayTeam.name}
+              leagueName={league?.name}
+              prediction={aiExpertPrediction as any}
+            />
+          </SectionErrorBoundary>
+
+          {/* Simulateur de scénarios live */}
+          <SectionErrorBoundary sectionName="Scenario Simulator">
+            <LiveScenarioSimulator
+              homeTeamName={homeTeam.name}
+              awayTeamName={awayTeam.name}
+              currentMinute={fix?.fixture?.status?.elapsed || 45}
+              currentHomeScore={fix?.goals?.home ?? 0}
+              currentAwayScore={fix?.goals?.away ?? 0}
+              baseProbabilities={
+                (aiExpertPrediction as any)?.probabilities ||
+                { home: 45, draw: 28, away: 27 }
+              }
+              xgHome={(aiExpertPrediction as any)?.xgHome || 1.3}
+              xgAway={(aiExpertPrediction as any)?.xgAway || 1.0}
+            />
+          </SectionErrorBoundary>
+
+          {/* Profil parieur */}
+          <SectionErrorBoundary sectionName="Betting Profile">
+            <BettingProfileWidget />
+          </SectionErrorBoundary>
+
+          {/* Alertes prédictives */}
+          <SectionErrorBoundary sectionName="Predictive Alerts">
+            <PredictiveAlerts
+              fixtureId={matchId}
+              homeTeamName={homeTeam.name}
+              awayTeamName={awayTeam.name}
+            />
+          </SectionErrorBoundary>
+
         </TabsContent>
 
         {/* H2H */}

@@ -12,35 +12,50 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 // ─── Features par plan ───────────────────────────────────────
+
+// Features de base communes à tous les plans
+const BASE_FEATURES = [
+  { icon: "🤖", text: "Accès illimité à l'IA AnalystePro V4", highlight: false },
+  { icon: "🎯", text: "Détecteur de matchs truqués & anomalies de cotes", highlight: false },
+  { icon: "📈", text: "Value Bets exclusifs générés par l'IA", highlight: false },
+  { icon: "📊", text: "Confiance par marché (1X2, BTTS, O/U, Handicap)", highlight: false },
+  { icon: "🔢", text: "Modèle Double Poisson Dixon-Coles & ELO", highlight: false },
+  { icon: "🚫", text: "Sans publicité", highlight: false },
+];
+
 const WEEKLY_FEATURES = [
-  { icon: "✅", text: "AnalystePro V4 — Pronos 1X2 / BTTS / O/U", highlight: false },
-  { icon: "✅", text: "Score prédit par modèle Poisson Dixon-Coles", highlight: false },
-  { icon: "✅", text: "Confiance calibrée + niveau de risque", highlight: false },
-  { icon: "❌", text: "Value Bet Détecteur temps réel", highlight: false, locked: true },
-  { icon: "❌", text: "IA Conversationnelle sur chaque match", highlight: false, locked: true },
-  { icon: "❌", text: "Simulateur de scénarios live", highlight: false, locked: true },
-  { icon: "❌", text: "Profil parieur personnalisé", highlight: false, locked: true },
-  { icon: "❌", text: "Alertes push prédictives", highlight: false, locked: true },
+  ...BASE_FEATURES,
+  { icon: "🔒", text: "Value Bet Détecteur temps réel", highlight: false, locked: true },
+  { icon: "🔒", text: "IA Conversationnelle sur chaque match", highlight: false, locked: true },
+  { icon: "🔒", text: "Simulateur de scénarios live", highlight: false, locked: true },
+  { icon: "🔒", text: "Profil parieur personnalisé", highlight: false, locked: true },
+  { icon: "🔒", text: "Alertes push prédictives", highlight: false, locked: true },
 ];
 
 const MONTHLY_FEATURES = [
-  { icon: "✅", text: "Tout le plan Hebdomadaire", highlight: false },
+  ...BASE_FEATURES,
   { icon: "🔥", text: "Value Bet Détecteur temps réel", highlight: true },
   { icon: "🧠", text: "IA Conversationnelle sur chaque match", highlight: true },
-  { icon: "❌", text: "Simulateur de scénarios live", highlight: false, locked: true },
-  { icon: "❌", text: "Profil parieur personnalisé", highlight: false, locked: true },
-  { icon: "❌", text: "Alertes push prédictives", highlight: false, locked: true },
+  { icon: "🔒", text: "Simulateur de scénarios live", highlight: false, locked: true },
+  { icon: "🔒", text: "Profil parieur personnalisé", highlight: false, locked: true },
+  { icon: "🔒", text: "Alertes push prédictives", highlight: false, locked: true },
 ];
 
 const QUARTERLY_FEATURES = [
-  { icon: "✅", text: "Tout le plan Mensuel", highlight: false },
+  ...BASE_FEATURES,
+  { icon: "🔥", text: "Value Bet Détecteur temps réel", highlight: false },
+  { icon: "🧠", text: "IA Conversationnelle sur chaque match", highlight: false },
   { icon: "🔄", text: "Simulateur de scénarios live (Poisson interactif)", highlight: true },
   { icon: "🎯", text: "Profil parieur personnalisé (IA adaptive)", highlight: true },
-  { icon: "❌", text: "Alertes push prédictives", highlight: false, locked: true },
+  { icon: "🔒", text: "Alertes push prédictives", highlight: false, locked: true },
 ];
 
 const ANNUAL_FEATURES = [
-  { icon: "✅", text: "Tout le plan Trimestriel", highlight: false },
+  ...BASE_FEATURES,
+  { icon: "🔥", text: "Value Bet Détecteur temps réel", highlight: false },
+  { icon: "🧠", text: "IA Conversationnelle sur chaque match", highlight: false },
+  { icon: "🔄", text: "Simulateur de scénarios live", highlight: false },
+  { icon: "🎯", text: "Profil parieur personnalisé", highlight: false },
   { icon: "⚡", text: "Alertes push prédictives exclusives", highlight: true },
   { icon: "👑", text: "Accès prioritaire aux nouvelles fonctionnalités", highlight: true },
   { icon: "💰", text: "Économie instantanée de 90€ vs mensuel", highlight: true },
