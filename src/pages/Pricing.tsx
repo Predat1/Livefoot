@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 
-import { Check, Shield, Zap, Target, Lock, Crown, ArrowLeft, Loader2 } from "lucide-react";
+import { Check, Shield, Zap, Target, Lock, Crown, ArrowLeft, Loader2, Brain, TrendingUp, Sparkles, Bell, Sliders, MessageSquare, Flame, ChevronRight, Star, AlertTriangle, BarChart3, Repeat2 } from "lucide-react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,7 +147,7 @@ export default function Pricing() {
               transition={{ delay: 0.2 }}
               className="text-base sm:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed"
             >
-              Débloquez l'IA <strong className="text-white">AnalystePro V3</strong>. Un algorithme propriétaire conçu pour repérer les failles des bookmakers, les mouvements de cotes suspects et les Value Bets à forte rentabilité.
+              Débloquez l'IA <strong className="text-white">AnalystePro V4</strong>. Un algorithme propriétaire conçu pour repérer les failles des bookmakers, les mouvements de cotes suspects et les Value Bets à forte rentabilité.
             </motion.p>
           </div>
 
@@ -339,6 +339,206 @@ export default function Pricing() {
             </motion.div>
           </div>
 
+          {/* ═══════════════════════════════════════════════════════════════
+               SECTION : 10 ANS D'AVANCE — Fonctionnalités exclusives
+          ═══════════════════════════════════════════════════════════════ */}
+          <div className="mb-28">
+            {/* Header section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-black uppercase tracking-widest mb-5">
+                <Sparkles className="h-3 w-3" /> Exclusif VIP — Inexistant chez nos concurrents
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 leading-tight">
+                10 ans d'avance sur <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">l'industrie</span>
+              </h2>
+              <p className="text-white/50 text-base max-w-xl mx-auto">Ces 5 fonctionnalités n'existent sur aucun autre service de pronostics au monde. Elles sont <strong className="text-white">réservées aux membres VIP</strong>.</p>
+            </motion.div>
+
+            <div className="space-y-6 max-w-5xl mx-auto">
+
+              {/* Feature 1: IA Conversationnelle */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="relative rounded-3xl overflow-hidden border border-violet-500/20 bg-gradient-to-r from-violet-950/60 to-[#0a0d14] p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group hover:border-violet-500/40 transition-all"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-violet-400 to-violet-700 rounded-l-3xl" />
+                <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-violet-500/5 to-transparent pointer-events-none" />
+                <div className="shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center shadow-lg shadow-violet-500/10">
+                    <MessageSquare className="h-7 w-7 text-violet-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">Exclusif Monde</span>
+                    <span className="text-[10px] font-bold text-white/30">Inexistant sur BeSoccer, SofaScore, Flashscore</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white mb-2">🧠 IA Conversationnelle sur chaque match</h3>
+                  <p className="text-white/60 text-sm leading-relaxed mb-4">Posez n'importe quelle question à l'IA directement sur la page du match. <em className="text-white/80">"Et si Benzema ne joue pas ?"</em> <em className="text-white/80">"Pourquoi tu préfères le nul ?"</em> — L'IA répond avec les données réelles du match en contexte.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["Analyse tactique en temps réel", "Scénarios alternatifs", "Explication des probabilités"].map(t => (
+                      <span key={t} className="text-[11px] text-violet-300 bg-violet-500/10 border border-violet-500/15 px-3 py-1 rounded-full font-semibold">{t}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="shrink-0 self-center opacity-30 group-hover:opacity-60 transition-opacity">
+                  <ChevronRight className="h-6 w-6 text-violet-400" />
+                </div>
+              </motion.div>
+
+              {/* Feature 2: Value Bet Detector */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="relative rounded-3xl overflow-hidden border border-emerald-500/20 bg-gradient-to-r from-emerald-950/60 to-[#0a0d14] p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group hover:border-emerald-500/40 transition-all"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-700 rounded-l-3xl" />
+                <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-emerald-500/5 to-transparent pointer-events-none" />
+                <div className="shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                    <TrendingUp className="h-7 w-7 text-emerald-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">ROI Prouvé</span>
+                    <span className="text-[10px] font-bold text-white/30">Les bookmakers détestent ça</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white mb-2">📊 Détecteur de Value Bet en temps réel</h3>
+                  <p className="text-white/60 text-sm leading-relaxed mb-4">Notre modèle Poisson Dixon-Coles calcule la probabilité réelle de chaque résultat. Quand elle dépasse la probabilité implicite d'un bookmaker de <strong className="text-white">+15%</strong>, un badge <strong className="text-emerald-400">VALUE BET 🔥</strong> s'allume instantanément — avant que la cote ne se corrige.</p>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                    <AlertTriangle className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span className="text-xs text-emerald-300 font-semibold">Exemple : Modèle donne 68% victoire domicile → Cote bookmaker implique 45% → Écart +23% → VALUE BET détecté</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Feature 3: Live Scenario Simulator */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="relative rounded-3xl overflow-hidden border border-blue-500/20 bg-gradient-to-r from-blue-950/60 to-[#0a0d14] p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group hover:border-blue-500/40 transition-all"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-blue-700 rounded-l-3xl" />
+                <div className="shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/10">
+                    <Sliders className="h-7 w-7 text-blue-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">Live Uniquement</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white mb-2">🔄 Simulateur de scénarios live</h3>
+                  <p className="text-white/60 text-sm leading-relaxed mb-4">Match en cours ? Utilisez le simulateur interactif : <em className="text-white/80">"Si l'équipe A marque dans les 10 prochaines minutes"</em> → le modèle Poisson recalcule instantanément les probabilités selon la minute, le score et le momentum actuel.</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "But à 70'→", val: "+34%", color: "text-emerald-400" },
+                      { label: "But à 85'→", val: "+18%", color: "text-amber-400" },
+                      { label: "Carton rouge→", val: "-22%", color: "text-red-400" },
+                    ].map(s => (
+                      <div key={s.label} className="text-center p-2 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                        <div className="text-[10px] text-white/40 mb-1">{s.label}</div>
+                        <div className={`text-lg font-black ${s.color}`}>{s.val}</div>
+                        <div className="text-[9px] text-white/30">prob victoire</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Feature 4: Profil Parieur Personnalisé */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="relative rounded-3xl overflow-hidden border border-amber-500/20 bg-gradient-to-r from-amber-950/40 to-[#0a0d14] p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group hover:border-amber-500/40 transition-all"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-400 to-amber-700 rounded-l-3xl" />
+                <div className="shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
+                    <Brain className="h-7 w-7 text-amber-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">IA Adaptive</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white mb-2">🎯 Profil de parieur personnalisé</h3>
+                  <p className="text-white/60 text-sm leading-relaxed mb-4">L'IA mémorise vos préférences et adapte ses recommandations. Vous misez plutôt sur BTTS ? Sur les gros cotes ? Sur les handicaps asiatiques ? Le système apprend et ne vous propose <strong className="text-white">que ce qui correspond à votre style</strong> — et à votre bankroll.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["BTTS specialist", "Value Hunter", "Safe bettor", "Combo builder", "Asian handicap"].map(tag => (
+                      <span key={tag} className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/15 px-3 py-1 rounded-full font-semibold">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Feature 5: Alertes Prédictives Push */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="relative rounded-3xl overflow-hidden border border-red-500/20 bg-gradient-to-r from-red-950/40 to-[#0a0d14] p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group hover:border-red-500/40 transition-all"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-400 to-red-700 rounded-l-3xl" />
+                <div className="shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shadow-lg shadow-red-500/10 relative">
+                    <Bell className="h-7 w-7 text-red-400" />
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-[#06080c] flex items-center justify-center">
+                      <span className="text-[8px] font-black text-white">!</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">Temps Réel</span>
+                    <span className="text-[10px] font-bold text-white/30">Avant tout le monde</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white mb-2">⚡ Alertes prédictives push</h3>
+                  <p className="text-white/60 text-sm leading-relaxed mb-4">Recevez une notification push dès qu'un événement modifie significativement les probabilités d'un match que vous suivez : blessure de dernière minute, changement de cote brutal, conditions météo défavorables.</p>
+                  <div className="space-y-2">
+                    {[
+                      { icon: "🏥", text: "Arsenal : Ramsdale forfait — Under 2.5 passe de 42% à 61%", time: "2h avant" },
+                      { icon: "📉", text: "Cote 1X2 PSG chute de 1.45→1.28 en 10min (mouvement suspect)", time: "45min avant" },
+                      { icon: "🌧️", text: "Pluie battante à Manchester — BTTS recalibré à la baisse", time: "3h avant" },
+                    ].map((a, i) => (
+                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl bg-red-500/5 border border-red-500/10">
+                        <span className="text-base shrink-0">{a.icon}</span>
+                        <span className="text-xs text-white/70 flex-1">{a.text}</span>
+                        <span className="text-[10px] text-red-400 font-bold shrink-0">{a.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+            </div>
+
+            {/* CTA récapitulatif */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-12 text-center"
+            >
+              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                <Star className="h-5 w-5 text-amber-400" />
+                <span className="text-sm text-white font-bold">Ces 5 fonctionnalités sont incluses dans <span className="text-amber-400">tous les plans VIP</span> — dès le premier jour</span>
+                <Star className="h-5 w-5 text-amber-400" />
+              </div>
+            </motion.div>
+          </div>
+
           {/* License Activation Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -403,7 +603,7 @@ export default function Pricing() {
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                 <h4 className="text-base font-bold text-white mb-2">{t("pricing.faq_why_expensive_title")}</h4>
-                <p className="text-sm text-white/60 leading-relaxed">L'AnalystePro V3 n'est pas un robot de conseils aléatoires. Il effectue des millions de calculs ELO, compare les marges et tourne sur des serveurs d'intelligence artificielle surpuissants (Double Poisson Model). Ce coût d'infrastructure garantit la meilleure précision du marché. Un seul pari Value Bet suffit généralement à rentabiliser le mois.</p>
+                <p className="text-sm text-white/60 leading-relaxed">L'AnalystePro V4 n'est pas un robot de conseils aléatoires. Il implémente le modèle Double Poisson Dixon-Coles, la pondération ELO exponentielle, la détection de Value Bets en temps réel et une IA conversationnelle — et tourne sur des serveurs d'intelligence artificielle surpuissants (Gemini 2.5 Flash + fallback Claude). Ce coût d'infrastructure garantit la meilleure précision du marché. Un seul pari Value Bet suffit généralement à rentabiliser le mois.</p>
               </div>
             </div>
           </div>
