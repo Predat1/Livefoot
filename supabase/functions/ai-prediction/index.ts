@@ -31,15 +31,15 @@ function checkRateLimit(ip: string): boolean {
 
 const REQUIRED_ENV = ["OPENROUTER_API_KEY", "API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 
-const SYSTEM_INSTRUCTION = `Tu es AnalystePro V3, le système d'intelligence artificielle le plus avancé au monde en prédiction de matchs de football (25+ ans de données, 200k+ matchs analysés).
+const SYSTEM_INSTRUCTION = `Tu es AnalystePro V4, le système d'intelligence artificielle le plus avancé au monde en prédiction de matchs de football (25+ ans de données, 200k+ matchs analysés).
 
 ## MÉTHODOLOGIE (OBLIGATOIRE)
 
-### Étape 1 — Modèle Double Poisson Avancé
-- Calcule λ_home = (Avg buts marqués domicile × Avg buts encaissés adverse) / Avg ligue
-- Calcule λ_away = (Avg buts marqués extérieur × Avg buts encaissés adverse) / Avg ligue
-- Applique les facteurs de correction : avantage domicile (+12%), fatigue calendrier (±5%), derby/rivalité (+10% de variance)
-- Génère la distribution de probabilité pour chaque score exact (0-0 à 5-5)
+### Étape 1 — Modèle Double Poisson Dixon-Coles
+- Calcule λ_home = (AttaqueHome × DéfenseAdverse / λ_ligue) × 1.08 (avantage domicile)
+- Calcule λ_away = (AttaqueAway × DéfenseHome / λ_ligue)
+- Applique la correction Dixon-Coles ρ=-0.13 pour les scores {0-0, 1-0, 0-1, 1-1}
+- Génère la distribution complète de probabilité (0-0 à 6-6) pour en déduire P(home), P(draw), P(away), P(BTTS), P(O/U 1.5/2.5/3.5)
 
 ### Étape 2 — Pondération ELO des Formes
 - Les 5 derniers matchs ont des poids exponentiels décroissants : [1.0, 0.85, 0.72, 0.61, 0.52]
@@ -58,10 +58,11 @@ const SYSTEM_INSTRUCTION = `Tu es AnalystePro V3, le système d'intelligence art
 - **Absences** : Évalue l'impact de l'absence des joueurs clés (impact sur le xG et la solidité défensive).
 
 ### Étape 5 — Calibration Confiance
-- Confiance = min(Poisson_conf, Form_conf, Historical_conf)
-- Si les 3 modèles convergent → confiance 0.75-0.92
-- Si divergence → confiance 0.45-0.59
-- JAMAIS au-dessus de 0.95 (aucun match n'est certain)
+- Confiance = agrégation pondérée(Poisson_conf × 0.4, Form_conf × 0.35, H2H_conf × 0.25)
+- Si les 3 modèles convergent → confiance 0.72-0.89
+- Si divergence entre modèles → confiance 0.42-0.57
+- JAMAIS au-dessus de 0.92 (aucun match n'est certain)
+- Indique toujours le niveau de convergence dans le reasoning
 
 ## ADAPTATION TEMPS RÉEL (CRITIQUE)
 - Si "Terminé" → analyse post-match au passé, confiance basée sur la justesse du résultat
@@ -272,37 +273,57 @@ Génère une analyse précise en tenant compte :
 IMPORTANT: En direct, utilise le score actuel comme point de départ. Si le score est 2-0 à la 70e, le score prédit DOIT être au moins 2-0. Estime les probabilités de buts supplémentaires basées sur le momentum.`;
 }
 
-async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout
+const MODEL_FALLBACK_CHAIN = [
+  "google/gemini-2.5-flash-preview",
+  "google/gemini-2.0-flash-001",
+  "anthropic/claude-3-haiku",
+];
 
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://livefoot.fun",
-        "X-Title": "LiveFoot AI Expert"
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.0-flash-001",
-        messages: [
-          { role: "system", content: SYSTEM_INSTRUCTION },
-          { role: "user", content: prompt }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3, // Lower temp for more consistent predictions
-        max_tokens: 1200,
-      }),
-      signal: controller.signal,
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(`OpenRouter: ${data.error?.message || res.status}`);
-    return data.choices[0].message.content;
-  } finally {
-    clearTimeout(timeout);
+async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (const model of MODEL_FALLBACK_CHAIN) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 28000);
+
+    try {
+      console.log(`Trying model: ${model}`);
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://livefoot.fun",
+          "X-Title": "LiveFoot AnalystePro V4"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: SYSTEM_INSTRUCTION },
+            { role: "user", content: prompt }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.2,
+          max_tokens: 2000,
+        }),
+        signal: controller.signal,
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(`OpenRouter [${model}]: ${data.error?.message || res.status}`);
+      }
+      const content = data.choices[0].message.content;
+      console.log(`Success with model: ${model}`);
+      return content;
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`Model ${model} failed: ${err.message}`);
+    } finally {
+      clearTimeout(timeout);
+    }
   }
+
+  throw lastError ?? new Error("Tous les modèles IA ont échoué");
 }
 
 
@@ -459,9 +480,16 @@ serve(async (req) => {
           const { latitude, longitude } = cityData.results[0];
           const forecastRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
           const forecastData = await forecastRes.json();
+          const wCode = forecastData.current_weather?.weathercode ?? 0;
+          const wCondition = wCode === 0 ? "Ciel dégagé" :
+            wCode <= 3 ? "Nuageux" :
+            wCode <= 67 ? "Pluie" :
+            wCode <= 77 ? "Neige" :
+            wCode <= 82 ? "Averses" :
+            wCode <= 99 ? "Orage" : "Variable";
           weatherData = {
             temperature: forecastData.current_weather.temperature,
-            condition: "Code " + forecastData.current_weather.weathercode, // simplified
+            condition: wCondition,
           };
         }
       } catch (e) {
