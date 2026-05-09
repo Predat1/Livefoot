@@ -42,45 +42,92 @@ serve(async (req) => {
     // 1. Vérification des variables d'environnement
     const missing = REQUIRED_ENV.filter(k => !Deno.env.get(k));
     if (missing.length) {
-      throw new Error(`Variables d'environnement manquantes : ${missing.join(", ")}`);
+      console.error(`Missing env vars: ${missing.join(", ")}`);
+      return new Response(JSON.stringify({ 
+        error: `Variables d'environnement manquantes : ${missing.join(", ")}`,
+        code: "ENV_MISSING"
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
     }
 
-    // 2. Rate Limiting
+    // 2. Parse request body
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error("Failed to parse request body:", e);
+      return new Response(JSON.stringify({ 
+        error: "Invalid request body - JSON expected",
+        code: "INVALID_BODY"
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const { endpoint, params } = body;
+    
+    if (!endpoint) {
+      return new Response(JSON.stringify({ 
+        error: "Missing 'endpoint' parameter",
+        code: "MISSING_ENDPOINT"
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    // 3. Rate Limiting
     const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
     if (!checkRateLimit(clientIp)) {
       return new Response(JSON.stringify({ error: "Trop de requêtes. Réessaie dans une minute." }), {
         status: 429, headers: { ...corsHeaders, "Retry-After": "60", "Content-Type": "application/json" }
       });
     }
-    const { endpoint, params } = await req.json()
-    const apiKey = Deno.env.get('API_FOOTBALL_KEY')
+
+    const apiKey = Deno.env.get('API_FOOTBALL_KEY');
 
     if (!apiKey) {
-      throw new Error('API_FOOTBALL_KEY not configured in Supabase secrets')
+      return new Response(JSON.stringify({ 
+        error: "API_FOOTBALL_KEY not configured in Supabase secrets",
+        code: "API_KEY_MISSING"
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
     }
 
-    const queryParams = new URLSearchParams(params).toString()
-    const url = `https://v3.football.api-sports.io/${endpoint}${queryParams ? `?${queryParams}` : ''}`
+    const queryParams = new URLSearchParams(params || {}).toString();
+    const url = `https://v3.football.api-sports.io/${endpoint}${queryParams ? `?${queryParams}` : ''}`;
 
-    console.log(`Fetching: ${url}`)
+    console.log(`[api-football] Fetching: ${url} for IP: ${clientIp}`);
 
     const response = await fetch(url, {
       headers: {
         'x-rapidapi-key': apiKey,
         'x-rapidapi-host': 'v3.football.api-sports.io',
       },
-    })
+    });
 
-    const data = await response.json()
+    const data = await response.json();
+    
+    console.log(`[api-football] Response status: ${response.status}, errors: ${data.errors?.length || 0}`);
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
-    })
+    });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[api-football] Error:", error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      code: "INTERNAL_ERROR",
+      stack: error.stack
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+      status: 500,
+    });
   }
 })

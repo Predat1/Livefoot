@@ -14,23 +14,56 @@ async function callApi<T = unknown>(
   endpoint: string,
   params: Record<string, string> = {}
 ): Promise<ApiFootballResponse<T>> {
-  const { data, error } = await supabase.functions.invoke("api-football", {
-    body: { endpoint, params },
-  });
+  try {
+    const { data, error } = await supabase.functions.invoke("api-football", {
+      body: { endpoint, params },
+    });
 
-  if (error) {
-    console.error(`Edge Function invocation error [${endpoint}]:`, error);
-    throw new Error(`Erreur de connexion aux serveurs (Edge Function: ${error.message}). Assurez-vous que la fonction 'api-football' est bien déployée sur votre projet Supabase.`);
+    if (error) {
+      console.error(`Edge Function invocation error [${endpoint}]:`, error);
+      
+      // Check if it's a non-2xx error from the edge function itself
+      if (error.message?.includes("non-2xx status code")) {
+        throw new Error(
+          `Erreur Edge Function 'api-football' - La fonction retourne une erreur. ` +
+          `Vérifiez dans les logs Supabase: Dashboard > Edge Functions > api-football > Logs. ` +
+          `Erreur: ${error.message}`
+        );
+      }
+      
+      throw new Error(
+        `Erreur de connexion (Edge Function: ${error.message}). ` +
+        `Assurez-vous que la fonction 'api-football' est bien déployée sur votre projet Supabase. ` +
+        `Commande de déploiement: supabase functions deploy api-football`
+      );
+    }
+
+    // If data is null/undefined, something went wrong
+    if (!data) {
+      throw new Error("La fonction Edge Function a retourné une réponse vide");
+    }
+
+    const response = data as ApiFootballResponse<T>;
+
+    // Check for API-level errors from API-Football
+    if (response.errors && !Array.isArray(response.errors) && Object.keys(response.errors).length > 0) {
+      throw new Error(Object.values(response.errors).join(", "));
+    }
+
+    return response;
+  } catch (e: any) {
+    // If it's already our custom error, re-throw
+    if (e.message?.includes("Edge Function") || e.message?.includes("api-football")) {
+      throw e;
+    }
+    
+    // Otherwise wrap with more context
+    console.error(`API call failed [${endpoint}]:`, e);
+    throw new Error(
+      `Échec de l'appel API [${endpoint}]: ${e.message}. ` +
+      `Vérifiez votre connexion internet et que l'Edge Function est bien déployée.`
+    );
   }
-
-  const response = data as ApiFootballResponse<T>;
-
-  // Check for API-level errors
-  if (response.errors && !Array.isArray(response.errors) && Object.keys(response.errors).length > 0) {
-    throw new Error(Object.values(response.errors).join(", "));
-  }
-
-  return response;
 }
 
 // ─── Fixtures / Matches ───────────────────────────────────────
