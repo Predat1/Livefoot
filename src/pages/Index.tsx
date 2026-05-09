@@ -29,6 +29,7 @@ import { buildEntitySlug } from "@/utils/slugify";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import TopMatches from "@/components/TopMatches";
 import { useAuth } from "@/contexts/AuthContext";
+import TelegramBanner from "@/components/TelegramBanner";
 
 const Index = () => {
   const livefootLogo = useAppLogo();
@@ -326,6 +327,13 @@ const SEO_LD = [
           <SectionErrorBoundary>
             <TopMatches leagues={leagues} />
           </SectionErrorBoundary>
+        )}
+
+        {/* Telegram community banner */}
+        {activeFilter === "all" && (
+          <div className="mb-4">
+            <TelegramBanner variant="inline" dismissible={true} />
+          </div>
         )}
 
         <div className="mb-4 sm:mb-6 flex items-center justify-between">

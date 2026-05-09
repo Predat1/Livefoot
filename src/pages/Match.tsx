@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MatchDetailSkeleton } from "@/components/BrandedLoader";
 import TacticalPitch from "@/components/TacticalPitch";
 import CommunityPredictions from "@/components/CommunityPredictions";
+import TelegramBanner from "@/components/TelegramBanner";
 import ShotMap from "@/components/ShotMap";
 import HeatMap from "@/components/HeatMap";
 import PlayerRatingStars from "@/components/PlayerRatingStars";
@@ -1075,6 +1076,9 @@ const Match = () => {
                 homeLogo={homeTeam.logo}
                 awayLogo={awayTeam.logo}
               />
+              <div className="mt-4">
+                <TelegramBanner variant="card" dismissible={true} />
+              </div>
             </div>
           </div>
         </TabsContent>

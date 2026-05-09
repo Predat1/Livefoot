@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import TelegramBanner from "@/components/TelegramBanner";
 
 // ─── Features par plan ───────────────────────────────────────
 
@@ -457,6 +458,16 @@ export default function Pricing() {
                 </div>
               ))}
             </div>
+          </motion.div>
+
+          {/* Telegram community CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-2xl mx-auto mb-10"
+          >
+            <TelegramBanner variant="card" dismissible={false} />
           </motion.div>
 
           {/* License Activation Section */}
