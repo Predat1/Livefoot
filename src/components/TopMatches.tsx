@@ -46,7 +46,7 @@ const TopMatches = ({ leagues }: TopMatchesProps) => {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0">
         {sorted.map((match, i) => {
           const isLive = match.status === "live";
           const isFinished = match.status === "finished";
@@ -63,7 +63,7 @@ const TopMatches = ({ leagues }: TopMatchesProps) => {
               <Link
                 to={`/match/${buildEntitySlug(match.id, `${match.homeTeam.name}-vs-${match.awayTeam.name}`)}`}
                 className={cn(
-                  "group relative flex flex-col gap-2 rounded-xl border p-3 sm:p-4 transition-all hover:shadow-md hover:-translate-y-0.5",
+                  "group relative flex flex-col gap-2 rounded-xl border p-3 sm:p-4 transition-all hover:shadow-md hover:-translate-y-0.5 min-w-[260px] shrink-0 sm:min-w-0 sm:shrink",
                   isLive
                     ? "bg-live/5 border-live/30 hover:border-live/60"
                     : "bg-card border-border/50 hover:border-primary/30"

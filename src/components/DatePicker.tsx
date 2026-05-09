@@ -96,11 +96,11 @@ const DatePicker = ({
   };
 
   const filters = [
-    { id: "all", label: "Tous", mobileLabel: "Tous", count: matchCounts.all, icon: null },
-    { id: "live", label: "En Direct", mobileLabel: "Live", count: matchCounts.live, icon: Radio, isLive: true },
-    { id: "scheduled", label: "À Venir", mobileLabel: "À Venir", count: matchCounts.scheduled ?? 0, icon: null },
-    { id: "finished", label: "Terminés", mobileLabel: "FT", count: matchCounts.finished ?? 0, icon: null },
-    { id: "tv", label: "Télévisés", mobileLabel: "TV", count: matchCounts.tv, icon: Tv },
+    { id: "all", label: "Tous", mobileLabel: "Tous", count: matchCounts.all, icon: null, mobileHidden: false },
+    { id: "live", label: "En Direct", mobileLabel: "Live", count: matchCounts.live, icon: Radio, isLive: true, mobileHidden: false },
+    { id: "scheduled", label: "À Venir", mobileLabel: "À Venir", count: matchCounts.scheduled ?? 0, icon: null, mobileHidden: true },
+    { id: "finished", label: "Terminés", mobileLabel: "FT", count: matchCounts.finished ?? 0, icon: null, mobileHidden: false },
+    { id: "tv", label: "Télévisés", mobileLabel: "TV", count: matchCounts.tv, icon: Tv, mobileHidden: true },
   ];
 
   return (
@@ -193,6 +193,7 @@ const DatePicker = ({
               onClick={() => handleFilterChange(filter.id)}
               className={cn(
                 "flex items-center gap-1 sm:gap-2 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300",
+                filter.mobileHidden && "hidden sm:flex",
                 activeFilter === filter.id
                   ? filter.isLive 
                     ? "bg-live text-primary-foreground shadow-lg shadow-live/30"

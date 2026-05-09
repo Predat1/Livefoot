@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 const Auth = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get("ref") || "";
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +56,7 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signupData, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
@@ -66,6 +68,16 @@ const Auth = () => {
       livefootToast.error("Inscription échouée", error.message);
     } else {
       livefootToast.success("Compte créé !", "Vérifiez votre e-mail pour confirmer votre compte.");
+      // Claim referral if a ref code was in the URL
+      if (refCode && signupData?.user?.id) {
+        try {
+          await supabase.functions.invoke("claim-referral", {
+            body: { referral_code: refCode, referred_user_id: signupData.user.id },
+          });
+        } catch (_) {
+          // Silent — referral failure should not block signup
+        }
+      }
     }
     setLoading(false);
   };
@@ -98,7 +110,17 @@ const Auth = () => {
         <div className="rounded-3xl bg-[#0a0d14] border border-white/10 shadow-2xl p-6 sm:p-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-amber-500 to-amber-500 opacity-50" />
           
-          <Tabs defaultValue="login">
+          {/* Referral welcome banner */}
+          {refCode && (
+            <div className="mb-6 flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <span className="text-xl">🎁</span>
+              <div>
+                <p className="text-xs font-black text-white">Vous avez été invité par un ami !</p>
+                <p className="text-[10px] text-amber-400/70">Créez votre compte pour activer le parrainage</p>
+              </div>
+            </div>
+          )}
+          <Tabs defaultValue={refCode ? "signup" : "login"}>
             <TabsList className="w-full grid grid-cols-2 mb-8 bg-white/5 p-1 rounded-xl">
               <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">{t("auth.login")}</TabsTrigger>
               <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 transition-all font-bold">{t("auth.signup")}</TabsTrigger>

@@ -18,6 +18,7 @@ import LogoGenerator from "@/components/LogoGenerator";
 import { mockTeams } from "@/data/teamsData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { cn } from "@/lib/utils";
+import ReferralWidget from "@/components/ReferralWidget";
 
 const Profile = () => {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -205,6 +206,9 @@ const Profile = () => {
             </div>
           )}
         </div>
+
+        {/* Referral Widget */}
+        <ReferralWidget />
 
         {/* Edit Form */}
         <div className="rounded-2xl bg-card border border-border/50 overflow-hidden mb-6">

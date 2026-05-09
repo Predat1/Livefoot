@@ -28,11 +28,14 @@ import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import TopMatches from "@/components/TopMatches";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const livefootLogo = useAppLogo();
+  const { isVip, user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState("all");
+  const [referralBannerDismissed, setReferralBannerDismissed] = useState(false);
 
   const { data: apiLeagues, isLoading, isError, refetch } = useFixturesByDate(selectedDate);
   const { favorites } = useFavorites();
@@ -299,6 +302,24 @@ const SEO_LD = [
           </section>
         )}
 
+
+        {/* Referral banner — non-VIP uniquement */}
+        {user && !isVip && !referralBannerDismissed && activeFilter === "all" && (
+          <div className="mb-4 rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-950/40 to-[#0a0d14] p-4 flex items-center gap-3 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
+            <div className="h-10 w-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <Users className="h-5 w-5 text-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-black text-white">🎁 Invitez 10 amis — Obtenez 48h VIP gratuit</p>
+              <p className="text-[10px] text-white/40">Partagez votre lien depuis votre profil</p>
+            </div>
+            <Link to="/profile" className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500 text-black text-[11px] font-black hover:bg-amber-400 transition-colors">
+              Mon lien
+            </Link>
+            <button onClick={() => setReferralBannerDismissed(true)} className="shrink-0 text-white/20 hover:text-white/50 transition-colors text-lg leading-none ml-1">×</button>
+          </div>
+        )}
 
         {/* Top Matches bloc - visible only on "all" filter */}
         {!isLoading && !isError && activeFilter === "all" && (
