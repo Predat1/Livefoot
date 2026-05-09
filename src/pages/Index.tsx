@@ -27,6 +27,7 @@ import PartnerBanner from "@/components/PartnerBanner";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
+import TopMatches from "@/components/TopMatches";
 
 const Index = () => {
   const livefootLogo = useAppLogo();
@@ -71,28 +72,45 @@ const Index = () => {
     let all = 0;
     let tv = 0;
     let live = 0;
+    let scheduled = 0;
+    let finished = 0;
     for (const league of leagues) {
       for (const match of league.matches) {
         all++;
         if ((match as any).isTv) tv++;
         if (match.status === "live") live++;
+        else if (match.status === "scheduled") scheduled++;
+        else if (match.status === "finished") finished++;
       }
     }
-    return { all, tv, live };
+    return { all, tv, live, scheduled, finished };
   }, [leagues]);
 
+  const statusOrder = { live: 0, scheduled: 1, finished: 2 };
+
   const filteredLeagues = useMemo(() => {
-    if (activeFilter === "all") return leagues;
-    return leagues
-      .map((league) => ({
-        ...league,
-        matches: league.matches.filter((match) => {
-          if (activeFilter === "tv") return (match as any).isTv === true;
-          if (activeFilter === "live") return match.status === "live";
-          return true;
-        }),
-      }))
-      .filter((league) => league.matches.length > 0);
+    const filtered = activeFilter === "all"
+      ? leagues
+      : leagues
+          .map((league) => ({
+            ...league,
+            matches: league.matches.filter((match) => {
+              if (activeFilter === "tv") return (match as any).isTv === true;
+              if (activeFilter === "live") return match.status === "live";
+              if (activeFilter === "scheduled") return match.status === "scheduled";
+              if (activeFilter === "finished") return match.status === "finished";
+              return true;
+            }),
+          }))
+          .filter((league) => league.matches.length > 0);
+
+    // Sort matches within each league: Live → À venir → Terminés
+    return filtered.map((league) => ({
+      ...league,
+      matches: [...league.matches].sort(
+        (a, b) => (statusOrder[a.status] ?? 1) - (statusOrder[b.status] ?? 1)
+      ),
+    }));
   }, [activeFilter, leagues]);
 
   const stats = [
@@ -282,11 +300,22 @@ const SEO_LD = [
         )}
 
 
+        {/* Top Matches bloc - visible only on "all" filter */}
+        {!isLoading && !isError && activeFilter === "all" && (
+          <SectionErrorBoundary>
+            <TopMatches leagues={leagues} />
+          </SectionErrorBoundary>
+        )}
+
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
             <h2 className="text-base sm:text-lg font-bold text-foreground">
-              {activeFilter === "live" ? "Matchs en Direct" : activeFilter === "tv" ? "Matchs Télévisés" : "Matchs du Jour"}
+              {activeFilter === "live" ? "Matchs en Direct"
+                : activeFilter === "tv" ? "Matchs Télévisés"
+                : activeFilter === "finished" ? "Matchs Terminés"
+                : activeFilter === "scheduled" ? "Matchs à Venir"
+                : "Matchs du Jour"}
             </h2>
           </div>
           {isLoading && (

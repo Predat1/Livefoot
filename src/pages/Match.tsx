@@ -6,8 +6,9 @@ import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
-  useLiveOdds,
+  useLiveOdds, useStandings,
 } from "@/hooks/useApiFootball";
+import { useFootballNews } from "@/hooks/useFootballNews";
 import { 
   Trophy, TrendingUp, Zap, ArrowLeft, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2, 
   Target, AlertTriangle, Repeat2, MapPin, User, HeartPulse, Clock, MessageSquare, Swords, Radar, Crosshair, 
@@ -123,6 +124,10 @@ const Match = () => {
 
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
   const { data: standingsData } = useTeamForm(homeTeamId);
+  const leagueId = fix?.league?.id ? String(fix.league.id) : "";
+  const season = fix?.league?.season ? String(fix.league.season) : "2024";
+  const { data: leagueStandings } = useStandings(leagueId, season);
+  const { data: allNews = [] } = useFootballNews();
 
   // ✅ useAiExpert ici (avant les early returns)
   const { data: aiExpertPredictionRaw } = useAiExpert({
@@ -287,17 +292,17 @@ const Match = () => {
   const renderTabs = () => {
     const tabItems = [
       { value: "events", label: "Résumé" },
-      { value: "predictions", label: "Pronos IA" },
-      { value: "stats", label: "Stats" },
+      ...(hasStats ? [{ value: "live", label: isLive ? "🔴 Live" : "Live" }] : []),
       { value: "lineups", label: "Compos" },
-      ...(hasStats ? [{ value: "live", label: "Live" }] : []),
+      { value: "stats", label: "Stats" },
+      { value: "h2h", label: "H2H" },
+      { value: "form", label: "Forme" },
+      { value: "predictions", label: "Pronos IA" },
       ...(hasStats ? [{ value: "ratings", label: "Notes" }] : []),
       { value: "momentum", label: "Momentum" },
       ...(players.length >= 2 ? [{ value: "heatmap", label: "Heatmap" }] : []),
-      { value: "h2h", label: "H2H" },
-      { value: "form", label: "Forme" },
       { value: "calendar", label: "Calendrier" },
-      { value: "community", label: "Pronos" },
+      { value: "community", label: "Communauté" },
       ...(odds.length > 0 ? [{ value: "odds", label: isMatchLive && liveOdds.length > 0 ? "Cotes 🔴" : "Cotes" }] : []),
       { value: "injuries", label: "Blessures" },
     ];
@@ -762,6 +767,13 @@ const Match = () => {
                               </div>
                             ))}
                           </div>
+                        </div>
+                      )}
+                      {teamLineup.coach?.name && (
+                        <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                          {teamLineup.coach?.photo && <img src={teamLineup.coach.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase">Coach</span>
+                          <span className="text-xs font-bold text-foreground">{teamLineup.coach.name}</span>
                         </div>
                       )}
                     </div>
@@ -1231,6 +1243,23 @@ const Match = () => {
                       )}
                     </div>
                     {isLive && <span className="text-[10px] font-black text-live animate-pulse mt-1">{minute}'</span>}
+                    {/* Scorers under score */}
+                    {(isLive || isFinished) && events.filter((e: any) => e.type === "Goal" && e.detail !== "Missed Penalty").length > 0 && (
+                      <div className="mt-2 flex flex-col gap-0.5 text-center max-w-[200px]">
+                        {events.filter((e: any) => e.type === "Goal" && e.detail !== "Missed Penalty").map((e: any, i: number) => {
+                          const isHome = e.team?.id === fix?.teams?.home?.id;
+                          return (
+                            <div key={i} className={cn("flex items-center gap-1 text-[10px] text-muted-foreground", isHome ? "justify-end" : "justify-start self-start")}>
+                              <span>⚽</span>
+                              <span className="font-medium truncate max-w-[80px]">{e.player?.name?.split(" ").pop()}</span>
+                              <span className="text-primary font-black">{e.time?.elapsed}'</span>
+                              {e.detail === "Penalty" && <span className="text-[8px] text-amber-500">(pen)</span>}
+                              {e.detail === "Own Goal" && <span className="text-[8px] text-destructive">(csc)</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center rounded-xl sm:rounded-3xl bg-primary/10 border border-primary/20 px-4 py-3 sm:px-8 sm:py-6 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.2)]">
@@ -1348,6 +1377,104 @@ const Match = () => {
 
         {/* All tabs */}
         {renderTabs()}
+
+        {/* ─── Standings Widget ─────────────────────────────────────── */}
+        {leagueStandings && leagueStandings.length > 0 && (() => {
+          const standings = leagueStandings as any[];
+          const homeRank = standings.find((t: any) => String(t.team?.id) === homeTeamId);
+          const awayRank = standings.find((t: any) => String(t.team?.id) === awayTeamId);
+          const homePos = homeRank?.rank || 0;
+          const awayPos = awayRank?.rank || 0;
+          const minPos = Math.max(1, Math.min(homePos, awayPos) - 2);
+          const maxPos = Math.min(standings.length, Math.max(homePos, awayPos) + 2);
+          const slice = standings.filter((t: any) => t.rank >= minPos && t.rank <= maxPos);
+          if (slice.length === 0) return null;
+          return (
+            <div className="mt-8 rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+                {league?.logo && <img src={league.logo} alt="" className="h-4 w-4 object-contain" />}
+                <Trophy className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Classement — {league?.name}</h3>
+                <span className="ml-auto text-[10px] text-muted-foreground">Saison {season}</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border/50 text-muted-foreground">
+                      <th className="px-3 py-2 text-left font-semibold w-8">#</th>
+                      <th className="px-3 py-2 text-left font-semibold">Équipe</th>
+                      <th className="px-2 py-2 text-center font-semibold">MJ</th>
+                      <th className="px-2 py-2 text-center font-semibold">V</th>
+                      <th className="px-2 py-2 text-center font-semibold">N</th>
+                      <th className="px-2 py-2 text-center font-semibold">D</th>
+                      <th className="px-2 py-2 text-center font-semibold">Buts</th>
+                      <th className="px-2 py-2 text-center font-semibold text-primary">Pts</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    {slice.map((t: any) => {
+                      const isHome = String(t.team?.id) === homeTeamId;
+                      const isAway = String(t.team?.id) === awayTeamId;
+                      return (
+                        <tr key={t.team?.id} className={cn(
+                          "transition-colors",
+                          isHome && "bg-primary/5 border-l-2 border-l-primary",
+                          isAway && "bg-destructive/5 border-l-2 border-l-destructive",
+                        )}>
+                          <td className="px-3 py-2 font-black text-muted-foreground">{t.rank}</td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              {t.team?.logo && <img src={t.team.logo} alt="" className="h-4 w-4 object-contain" />}
+                              <span className={cn("font-semibold truncate max-w-[100px]", (isHome || isAway) && "text-foreground font-black")}>{t.team?.name}</span>
+                              {isHome && <span className="text-[8px] text-primary font-black bg-primary/10 px-1 rounded">DOM</span>}
+                              {isAway && <span className="text-[8px] text-destructive font-black bg-destructive/10 px-1 rounded">EXT</span>}
+                            </div>
+                          </td>
+                          <td className="px-2 py-2 text-center text-muted-foreground">{t.all?.played}</td>
+                          <td className="px-2 py-2 text-center text-emerald-500 font-semibold">{t.all?.win}</td>
+                          <td className="px-2 py-2 text-center text-amber-500 font-semibold">{t.all?.draw}</td>
+                          <td className="px-2 py-2 text-center text-destructive font-semibold">{t.all?.lose}</td>
+                          <td className="px-2 py-2 text-center text-muted-foreground">{t.all?.goals?.for}:{t.all?.goals?.against}</td>
+                          <td className="px-2 py-2 text-center font-black text-primary">{t.points}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ─── Related News ─────────────────────────────────────────── */}
+        {(() => {
+          const relatedNews = allNews.filter((n: any) => {
+            const title = (n.title || "").toLowerCase();
+            const home = homeTeam.name.toLowerCase().split(" ")[0];
+            const away = awayTeam.name.toLowerCase().split(" ")[0];
+            return title.includes(home) || title.includes(away);
+          }).slice(0, 4);
+          if (relatedNews.length === 0) return null;
+          return (
+            <div className="mt-6 rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+              <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+                <Flame className="h-4 w-4 text-destructive" />
+                <h3 className="font-bold text-sm text-foreground">Actualités liées</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+                {relatedNews.map((n: any, i: number) => (
+                  <Link key={i} to={`/news/${n.id}`} className="flex gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors group">
+                    {n.image && <img src={n.image} alt="" className="h-14 w-20 object-cover rounded-lg flex-shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">{n.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">{n.date}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* VIP Premium CTA */}
         <div className="mt-8 mb-12 p-8 rounded-[2rem] bg-gradient-to-br from-amber-500/10 via-card to-amber-500/5 border border-amber-500/20 relative overflow-hidden group">

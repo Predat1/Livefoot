@@ -103,7 +103,9 @@ const LeagueSection = ({ league, index = 0 }: LeagueSectionProps) => {
               transition={{ type: "spring", stiffness: 500, damping: 15, delay: index * 0.08 + 0.2 }}
             >
               <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-live live-pulse" />
-              <span className="text-[9px] sm:text-[10px] font-bold text-live uppercase">Live</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-live uppercase">
+                {league.matches.filter(m => m.status === "live").length} Live
+              </span>
             </motion.div>
           )}
         </div>

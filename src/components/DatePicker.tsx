@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 interface DatePickerProps {
   onDateChange?: (date: Date) => void;
   onFilterChange?: (filter: string) => void;
-  matchCounts?: { all: number; tv: number; live: number };
+  matchCounts?: { all: number; tv: number; live: number; scheduled?: number; finished?: number };
   selectedDate?: Date;
   activeFilter?: string;
 }
@@ -97,8 +97,10 @@ const DatePicker = ({
 
   const filters = [
     { id: "all", label: "Tous", mobileLabel: "Tous", count: matchCounts.all, icon: null },
-    { id: "tv", label: "Télévisés", mobileLabel: "TV", count: matchCounts.tv, icon: Tv },
     { id: "live", label: "En Direct", mobileLabel: "Live", count: matchCounts.live, icon: Radio, isLive: true },
+    { id: "scheduled", label: "À Venir", mobileLabel: "À Venir", count: matchCounts.scheduled ?? 0, icon: null },
+    { id: "finished", label: "Terminés", mobileLabel: "FT", count: matchCounts.finished ?? 0, icon: null },
+    { id: "tv", label: "Télévisés", mobileLabel: "TV", count: matchCounts.tv, icon: Tv },
   ];
 
   return (
