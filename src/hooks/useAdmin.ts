@@ -279,3 +279,213 @@ export function useAdminAuditLogForUser(userId: string | null, limit = 50) {
     staleTime: 60 * 1000,
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 2 : Monétisation & VIP
+// ═══════════════════════════════════════════════════════════════
+
+export interface RevenueStats {
+  total_revenue_eur: number;
+  revenue_7d_eur: number;
+  revenue_30d_eur: number;
+  partner_revenue_eur: number;
+  total_clicks: number;
+  total_conversions: number;
+  transactions_count: number;
+  transactions_7d: number;
+  pending_count: number;
+  failed_count: number;
+  stripe_revenue: number;
+  paypal_revenue: number;
+  crypto_revenue: number;
+  chariow_revenue: number;
+  arpu_eur: number;
+}
+
+export function useAdminRevenueStats() {
+  return useQuery({
+    queryKey: ["admin-revenue-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_revenue_stats" as any);
+      if (error) throw error;
+      return data as RevenueStats;
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export interface Transaction {
+  id: string;
+  user_id: string;
+  user_email: string;
+  type: string;
+  amount_eur: number;
+  currency: string;
+  status: string;
+  payment_method: string;
+  external_id: string | null;
+  metadata: Record<string, any> | null;
+  partner_name: string | null;
+  created_at: string;
+}
+
+export function useAdminTransactions(limit = 50, status: string | null = null, type: string | null = null) {
+  return useQuery({
+    queryKey: ["admin-transactions", limit, status, type],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_transactions_list" as any, {
+        p_limit: limit,
+        p_offset: 0,
+        p_status: status,
+        p_type: type,
+      });
+      if (error) throw error;
+      return (data || []) as Transaction[];
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export interface Partner {
+  id: string;
+  name: string;
+  type: string;
+  logo_url: string | null;
+  website_url: string | null;
+  commission_rate: number | null;
+  flat_amount_eur: number | null;
+  tracking_code: string;
+  is_active: boolean;
+  click_count: number;
+  conversion_count: number;
+  revenue_eur: number;
+  contract_start: string | null;
+  contract_end: string | null;
+  contact_email: string | null;
+  contact_name: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export function useAdminPartners() {
+  return useQuery({
+    queryKey: ["admin-partners"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partners")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as Partner[];
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useCreatePartner() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      name,
+      type,
+      websiteUrl,
+      commissionRate,
+      flatAmount,
+      trackingCode,
+      contactEmail,
+      contactName,
+      contractStart,
+      contractEnd,
+      notes,
+    }: {
+      name: string;
+      type: string;
+      websiteUrl?: string;
+      commissionRate?: number;
+      flatAmount?: number;
+      trackingCode?: string;
+      contactEmail?: string;
+      contactName?: string;
+      contractStart?: string;
+      contractEnd?: string;
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase.rpc("admin_partner_create" as any, {
+        p_name: name,
+        p_type: type,
+        p_website_url: websiteUrl,
+        p_commission_rate: commissionRate,
+        p_flat_amount_eur: flatAmount,
+        p_tracking_code: trackingCode,
+        p_contact_email: contactEmail,
+        p_contact_name: contactName,
+        p_contract_start: contractStart,
+        p_contract_end: contractEnd,
+        p_notes: notes,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-partners"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+  });
+}
+
+export function useUpdatePartner() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      partnerId,
+      ...updates
+    }: {
+      partnerId: string;
+      name?: string;
+      type?: string;
+      websiteUrl?: string;
+      commissionRate?: number;
+      flatAmount?: number;
+      isActive?: boolean;
+      contactEmail?: string;
+      contactName?: string;
+      contractEnd?: string;
+      notes?: string;
+    }) => {
+      const { error } = await supabase.rpc("admin_partner_update" as any, {
+        p_partner_id: partnerId,
+        p_name: updates.name,
+        p_type: updates.type,
+        p_website_url: updates.websiteUrl,
+        p_commission_rate: updates.commissionRate,
+        p_flat_amount_eur: updates.flatAmount,
+        p_is_active: updates.isActive,
+        p_contact_email: updates.contactEmail,
+        p_contact_name: updates.contactName,
+        p_contract_end: updates.contractEnd,
+        p_notes: updates.notes,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-partners"] });
+    },
+  });
+}
+
+export function useDeletePartner() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (partnerId: string) => {
+      const { error } = await supabase.rpc("admin_partner_delete" as any, {
+        p_partner_id: partnerId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-partners"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+  });
+}
