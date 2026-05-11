@@ -1,5 +1,5 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { useMemo, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { useMemo } from "react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHeadEnhanced";
 import {
@@ -22,7 +22,7 @@ import LiveScenarioSimulator from "@/components/LiveScenarioSimulator";
 import BettingProfileWidget from "@/components/BettingProfileWidget";
 import PredictiveAlerts from "@/components/PredictiveAlerts";
 import { cn } from "@/lib/utils";
-import { buildEntitySlug, extractIdFromSlug } from "@/utils/slugify";
+import { extractIdFromSlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareWidget from "@/components/ShareWidget";
 import ShareButton from "@/components/ShareButton";
@@ -108,7 +108,6 @@ function EmptyMatchData({ label }: { label: string }) {
 
 const Match = () => {
   const { matchId: rawMatchId } = useParams();
-  const navigate = useNavigate();
   const matchId = extractIdFromSlug(rawMatchId || "");
 
   // ─── Tous les hooks en premier, sans exception ────────────────
@@ -178,23 +177,6 @@ const Match = () => {
     return timeline;
   }, [fixtureData, eventsData, fix?.teams?.home?.id]);
 
-  // ─── Redirect canonical SEO (simplifié, sans boucle) ──────────
-  useEffect(() => {
-    // Ne rediriger que si l'URL est un ID numérique pur (pas déjà un slug)
-    const isNumericOnly = /^\d+$/.test(rawMatchId || "");
-    if (
-      isNumericOnly &&
-      fix?.fixture?.id &&
-      fix?.teams?.home?.name &&
-      fix?.teams?.away?.name
-    ) {
-      const canonical = buildEntitySlug(
-        fix.fixture.id,
-        `${fix.teams.home.name}-vs-${fix.teams.away.name}`
-      );
-      navigate(`/match/${canonical}`, { replace: true });
-    }
-  }, [fix?.fixture?.id, fix?.teams?.home?.name, fix?.teams?.away?.name, rawMatchId, navigate]);
 
   // ─── Early returns APRÈS tous les hooks ───────────────────────
   if (!matchId) {
