@@ -867,3 +867,89 @@ export function usePurgeCache() {
     },
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 6 : Final Features — Newsletter, API Monitoring, Backups
+// ═══════════════════════════════════════════════════════════════
+
+export interface NewsletterStats {
+  total_subscribers: number;
+  active_subscribers: number;
+  new_this_week: number;
+  unsubscribed: number;
+  confirmed_rate: number;
+}
+
+export function useAdminNewsletterStats() {
+  return useQuery({
+    queryKey: ["admin-newsletter-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_newsletter_stats" as any);
+      if (error) throw error;
+      return data as NewsletterStats;
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useExportNewsletterCsv(activeOnly = true) {
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("admin_export_newsletter_csv" as any, {
+        p_active_only: activeOnly,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+  });
+}
+
+export interface ApiUsageStats {
+  total_requests: number;
+  total_errors: number;
+  avg_response_time: number;
+  top_endpoints: { endpoint: string; count: number }[];
+  quota_usage_by_day: { day: string; total: number }[];
+}
+
+export function useAdminApiUsageStats(days = 7) {
+  return useQuery({
+    queryKey: ["admin-api-usage", days],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_api_usage_stats" as any, {
+        p_days: days,
+      });
+      if (error) throw error;
+      return data as ApiUsageStats;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export interface Backup {
+  id: string;
+  type: string;
+  status: string;
+  started_at: string;
+  completed_at: string | null;
+  file_url: string | null;
+  file_size_bytes: number | null;
+  tables_included: string[];
+  row_count: number | null;
+}
+
+export function useAdminTriggerBackup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (type: string = "full") => {
+      const { data, error } = await supabase.rpc("admin_trigger_backup" as any, {
+        p_type: type,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-backups"] });
+    },
+  });
+}

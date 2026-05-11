@@ -15,6 +15,10 @@ import {
   useAdminSiteSettings,
   useSetMaintenanceMode,
   usePurgeCache,
+  useAdminNewsletterStats,
+  useExportNewsletterCsv,
+  useAdminApiUsageStats,
+  useAdminTriggerBackup,
 } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +36,12 @@ import {
   Crown,
   RefreshCw,
   Trash2,
+  Newspaper,
+  Database,
+  Activity,
+  Download,
+  Archive,
+  Clock,
 } from "lucide-react";
 
 const FEATURE_ICONS: Record<string, any> = {
@@ -48,6 +58,12 @@ export default function AdminSettings() {
   const setFeatureFlag = useSetFeatureFlag();
   const setMaintenanceMode = useSetMaintenanceMode();
   const purgeCache = usePurgeCache();
+  
+  // Phase 6 hooks
+  const { data: newsletterStats, isLoading: newsletterLoading } = useAdminNewsletterStats();
+  const exportNewsletter = useExportNewsletterCsv();
+  const { data: apiStats, isLoading: apiLoading } = useAdminApiUsageStats(7);
+  const triggerBackup = useAdminTriggerBackup();
 
   const maintenanceEnabled = siteSettings?.find((s) => s.key === "maintenance_mode")?.value === "true";
   const maintenanceMessage = siteSettings?.find((s) => s.key === "maintenance_message")?.value || "";
@@ -106,6 +122,31 @@ export default function AdminSettings() {
     }
   };
 
+  const handleExportNewsletter = async () => {
+    try {
+      const csvData = await exportNewsletter.mutateAsync();
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `newsletter-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Export newsletter téléchargé');
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur lors de l\'export');
+    }
+  };
+
+  const handleBackup = async (type: string) => {
+    try {
+      const backupId = await triggerBackup.mutateAsync(type);
+      toast.success(`Backup démarré (ID: ${backupId.slice(0, 8)}...)`);
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur backup');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -128,6 +169,14 @@ export default function AdminSettings() {
             <ToggleLeft className="h-4 w-4 mr-2" />
             Feature Flags
           </TabsTrigger>
+          <TabsTrigger value="newsletter" className="text-xs sm:text-sm">
+            <Newspaper className="h-4 w-4 mr-2" />
+            Newsletter
+          </TabsTrigger>
+          <TabsTrigger value="system" className="text-xs sm:text-sm">
+            <Database className="h-4 w-4 mr-2" />
+            Système
+          </TabsTrigger>
           <TabsTrigger value="maintenance" className="text-xs sm:text-sm">
             <AlertTriangle className="h-4 w-4 mr-2" />
             Maintenance
@@ -136,7 +185,7 @@ export default function AdminSettings() {
             <Settings className="h-4 w-4 mr-2" />
             Général
           </TabsTrigger>
-        </TabsTrigger>
+        </TabsList>
 
         {/* Feature Flags Tab */}
         <TabsContent value="features" className="mt-4 space-y-4">
@@ -342,7 +391,104 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Newsletter Tab */}
+        <TabsContent value="newsletter" className="mt-4 space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard icon={Mail} label="Total" value={newsletterStats?.total_subscribers || 0} loading={newsletterLoading} color="bg-blue-500" />
+            <StatCard icon={CheckCircle} label="Actifs" value={newsletterStats?.active_subscribers || 0} loading={newsletterLoading} color="bg-emerald-500" />
+            <StatCard icon={Users} label="Nouveaux 7j" value={newsletterStats?.new_this_week || 0} loading={newsletterLoading} color="bg-amber-500" />
+            <StatCard icon={CheckCircle} label="Confirmés %" value={`${newsletterStats?.confirmed_rate?.toFixed(1) || 0}%`} loading={newsletterLoading} color="bg-purple-500" />
+          </div>
+          
+          <Card className="bg-slate-900/50 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <Newspaper className="h-5 w-5 text-primary" />
+                Gestion Newsletter
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                <div>
+                  <p className="font-medium text-white">Export CSV</p>
+                  <p className="text-sm text-slate-400">Télécharger la liste des abonnés actifs</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleExportNewsletter} disabled={exportNewsletter.isPending}>
+                  {exportNewsletter.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                  Exporter
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* System Tab */}
+        <TabsContent value="system" className="mt-4 space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <StatCard icon={Activity} label="Requêtes API (7j)" value={apiStats?.total_requests || 0} loading={apiLoading} color="bg-blue-500" />
+            <StatCard icon={AlertTriangle} label="Erreurs" value={apiStats?.total_errors || 0} loading={apiLoading} color="bg-red-500" />
+            <StatCard icon={Clock} label="Temps moyen" value={`${apiStats?.avg_response_time || 0}ms`} loading={apiLoading} color="bg-emerald-500" />
+          </div>
+          
+          <Card className="bg-slate-900/50 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <Archive className="h-5 w-5 text-primary" />
+                Sauvegardes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Button variant="outline" onClick={() => handleBackup('full')} disabled={triggerBackup.isPending}>
+                  <Database className="h-4 w-4 mr-2" />
+                  Backup Complet
+                </Button>
+                <Button variant="outline" onClick={() => handleBackup('users')} disabled={triggerBackup.isPending}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Backup Users
+                </Button>
+                <Button variant="outline" onClick={() => handleBackup('transactions')} disabled={triggerBackup.isPending}>
+                  <Crown className="h-4 w-4 mr-2" />
+                  Backup Transactions
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </motion.div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  loading,
+  color,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  loading?: boolean;
+  color: string;
+}) {
+  return (
+    <Card className="bg-slate-900/50 border-slate-800">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3">
+          <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", color)}>
+            <Icon className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-lg font-black text-white">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : value}
+            </p>
+            <p className="text-xs text-slate-400">{label}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
