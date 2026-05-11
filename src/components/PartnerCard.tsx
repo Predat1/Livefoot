@@ -27,7 +27,7 @@ const PartnerLogo: React.FC<{ partner: Partner; className?: string }> = ({ partn
       className={cn("h-full w-full object-contain", className)}
       onError={() => setError(true)}
       loading="lazy"
-      crossOrigin="anonymous"
+      crossOrigin={partner.logo.startsWith("http") ? "anonymous" : undefined}
     />
   );
 };
@@ -69,7 +69,10 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full", so
   if (variant === "compact") {
     return (
       <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-all shadow-sm">
-        <div className="h-10 w-10 flex-shrink-0 bg-white rounded-lg p-1.5 flex items-center justify-center border border-gray-200">
+        <div
+          className="h-10 w-10 flex-shrink-0 rounded-lg p-1.5 flex items-center justify-center border border-gray-200"
+          style={{ backgroundColor: partner.logoBackground || "#ffffff" }}
+        >
           <PartnerLogo partner={partner} />
         </div>
         <div className="flex-1 min-w-0">
@@ -91,7 +94,10 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full", so
     <div className="group relative rounded-2xl bg-card border border-border/50 overflow-hidden hover:border-primary/30 transition-all shadow-md hover:shadow-xl hover-lift">
       <div className="p-5 sm:p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="h-12 w-28 sm:h-14 sm:w-32 bg-white rounded-xl p-3 flex items-center justify-center shadow-inner border border-gray-200">
+          <div
+            className="h-12 w-28 sm:h-14 sm:w-32 rounded-xl p-3 flex items-center justify-center shadow-inner border border-gray-200"
+            style={{ backgroundColor: partner.logoBackground || "#ffffff" }}
+          >
             <PartnerLogo partner={partner} />
           </div>
           {partner.bonus && (

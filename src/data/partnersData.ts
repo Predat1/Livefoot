@@ -3,6 +3,7 @@ export interface Partner {
   name: string;
   logo: string;
   logoDark?: string; // Optional dark variant for better visibility
+  logoBackground?: string;
   link: string;
   promoCode: string;
   bonus?: string;
@@ -17,8 +18,9 @@ export const PARTNERS: Partner[] = [
   {
     id: "1xbet",
     name: "1XBET",
-    logo: "https://cdn.1xbet.com/partnership/promo-materials/1xbet-logo-white.svg",
-    logoDark: "https://cdn.1xbet.com/partnership/promo-materials/1xbet-logo.svg",
+    logo: "/partners/official/1xbet.png",
+    logoDark: "/partners/official/1xbet.png",
+    logoBackground: "#ffffff",
     link: "https://reffpa.com/L?tag=d_633509m_18975c_&site=633509&ad=18975",
     promoCode: "PREDAT",
     bonus: "130.000 FCFA",
@@ -28,8 +30,9 @@ export const PARTNERS: Partner[] = [
   {
     id: "linebet",
     name: "LINEBET",
-    logo: "https://linebet.com/img/logo-white.svg",
-    logoDark: "https://linebet.com/img/logo.svg",
+    logo: "/partners/official/linebet.svg",
+    logoDark: "/partners/official/linebet.svg",
+    logoBackground: "#015003",
     link: "https://lb-aff.com/L?tag=d_1972375m_66803c_apk1&site=1972375&ad=66803",
     promoCode: "PREDAT",
     bonus: "130.000 FCFA",
@@ -39,8 +42,9 @@ export const PARTNERS: Partner[] = [
   {
     id: "1win",
     name: "1WIN",
-    logo: "https://1win.com/img/logo-white.svg",
-    logoDark: "https://1win.com/img/logo.svg",
+    logo: "/partners/official/1win.svg",
+    logoDark: "/partners/official/1win.svg",
+    logoBackground: "#ffffff",
     link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
     promoCode: "BALLWIN",
     bonus: "500% de Bonus",
@@ -50,8 +54,9 @@ export const PARTNERS: Partner[] = [
   {
     id: "1win-predat",
     name: "1WIN (PREDAT)",
-    logo: "https://1win.com/img/logo-white.svg",
-    logoDark: "https://1win.com/img/logo.svg",
+    logo: "/partners/official/1win.svg",
+    logoDark: "/partners/official/1win.svg",
+    logoBackground: "#ffffff",
     link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
     promoCode: "PREDAT",
     bonus: "Bonus spécial",
@@ -61,8 +66,9 @@ export const PARTNERS: Partner[] = [
   {
     id: "betwinner",
     name: "BETWINNER",
-    logo: "https://betwinner.com/img/logo-white.svg",
-    logoDark: "https://betwinner.com/img/logo.svg",
+    logo: "/partners/official/betwinner.png",
+    logoDark: "/partners/official/betwinner.png",
+    logoBackground: "#050505",
     link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
     promoCode: "BALL10",
     bonus: "Bonus exclusif",
@@ -72,8 +78,9 @@ export const PARTNERS: Partner[] = [
   {
     id: "melbet",
     name: "MELBET",
-    logo: "https://melbet.com/img/logo-white.svg",
-    logoDark: "https://melbet.com/img/logo.svg",
+    logo: "/partners/official/melbet.svg",
+    logoDark: "/partners/official/melbet.svg",
+    logoBackground: "#ffffff",
     link: "https://refpa3665.com/L?tag=d_2730287m_45415c_&site=2730287&ad=45415",
     promoCode: "PREDAT",
     bonus: "Bonus de dépôt",
