@@ -757,7 +757,7 @@ const LiveFootAIPredictionCard = ({
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-xs shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-105 transition-all"
               >
                 <Crown className="h-3.5 w-3.5" />
-                DÉBLOQUER LES VALUE BETS
+                DEVENIR VIP
               </Link>
             </motion.div>
           )}

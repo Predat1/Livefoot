@@ -1594,7 +1594,7 @@ const Match = () => {
                 }
                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 text-center"
               >
-                DÉBLOQUER LES VALUE BETS
+                REJOINDRE LE CLUB VIP
               </Link>
               <span className="text-xs font-bold text-muted-foreground">Analyses avancées & Communauté VIP</span>
             </div>

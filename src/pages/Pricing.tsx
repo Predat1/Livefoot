@@ -255,7 +255,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tester 7 jours"}
+                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
 
               <div className="space-y-2.5">
@@ -297,7 +297,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Débloquer les Value Bets"}
+                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.start")}
               </button>
 
               <div className="space-y-2.5">
@@ -340,7 +340,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accéder aux outils pro"}
+                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
               </button>
 
               <div className="space-y-2.5">
@@ -388,7 +388,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
               >
-                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Maximiser mon ROI"}
+                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.join")}
               </button>
 
               <div className="space-y-2.5 relative z-10">

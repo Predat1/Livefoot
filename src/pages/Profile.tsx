@@ -215,7 +215,7 @@ const Profile = () => {
                     })
                   }
                 >
-                  DÉBLOQUER LES VALUE BETS
+                  DEVENIR VIP MAINTENANT
                 </Link>
               </Button>
             </div>
