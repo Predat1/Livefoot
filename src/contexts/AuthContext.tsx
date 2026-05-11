@@ -14,6 +14,8 @@ interface Profile {
   points?: number;
   rank_title?: string;
   vip_expires_at?: string | null;
+  is_banned?: boolean;
+  banned_reason?: string | null;
 }
 
 interface AuthContextType {
@@ -22,6 +24,8 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isVip: boolean;
+  isBanned: boolean;
+  banReason: string | null;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -33,11 +37,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [banCheckFailed, setBanCheckFailed] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     try {
       const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
-      setProfile((data as Profile) ?? null);
+      const profileData = data as Profile;
+      
+      // Verification du bannissement
+      if (profileData?.is_banned) {
+        console.warn("Utilisateur banni - deconnexion forcee");
+        setBanCheckFailed(true);
+        await supabase.auth.signOut();
+        setProfile(null);
+        setUser(null);
+        setSession(null);
+        // Redirection via window.location pour forcer le rechargement
+        window.location.href = "/login?banned=1&reason=" + encodeURIComponent(profileData.banned_reason || "");
+        return;
+      }
+      
+      setProfile(profileData ?? null);
     } catch (e) {
       console.warn("fetchProfile failed", e);
       setProfile(null);
@@ -54,6 +74,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user?.user_metadata?.is_vip ||
     user?.app_metadata?.is_vip
   );
+  
+  // Banned status
+  const isBanned = profile?.is_banned ?? false;
+  const banReason = profile?.banned_reason ?? null;
 
   useEffect(() => {
     if (!supabase || !supabase.auth) {
@@ -91,8 +115,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  // Si banni, afficher un message et empecher l'acces
+  if (banCheckFailed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Compte suspendu</h1>
+          <p className="text-slate-400">Votre compte a ete banni.</p>
+          <p className="text-slate-500 text-sm mt-2">Contactez l'administrateur pour plus d'informations.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isVip, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isVip, isBanned, banReason, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
