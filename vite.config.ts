@@ -35,60 +35,30 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false, // build plus rapide
     rollupOptions: {
       output: {
-        // Split intelligent : chaque grosse lib dans son propre chunk
-        // -> meilleur cache navigateur + parallelisation du download
+        // Chunking simple sans dépendances circulaires.
+        // Toutes les libs node_modules dans "vendor" pour éviter les TDZ errors.
+        // Vite + tree-shaking optimisent le reste.
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
 
-          // React core - charge en premier, reste stable
-          if (id.includes("react-dom") || id.match(/[\\/]node_modules[\\/]react[\\/]/) || id.includes("scheduler")) {
-            return "react-core";
-          }
-          // Router
-          if (id.includes("react-router")) {
-            return "router";
-          }
-          // Animations - lourd (~100 KB), peut etre charge plus tard
-          if (id.includes("framer-motion")) {
-            return "motion";
-          }
-          // Charts - tres lourd (Recharts ~375 KB), uniquement pour Match/PlayerDetail
+          // Charts isolés (lourds, uniquement chargés sur Match/PlayerDetail)
           if (id.includes("recharts") || id.includes("d3-")) {
             return "charts";
           }
-          // Radix UI - tres modulaire mais nombreux composants
-          if (id.includes("@radix-ui")) {
-            return "radix";
-          }
-          // Supabase
-          if (id.includes("@supabase") || id.includes("@tanstack/react-query")) {
-            return "data";
-          }
-          // i18n
-          if (id.includes("i18next") || id.includes("react-i18next")) {
-            return "i18n";
-          }
-          // Icones
+          // Icons isolés (peuvent être tree-shakés mais lourds)
           if (id.includes("lucide-react")) {
             return "icons";
           }
-          // Sentry - ne doit pas bloquer le premier paint
+          // Sentry isolé (chargé après le first paint)
           if (id.includes("@sentry")) {
             return "sentry";
           }
-          // Forms
-          if (id.includes("react-hook-form") || id.includes("@hookform") || id.includes("zod")) {
-            return "forms";
-          }
-          // Date utils
-          if (id.includes("date-fns")) {
-            return "date";
-          }
-          // Tout le reste des node_modules
+          // Tout le reste (React, Router, Supabase, Radix, etc.) dans vendor
+          // pour éviter les dépendances circulaires entre chunks
           return "vendor";
         },
       },
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 800,
   },
 }));
