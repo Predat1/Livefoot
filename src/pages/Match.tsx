@@ -751,56 +751,84 @@ const Match = () => {
           )}
 
           <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
-            <div className="bg-league-header px-4 py-2.5 border-b border-border">
-              <h3 className="font-bold text-sm text-foreground">Lineups</h3>
+            <div className="bg-league-header px-4 py-2.5 border-b border-border flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <h3 className="font-bold text-sm text-foreground">Compositions Officielles</h3>
             </div>
             <div className="p-4 sm:p-6">
               {lineups.length >= 2 ? (
-                <div className="grid grid-cols-2 gap-4 sm:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {lineups.map((teamLineup: any, tIdx: number) => (
-                    <div key={tIdx}>
-                      <h4 className="font-bold text-sm text-foreground mb-3 flex items-center gap-2">
-                        {teamLineup.team?.logo && <img src={teamLineup.team.logo} alt="" className="h-5 w-5 object-contain" />}
-                        {teamLineup.team?.name} ({teamLineup.formation})
-                      </h4>
-                      <div className="space-y-1.5">
+                    <div key={tIdx} className="space-y-3">
+                      {/* Team Header with Formation */}
+                      <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
+                        <div className="flex items-center gap-2">
+                          {teamLineup.team?.logo && <img src={teamLineup.team.logo} alt="" className="h-6 w-6 object-contain" />}
+                          <span className="font-bold text-sm text-foreground">{teamLineup.team?.name}</span>
+                        </div>
+                        <span className="text-xs font-black text-primary bg-primary/10 px-2 py-1 rounded">{teamLineup.formation}</span>
+                      </div>
+                      
+                      {/* Starting XI */}
+                      <div className="space-y-1">
+                        <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Titulaires</h5>
                         {(teamLineup.startXI || []).map((item: any, i: number) => (
-                          <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/40 transition-colors">
-                            <span className="w-6 text-center text-xs font-black text-primary bg-primary/10 rounded">{item.player?.number || "-"}</span>
-                            <span className="text-xs font-medium text-foreground flex-1 truncate">{item.player?.name}</span>
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">{item.player?.pos}</span>
+                          <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors border border-border/30">
+                            <span className="w-8 h-8 flex items-center justify-center text-sm font-black text-primary bg-primary/15 rounded-full shrink-0">{item.player?.number || "-"}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{item.player?.name}</p>
+                              <p className="text-[10px] text-muted-foreground">{item.player?.pos === "G" ? "Gardien" : item.player?.pos === "D" ? "Défenseur" : item.player?.pos === "M" ? "Milieu" : item.player?.pos === "F" ? "Attaquant" : item.player?.pos}</p>
+                            </div>
                           </div>
                         ))}
                       </div>
+                      
+                      {/* Substitutes */}
                       {(teamLineup.substitutes || []).length > 0 && (
-                        <div className="mt-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="h-px flex-1 bg-border" />
-                            <span className="text-[10px] font-semibold text-muted-foreground uppercase">Remplaçants</span>
-                            <div className="h-px flex-1 bg-border" />
-                          </div>
-                          <div className="space-y-1 opacity-75">
+                        <div className="pt-2 border-t border-border/50">
+                          <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Remplaçants</h5>
+                          <div className="space-y-1">
                             {(teamLineup.substitutes || []).map((item: any, i: number) => (
-                              <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-muted/30">
-                                <span className="w-5 text-center text-[10px] font-bold text-muted-foreground">{item.player?.number}</span>
-                                <span className="text-xs text-foreground flex-1">{item.player?.name}</span>
+                              <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-muted/20 opacity-80">
+                                <span className="w-6 text-center text-xs font-bold text-muted-foreground">{item.player?.number}</span>
+                                <span className="text-xs text-foreground flex-1 truncate">{item.player?.name}</span>
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
+                      
+                      {/* Coach */}
                       {teamLineup.coach?.name && (
-                        <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
-                          {teamLineup.coach?.photo && <img src={teamLineup.coach.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase">Coach</span>
-                          <span className="text-xs font-bold text-foreground">{teamLineup.coach.name}</span>
+                        <div className="mt-2 flex items-center gap-3 p-2.5 rounded-lg bg-gradient-to-r from-primary/10 to-transparent border border-primary/20">
+                          {teamLineup.coach?.photo ? (
+                            <img src={teamLineup.coach.photo} alt="" className="h-8 w-8 rounded-full object-cover border-2 border-primary/30" />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                              <User className="h-4 w-4 text-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Entraîneur</span>
+                            <span className="text-sm font-bold text-foreground">{teamLineup.coach.name}</span>
+                          </div>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <EmptyMatchData label="Compositions" />
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Compositions non disponibles</p>
+                  <p className="text-xs text-muted-foreground/60 mb-4">Les lineups seront publiées environ 1h avant le match</p>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Rafraîchir
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -1178,36 +1206,89 @@ const Match = () => {
             </div>
             <div className="p-3 sm:p-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[{ teamId: homeTeamId, team: homeTeam }, { teamId: awayTeamId, team: awayTeam }].map(({ teamId: tId, team }) => (
-                  <div key={tId}>
-                    <h4 className="font-bold text-xs text-foreground mb-2 flex items-center gap-2">
-                      {team.logo && <img src={team.logo} alt="" className="h-4 w-4 object-contain" />}
-                      {team.name}
-                    </h4>
-                    <div className="space-y-1.5">
-                      {injuries.filter((inj: any) => String(inj.team?.id) === tId).length > 0 ? (
-                        injuries.filter((inj: any) => String(inj.team?.id) === tId).map((inj: any, i: number) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="flex items-center gap-2 p-2 rounded-lg bg-destructive/5"
-                          >
-                            {inj.player?.photo && <img src={inj.player.photo} alt="" className="h-6 w-6 rounded-full object-cover" />}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-foreground truncate">{inj.player?.name}</p>
-                              <p className="text-[10px] text-destructive">{inj.player?.reason || "Injured"}</p>
-                            </div>
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0">{inj.player?.type}</span>
-                          </motion.div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-muted-foreground">Aucune blessure signalée</p>
-                      )}
+                {[{ teamId: homeTeamId, team: homeTeam }, { teamId: awayTeamId, team: awayTeam }].map(({ teamId: tId, team }) => {
+                  const teamInjuries = injuries.filter((inj: any) => String(inj.team?.id) === tId);
+                  return (
+                    <div key={tId}>
+                      <h4 className="font-bold text-xs text-foreground mb-2 flex items-center gap-2">
+                        {team.logo && <img src={team.logo} alt="" className="h-4 w-4 object-contain" />}
+                        {team.name}
+                      </h4>
+                      <div className="space-y-1.5">
+                        {teamInjuries.length > 0 ? (
+                          teamInjuries.map((inj: any, i: number) => {
+                            // Translate injury reasons
+                            const reasonMap: Record<string, string> = {
+                              "Injured": "Blessé",
+                              "Suspension": "Suspendu",
+                              "Knock": "Coup",
+                              "Fatigue": "Fatigue",
+                              "Illness": "Maladie",
+                              "Rest": "Repos",
+                              "Personal": "Raisons pers.",
+                              "International": "Sélection",
+                            };
+                            const typeMap: Record<string, string> = {
+                              "Missing Fixture": "Indisponible",
+                              "Doubtful": "Incertain",
+                              "Out": "Forfait",
+                            };
+                            const reason = reasonMap[inj.player?.reason] || inj.player?.reason || "Indisponible";
+                            const type = typeMap[inj.player?.type] || inj.player?.type || "";
+                            
+                            return (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                                className={cn(
+                                  "flex items-center gap-2 p-2 rounded-lg border",
+                                  inj.player?.type === "Out" ? "bg-destructive/10 border-destructive/20" :
+                                  inj.player?.type === "Doubtful" ? "bg-amber-500/10 border-amber-500/20" :
+                                  "bg-muted/30 border-border/30"
+                                )}
+                              >
+                                {inj.player?.photo ? (
+                                  <img src={inj.player.photo} alt="" className="h-7 w-7 rounded-full object-cover" />
+                                ) : (
+                                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center">
+                                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-foreground truncate">{inj.player?.name}</p>
+                                  <p className={cn(
+                                    "text-[10px]",
+                                    inj.player?.type === "Out" ? "text-destructive" :
+                                    inj.player?.type === "Doubtful" ? "text-amber-500" :
+                                    "text-muted-foreground"
+                                  )}>{reason}</p>
+                                </div>
+                                {type && (
+                                  <span className={cn(
+                                    "text-[9px] px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0",
+                                    inj.player?.type === "Out" ? "bg-destructive/20 text-destructive" :
+                                    inj.player?.type === "Doubtful" ? "bg-amber-500/20 text-amber-600" :
+                                    "bg-muted text-muted-foreground"
+                                  )}>{type}</span>
+                                )}
+                              </motion.div>
+                            );
+                          })
+                        ) : (
+                          <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                            <p className="text-xs text-emerald-600 font-medium flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                              Aucun absent signalé
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-1">Tous les joueurs disponibles</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1469,9 +1550,18 @@ const Match = () => {
                 );
               })()}
               
+              {/* Stadium and Referee Info */}
               <div className="flex items-center justify-center gap-4 sm:gap-8 text-[11px] sm:text-sm font-medium text-muted-foreground flex-wrap">
-                {venue?.name && <div className="flex items-center gap-1.5 bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-sm"><MapPin className="h-3.5 w-3.5 text-primary" /><span>{venue.name}</span></div>}
-                {referee && <div className="flex items-center gap-1.5 bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-sm"><User className="h-3.5 w-3.5 text-primary" /><span>{referee}</span></div>}
+                <div className="flex items-center gap-1.5 bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-sm">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  <span>{venue?.name || venue?.city || "Stade à confirmer"}</span>
+                </div>
+                {referee && (
+                  <div className="flex items-center gap-1.5 bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-sm">
+                    <User className="h-3.5 w-3.5 text-primary" />
+                    <span>{referee}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
