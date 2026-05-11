@@ -24,6 +24,7 @@ const AdminSettings = lazy(() => import("@/pages/Admin/Settings"));
 const News = lazy(() => import("@/pages/News"));
 const NewsDetail = lazy(() => import("@/pages/NewsDetail"));
 const Competitions = lazy(() => import("@/pages/Competitions"));
+const CompetitionDetail = lazy(() => import("@/pages/CompetitionDetail"));
 const Teams = lazy(() => import("@/pages/Teams"));
 const TeamDetail = lazy(() => import("@/pages/TeamDetail"));
 const Players = lazy(() => import("@/pages/Players"));
@@ -89,6 +90,7 @@ const AnimatedRoutes = () => {
             <Route path="/news" element={<PageTransition><News /></PageTransition>} />
             <Route path="/news/:newsId" element={<PageTransition><NewsDetail /></PageTransition>} />
             <Route path="/competitions" element={<PageTransition><Competitions /></PageTransition>} />
+            <Route path="/competitions/:id" element={<PageTransition><CompetitionDetail /></PageTransition>} />
             <Route path="/standings" element={<PageTransition><Standings /></PageTransition>} />
             <Route path="/teams" element={<PageTransition><Teams /></PageTransition>} />
             <Route path="/teams/:teamId" element={<PageTransition><TeamDetail /></PageTransition>} />

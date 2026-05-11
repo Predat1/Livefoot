@@ -287,6 +287,23 @@ export function useTopAssists(leagueId: string, season: string) {
   });
 }
 
+// ─── League Fixtures ─────────────────────────────────────────
+export function useLeagueFixtures(leagueId: string) {
+  return useQuery({
+    queryKey: ["league-fixtures", leagueId],
+    queryFn: async () => {
+      const res = await fetchFromSupabase("fixtures", {
+        league: leagueId,
+        season: "2024",
+        status: "NS", // Not started (upcoming)
+      });
+      return res.response || [];
+    },
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    enabled: !!leagueId,
+  });
+}
+
 // ─── Standings ────────────────────────────────────────────────
 
 export interface StandingTeam {
