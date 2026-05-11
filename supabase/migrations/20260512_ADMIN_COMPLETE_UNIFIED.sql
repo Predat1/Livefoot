@@ -40,19 +40,20 @@ CREATE TABLE IF NOT EXISTS public.admin_audit_log (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX audit_admin_idx ON public.admin_audit_log(admin_id, created_at DESC);
-CREATE INDEX audit_target_idx ON public.admin_audit_log(target_type, target_id);
-CREATE INDEX audit_date_idx ON public.admin_audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS audit_admin_idx ON public.admin_audit_log(admin_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS audit_target_idx ON public.admin_audit_log(target_type, target_id);
+CREATE INDEX IF NOT EXISTS audit_date_idx ON public.admin_audit_log(created_at DESC);
 
 ALTER TABLE public.admin_audit_log ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view audit logs"
-  ON public.admin_audit_log FOR SELECT
-  USING (public.is_admin());
-
-CREATE POLICY "Admins can insert audit logs"
-  ON public.admin_audit_log FOR INSERT
-  WITH CHECK (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'admin_audit_log' AND policyname = 'Admins can view audit logs') THEN
+    CREATE POLICY "Admins can view audit logs" ON public.admin_audit_log FOR SELECT USING (public.is_admin());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'admin_audit_log' AND policyname = 'Admins can insert audit logs') THEN
+    CREATE POLICY "Admins can insert audit logs" ON public.admin_audit_log FOR INSERT WITH CHECK (public.is_admin());
+  END IF;
+END $$;
 
 -- 1.4 RPC admin_user_detail
 CREATE OR REPLACE FUNCTION public.admin_user_detail(p_user_id UUID)
@@ -195,33 +196,7 @@ $$;
 -- PHASE 2: MONÉTISATION
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- 2.1 Table transactions
-CREATE TABLE IF NOT EXISTS public.transactions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  user_email TEXT,
-  type TEXT NOT NULL,
-  amount_eur NUMERIC(10, 2) NOT NULL,
-  currency TEXT DEFAULT 'EUR',
-  status TEXT NOT NULL DEFAULT 'pending',
-  payment_method TEXT,
-  external_id TEXT,
-  metadata JSONB,
-  partner_id UUID REFERENCES public.partners(id),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX transactions_user_idx ON public.transactions(user_id, created_at DESC);
-CREATE INDEX transactions_status_idx ON public.transactions(status);
-
-ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can view all transactions"
-  ON public.transactions FOR SELECT
-  USING (public.is_admin());
-
--- 2.2 Table partners
+-- 2.1 Table partners (doit être créée AVANT transactions)
 CREATE TABLE IF NOT EXISTS public.partners (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
@@ -244,13 +219,43 @@ CREATE TABLE IF NOT EXISTS public.partners (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX partners_type_idx ON public.partners(type);
+CREATE INDEX IF NOT EXISTS partners_type_idx ON public.partners(type);
 
 ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can manage partners"
-  ON public.partners FOR ALL
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'partners' AND policyname = 'Admins can manage partners') THEN
+    CREATE POLICY "Admins can manage partners" ON public.partners FOR ALL USING (public.is_admin());
+  END IF;
+END $$;
+
+-- 2.2 Table transactions
+CREATE TABLE IF NOT EXISTS public.transactions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_email TEXT,
+  type TEXT NOT NULL,
+  amount_eur NUMERIC(10, 2) NOT NULL,
+  currency TEXT DEFAULT 'EUR',
+  status TEXT NOT NULL DEFAULT 'pending',
+  payment_method TEXT,
+  external_id TEXT,
+  metadata JSONB,
+  partner_id UUID REFERENCES public.partners(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS transactions_user_idx ON public.transactions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS transactions_status_idx ON public.transactions(status);
+
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'transactions' AND policyname = 'Admins can view all transactions') THEN
+    CREATE POLICY "Admins can view all transactions" ON public.transactions FOR SELECT USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 2.3 RPC admin_revenue_stats
 CREATE OR REPLACE FUNCTION public.admin_revenue_stats()
@@ -290,15 +295,17 @@ CREATE TABLE IF NOT EXISTS public.page_views (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX pageviews_session_idx ON public.page_views(session_id, created_at DESC);
-CREATE INDEX pageviews_path_idx ON public.page_views(path);
-CREATE INDEX pageviews_date_idx ON public.page_views(created_at DESC);
+CREATE INDEX IF NOT EXISTS pageviews_session_idx ON public.page_views(session_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS pageviews_path_idx ON public.page_views(path);
+CREATE INDEX IF NOT EXISTS pageviews_date_idx ON public.page_views(created_at DESC);
 
 ALTER TABLE public.page_views ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view page views"
-  ON public.page_views FOR SELECT
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'page_views' AND policyname = 'Admins can view page views') THEN
+    CREATE POLICY "Admins can view page views" ON public.page_views FOR SELECT USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 3.2 RPC admin_analytics_stats
 CREATE OR REPLACE FUNCTION public.admin_analytics_stats(p_days INT DEFAULT 30)
@@ -352,13 +359,15 @@ CREATE TABLE IF NOT EXISTS public.content_moderation_queue (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX moderation_status_idx ON public.content_moderation_queue(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS moderation_status_idx ON public.content_moderation_queue(status, created_at DESC);
 
 ALTER TABLE public.content_moderation_queue ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view queue"
-  ON public.content_moderation_queue FOR SELECT
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'content_moderation_queue' AND policyname = 'Admins can view queue') THEN
+    CREATE POLICY "Admins can view queue" ON public.content_moderation_queue FOR SELECT USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 4.2 Table feature_flags
 CREATE TABLE IF NOT EXISTS public.feature_flags (
@@ -376,13 +385,14 @@ CREATE TABLE IF NOT EXISTS public.feature_flags (
 
 ALTER TABLE public.feature_flags ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can view feature flags"
-  ON public.feature_flags FOR SELECT
-  TO authenticated, anon USING (TRUE);
-
-CREATE POLICY "Only admins can manage"
-  ON public.feature_flags FOR ALL
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feature_flags' AND policyname = 'Anyone can view feature flags') THEN
+    CREATE POLICY "Anyone can view feature flags" ON public.feature_flags FOR SELECT TO authenticated, anon USING (TRUE);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feature_flags' AND policyname = 'Only admins can manage') THEN
+    CREATE POLICY "Only admins can manage" ON public.feature_flags FOR ALL USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 4.3 Table site_settings
 CREATE TABLE IF NOT EXISTS public.site_settings (
@@ -395,13 +405,14 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
 
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can view settings"
-  ON public.site_settings FOR SELECT
-  TO authenticated, anon USING (TRUE);
-
-CREATE POLICY "Only admins can update"
-  ON public.site_settings FOR ALL
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'site_settings' AND policyname = 'Anyone can view settings') THEN
+    CREATE POLICY "Anyone can view settings" ON public.site_settings FOR SELECT TO authenticated, anon USING (TRUE);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'site_settings' AND policyname = 'Only admins can update') THEN
+    CREATE POLICY "Only admins can update" ON public.site_settings FOR ALL USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 4.4 RPC admin_moderation_stats
 CREATE OR REPLACE FUNCTION public.admin_moderation_stats()
@@ -525,18 +536,19 @@ CREATE TABLE IF NOT EXISTS public.admin_notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX admin_notifications_unread_idx ON public.admin_notifications(read, created_at DESC);
-CREATE INDEX admin_notifications_type_idx ON public.admin_notifications(type);
+CREATE INDEX IF NOT EXISTS admin_notifications_unread_idx ON public.admin_notifications(read, created_at DESC);
+CREATE INDEX IF NOT EXISTS admin_notifications_type_idx ON public.admin_notifications(type);
 
 ALTER TABLE public.admin_notifications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view notifications"
-  ON public.admin_notifications FOR SELECT
-  USING (public.is_admin());
-
-CREATE POLICY "Admins can update notifications"
-  ON public.admin_notifications FOR UPDATE
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'admin_notifications' AND policyname = 'Admins can view notifications') THEN
+    CREATE POLICY "Admins can view notifications" ON public.admin_notifications FOR SELECT USING (public.is_admin());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'admin_notifications' AND policyname = 'Admins can update notifications') THEN
+    CREATE POLICY "Admins can update notifications" ON public.admin_notifications FOR UPDATE USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 5.2 RPC admin_notifications_list
 CREATE OR REPLACE FUNCTION public.admin_notifications_list(
@@ -636,18 +648,19 @@ CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
   confirmation_token TEXT
 );
 
-CREATE INDEX newsletter_email_idx ON public.newsletter_subscribers(email);
-CREATE INDEX newsletter_active_idx ON public.newsletter_subscribers(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS newsletter_email_idx ON public.newsletter_subscribers(email);
+CREATE INDEX IF NOT EXISTS newsletter_active_idx ON public.newsletter_subscribers(is_active) WHERE is_active = TRUE;
 
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can subscribe"
-  ON public.newsletter_subscribers FOR INSERT
-  WITH CHECK (TRUE);
-
-CREATE POLICY "Admins can view subscribers"
-  ON public.newsletter_subscribers FOR SELECT
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'newsletter_subscribers' AND policyname = 'Anyone can subscribe') THEN
+    CREATE POLICY "Anyone can subscribe" ON public.newsletter_subscribers FOR INSERT WITH CHECK (TRUE);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'newsletter_subscribers' AND policyname = 'Admins can view subscribers') THEN
+    CREATE POLICY "Admins can view subscribers" ON public.newsletter_subscribers FOR SELECT USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 6.2 Table api_usage_logs
 CREATE TABLE IF NOT EXISTS public.api_usage_logs (
@@ -663,14 +676,16 @@ CREATE TABLE IF NOT EXISTS public.api_usage_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX api_usage_endpoint_idx ON public.api_usage_logs(endpoint, created_at DESC);
-CREATE INDEX api_usage_user_idx ON public.api_usage_logs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS api_usage_endpoint_idx ON public.api_usage_logs(endpoint, created_at DESC);
+CREATE INDEX IF NOT EXISTS api_usage_user_idx ON public.api_usage_logs(user_id, created_at DESC);
 
 ALTER TABLE public.api_usage_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view API usage"
-  ON public.api_usage_logs FOR SELECT
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_usage_logs' AND policyname = 'Admins can view API usage') THEN
+    CREATE POLICY "Admins can view API usage" ON public.api_usage_logs FOR SELECT USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 6.3 Table backups
 CREATE TABLE IF NOT EXISTS public.backups (
@@ -689,9 +704,11 @@ CREATE TABLE IF NOT EXISTS public.backups (
 
 ALTER TABLE public.backups ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view backups"
-  ON public.backups FOR SELECT
-  USING (public.is_admin());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'backups' AND policyname = 'Admins can view backups') THEN
+    CREATE POLICY "Admins can view backups" ON public.backups FOR SELECT USING (public.is_admin());
+  END IF;
+END $$;
 
 -- 6.4 RPC admin_newsletter_stats
 CREATE OR REPLACE FUNCTION public.admin_newsletter_stats()
