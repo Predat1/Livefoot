@@ -13,6 +13,12 @@ import AdminContent from "@/pages/Admin/Content";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 
+// Lazy: admin pages
+const AdminMonetization = lazy(() => import("@/pages/Admin/Monetization"));
+const AdminAnalytics = lazy(() => import("@/pages/Admin/Analytics"));
+const AdminLogs = lazy(() => import("@/pages/Admin/Logs"));
+const AdminSettings = lazy(() => import("@/pages/Admin/Settings"));
+
 // Lazy: secondary pages
 const News = lazy(() => import("@/pages/News"));
 const NewsDetail = lazy(() => import("@/pages/NewsDetail"));
@@ -103,10 +109,10 @@ const AnimatedRoutes = () => {
               <Route path="users" element={<AdminUsers />} />
               <Route path="content" element={<AdminContent />} />
               <Route path="ai" element={<div className="p-8 text-center text-slate-400">IA & Prédictions - En construction</div>} />
-              <Route path="monetization" element={<div className="p-8 text-center text-slate-400">Monetisation - En construction</div>} />
-              <Route path="analytics" element={<div className="p-8 text-center text-slate-400">Analytics - En construction</div>} />
-              <Route path="logs" element={<div className="p-8 text-center text-slate-400">Logs - En construction</div>} />
-              <Route path="settings" element={<div className="p-8 text-center text-slate-400">Configuration - En construction</div>} />
+              <Route path="monetization" element={<AdminMonetization />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="logs" element={<AdminLogs />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
             <Route path="/bonuses" element={<PageTransition><Bonuses /></PageTransition>} />
             <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
