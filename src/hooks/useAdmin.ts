@@ -489,3 +489,125 @@ export function useDeletePartner() {
     },
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 3 : Analytics hybride
+// ═══════════════════════════════════════════════════════════════
+
+export interface AnalyticsStats {
+  internal_visitors: number;
+  internal_pageviews: number;
+  internal_avg_duration: number;
+  top_pages: { path: string; views: number }[];
+  top_countries: { country_code: string; visitors: number }[];
+  device_breakdown: Record<string, number>;
+  plausible_visitors: number;
+  plausible_pageviews: number;
+  plausible_avg_bounce: number;
+  plausible_sources: { source: string; visitors: number }[];
+  total_conversions: number;
+  conversion_value_eur: number;
+  period_days: number;
+}
+
+export function useAdminAnalyticsStats(days = 30) {
+  return useQuery({
+    queryKey: ["admin-analytics-stats", days],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_analytics_stats" as any, {
+        p_days: days,
+      });
+      if (error) throw error;
+      return data as AnalyticsStats;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export interface PlausibleRow {
+  date: string;
+  visitors: number;
+  pageviews: number;
+  bounce_rate: number;
+  avg_duration: number;
+  source?: string;
+  medium?: string;
+  country?: string;
+  device_type?: string;
+  page_path?: string;
+}
+
+export function useImportPlausible() {
+  return useMutation({
+    mutationFn: async (data: PlausibleRow[]) => {
+      const { data: result, error } = await supabase.rpc("admin_import_plausible" as any, {
+        p_data: JSON.stringify(data),
+      });
+      if (error) throw error;
+      return result as number;
+    },
+  });
+}
+
+export function useLogPageView() {
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      path,
+      referrer,
+      countryCode,
+      deviceType,
+      browser,
+      os,
+      lang,
+    }: {
+      sessionId: string;
+      path: string;
+      referrer?: string;
+      countryCode?: string;
+      deviceType?: string;
+      browser?: string;
+      os?: string;
+      lang?: string;
+    }) => {
+      const { error } = await supabase.rpc("log_page_view" as any, {
+        p_session_id: sessionId,
+        p_path: path,
+        p_referrer: referrer,
+        p_country_code: countryCode,
+        p_device_type: deviceType,
+        p_browser: browser,
+        p_os: os,
+        p_lang: lang,
+      });
+      if (error) throw error;
+    },
+  });
+}
+
+export function useLogConversion() {
+  return useMutation({
+    mutationFn: async ({
+      goalName,
+      sessionId,
+      userId,
+      valueEur,
+      metadata,
+    }: {
+      goalName: string;
+      sessionId: string;
+      userId?: string;
+      valueEur?: number;
+      metadata?: Record<string, any>;
+    }) => {
+      const { error } = await supabase.rpc("log_conversion" as any, {
+        p_goal_name: goalName,
+        p_session_id: sessionId,
+        p_user_id: userId,
+        p_value_eur: valueEur,
+        p_metadata: metadata,
+      });
+      if (error) throw error;
+    },
+  });
+}

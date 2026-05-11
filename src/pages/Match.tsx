@@ -111,6 +111,22 @@ const Match = () => {
   const navigate = useNavigate();
   const matchId = extractIdFromSlug(rawMatchId || "");
 
+  // ─── Vérification précoce si l'ID est invalide ───────────────
+  if (!matchId) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground mb-2">ID de match invalide</h1>
+          <p className="text-muted-foreground mb-6">L'identifiant du match est manquant ou incorrect.</p>
+          <Link to="/" className="inline-flex items-center gap-2 text-primary font-bold hover:underline">
+            <ArrowLeft className="h-4 w-4" /> Retour à l'accueil
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
+
   // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
   const { data: eventsData } = useFixtureEvents(matchId);
