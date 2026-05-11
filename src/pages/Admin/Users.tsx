@@ -17,9 +17,6 @@ import {
   Users,
   Search,
   Filter,
-  Shield,
-  ShieldCheck,
-  UserCog,
   Crown,
   Ban,
   CheckCircle,
@@ -35,26 +32,12 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-// Re-export pour UserDetailDrawer
-export { useUserRoles };
+// Re-export pour compatibilité
+export { useUserRoles } from "@/hooks/useAdmin";
 
-export const ROLE_CONFIG = {
-  admin: {
-    label: "Admin",
-    icon: Shield,
-    color: "bg-destructive/10 text-destructive border-destructive/30",
-  },
-  moderator: {
-    label: "Modérateur",
-    icon: ShieldCheck,
-    color: "bg-amber-500/10 text-amber-500 border-amber-500/30",
-  },
-  user: {
-    label: "Utilisateur",
-    icon: UserCog,
-    color: "bg-primary/10 text-primary border-primary/30",
-  },
-};
+// Import ROLE_CONFIG depuis utils partagé
+import { ROLE_CONFIG } from "@/lib/adminUtils";
+export { ROLE_CONFIG };
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();

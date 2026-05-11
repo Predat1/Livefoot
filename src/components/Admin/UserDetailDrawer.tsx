@@ -34,7 +34,7 @@ import {
   type UserDetail,
   type AuditLogEntry,
 } from "@/hooks/useAdmin";
-import { useUserRoles, ROLE_CONFIG } from "@/pages/Admin/Users";
+import { ROLE_CONFIG } from "@/lib/adminUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
