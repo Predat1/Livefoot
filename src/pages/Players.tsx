@@ -36,7 +36,7 @@ const LEAGUES = [
   { id: "61", name: "Ligue 1", country: "France" },
 ];
 
-const currentSeason = "2024";
+const currentSeason = "2025";
 
 const Players = () => {
   const [activePosition, setActivePosition] = useState("All");

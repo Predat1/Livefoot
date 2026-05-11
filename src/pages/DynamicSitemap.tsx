@@ -4,7 +4,7 @@ import { buildEntitySlug } from "@/utils/slugify";
 
 const LEAGUES = ["39", "140", "135", "78", "61", "2", "3"]; // PL, Liga, Serie A, BuLi, L1, CL, EL
 const BASE = "https://livefoot.fun";
-const SEASON = "2024";
+const SEASON = "2025";
 
 const DynamicSitemap = () => {
   const teamQueries = LEAGUES.map(id => useTeamsByLeague(id, SEASON));

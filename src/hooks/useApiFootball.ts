@@ -294,7 +294,7 @@ export function useLeagueFixtures(leagueId: string) {
     queryFn: async () => {
       const res = await fetchFromSupabase("fixtures", {
         league: leagueId,
-        season: "2024",
+        season: "2025",
         status: "NS", // Not started (upcoming)
       });
       return res.response || [];
