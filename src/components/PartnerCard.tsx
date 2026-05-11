@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, Copy, Check, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { trackConversionEvent } from "@/lib/conversionTracking";
 
 interface PartnerCardProps {
   partner: Partner;
   variant?: "full" | "compact";
+  source?: string;
 }
 
 const PartnerLogo: React.FC<{ partner: Partner; className?: string }> = ({ partner, className }) => {
@@ -30,14 +32,38 @@ const PartnerLogo: React.FC<{ partner: Partner; className?: string }> = ({ partn
   );
 };
 
-const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full" }) => {
+const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full", source = "partner_card" }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(partner.promoCode);
+    trackConversionEvent({
+      goalName: "Affiliate Promo Copied",
+      metadata: {
+        source,
+        partner_id: partner.id,
+        partner_name: partner.name,
+        promo_code: partner.promoCode,
+        variant,
+      },
+    });
     setCopied(true);
     toast.success(`Code promo ${partner.promoCode} copié !`);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleAffiliateClick = () => {
+    trackConversionEvent({
+      goalName: "Affiliate CTA Click",
+      metadata: {
+        source,
+        partner_id: partner.id,
+        partner_name: partner.name,
+        promo_code: partner.promoCode,
+        variant,
+      },
+    });
+    window.open(partner.link, "_blank");
   };
 
   if (variant === "compact") {
@@ -53,9 +79,9 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full" }) 
         <Button 
           size="sm" 
           className="h-8 rounded-lg text-[10px] font-black uppercase px-3"
-          onClick={() => window.open(partner.link, "_blank")}
+          onClick={handleAffiliateClick}
         >
-          PARIER
+          BONUS
         </Button>
       </div>
     );
@@ -99,9 +125,9 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, variant = "full" }) 
           
           <Button 
             className="w-full h-11 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-primary/20"
-            onClick={() => window.open(partner.link, "_blank")}
+            onClick={handleAffiliateClick}
           >
-            S'inscrire & Parier <ExternalLink className="ml-2 h-4 w-4" />
+            Obtenir le bonus <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </div>

@@ -19,6 +19,7 @@ import { mockTeams } from "@/data/teamsData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { cn } from "@/lib/utils";
 import ReferralWidget from "@/components/ReferralWidget";
+import { trackConversionEvent } from "@/lib/conversionTracking";
 
 const Profile = () => {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -201,7 +202,21 @@ const Profile = () => {
                 "Débloquez les pronostics Score Exact, les Value Bets et les analyses en direct en devenant VIP."
               </p>
               <Button asChild className="w-full gradient-primary rounded-xl font-bold">
-                <Link to="/pricing">DEVENIR VIP MAINTENANT</Link>
+                <Link
+                  to="/pricing"
+                  onClick={() =>
+                    trackConversionEvent({
+                      goalName: "VIP CTA Click",
+                      userId: user?.id,
+                      metadata: {
+                        source: "profile",
+                        placement: "status_card",
+                      },
+                    })
+                  }
+                >
+                  DÉBLOQUER LES VALUE BETS
+                </Link>
               </Button>
             </div>
           )}

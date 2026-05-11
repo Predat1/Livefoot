@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { getRandomPartner } from "@/data/partnersData";
 import PartnerCard from "@/components/PartnerCard";
 import { Link } from "react-router-dom";
+import { trackConversionEvent } from "@/lib/conversionTracking";
 
 interface LiveFootAIPredictionCardProps {
   fixtureId?: string;
@@ -740,10 +741,23 @@ const LiveFootAIPredictionCard = ({
               </p>
               <Link
                 to="/pricing"
+                onClick={() =>
+                  trackConversionEvent({
+                    goalName: "VIP CTA Click",
+                    userId: user?.id,
+                    metadata: {
+                      source: "ai_prediction",
+                      placement: "free_user_paywall",
+                      fixture_id: fixtureId || null,
+                      home_team: homeTeamName,
+                      away_team: awayTeamName,
+                    },
+                  })
+                }
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-xs shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-105 transition-all"
               >
                 <Crown className="h-3.5 w-3.5" />
-                DEVENIR VIP
+                DÉBLOQUER LES VALUE BETS
               </Link>
             </motion.div>
           )}
@@ -758,7 +772,7 @@ const LiveFootAIPredictionCard = ({
             <p className="text-[10px] font-black text-primary/80 uppercase tracking-widest text-center mb-4">
               Profitez du Bonus pour ce match
             </p>
-            <PartnerCard partner={featuredPartner} variant="full" />
+            <PartnerCard partner={featuredPartner} variant="full" source="ai_prediction_match_bonus" />
           </motion.div>
         </div>
 

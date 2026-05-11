@@ -36,7 +36,7 @@ const Bonuses = () => {
               className="animate-scale-in" 
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <PartnerCard partner={partner} />
+              <PartnerCard partner={partner} source="bonuses_page" />
             </div>
           ))}
         </div>

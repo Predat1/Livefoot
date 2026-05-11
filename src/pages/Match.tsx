@@ -28,6 +28,7 @@ import ShareWidget from "@/components/ShareWidget";
 import ShareButton from "@/components/ShareButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
+import { trackConversionEvent } from "@/lib/conversionTracking";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MatchDetailSkeleton } from "@/components/BrandedLoader";
 import TacticalPitch from "@/components/TacticalPitch";
@@ -109,6 +110,7 @@ function EmptyMatchData({ label }: { label: string }) {
 const Match = () => {
   const { matchId: rawMatchId } = useParams();
   const matchId = extractIdFromSlug(rawMatchId || "");
+  const { user } = useAuth();
 
   // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
@@ -1575,8 +1577,24 @@ const Match = () => {
               Alors que nos prédictions de base sont <strong>100% gratuites</strong>, le Club VIP vous donne accès aux "Value Bets" détectés par nos algorithmes avancés et aux alertes exclusives en temps réel.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <Link to="/pricing" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 text-center">
-                REJOINDRE LE CLUB VIP
+              <Link
+                to="/pricing"
+                onClick={() =>
+                  trackConversionEvent({
+                    goalName: "VIP CTA Click",
+                    userId: user?.id,
+                    metadata: {
+                      source: "match_detail",
+                      placement: "bottom_vip_cta",
+                      fixture_id: matchId,
+                      home_team: homeTeam.name,
+                      away_team: awayTeam.name,
+                    },
+                  })
+                }
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 text-center"
+              >
+                DÉBLOQUER LES VALUE BETS
               </Link>
               <span className="text-xs font-bold text-muted-foreground">Analyses avancées & Communauté VIP</span>
             </div>

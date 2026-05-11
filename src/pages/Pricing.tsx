@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import TelegramBanner from "@/components/TelegramBanner";
+import { trackConversionEvent } from "@/lib/conversionTracking";
 
 // ─── Features par plan ───────────────────────────────────────
 
@@ -62,6 +63,13 @@ const ANNUAL_FEATURES = [
   { icon: "💰", text: "Économie instantanée de 90€ vs mensuel", highlight: true },
 ];
 
+const PLAN_VALUES: Record<string, number> = {
+  weekly: 9.99,
+  monthly: 19.99,
+  quarterly: 49.99,
+  annual: 149.99,
+};
+
 export default function Pricing() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -74,14 +82,30 @@ export default function Pricing() {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") === "success") {
+      trackConversionEvent({
+        goalName: "VIP Checkout Success",
+        userId: user?.id,
+        metadata: {
+          source: "pricing",
+          checkout_status: "success",
+        },
+      });
       toast.success(t("pricing.payment_success_message") || "Paiement réussi ! Votre accès VIP est en cours d'activation.");
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (params.get("checkout") === "cancel") {
+      trackConversionEvent({
+        goalName: "VIP Checkout Cancel",
+        userId: user?.id,
+        metadata: {
+          source: "pricing",
+          checkout_status: "cancel",
+        },
+      });
       toast.error("Paiement annulé.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [t]);
+  }, [t, user?.id]);
 
   // ─── Checkout via Chariow Direct Link (Requested by user) ────
   const handleCheckout = (planId: string, productId: string) => {
@@ -92,6 +116,16 @@ export default function Pricing() {
     }
 
     setIsProcessing(planId);
+    trackConversionEvent({
+      goalName: "VIP Checkout Started",
+      userId: user.id,
+      valueEur: PLAN_VALUES[planId],
+      metadata: {
+        source: "pricing",
+        plan_id: planId,
+        product_id: productId,
+      },
+    });
     
     try {
       // The user provided specific URLs: https://nhvjjgbn.mychariow.shop/prd_xxxxxx/checkout
@@ -221,7 +255,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
+                {isProcessing === "weekly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tester 7 jours"}
               </button>
 
               <div className="space-y-2.5">
@@ -263,7 +297,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.start")}
+                {isProcessing === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Débloquer les Value Bets"}
               </button>
 
               <div className="space-y-2.5">
@@ -306,7 +340,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 mt-auto mb-6"
               >
-                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.select")}
+                {isProcessing === "quarterly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accéder aux outils pro"}
               </button>
 
               <div className="space-y-2.5">
@@ -354,7 +388,7 @@ export default function Pricing() {
                 disabled={isProcessing !== null}
                 className="w-full py-3 rounded-xl font-black text-sm transition-all bg-gradient-to-r from-amber-500 to-amber-400 hover:to-amber-300 text-black shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 mt-auto mb-6 relative z-10"
               >
-                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("pricing.join")}
+                {isProcessing === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Maximiser mon ROI"}
               </button>
 
               <div className="space-y-2.5 relative z-10">

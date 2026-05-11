@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { trackConversionEvent } from "@/lib/conversionTracking";
 
 export interface Favorites {
   teams: string[];
@@ -116,6 +117,18 @@ export const useFavorites = () => {
     toast(isCurrentlyFav ? "Retiré des favoris" : "Ajouté aux favoris", {
       description: name || id
     });
+
+    if (!isCurrentlyFav) {
+      trackConversionEvent({
+        goalName: "Favoris ajouté",
+        userId: user?.id,
+        metadata: {
+          entity_id: id,
+          entity_type: entityType,
+          entity_name: name || null,
+        },
+      });
+    }
 
     if (user) {
       if (isCurrentlyFav) {
