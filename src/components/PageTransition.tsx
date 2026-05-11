@@ -1,42 +1,13 @@
-import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
 interface PageTransitionProps {
   children: ReactNode;
 }
 
-const pageVariants = {
-  initial: {
-    opacity: 0,
-    y: 12,
-  },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.3,
-      ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -8,
-    transition: {
-      duration: 0.2,
-      ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
-    },
-  },
-};
-
+// Transition CSS pure : 0 JS, navigation perçue instantanée (~150ms)
+// Remplace framer-motion qui infligeait 0.5s de lag à chaque clic
 const PageTransition = ({ children }: PageTransitionProps) => (
-  <motion.div
-    variants={pageVariants}
-    initial="initial"
-    animate="animate"
-    exit="exit"
-  >
-    {children}
-  </motion.div>
+  <div className="animate-page-in">{children}</div>
 );
 
 export default PageTransition;

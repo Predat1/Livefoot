@@ -1,5 +1,4 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import { lazy, Suspense } from "react";
 import BrandedLoader from "./BrandedLoader";
 import PageTransition from "./PageTransition";
@@ -69,12 +68,10 @@ const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
-    // ✅ FIX: key sur AnimatePresence uniquement, pas sur Suspense
-    // Suspense reste stable et ne se démonte pas à chaque navigation
-    <AnimatePresence mode="wait">
-      <ErrorBoundary fallback={<RouteErrorFallback />}>
-        <Suspense fallback={<PageLoader />}>
-          <Routes location={location} key={location.pathname}>
+    // Transition CSS gérée par PageTransition (zero JS, instantanée)
+    <ErrorBoundary fallback={<RouteErrorFallback />}>
+      <Suspense fallback={<PageLoader />}>
+        <Routes location={location}>
             <Route path="/" element={<PageTransition><Index /></PageTransition>} />
             <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
             <Route path="/live" element={<PageTransition><Live /></PageTransition>} />
@@ -115,11 +112,10 @@ const AnimatedRoutes = () => {
             <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
             <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
             <Route path="/vip" element={<PageTransition><VipDashboard /></PageTransition>} />
-            <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-          </Routes>
-        </Suspense>
-      </ErrorBoundary>
-    </AnimatePresence>
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, Fragment } from "react";
+import React, { useState, useCallback, useMemo, Fragment, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHeadEnhanced";
@@ -14,22 +14,24 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2 } from "lucide-react";
-import ShareWidget from "@/components/ShareWidget";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { MatchSkeleton } from "@/components/BrandedLoader";
-import FavoritesFeed from "@/components/FavoritesFeed";
 import PlayerAvatar from "@/components/PlayerAvatar";
-import TopScorersWidget from "@/components/TopScorersWidget";
-import PartnerBanner from "@/components/PartnerBanner";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
-import TopMatches from "@/components/TopMatches";
 import { useAuth } from "@/contexts/AuthContext";
-import TelegramBanner from "@/components/TelegramBanner";
+
+// Widgets secondaires lazy-loaded -> sortis du bundle initial de la home
+const FavoritesFeed = lazy(() => import("@/components/FavoritesFeed"));
+const TopMatches = lazy(() => import("@/components/TopMatches"));
+const TopScorersWidget = lazy(() => import("@/components/TopScorersWidget"));
+const PartnerBanner = lazy(() => import("@/components/PartnerBanner"));
+const TelegramBanner = lazy(() => import("@/components/TelegramBanner"));
+const ShareWidget = lazy(() => import("@/components/ShareWidget"));
 
 const Index = () => {
   const livefootLogo = useAppLogo();
@@ -302,7 +304,9 @@ const SEO_FAQ = [
           </div>
         </section>
 
-        <FavoritesFeed leagues={leagues} isLoading={isLoading} />
+        <Suspense fallback={null}>
+          <FavoritesFeed leagues={leagues} isLoading={isLoading} />
+        </Suspense>
 
         {/* Top Community Players Widget */}
         {(topRatedPlayers && topRatedPlayers.length > 0) && (
@@ -373,14 +377,18 @@ const SEO_FAQ = [
         {/* Top Matches bloc - visible only on "all" filter */}
         {!isLoading && !isError && activeFilter === "all" && (
           <SectionErrorBoundary>
-            <TopMatches leagues={leagues} />
+            <Suspense fallback={null}>
+              <TopMatches leagues={leagues} />
+            </Suspense>
           </SectionErrorBoundary>
         )}
 
         {/* Telegram community banner */}
         {activeFilter === "all" && (
           <div className="mb-4">
-            <TelegramBanner variant="inline" dismissible={true} />
+            <Suspense fallback={null}>
+              <TelegramBanner variant="inline" dismissible={true} />
+            </Suspense>
           </div>
         )}
 
@@ -430,39 +438,53 @@ const SEO_FAQ = [
                   {/* Intercalate Top Scorers Widgets */}
                   {index === 0 && (
                     <SectionErrorBoundary>
-                      <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" className="my-6" />
+                      <Suspense fallback={null}>
+                        <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" className="my-6" />
+                      </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 1 && (
                     <SectionErrorBoundary>
-                      <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" className="my-6" />
+                      <Suspense fallback={null}>
+                        <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" className="my-6" />
+                      </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 2 && (
                     <SectionErrorBoundary>
-                      <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />
+                      <Suspense fallback={null}>
+                        <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />
+                      </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 3 && (
                     <SectionErrorBoundary>
-                      <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />
+                      <Suspense fallback={null}>
+                        <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />
+                      </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 4 && (
                     <SectionErrorBoundary>
-                      <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />
+                      <Suspense fallback={null}>
+                        <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />
+                      </Suspense>
                     </SectionErrorBoundary>
                   )}
                   
                   {/* Strategic Affiliate Placement Between Leagues */}
                   {index === 2 && (
                     <SectionErrorBoundary>
-                      <PartnerBanner partnerId="1xbet" className="my-8" />
+                      <Suspense fallback={null}>
+                        <PartnerBanner partnerId="1xbet" className="my-8" />
+                      </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 5 && (
                     <SectionErrorBoundary>
-                      <PartnerBanner partnerId="1win" className="my-8" />
+                      <Suspense fallback={null}>
+                        <PartnerBanner partnerId="1win" className="my-8" />
+                      </Suspense>
                     </SectionErrorBoundary>
                   )}
                 </Fragment>
@@ -547,11 +569,13 @@ const SEO_FAQ = [
               Partage l'application avec tes amis parieurs et fans de foot pour les aider à gagner grâce à nos pronos IA !
             </p>
             <div className="max-w-sm mx-auto">
-              <ShareWidget 
-                title="LiveFoot - Scores & Pronos IA"
-                text="Je te conseille LiveFoot pour suivre les scores en direct et avoir des pronostics IA de fou ! C'est 100% gratuit."
-                url="/"
-              />
+              <Suspense fallback={null}>
+                <ShareWidget 
+                  title="LiveFoot - Scores & Pronos IA"
+                  text="Je te conseille LiveFoot pour suivre les scores en direct et avoir des pronostics IA de fou ! C'est 100% gratuit."
+                  url="/"
+                />
+              </Suspense>
             </div>
           </div>
         </section>

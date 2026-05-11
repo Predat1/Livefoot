@@ -12,5 +12,13 @@ supabase link --project-ref YOUR_PROJECT_REF
 supabase functions deploy api-football
 supabase functions deploy ai-prediction
 supabase functions deploy football-news
+supabase functions deploy chariow-webhook
+supabase functions deploy ai-chat
+supabase functions deploy claim-referral
+supabase functions deploy create-checkout
+supabase functions deploy evaluate-predictions
+supabase functions deploy generate-logo
+supabase functions deploy sitemap
+supabase functions deploy validate-license
 
 Write-Host "Déploiement terminé !" -ForegroundColor Green

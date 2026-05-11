@@ -107,6 +107,10 @@ export default {
           from: { transform: "translateX(-100%)" },
           to: { transform: "translateX(100%)" },
         },
+        "page-in": {
+          from: { opacity: "0", transform: "translateY(6px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -115,6 +119,7 @@ export default {
         "slide-up": "slide-up 0.5s ease-out forwards",
         "scale-in": "scale-in 0.3s ease-out forwards",
         "shimmer": "shimmer 1.5s ease-in-out infinite",
+        "page-in": "page-in 0.18s ease-out",
       },
     },
   },
