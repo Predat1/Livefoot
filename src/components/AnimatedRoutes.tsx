@@ -12,6 +12,7 @@ import AdminUsers from "@/pages/Admin/Users";
 import AdminContent from "@/pages/Admin/Content";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
+import Match from "@/pages/Match";
 
 // Lazy: admin pages
 const AdminMonetization = lazy(() => import("@/pages/Admin/Monetization"));
@@ -28,7 +29,6 @@ const TeamDetail = lazy(() => import("@/pages/TeamDetail"));
 const Players = lazy(() => import("@/pages/Players"));
 const PlayerDetail = lazy(() => import("@/pages/PlayerDetail"));
 const Transfers = lazy(() => import("@/pages/Transfers"));
-const Match = lazy(() => import("@/pages/Match"));
 const Live = lazy(() => import("@/pages/Live"));
 const Install = lazy(() => import("@/pages/Install"));
 const Standings = lazy(() => import("@/pages/Standings"));
@@ -54,13 +54,18 @@ const VipDashboard = lazy(() => import("@/pages/VipDashboard"));
 const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
 
 // Fallback affiché si un lazy chunk ne se charge pas (réseau coupé, 404 CDN)
-const RouteErrorFallback = () => (
+const RouteErrorFallback = ({ error }: { error?: Error | null }) => (
   <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4 p-6 text-center">
     <div className="text-5xl">⚽</div>
     <h2 className="text-xl font-bold">Page temporairement indisponible</h2>
     <p className="text-slate-400 text-sm max-w-sm">
       Impossible de charger cette page. Vérifiez votre connexion et réessayez.
     </p>
+    {error?.message && (
+      <p className="text-xs text-slate-500 max-w-md break-words">
+        {error.message}
+      </p>
+    )}
     <button
       onClick={() => window.location.reload()}
       className="px-5 py-2 bg-emerald-500 rounded-lg font-bold hover:bg-emerald-600 transition-colors text-sm"
@@ -75,7 +80,7 @@ const AnimatedRoutes = () => {
 
   return (
     // Transition CSS gérée par PageTransition (zero JS, instantanée)
-    <ErrorBoundary fallback={<RouteErrorFallback />}>
+    <ErrorBoundary fallback={(error) => <RouteErrorFallback error={error} />}>
       <Suspense fallback={<PageLoader />}>
         <Routes location={location}>
             <Route path="/" element={<PageTransition><Index /></PageTransition>} />

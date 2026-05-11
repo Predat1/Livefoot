@@ -3,7 +3,7 @@ import { captureError } from "@/integrations/sentry";
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
+  fallback?: ReactNode | ((error: Error | null) => ReactNode);
 }
 
 interface State {
@@ -48,7 +48,11 @@ class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      if (this.props.fallback) return this.props.fallback;
+      if (this.props.fallback) {
+        return typeof this.props.fallback === "function"
+          ? this.props.fallback(this.state.error)
+          : this.props.fallback;
+      }
 
       return (
         <div style={{
