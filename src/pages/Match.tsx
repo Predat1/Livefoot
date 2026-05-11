@@ -257,6 +257,21 @@ const Match = () => {
   const time = fix?.fixture?.date 
     ? new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) 
     : "--:--";
+  const dateLabel = fix?.fixture?.date
+    ? new Date(fix.fixture.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+    : "";
+  const matchOgImage = `https://livefoot.fun/api/og/match/${encodeURIComponent(matchId)}?${new URLSearchParams({
+    home: homeTeam.name,
+    away: awayTeam.name,
+    homeLogo: homeTeam.logo,
+    awayLogo: awayTeam.logo,
+    homeScore: String(homeTeam.score ?? ""),
+    awayScore: String(awayTeam.score ?? ""),
+    status,
+    minute: minute ? String(minute) : "",
+    league: league?.name || "Football",
+    date: dateLabel,
+  }).toString()}`;
 
   const events = (eventsData || []) as any[];
   const teamStats = (statsData || []) as any[];
@@ -1207,7 +1222,7 @@ const Match = () => {
         title={`${homeTeam.name} vs ${awayTeam.name} en Direct Live | ${league?.name || "LiveFoot.fun"}`}
         description={`${homeTeam.name} vs ${awayTeam.name} EN DIRECT - Pronostics IA gratuits, score live, compositions, stats H2H et analyse complète. Match ${league?.name || ""} en temps réel sur LiveFoot.fun !`}
         keywords={`${homeTeam.name} vs ${awayTeam.name} direct, ${homeTeam.name} ${awayTeam.name} live, prono ${homeTeam.name} ${awayTeam.name}, score ${homeTeam.name} ${awayTeam.name}, match en direct ${homeTeam.name}, ${league?.name || ""} en direct, football live scores`}
-        ogImage={homeTeam.logo || awayTeam.logo}
+        ogImage={matchOgImage}
         canonical={`https://livefoot.fun/match/${matchId}`}
         matchData={{
           homeTeam: homeTeam.name,
@@ -1610,6 +1625,18 @@ const Match = () => {
             title={`LiveFoot: ${homeTeam.name} vs ${awayTeam.name}`}
             text={`Regarde le match ${homeTeam.name} vs ${awayTeam.name} en direct sur LiveFoot. Pronos IA, stats et scores live !`}
             url={`/match/${matchId}`}
+            matchShareData={{
+              homeTeam: homeTeam.name,
+              awayTeam: awayTeam.name,
+              homeLogo: homeTeam.logo,
+              awayLogo: awayTeam.logo,
+              homeScore: homeTeam.score,
+              awayScore: awayTeam.score,
+              status,
+              minute,
+              league: league?.name || "Football",
+              dateLabel,
+            }}
           />
         </div>
       </div>

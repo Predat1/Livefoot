@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { generateMatchShareImage, MatchShareImageData } from "@/lib/matchShareImage";
 
 interface ShareWidgetProps {
   title: string;
@@ -11,10 +12,12 @@ interface ShareWidgetProps {
   url: string;
   variant?: "icon" | "button" | "minimal";
   className?: string;
+  matchShareData?: Omit<MatchShareImageData, "matchUrl">;
 }
 
-const ShareWidget = ({ title, text, url, variant = "button", className }: ShareWidgetProps) => {
+const ShareWidget = ({ title, text, url, variant = "button", className, matchShareData }: ShareWidgetProps) => {
   const [isCopying, setIsCopying] = useState(false);
+  const [isSharingImage, setIsSharingImage] = useState(false);
   const fullUrl = url.startsWith("http") ? url : `https://livefoot.fun${url}`;
 
   const handleNativeShare = async () => {
@@ -40,6 +43,47 @@ const ShareWidget = ({ title, text, url, variant = "button", className }: ShareW
       description: "Vous pouvez maintenant le partager avec vos amis."
     });
     setTimeout(() => setIsCopying(false), 2000);
+  };
+
+  const handleShareImage = async () => {
+    if (!matchShareData) return;
+
+    setIsSharingImage(true);
+    try {
+      const file = await generateMatchShareImage({
+        ...matchShareData,
+        matchUrl: fullUrl,
+      });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title,
+          text,
+          url: fullUrl,
+          files: [file],
+        });
+      } else {
+        const objectUrl = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = objectUrl;
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(objectUrl);
+        copyToClipboard();
+        toast.success("Image du match téléchargée", {
+          description: "Le lien LiveFoot a aussi été copié.",
+        });
+      }
+    } catch {
+      copyToClipboard();
+      toast.error("Image indisponible", {
+        description: "Le lien du match a été copié à la place.",
+      });
+    } finally {
+      setIsSharingImage(false);
+    }
   };
 
   const shareLinks = [
@@ -68,10 +112,11 @@ const ShareWidget = ({ title, text, url, variant = "button", className }: ShareW
       <Button
         variant="ghost"
         size="sm"
-        onClick={handleNativeShare}
+        onClick={matchShareData ? handleShareImage : handleNativeShare}
+        disabled={isSharingImage}
         className={cn("h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all", className)}
       >
-        <Share2 className="h-4 w-4" />
+        <Share2 className={cn("h-4 w-4", isSharingImage && "animate-pulse")} />
       </Button>
     );
   }
@@ -95,6 +140,18 @@ const ShareWidget = ({ title, text, url, variant = "button", className }: ShareW
           {isCopying ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
         </Button>
       </div>
+
+      {matchShareData && (
+        <Button
+          variant="outline"
+          onClick={handleShareImage}
+          disabled={isSharingImage}
+          className="rounded-xl border-primary/20 bg-primary/10 hover:bg-primary/20 text-primary font-black gap-2"
+        >
+          <Share2 className={cn("h-4 w-4", isSharingImage && "animate-pulse")} />
+          {isSharingImage ? "Génération de l'image..." : "Partager avec image"}
+        </Button>
+      )}
       
       <div className="flex items-center justify-between gap-2">
         {shareLinks.map((link) => (

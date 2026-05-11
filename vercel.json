@@ -1,6 +1,17 @@
 {
   "rewrites": [
     {
+      "source": "/match/:matchId",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|Facebot|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Slackbot|Discordbot|Pinterest)"
+        }
+      ],
+      "destination": "/api/og-page/match/:matchId"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
