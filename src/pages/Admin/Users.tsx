@@ -4,6 +4,7 @@ import {
   useAdminUsers,
   useUserRoles,
   useAdminStats,
+  useExportUsersCsv,
 } from "@/hooks/useAdmin";
 import { UserDetailDrawer } from "@/components/Admin/UserDetailDrawer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +28,7 @@ import {
   Calendar,
   User,
   Eye,
+  Download,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -104,6 +106,24 @@ export default function AdminUsers() {
     setTimeout(() => setSelectedUserId(null), 300);
   };
 
+  // Export CSV
+  const exportUsers = useExportUsersCsv();
+  const handleExport = async () => {
+    try {
+      const csvData = await exportUsers.mutateAsync();
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Export CSV téléchargé');
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur lors de l\'export');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -146,6 +166,14 @@ export default function AdminUsers() {
             {filteredUsers?.length || 0} sur {users?.length || 0} utilisateurs
           </p>
         </div>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exportUsers.isPending}>
+          {exportUsers.isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
+          Export CSV
+        </Button>
       </div>
 
       {/* Filters */}

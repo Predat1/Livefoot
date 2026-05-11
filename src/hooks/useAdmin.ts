@@ -801,3 +801,69 @@ export function useIsFeatureEnabled(key: string, userId?: string) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 5 : Enhancements — Notifications, Export, Cache
+// ═══════════════════════════════════════════════════════════════
+
+export interface AdminNotification {
+  id: string;
+  type: string;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string;
+  data: Record<string, any>;
+  read: boolean;
+  created_at: string;
+}
+
+export function useAdminNotifications(limit = 50, unreadOnly = false) {
+  return useQuery({
+    queryKey: ["admin-notifications", limit, unreadOnly],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_notifications_list" as any, {
+        p_limit: limit,
+        p_unread_only: unreadOnly,
+      });
+      if (error) throw error;
+      return (data || []) as AdminNotification[];
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: unreadOnly ? 10 * 1000 : 60 * 1000, // 10s si unreadOnly, 1min sinon
+  });
+}
+
+export function useMarkNotificationRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase.rpc("admin_mark_notification_read" as any, {
+        p_notification_id: notificationId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-notifications"] });
+    },
+  });
+}
+
+export function useExportUsersCsv() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("admin_export_users_csv" as any);
+      if (error) throw error;
+      return data as string;
+    },
+  });
+}
+
+export function usePurgeCache() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("admin_purge_cache" as any);
+      if (error) throw error;
+      return data as { success: boolean; message: string; timestamp: string };
+    },
+  });
+}

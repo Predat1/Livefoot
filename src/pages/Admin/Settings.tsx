@@ -14,6 +14,7 @@ import {
   useSetFeatureFlag,
   useAdminSiteSettings,
   useSetMaintenanceMode,
+  usePurgeCache,
 } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +31,7 @@ import {
   Users,
   Crown,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 
 const FEATURE_ICONS: Record<string, any> = {
@@ -45,6 +47,7 @@ export default function AdminSettings() {
   const { data: siteSettings, isLoading: settingsLoading } = useAdminSiteSettings();
   const setFeatureFlag = useSetFeatureFlag();
   const setMaintenanceMode = useSetMaintenanceMode();
+  const purgeCache = usePurgeCache();
 
   const maintenanceEnabled = siteSettings?.find((s) => s.key === "maintenance_mode")?.value === "true";
   const maintenanceMessage = siteSettings?.find((s) => s.key === "maintenance_message")?.value || "";
@@ -91,6 +94,15 @@ export default function AdminSettings() {
       toast.success(`Mode maintenance ${enabled ? "activé" : "désactivé"}`);
     } catch (e: any) {
       toast.error(e.message || "Erreur");
+    }
+  };
+
+  const handlePurgeCache = async () => {
+    try {
+      const result = await purgeCache.mutateAsync();
+      toast.success(`Cache purgé - ${result.message}`);
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors du purge");
     }
   };
 
@@ -294,6 +306,39 @@ export default function AdminSettings() {
                 <Save className="h-4 w-4 mr-2" />
                 Sauvegarder
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Cache Section */}
+          <Card className="bg-slate-900/50 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-destructive" />
+                Cache & Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg border border-destructive/30">
+                <div>
+                  <p className="font-medium text-destructive">Purger le cache</p>
+                  <p className="text-sm text-slate-400">
+                    Force la réinitialisation du cache applicatif
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePurgeCache}
+                  disabled={purgeCache.isPending}
+                >
+                  {purgeCache.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Purger
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
