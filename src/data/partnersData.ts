@@ -27,12 +27,12 @@ export const PARTNERS: Partner[] = [
     logo: "/partners/official/1xbet.png",
     logoDark: "/partners/official/1xbet.png",
     logoBackground: "#ffffff",
-    link: "https://reffpa.com/L?tag=d_633509m_18975c_&site=633509&ad=18975",
+    link: "https://1xbet.com/",
     promoCode: "PREDAT",
     bonus: "130.000 FCFA",
     bonusDetails: "Bonus de bienvenue jusqu'à 130.000 FCFA selon les conditions actives du bookmaker.",
     signupSteps: [
-      "Cliquez sur « Obtenir le bonus » depuis LiveFoot.",
+      "Cliquez sur « Obtenir le bonus » pour ouvrir le site officiel 1XBET.",
       "Créez votre compte 1XBET avec un numéro ou une adresse email valide.",
       "Saisissez le code promo PREDAT dans le champ dédié avant validation.",
       "Effectuez votre premier dépôt puis vérifiez les conditions de mise.",
@@ -50,7 +50,7 @@ export const PARTNERS: Partner[] = [
     faq: [
       {
         question: "Comment utiliser le code promo 1XBET PREDAT ?",
-        answer: "Cliquez sur le lien LiveFoot, inscrivez-vous, puis ajoutez PREDAT dans le champ code promo avant votre premier dépôt.",
+        answer: "Ouvrez le site officiel 1XBET, inscrivez-vous, puis ajoutez PREDAT dans le champ code promo avant votre premier dépôt.",
       },
       {
         question: "Le bonus 1XBET est-il automatique ?",
@@ -67,12 +67,12 @@ export const PARTNERS: Partner[] = [
     logo: "/partners/official/linebet.svg",
     logoDark: "/partners/official/linebet.svg",
     logoBackground: "#015003",
-    link: "https://lb-aff.com/L?tag=d_1972375m_66803c_apk1&site=1972375&ad=66803",
+    link: "https://linebet.com/",
     promoCode: "PREDAT",
     bonus: "130.000 FCFA",
     bonusDetails: "Offre de bienvenue jusqu'à 130.000 FCFA pour les nouveaux comptes éligibles.",
     signupSteps: [
-      "Ouvrez Linebet depuis le bouton LiveFoot.",
+      "Ouvrez le site officiel Linebet depuis le bouton.",
       "Lancez l'inscription et complétez vos informations personnelles.",
       "Ajoutez le code promo PREDAT au moment demandé.",
       "Déposez le montant souhaité et consultez le bonus activé dans votre profil.",
@@ -94,7 +94,7 @@ export const PARTNERS: Partner[] = [
       },
       {
         question: "Pourquoi passer par LiveFoot pour Linebet ?",
-        answer: "Le lien LiveFoot applique le bon parcours partenaire et facilite l'activation du code promo recommandé.",
+        answer: "LiveFoot vous indique le code à utiliser et les étapes à suivre sur le site officiel Linebet.",
       },
     ],
     rankingReason: "Bon choix pour un parcours d'inscription rapide et une offre de bienvenue claire.",
@@ -107,7 +107,7 @@ export const PARTNERS: Partner[] = [
     logo: "/partners/official/1win.svg",
     logoDark: "/partners/official/1win.svg",
     logoBackground: "#ffffff",
-    link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
+    link: "https://1win.com/",
     promoCode: "BALLWIN",
     bonus: "500% de Bonus",
     bonusDetails: "Bonus jusqu'à 500% selon l'offre disponible au moment de l'inscription.",
@@ -147,12 +147,12 @@ export const PARTNERS: Partner[] = [
     logo: "/partners/official/1win.svg",
     logoDark: "/partners/official/1win.svg",
     logoBackground: "#ffffff",
-    link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
+    link: "https://1win.com/",
     promoCode: "PREDAT",
     bonus: "Bonus spécial",
     bonusDetails: "Offre spéciale associée au code PREDAT pour les utilisateurs LiveFoot.",
     signupSteps: [
-      "Accédez à 1WIN via le lien LiveFoot.",
+      "Accédez au site officiel 1WIN.",
       "Démarrez votre inscription.",
       "Utilisez le code PREDAT dans le champ promotion.",
       "Confirmez votre compte puis consultez la promotion disponible.",
@@ -163,7 +163,7 @@ export const PARTNERS: Partner[] = [
       "Alternative au code BALLWIN selon la campagne active.",
     ],
     requirements: [
-      "Créer un nouveau compte depuis le lien partenaire.",
+      "Créer un nouveau compte depuis le site officiel 1WIN.",
       "Ne pas oublier le code avant validation.",
       "Respecter les limites d'âge et règles locales.",
     ],
@@ -187,7 +187,7 @@ export const PARTNERS: Partner[] = [
     logo: "/partners/official/betwinner.png",
     logoDark: "/partners/official/betwinner.png",
     logoBackground: "#050505",
-    link: "https://1wwnpz.com/betting?p=iezl&sharebet=PREDAT",
+    link: "https://betwinner.com/",
     promoCode: "BALL10",
     bonus: "Bonus exclusif",
     bonusDetails: "Bonus exclusif pour les nouveaux comptes éligibles avec le code BALL10.",
@@ -210,7 +210,7 @@ export const PARTNERS: Partner[] = [
     faq: [
       {
         question: "Comment activer BALL10 sur Betwinner ?",
-        answer: "Passez par le lien LiveFoot, inscrivez-vous, puis saisissez BALL10 dans le champ code promo.",
+        answer: "Ouvrez le site officiel Betwinner, inscrivez-vous, puis saisissez BALL10 dans le champ code promo.",
       },
       {
         question: "Betwinner demande-t-il une vérification ?",
@@ -227,12 +227,12 @@ export const PARTNERS: Partner[] = [
     logo: "/partners/official/melbet.svg",
     logoDark: "/partners/official/melbet.svg",
     logoBackground: "#ffffff",
-    link: "https://refpa3665.com/L?tag=d_2730287m_45415c_&site=2730287&ad=45415",
+    link: "https://melbet.com/",
     promoCode: "PREDAT",
     bonus: "Bonus de dépôt",
     bonusDetails: "Bonus de dépôt activable avec le code PREDAT selon les conditions de Melbet.",
     signupSteps: [
-      "Ouvrez Melbet depuis LiveFoot.",
+      "Ouvrez le site officiel Melbet.",
       "Créez votre compte et sélectionnez votre devise.",
       "Ajoutez PREDAT comme code promo.",
       "Effectuez votre dépôt puis consultez les règles du bonus.",
@@ -250,7 +250,7 @@ export const PARTNERS: Partner[] = [
     faq: [
       {
         question: "Le code PREDAT fonctionne-t-il sur Melbet ?",
-        answer: "Il doit être saisi pendant l'inscription depuis le lien partenaire LiveFoot pour être pris en compte.",
+        answer: "Il doit être saisi pendant l'inscription sur le site officiel Melbet pour être pris en compte.",
       },
       {
         question: "Quel est l'avantage principal de Melbet ?",
