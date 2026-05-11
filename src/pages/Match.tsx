@@ -22,7 +22,7 @@ import LiveScenarioSimulator from "@/components/LiveScenarioSimulator";
 import BettingProfileWidget from "@/components/BettingProfileWidget";
 import PredictiveAlerts from "@/components/PredictiveAlerts";
 import { cn } from "@/lib/utils";
-import { extractIdFromSlug } from "@/utils/slugify";
+import { extractIdFromSlug, buildEntitySlug } from "@/utils/slugify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareWidget from "@/components/ShareWidget";
 import ShareButton from "@/components/ShareButton";
