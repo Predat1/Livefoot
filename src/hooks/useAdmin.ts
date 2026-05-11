@@ -611,3 +611,193 @@ export function useLogConversion() {
     },
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 4 : Content Moderation & Feature Flags
+// ═══════════════════════════════════════════════════════════════
+
+export interface ModerationStats {
+  pending_count: number;
+  approved_today: number;
+  rejected_today: number;
+  total_reports: number;
+  by_type: Record<string, number>;
+  by_reason: Record<string, number>;
+}
+
+export function useAdminModerationStats() {
+  return useQuery({
+    queryKey: ["admin-moderation-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_moderation_stats" as any);
+      if (error) throw error;
+      return data as ModerationStats;
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+export interface ModerationQueueItem {
+  id: string;
+  content_type: string;
+  content_id: string;
+  content_preview: string;
+  author_id: string;
+  author_email: string;
+  reported_by: string;
+  report_reason: string;
+  report_details: string;
+  status: string;
+  created_at: string;
+}
+
+export function useAdminModerationQueue(status = "pending") {
+  return useQuery({
+    queryKey: ["admin-moderation-queue", status],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("content_moderation_queue")
+        .select("*")
+        .eq("status", status)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as ModerationQueueItem[];
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useModerationAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      reportId,
+      action,
+      notes,
+    }: {
+      reportId: string;
+      action: "approve" | "reject" | "escalate";
+      notes?: string;
+    }) => {
+      const { error } = await supabase.rpc("admin_moderation_action" as any, {
+        p_report_id: reportId,
+        p_action: action,
+        p_notes: notes,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-moderation-queue"] });
+      qc.invalidateQueries({ queryKey: ["admin-moderation-stats"] });
+    },
+  });
+}
+
+export interface FeatureFlag {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  rollout_percentage: number;
+  allowed_roles: string[];
+  config: Record<string, any>;
+  updated_at: string;
+}
+
+export function useAdminFeatureFlags() {
+  return useQuery({
+    queryKey: ["admin-feature-flags"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("feature_flags")
+        .select("*")
+        .order("key");
+      if (error) throw error;
+      return (data || []) as FeatureFlag[];
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useSetFeatureFlag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      key,
+      enabled,
+      rolloutPercentage,
+      config,
+    }: {
+      key: string;
+      enabled: boolean;
+      rolloutPercentage?: number;
+      config?: Record<string, any>;
+    }) => {
+      const { error } = await supabase.rpc("admin_set_feature_flag" as any, {
+        p_key: key,
+        p_enabled: enabled,
+        p_rollout_percentage: rolloutPercentage ?? 100,
+        p_config: config,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-feature-flags"] });
+    },
+  });
+}
+
+export interface SiteSetting {
+  id: string;
+  key: string;
+  value: string;
+  description: string;
+  updated_at: string;
+}
+
+export function useAdminSiteSettings() {
+  return useQuery({
+    queryKey: ["admin-site-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("*")
+        .order("key");
+      if (error) throw error;
+      return (data || []) as SiteSetting[];
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useSetMaintenanceMode() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ enabled, message }: { enabled: boolean; message?: string }) => {
+      const { error } = await supabase.rpc("admin_set_maintenance_mode" as any, {
+        p_enabled: enabled,
+        p_message: message,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-site-settings"] });
+    },
+  });
+}
+
+export function useIsFeatureEnabled(key: string, userId?: string) {
+  return useQuery({
+    queryKey: ["feature-flag", key, userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("is_feature_enabled" as any, {
+        p_key: key,
+        p_user_id: userId,
+      });
+      if (error) throw error;
+      return data as boolean;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

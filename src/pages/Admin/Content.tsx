@@ -2,8 +2,14 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import {
+  useAdminModerationStats,
+  useAdminModerationQueue,
+  useModerationAction,
+} from "@/hooks/useAdmin";
 import {
   FileText,
   Trophy,
@@ -17,8 +23,14 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  AlertTriangle,
+  Shield,
+  User,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const mockContent = {
   matches: [
@@ -31,20 +43,24 @@ const mockContent = {
     { id: 2, title: "Ligue 1: Les résultats du weekend", status: "draft", author: "Jane Smith", views: 0 },
     { id: 3, title: "Champions League: Analyse des groupes", status: "published", author: "John Doe", views: 32000 },
   ],
-  comments: [
-    { id: 1, user: "User123", content: "Excellent match!", match: "PSG vs Real", status: "approved", reports: 0 },
-    { id: 2, user: "Troll99", content: "Spam content here...", match: "Man City vs Arsenal", status: "pending", reports: 5 },
-    { id: 3, user: "FanFoot", content: "Super analyse", match: "Barça vs Atleti", status: "approved", reports: 0 },
-  ],
 };
 
 export default function AdminContent() {
-  const [activeTab, setActiveTab] = useState("matches");
+  const [activeTab, setActiveTab] = useState("moderation");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAction = (action: string, id: number) => {
-    toast.success(`${action} effectué sur l'élément #${id}`);
+  // Real moderation hooks
+  const { data: moderationStats, isLoading: statsLoading } = useAdminModerationStats();
+  const { data: moderationQueue, isLoading: queueLoading } = useAdminModerationQueue("pending");
+  const moderationAction = useModerationAction();
+
+  const handleModerationAction = async (reportId: string, action: "approve" | "reject") => {
+    try {
+      await moderationAction.mutateAsync({ reportId, action });
+      toast.success(`Contenu ${action === "approve" ? "approuvé" : "rejeté"}`);
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de la modération");
+    }
   };
 
   return (
@@ -72,7 +88,14 @@ export default function AdminContent() {
         <StatCard icon={Trophy} label="Matchs" value="156" color="bg-blue-500" />
         <StatCard icon={FileText} label="Articles" value="48" color="bg-emerald-500" />
         <StatCard icon={MessageSquare} label="Commentaires" value="2.4k" color="bg-amber-500" />
-        <StatCard icon={Flag} label="Signalements" value="12" color="bg-red-500" />
+        <StatCard 
+          icon={Flag} 
+          label="À modérer" 
+          value={moderationStats?.pending_count || 0} 
+          color="bg-red-500" 
+          loading={statsLoading}
+          alert={(moderationStats?.pending_count || 0) > 0}
+        />
       </div>
 
       {/* Main Content Tabs */}
@@ -81,6 +104,15 @@ export default function AdminContent() {
           <CardHeader className="border-b border-slate-800">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <TabsList className="bg-slate-800">
+                <TabsTrigger value="moderation" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Modération
+                  {(moderationStats?.pending_count || 0) > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center">
+                      {moderationStats?.pending_count}
+                    </span>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="matches" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Trophy className="h-4 w-4 mr-2" />
                   Matchs
@@ -194,6 +226,90 @@ export default function AdminContent() {
                 )}
               />
             </TabsContent>
+
+            <TabsContent value="moderation" className="m-0">
+              {queueLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : moderationQueue?.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Shield className="h-12 w-12 text-emerald-500/50 mb-4" />
+                  <p className="text-lg font-medium text-white">Rien à modérer</p>
+                  <p className="text-sm text-slate-400">La file d'attente est vide</p>
+                </div>
+              ) : (
+                <div className="space-y-3 p-4">
+                  {moderationQueue?.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-slate-800/50 rounded-lg p-4 border border-slate-700"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline" className="capitalize">
+                              {item.content_type}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "capitalize",
+                                item.report_reason === "spam" && "text-red-400 border-red-500/30",
+                                item.report_reason === "inappropriate" && "text-amber-400 border-amber-500/30",
+                              )}
+                            >
+                              {item.report_reason}
+                            </Badge>
+                            <span className="text-xs text-slate-500">
+                              {format(new Date(item.created_at), "dd/MM HH:mm", { locale: fr })}
+                            </span>
+                          </div>
+                          
+                          <p className="text-sm text-slate-300 mb-2 line-clamp-2">
+                            {item.content_preview || "Aperçu non disponible"}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {item.author_email || "Anonyme"}
+                            </span>
+                            {item.report_details && (
+                              <span className="flex items-center gap-1 text-amber-400">
+                                <AlertTriangle className="h-3 w-3" />
+                                {item.report_details}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 ml-4">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleModerationAction(item.id, "approve")}
+                            disabled={moderationAction.isPending}
+                          >
+                            <CheckCircle className="h-4 w-4 text-emerald-400" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleModerationAction(item.id, "reject")}
+                            disabled={moderationAction.isPending}
+                          >
+                            <XCircle className="h-4 w-4 text-red-400" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
           </CardContent>
         </Tabs>
       </Card>
@@ -201,15 +317,31 @@ export default function AdminContent() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
+function StatCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  color,
+  loading,
+  alert,
+}: { 
+  icon: any; 
+  label: string; 
+  value: string | number; 
+  color: string;
+  loading?: boolean;
+  alert?: boolean;
+}) {
   return (
-    <Card className="bg-slate-900/50 border-slate-800">
+    <Card className={cn("bg-slate-900/50 border-slate-800", alert && "border-red-500/30")}>
       <CardContent className="p-4 flex items-center gap-3">
         <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", color)}>
           <Icon className="h-5 w-5 text-white" />
         </div>
         <div>
-          <p className="text-lg font-black text-white">{value}</p>
+          <p className="text-lg font-black text-white">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : value}
+          </p>
           <p className="text-xs text-slate-400">{label}</p>
         </div>
       </CardContent>
