@@ -24,6 +24,26 @@ class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
     captureError(error, { componentStack: errorInfo.componentStack });
+
+    // Auto-reload sur erreur de chunk loading (déploiement récent avec nouveaux hashes)
+    const isChunkError =
+      error.name === "ChunkLoadError" ||
+      /Loading chunk \d+ failed/i.test(error.message) ||
+      /Failed to fetch dynamically imported module/i.test(error.message) ||
+      /Importing a module script failed/i.test(error.message) ||
+      /Cannot access '\w+' before initialization/i.test(error.message);
+
+    if (isChunkError) {
+      // Évite la boucle infinie de reload : on ne reload qu'une seule fois
+      const reloadKey = "livefoot_chunk_reload";
+      const lastReload = sessionStorage.getItem(reloadKey);
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+        sessionStorage.setItem(reloadKey, now.toString());
+        console.warn("Stale chunk detected, forcing reload...");
+        window.location.reload();
+      }
+    }
   }
 
   public render() {
