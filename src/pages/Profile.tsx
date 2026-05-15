@@ -288,9 +288,6 @@ const Profile = () => {
                 </span>
               </div>
 
-              {/* Referral Widget */}
-              <ReferralWidget />
-
               {/* Partner Program CTA (if active) */}
               {(profile as any)?.is_partner && (
                 <div className="rounded-xl bg-gradient-to-r from-cyan-500/10 to-cyan-600/5 border border-cyan-500/20 p-4 mb-5">
