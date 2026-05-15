@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, Copy, Check, Crown, Zap, Gift, ChevronRight, Share2, Banknote, ArrowUpRight } from "lucide-react";
+import { Users, Copy, Check, Crown, Zap, Gift, ChevronRight, Share2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 const REFERRAL_GOAL = 10;
 
@@ -90,20 +89,6 @@ export default function ReferralWidget() {
   const vipGrantedAt = (profile as any)?.referral_vip_granted_at;
   const vipExpires = (profile as any)?.vip_expires_at;
 
-  // Partner tier info
-  const isPartnerActive = referralCount >= 5;
-  const commissionRate = referralCount >= 101 ? 30 :
-                         referralCount >= 51 ? 25 :
-                         referralCount >= 31 ? 20 :
-                         referralCount >= 16 ? 15 :
-                         referralCount >= 5 ? 10 : 0;
-  const progressToPartner = Math.min(100, (referralCount / 5) * 100);
-  const nextTier = referralCount >= 101 ? null :
-                   referralCount >= 51 ? 101 :
-                   referralCount >= 31 ? 51 :
-                   referralCount >= 16 ? 31 :
-                   referralCount >= 5 ? 16 : 5;
-
   if (!user) return null;
 
   return (
@@ -164,59 +149,6 @@ export default function ReferralWidget() {
             ))}
           </div>
         </div>
-
-        {/* Partner badge if active */}
-        {isPartnerActive && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-cyan-600/10 border border-cyan-500/20"
-          >
-            <Banknote className="h-5 w-5 text-cyan-400 shrink-0" />
-            <div className="flex-1">
-              <p className="text-xs font-black text-white flex items-center gap-2">
-                💰 Partenaire Actif — {commissionRate}% de commission
-                <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 rounded-full">
-                  GAGNE DE L'ARGENT
-                </span>
-              </p>
-              <p className="text-[10px] text-cyan-400/70">
-                {nextTier ? `Passe à ${commissionRate >= 15 ? 20 : commissionRate >= 10 ? 15 : 10}% à ${nextTier} filleuls` : "Tu es au niveau maximum ! 🎉"}
-              </p>
-            </div>
-            <Link
-              to="/partner"
-              className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-            >
-              Voir <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          </motion.div>
-        )}
-
-        {/* Progress to partner tier (if not yet active) */}
-        {!isPartnerActive && referralCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-3 rounded-xl bg-white/5 border border-white/10"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold text-white">Progrès vers le Programme Partenaire</p>
-              <span className="text-[10px] text-cyan-400">{referralCount}/5 filleuls</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressToPartner}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-            </div>
-            <p className="text-[10px] text-white/40 mt-2">
-              Atteins 5 filleuls pour débloquer les commissions (10%)
-            </p>
-          </motion.div>
-        )}
 
         {/* VIP countdown if active */}
         {isGoalReached && vipExpires && (
@@ -279,29 +211,15 @@ export default function ReferralWidget() {
           </button>
         </div>
 
-        {/* CTA payant ou partenaire */}
+        {/* CTA payant */}
         <div className="flex items-center justify-between pt-1 border-t border-white/5">
-          {isPartnerActive ? (
-            <>
-              <p className="text-[10px] text-white/30">Accède à tes gains et outils marketing</p>
-              <Link
-                to="/partner"
-                className="flex items-center gap-1 text-[10px] font-black text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                <Banknote className="h-3 w-3" /> Espace Partenaire <ChevronRight className="h-3 w-3" />
-              </Link>
-            </>
-          ) : (
-            <>
-              <p className="text-[10px] text-white/30">Vous préférez un accès permanent ?</p>
-              <Link
-                to="/pricing"
-                className="flex items-center gap-1 text-[10px] font-black text-amber-400 hover:text-amber-300 transition-colors"
-              >
-                <Crown className="h-3 w-3" /> Abonnement VIP <ChevronRight className="h-3 w-3" />
-              </Link>
-            </>
-          )}
+          <p className="text-[10px] text-white/30">Vous préférez un accès permanent ?</p>
+          <Link
+            to="/pricing"
+            className="flex items-center gap-1 text-[10px] font-black text-amber-400 hover:text-amber-300 transition-colors"
+          >
+            <Crown className="h-3 w-3" /> Abonnement VIP <ChevronRight className="h-3 w-3" />
+          </Link>
         </div>
       </div>
     </div>

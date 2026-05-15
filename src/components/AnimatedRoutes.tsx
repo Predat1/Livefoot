@@ -19,7 +19,6 @@ const AdminMonetization = lazy(() => import("@/pages/Admin/Monetization"));
 const AdminAnalytics = lazy(() => import("@/pages/Admin/Analytics"));
 const AdminLogs = lazy(() => import("@/pages/Admin/Logs"));
 const AdminSettings = lazy(() => import("@/pages/Admin/Settings"));
-const AdminAI = lazy(() => import("@/pages/Admin/AI"));
 
 // Lazy: secondary pages
 const News = lazy(() => import("@/pages/News"));
@@ -52,8 +51,6 @@ const PredictionsHistory = lazy(() => import("@/pages/PredictionsHistory"));
 const Bonuses = lazy(() => import("@/pages/Bonuses"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const VipDashboard = lazy(() => import("@/pages/VipDashboard"));
-const PartnerDashboard = lazy(() => import("@/pages/PartnerDashboard"));
-const AdminPartners = lazy(() => import("@/pages/Admin/Partners"));
 
 const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
 
@@ -118,9 +115,8 @@ const AnimatedRoutes = () => {
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="content" element={<AdminContent />} />
-              <Route path="ai" element={<AdminAI />} />
+              <Route path="ai" element={<div className="p-8 text-center text-slate-400">IA & Prédictions - En construction</div>} />
               <Route path="monetization" element={<AdminMonetization />} />
-              <Route path="partners" element={<AdminPartners />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="logs" element={<AdminLogs />} />
               <Route path="settings" element={<AdminSettings />} />
@@ -129,7 +125,6 @@ const AnimatedRoutes = () => {
             <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
             <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
             <Route path="/vip" element={<PageTransition><VipDashboard /></PageTransition>} />
-            <Route path="/partner" element={<PageTransition><PartnerDashboard /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </Suspense>
