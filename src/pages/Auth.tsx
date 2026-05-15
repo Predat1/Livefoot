@@ -17,15 +17,16 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get("ref") || "";
+  const redirectTo = searchParams.get("redirect") || "/";
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, redirectTo]);
 
 
   // Login state
@@ -48,7 +49,7 @@ const Auth = () => {
       livefootToast.error("Connexion échouée", error.message);
     } else {
       livefootToast.success("Bienvenue !", "Vous êtes connecté.");
-      navigate("/");
+      navigate(redirectTo);
     }
     setLoading(false);
   };

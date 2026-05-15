@@ -24,7 +24,7 @@ import {
   Search,
 } from "lucide-react";
 
-const ADMIN_EMAIL = "Mobifranck310@gmail.com";
+const ADMIN_EMAIL = "mobifranck310@gmail.com";
 
 const navigation = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
@@ -46,7 +46,7 @@ export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Check if user is the specific admin
-  const isSuperAdmin = user?.email === ADMIN_EMAIL;
+  const isSuperAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
 
   useEffect(() => {
     if (!authLoading && !user) {
