@@ -52,6 +52,8 @@ const PredictionsHistory = lazy(() => import("@/pages/PredictionsHistory"));
 const Bonuses = lazy(() => import("@/pages/Bonuses"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const VipDashboard = lazy(() => import("@/pages/VipDashboard"));
+const PartnerDashboard = lazy(() => import("@/pages/PartnerDashboard"));
+const AdminPartners = lazy(() => import("@/pages/Admin/Partners"));
 
 const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
 
@@ -118,6 +120,7 @@ const AnimatedRoutes = () => {
               <Route path="content" element={<AdminContent />} />
               <Route path="ai" element={<AdminAI />} />
               <Route path="monetization" element={<AdminMonetization />} />
+              <Route path="partners" element={<AdminPartners />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="logs" element={<AdminLogs />} />
               <Route path="settings" element={<AdminSettings />} />
@@ -126,6 +129,7 @@ const AnimatedRoutes = () => {
             <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
             <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
             <Route path="/vip" element={<PageTransition><VipDashboard /></PageTransition>} />
+            <Route path="/partner" element={<PageTransition><PartnerDashboard /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </Suspense>

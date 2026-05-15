@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Bell,
   Search,
+  HandCoins,
 } from "lucide-react";
 
 const navigation = [
@@ -30,6 +31,7 @@ const navigation = [
   { name: "Contenu", path: "/admin/content", icon: FileText },
   { name: "IA & Prédictions", path: "/admin/ai", icon: Cpu },
   { name: "Monetisation", path: "/admin/monetization", icon: CreditCard },
+  { name: "Partenaires", path: "/admin/partners", icon: HandCoins },
   { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
   { name: "Logs", path: "/admin/logs", icon: ScrollText },
   { name: "Configuration", path: "/admin/settings", icon: Settings },

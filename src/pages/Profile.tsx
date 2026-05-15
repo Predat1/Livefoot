@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   BadgeCheck,
+  Banknote,
   Bell,
   Calendar,
   Crown,
@@ -286,6 +287,29 @@ const Profile = () => {
                   Profil public LiveFoot
                 </span>
               </div>
+
+              {/* Referral Widget */}
+              <ReferralWidget />
+
+              {/* Partner Program CTA (if active) */}
+              {(profile as any)?.is_partner && (
+                <div className="rounded-xl bg-gradient-to-r from-cyan-500/10 to-cyan-600/5 border border-cyan-500/20 p-4 mb-5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                        <Banknote className="h-5 w-5 text-cyan-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-foreground">Programme Partenaire</h3>
+                        <p className="text-xs text-muted-foreground">Accède à tes gains et outils marketing</p>
+                      </div>
+                    </div>
+                    <Button asChild className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold">
+                      <Link to="/partner">Voir</Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
                 <div className="space-y-2">

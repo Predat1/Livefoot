@@ -61,6 +61,9 @@ serve(async (req) => {
       console.log(`Activating VIP for user ${userId} (Product: ${productId})`);
 
       const licenseKey = data.license?.key || data.license_key || null;
+      const amount = data.amount || data.price || data.total || 0;
+      const isRenewal = data.is_renewal || data.subscription?.is_renewal || false;
+
       console.log(`Updating profile: userId=${userId}, expiresAt=${expiresAt}, licenseKey=${licenseKey}`);
 
       // Update the user profile to set is_vip to true
@@ -76,6 +79,31 @@ serve(async (req) => {
       if (updateError) {
         console.error("Error updating profile:", updateError);
         throw updateError;
+      }
+
+      // Track referral conversion (commission for referrer if applicable)
+      try {
+        console.log(`Tracking referral conversion for user ${userId}, amount: ${amount}€`);
+        const { data: conversionResult, error: conversionError } = await supabaseClient.functions.invoke(
+          "track-referral-conversion",
+          {
+            body: {
+              userId: userId,
+              amount: amount,
+              productId: productId,
+              isRenewal: isRenewal
+            }
+          }
+        );
+
+        if (conversionError) {
+          console.error("Error tracking referral conversion:", conversionError);
+        } else {
+          console.log("Referral conversion result:", conversionResult);
+        }
+      } catch (convErr) {
+        // Log but don't fail the webhook if conversion tracking fails
+        console.error("Failed to track referral conversion:", convErr);
       }
 
       return new Response(JSON.stringify({ success: true, message: "VIP status activated" }), {
