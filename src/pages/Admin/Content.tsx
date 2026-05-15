@@ -415,5 +415,3 @@ function ContentTable({
     </div>
   );
 }
-
-import { cn } from "@/lib/utils";
