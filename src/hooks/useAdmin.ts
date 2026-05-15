@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+export const OWNER_ADMIN_EMAIL = "mobifranck310@gmail.com";
+
 export function useIsAdmin() {
   const { user } = useAuth();
 
@@ -9,6 +11,7 @@ export function useIsAdmin() {
     queryKey: ["is-admin", user?.id],
     queryFn: async () => {
       if (!user) return false;
+      if (user.email?.toLowerCase() === OWNER_ADMIN_EMAIL) return true;
       const { data, error } = await supabase
         .from("user_roles" as any)
         .select("role")
@@ -21,6 +24,22 @@ export function useIsAdmin() {
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
+}
+
+export interface AdminUserRow {
+  id: string;
+  user_id: string;
+  email: string | null;
+  display_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string | null;
+  is_banned: boolean;
+  banned_at?: string | null;
+  banned_reason?: string | null;
+  is_vip: boolean;
+  vip_expires_at?: string | null;
 }
 
 export function useAdminStats() {
@@ -51,13 +70,24 @@ export function useAdminUsers() {
   return useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
+      const { data: rpcData, error: rpcError } = await supabase.rpc("admin_users_list" as any, {
+        p_limit: 500,
+        p_offset: 0,
+      });
+      if (!rpcError && rpcData) return rpcData as AdminUserRow[];
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return data || [];
+      return ((data || []) as any[]).map((profile) => ({
+        ...profile,
+        email: profile.email ?? null,
+        is_banned: Boolean(profile.is_banned),
+        is_vip: Boolean(profile.is_vip),
+      })) as AdminUserRow[];
     },
     staleTime: 60 * 1000,
   });
@@ -259,15 +289,16 @@ export interface AuditLogEntry {
   admin_id: string;
   admin_email: string;
   action: string;
+  target_type?: string | null;
+  target_id?: string | null;
   details: Record<string, any>;
   created_at: string;
 }
 
-export function useAdminAuditLogForUser(userId: string | null, limit = 50) {
+export function useAdminAuditLogForUser(userId: string | null = null, limit = 50) {
   return useQuery({
     queryKey: ["admin-audit-log", userId, limit],
     queryFn: async () => {
-      if (!userId) return [];
       const { data, error } = await supabase.rpc("admin_audit_log_for_user" as any, {
         p_target_id: userId,
         p_limit: limit,
@@ -275,7 +306,6 @@ export function useAdminAuditLogForUser(userId: string | null, limit = 50) {
       if (error) throw error;
       return (data || []) as AuditLogEntry[];
     },
-    enabled: !!userId,
     staleTime: 60 * 1000,
   });
 }
@@ -778,6 +808,23 @@ export function useSetMaintenanceMode() {
       const { error } = await supabase.rpc("admin_set_maintenance_mode" as any, {
         p_enabled: enabled,
         p_message: message,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-site-settings"] });
+    },
+  });
+}
+
+export function useSetSiteSetting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ key, value, description }: { key: string; value: string; description?: string }) => {
+      const { error } = await supabase.rpc("admin_set_site_setting" as any, {
+        p_key: key,
+        p_value: value,
+        p_description: description ?? key,
       });
       if (error) throw error;
     },

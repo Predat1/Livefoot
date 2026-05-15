@@ -19,6 +19,7 @@ const AdminMonetization = lazy(() => import("@/pages/Admin/Monetization"));
 const AdminAnalytics = lazy(() => import("@/pages/Admin/Analytics"));
 const AdminLogs = lazy(() => import("@/pages/Admin/Logs"));
 const AdminSettings = lazy(() => import("@/pages/Admin/Settings"));
+const AdminAI = lazy(() => import("@/pages/Admin/AI"));
 
 // Lazy: secondary pages
 const News = lazy(() => import("@/pages/News"));
@@ -115,7 +116,7 @@ const AnimatedRoutes = () => {
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="content" element={<AdminContent />} />
-              <Route path="ai" element={<div className="p-8 text-center text-slate-400">IA & Prédictions - En construction</div>} />
+              <Route path="ai" element={<AdminAI />} />
               <Route path="monetization" element={<AdminMonetization />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="logs" element={<AdminLogs />} />

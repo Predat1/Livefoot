@@ -15,6 +15,7 @@ import {
   useAdminSiteSettings,
   useSetMaintenanceMode,
   usePurgeCache,
+  useSetSiteSetting,
   useAdminNewsletterStats,
   useExportNewsletterCsv,
   useAdminApiUsageStats,
@@ -58,6 +59,7 @@ export default function AdminSettings() {
   const setFeatureFlag = useSetFeatureFlag();
   const setMaintenanceMode = useSetMaintenanceMode();
   const purgeCache = usePurgeCache();
+  const setSiteSetting = useSetSiteSetting();
   
   // Phase 6 hooks
   const { data: newsletterStats, isLoading: newsletterLoading } = useAdminNewsletterStats();
@@ -144,6 +146,26 @@ export default function AdminSettings() {
       toast.success(`Backup démarré (ID: ${backupId.slice(0, 8)}...)`);
     } catch (e: any) {
       toast.error(e.message || 'Erreur backup');
+    }
+  };
+
+  const handleSaveGeneralSettings = async () => {
+    try {
+      await Promise.all([
+        setSiteSetting.mutateAsync({
+          key: "site_name",
+          value: localSettings.siteName,
+          description: "Nom du site",
+        }),
+        setSiteSetting.mutateAsync({
+          key: "support_email",
+          value: localSettings.supportEmail,
+          description: "Email support",
+        }),
+      ]);
+      toast.success("Parametres generaux sauvegardes");
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de la sauvegarde");
     }
   };
 
@@ -351,7 +373,11 @@ export default function AdminSettings() {
                 </div>
               </div>
 
-              <Button className="w-full" disabled={settingsLoading}>
+              <Button
+                className="w-full"
+                onClick={handleSaveGeneralSettings}
+                disabled={settingsLoading || setSiteSetting.isPending}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Sauvegarder
               </Button>

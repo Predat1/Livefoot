@@ -43,6 +43,11 @@ const mockContent = {
     { id: 2, title: "Ligue 1: Les résultats du weekend", status: "draft", author: "Jane Smith", views: 0 },
     { id: 3, title: "Champions League: Analyse des groupes", status: "published", author: "John Doe", views: 32000 },
   ],
+  comments: [
+    { id: 1, user: "Admin", content: "Pronostic coherent et bien argumente.", match: "PSG vs Real Madrid", reports: 0 },
+    { id: 2, user: "Moderateur", content: "Commentaire signale pour verification.", match: "Manchester City vs Arsenal", reports: 2 },
+    { id: 3, user: "LiveFoot", content: "Message a valider avant publication.", match: "Barcelona vs Atletico Madrid", reports: 1 },
+  ],
 };
 
 export default function AdminContent() {

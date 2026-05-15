@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useIsAdmin } from "@/hooks/useAdmin";
+import { OWNER_ADMIN_EMAIL, useIsAdmin } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -24,8 +24,6 @@ import {
   Search,
 } from "lucide-react";
 
-const ADMIN_EMAIL = "mobifranck310@gmail.com";
-
 const navigation = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { name: "Utilisateurs", path: "/admin/users", icon: Users },
@@ -37,6 +35,11 @@ const navigation = [
   { name: "Configuration", path: "/admin/settings", icon: Settings },
 ];
 
+const getActiveNavItem = (pathname: string) =>
+  [...navigation]
+    .sort((a, b) => b.path.length - a.path.length)
+    .find((item) => pathname === item.path || pathname.startsWith(`${item.path}/`));
+
 export default function AdminLayout() {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -46,7 +49,7 @@ export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Check if user is the specific admin
-  const isSuperAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
+  const isSuperAdmin = user?.email?.toLowerCase() === OWNER_ADMIN_EMAIL;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -106,7 +109,7 @@ export default function AdminLayout() {
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {navigation.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+            const isActive = getActiveNavItem(location.pathname)?.path === item.path;
             return (
               <Link
                 key={item.name}
@@ -189,7 +192,7 @@ export default function AdminLayout() {
             <nav className="py-4 px-3 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                const isActive = getActiveNavItem(location.pathname)?.path === item.path;
                 return (
                   <Link
                     key={item.name}
@@ -235,7 +238,7 @@ export default function AdminLayout() {
                 <span className="text-slate-500">Admin</span>
                 <ChevronRight className="h-4 w-4" />
                 <span className="text-slate-200 capitalize">
-                  {navigation.find(n => location.pathname.startsWith(n.path))?.name || "Dashboard"}
+                  {getActiveNavItem(location.pathname)?.name || "Dashboard"}
                 </span>
               </div>
             </div>
