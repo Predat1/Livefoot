@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-const ALLOWED_ORIGINS = ["https://livefoot.fun", "https://www.livefoot.fun", "http://localhost:5173", "http://localhost:8080"];
+const ALLOWED_ORIGINS = ["https://www.livefoot.fun", "https://www.livefoot.fun", "http://localhost:5173", "http://localhost:8080"];
 
 const getCorsHeaders = (origin: string | null) => {
   const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
@@ -293,7 +293,7 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
         headers: {
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "https://livefoot.fun",
+          "HTTP-Referer": "https://www.livefoot.fun",
           "X-Title": "LiveFoot AnalystePro V4"
         },
         body: JSON.stringify({

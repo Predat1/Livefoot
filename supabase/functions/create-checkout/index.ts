@@ -62,8 +62,8 @@ serve(async (req) => {
         email,
         first_name: firstName,
         last_name: lastName,
-        redirect_url: `https://livefoot.fun/pricing?checkout=success&sale={sale_id}`,
-        cancel_url: `https://livefoot.fun/pricing?checkout=cancel`,
+        redirect_url: `https://www.livefoot.fun/pricing?checkout=success&sale={sale_id}`,
+        cancel_url: `https://www.livefoot.fun/pricing?checkout=cancel`,
         custom_metadata: {
           user_id: user.id,
           source: "livefoot_pricing_api",

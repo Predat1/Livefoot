@@ -36,9 +36,9 @@ interface SEOHeadEnhancedProps {
   };
 }
 
-const SITE_URL = "https://livefoot.fun";
-const DEFAULT_OG_IMAGE = "https://livefoot.fun/og-image.png";
-const LOGO_URL = "https://livefoot.fun/pwa-512x512.png";
+const SITE_URL = "https://www.livefoot.fun";
+const DEFAULT_OG_IMAGE = "https://www.livefoot.fun/og-image.png";
+const LOGO_URL = "https://www.livefoot.fun/pwa-512x512.png";
 
 // Generate FAQ Schema
 const generateFAQSchema = (faq: FAQItem[]) => ({

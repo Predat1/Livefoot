@@ -17,9 +17,9 @@ interface SEOHeadProps {
   };
 }
 
-const SITE_URL = "https://livefoot.fun";
-const DEFAULT_OG_IMAGE = "https://livefoot.fun/og-image.png";
-const LOGO_URL = "https://livefoot.fun/logo.png";
+const SITE_URL = "https://www.livefoot.fun";
+const DEFAULT_OG_IMAGE = "https://www.livefoot.fun/og-image.png";
+const LOGO_URL = "https://www.livefoot.fun/logo.png";
 
 const SEOHead = ({
   title,

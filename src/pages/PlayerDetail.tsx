@@ -158,7 +158,7 @@ const PlayerDetail = () => {
         description={`${player.name} - ${player.position} ${player.team} ${new Date().getFullYear()}/${(new Date().getFullYear() + 1).toString().slice(-2)}. ${player.goals} buts, ${player.assists} passes décisives, ${player.appearances} matchs. Stats complètes, historique, trophées et comparaisons sur LiveFoot.fun !`}
         keywords={`${player.name}, ${player.name} ${player.team}, ${player.name} stats, ${player.name} buts, ${player.position} ${player.team}, ${player.nationality || ""} football, ${player.name} transfert, ${player.name} performances`}
         ogImage={player.photo}
-        canonical={`https://livefoot.fun/players/${playerId}`}
+        canonical={`https://www.livefoot.fun/players/${playerId}`}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Person",

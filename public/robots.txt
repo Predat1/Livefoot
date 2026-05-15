@@ -2,9 +2,8 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://livefoot.fun/sitemap-comprehensive.xml
-Sitemap: https://livefoot.fun/sitemap.xml
-Sitemap: https://livefoot.fun/api/sitemap.xml
+Sitemap: https://www.livefoot.fun/sitemap-comprehensive.xml
+Sitemap: https://www.livefoot.fun/sitemap.xml
 
 # Crawl-delay for better server performance
 Crawl-delay: 1

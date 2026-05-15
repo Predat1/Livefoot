@@ -63,19 +63,19 @@ const DailyPicks = () => {
         title={`Pronostics IA Football du ${format(selectedDate, "d MMMM yyyy", { locale: fr })} | Pronos Gratuits 88% Réussite`}
         description={`Pronostics football gratuits ${format(selectedDate, "d MMMM yyyy", { locale: fr })} par IA LiveFoot (88% réussite). Analyse complète des cotes, formes, blessures et H2H pour les meilleurs matchs du jour. 100% GRATUIT !`}
         keywords={`pronostics foot ${format(selectedDate, "d MMMM", { locale: fr })}, pronos IA gratuits, pronostics matchs du jour, paris sportifs ${format(selectedDate, "d MMMM", { locale: fr })}, betting tips football, prono ligue 1, prono premier league, predictions soccer`}
-        canonical={`https://livefoot.fun/daily-picks?date=${format(selectedDate, "yyyy-MM-dd")}`}
+        canonical={`https://www.livefoot.fun/daily-picks?date=${format(selectedDate, "yyyy-MM-dd")}`}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "WebPage",
           "name": `Pronostics IA Football ${format(selectedDate, "d MMMM yyyy", { locale: fr })}`,
           "description": "Prédictions de football générées par intelligence artificielle avec 88% de réussite",
-          "url": `https://livefoot.fun/daily-picks?date=${format(selectedDate, "yyyy-MM-dd")}`,
+          "url": `https://www.livefoot.fun/daily-picks?date=${format(selectedDate, "yyyy-MM-dd")}`,
           "datePublished": selectedDate.toISOString(),
           "dateModified": new Date().toISOString(),
           "publisher": {
             "@type": "Organization",
             "name": "LiveFoot AI",
-            "logo": "https://livefoot.fun/pwa-512x512.png"
+            "logo": "https://www.livefoot.fun/pwa-512x512.png"
           }
         }}
         faq={[

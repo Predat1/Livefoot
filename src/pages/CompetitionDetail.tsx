@@ -422,7 +422,7 @@ const CompetitionDetail = () => {
         description={description}
         keywords={seoData.keywords.join(", ")}
         breadcrumbs={breadcrumbs}
-        canonical={`https://livefoot.fun/competitions/${competitionId}`}
+        canonical={`https://www.livefoot.fun/competitions/${competitionId}`}
       />
 
       <div className="container py-6 space-y-8">

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const BASE_URL = "https://livefoot.fun"
+const BASE_URL = "https://www.livefoot.fun"
 
 serve(async (req) => {
   try {

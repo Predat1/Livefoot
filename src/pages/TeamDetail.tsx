@@ -99,7 +99,7 @@ const TeamDetail = () => {
         description={`${team.name} (${team.country}) - Tout sur l'équipe : effectif complet, prochains matchs, derniers résultats, transferts, classement et statistiques. Stade: ${team.venue?.name || "N/A"}. Suivez ${team.name} en direct sur LiveFoot.fun !`}
         keywords={`${team.name}, ${team.name} effectif, ${team.name} calendrier, ${team.name} résultats, ${team.name} transferts, ${team.country} football, ${team.name} match en direct, composition ${team.name}`}
         ogImage={team.logo}
-        canonical={`https://livefoot.fun/teams/${teamId}`}
+        canonical={`https://www.livefoot.fun/teams/${teamId}`}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "SportsTeam",

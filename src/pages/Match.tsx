@@ -260,7 +260,7 @@ const Match = () => {
   const dateLabel = fix?.fixture?.date
     ? new Date(fix.fixture.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
     : "";
-  const matchOgImage = `https://livefoot.fun/api/og/match/${encodeURIComponent(matchId)}?${new URLSearchParams({
+  const matchOgImage = `https://www.livefoot.fun/api/og/match/${encodeURIComponent(matchId)}?${new URLSearchParams({
     home: homeTeam.name,
     away: awayTeam.name,
     homeLogo: homeTeam.logo,
@@ -1304,7 +1304,7 @@ const Match = () => {
         description={`${homeTeam.name} vs ${awayTeam.name} EN DIRECT - Pronostics IA gratuits, score live, compositions, stats H2H et analyse complète. Match ${league?.name || ""} en temps réel sur LiveFoot.fun !`}
         keywords={`${homeTeam.name} vs ${awayTeam.name} direct, ${homeTeam.name} ${awayTeam.name} live, prono ${homeTeam.name} ${awayTeam.name}, score ${homeTeam.name} ${awayTeam.name}, match en direct ${homeTeam.name}, ${league?.name || ""} en direct, football live scores`}
         ogImage={matchOgImage}
-        canonical={`https://livefoot.fun/match/${matchId}`}
+        canonical={`https://www.livefoot.fun/match/${matchId}`}
         matchData={{
           homeTeam: homeTeam.name,
           awayTeam: awayTeam.name,

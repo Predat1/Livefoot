@@ -18,7 +18,7 @@ interface ShareWidgetProps {
 const ShareWidget = ({ title, text, url, variant = "button", className, matchShareData }: ShareWidgetProps) => {
   const [isCopying, setIsCopying] = useState(false);
   const [isSharingImage, setIsSharingImage] = useState(false);
-  const fullUrl = url.startsWith("http") ? url : `https://livefoot.fun${url}`;
+  const fullUrl = url.startsWith("http") ? url : `https://www.livefoot.fun${url}`;
 
   const handleNativeShare = async () => {
     if (navigator.share) {

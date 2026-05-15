@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "livefoot.fun"
+        }
+      ],
+      "destination": "https://www.livefoot.fun/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/match/:matchId",
