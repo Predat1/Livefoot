@@ -238,8 +238,9 @@ export function useFixturesByDate(date: Date) {
         return fallbackLeagues;
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes for general lists
-    refetchInterval: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes for general lists
+    refetchInterval: 10 * 60 * 1000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -257,8 +258,9 @@ export function useLiveFixtures() {
           .filter((league) => league.matches.length > 0);
       }
     },
-    staleTime: 1 * 60 * 1000, // 1 minute for Live
-    refetchInterval: 1 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 minutes for Live (quota optimization)
+    refetchInterval: 2 * 60 * 1000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -345,13 +347,13 @@ export function useFixtureDetail(fixtureId: string) {
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 60 * 1000, // 60 seconds (quota optimization)
     refetchInterval: (query) => {
-      // Refresh every 30 seconds for live matches, 2 minutes for others
+      // Refresh every 60 seconds for live matches, 5 minutes for others
       const data = query.state.data as any;
       const isLive = data?.fixture?.status?.short && 
         ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(data.fixture.status.short);
-      return isLive ? 30 * 1000 : 2 * 60 * 1000;
+      return isLive ? 60 * 1000 : 5 * 60 * 1000;
     },
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
@@ -365,8 +367,8 @@ export function useFixtureEvents(fixtureId: string) {
       const res = await getFixtureEvents(fixtureId);
       return res.response || [];
     },
-    staleTime: 30 * 1000,
-    refetchInterval: 30 * 1000,
+    staleTime: 60 * 1000, // 60 seconds (quota optimization)
+    refetchInterval: 60 * 1000,
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
@@ -379,8 +381,8 @@ export function useFixtureLineups(fixtureId: string) {
       const res = await getFixtureLineups(fixtureId);
       return res.response || [];
     },
-    staleTime: 60 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 minutes (quota optimization)
+    refetchInterval: 2 * 60 * 1000,
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
@@ -393,8 +395,8 @@ export function useFixtureStatistics(fixtureId: string) {
       const res = await getFixtureStatistics(fixtureId);
       return res.response || [];
     },
-    staleTime: 30 * 1000,
-    refetchInterval: 30 * 1000,
+    staleTime: 60 * 1000, // 60 seconds (quota optimization)
+    refetchInterval: 60 * 1000,
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
@@ -848,7 +850,7 @@ export function usePlayerSeasons(playerId: string) {
     queryKey: ["player-seasons", playerId],
     queryFn: async () => {
       const { getPlayers } = await import("@/services/apiFootball");
-      const seasons = ["2024", "2023", "2022", "2021", "2020"];
+      const seasons = ["2024", "2023"]; // Reduced from 5 to 2 seasons (quota optimization)
       
       const responses = await Promise.allSettled(
         seasons.map(season => getPlayers({ id: playerId, season }))
@@ -1022,8 +1024,8 @@ export function useFixturePlayers(fixtureId: string) {
       const res = await getFixturePlayers(fixtureId);
       return (res.response || []) as any[];
     },
-    staleTime: 30 * 1000,
-    refetchInterval: 30 * 1000,
+    staleTime: 60 * 1000, // 60 seconds (quota optimization)
+    refetchInterval: 60 * 1000,
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
@@ -1095,8 +1097,9 @@ export function useLiveOdds(fixtureId: string) {
       const res = await getLiveOdds({ fixture: fixtureId });
       return (res.response || []) as any[];
     },
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 30 * 1000,
+    staleTime: 60 * 1000, // 60 seconds (quota optimization)
+    refetchInterval: 60 * 1000,
+    refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
 }
