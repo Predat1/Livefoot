@@ -58,6 +58,23 @@ const riskColors = {
   high: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30", label: "Risque élevé" },
 };
 
+const formatPredictionValue = (key: string, value: string) => {
+  const val = String(value).trim();
+  if (val === "Oui" || val === "Yes" || val === "1" || val === "Over 2.5" || val === "Over 1.5" || val === "Over 9.5" || val === "Over 3.5") {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/25">{val}</span>;
+  }
+  if (val === "Non" || val === "No" || val === "2" || val === "Under 2.5" || val === "Under 1.5" || val === "Under 9.5" || val === "Under 3.5") {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/25">{val}</span>;
+  }
+  if (val === "X" || val === "Nul" || val === "Draw" || val === "Equal") {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/25">{val}</span>;
+  }
+  if (val.toLowerCase() === "inconnu" || val.toLowerCase() === "n/a" || val === "None") {
+    return <span className="text-xs text-white/30 italic font-medium">{val}</span>;
+  }
+  return <span className="text-xs font-black text-white">{val}</span>;
+};
+
 const LiveFootAIPredictionCard = ({
   fixtureId, homeTeamId, awayTeamId, homeTeamName, awayTeamName,
   homeLogo, awayLogo, standings, injuries, apiPredictions,
@@ -66,6 +83,11 @@ const LiveFootAIPredictionCard = ({
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
   const { isVip, user } = useAuth();
+  const gradientId = useMemo(() => `gradient-${fixtureId || Math.random().toString(36).substr(2, 9)}`, [fixtureId]);
+  const [hasShared, setHasShared] = useState(() => {
+    if (typeof window === "undefined" || !fixtureId) return false;
+    return localStorage.getItem(`livefoot_shared_${fixtureId}`) === "true";
+  });
   
   // Only fetch AI Expert if not already provided by parent (avoids double API call)
   const shouldFetchAi = !initialAiExpertPrediction && !!fixtureId;
@@ -330,6 +352,85 @@ const LiveFootAIPredictionCard = ({
     }
   };
 
+  const handleSocialShareUnlock = () => {
+    const text = `🎯 Pronostics IA détaillés, stats xG et Value Bets pour le match ${homeTeamName} vs ${awayTeamName} sur LiveFoot ! Découvrez l'analyse complète ici :\n🔗 https://www.livefoot.fun/match/${fixtureId}`;
+    const shareUrl = `https://www.livefoot.fun/match/${fixtureId}`;
+    const shareInitiatedAt = Date.now();
+    let shareCompleted = false;
+
+    const checkVerification = () => {
+      const elapsed = Date.now() - shareInitiatedAt;
+      // Require at least 3.5 seconds outside the page to ensure they actually navigated to select a contact/send
+      if (elapsed < 3500) {
+        toast.error("Veuillez envoyer le message sur WhatsApp/Telegram pour valider le déblocage.");
+      } else {
+        if (fixtureId && !shareCompleted) {
+          shareCompleted = true;
+          localStorage.setItem(`livefoot_shared_${fixtureId}`, "true");
+          setHasShared(true);
+          toast.success("Félicitations ! Pronostics débloqués ! 🎉");
+          trackConversionEvent({ type: "social_share", fixtureId });
+        }
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        setTimeout(checkVerification, 300);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    if (navigator.share) {
+      navigator.share({
+        title: `${homeTeamName} vs ${awayTeamName} - LiveFoot AI`,
+        text: text,
+        url: shareUrl
+      })
+      .then(() => {
+        setTimeout(() => {
+          if (!shareCompleted && Date.now() - shareInitiatedAt >= 3500) {
+            shareCompleted = true;
+            if (fixtureId) {
+              localStorage.setItem(`livefoot_shared_${fixtureId}`, "true");
+              setHasShared(true);
+              toast.success("Prédictions débloquées ! 🎉");
+              trackConversionEvent({ type: "social_share", fixtureId });
+            }
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+          }
+        }, 1000);
+      })
+      .catch((err) => {
+        console.log("Native share dismissed", err);
+      });
+    } else {
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+
+    // Safety timeout in case visibilitychange does not trigger
+    setTimeout(() => {
+      if (!shareCompleted && document.visibilityState === "visible") {
+        const elapsed = Date.now() - shareInitiatedAt;
+        if (elapsed < 3500) {
+          toast.error("Veuillez finaliser le partage pour débloquer.");
+          document.removeEventListener("visibilitychange", handleVisibilityChange);
+        } else {
+          shareCompleted = true;
+          if (fixtureId) {
+            localStorage.setItem(`livefoot_shared_${fixtureId}`, "true");
+            setHasShared(true);
+            toast.success("Prédictions débloquées ! 🎉");
+            trackConversionEvent({ type: "social_share", fixtureId });
+          }
+        }
+      }
+    }, 6000);
+  };
+
   const risk = riskColors[prediction.risk];
   const winnerName = prediction.outcome === "home" ? homeTeamName
     : prediction.outcome === "away" ? awayTeamName
@@ -477,76 +578,90 @@ const LiveFootAIPredictionCard = ({
           )}
 
           {/* Score prediction */}
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex items-center justify-center gap-3 sm:gap-5 mb-6"
-          >
-            <div className="flex flex-col items-center gap-1.5 w-24">
-              {homeLogo && <img src={homeLogo} alt="" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />}
-              <span className="text-[10px] font-medium text-white/60 truncate max-w-full text-center">{homeTeamName}</span>
-              {prediction.xgHome !== undefined && (
-                <span className="text-[9px] font-bold text-white/40 bg-white/5 px-1.5 py-0.5 rounded">xG: {prediction.xgHome}</span>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
-              <span className={cn(
-                "text-3xl sm:text-4xl font-black tabular-nums",
-                prediction.outcome === "home" ? "text-primary" : "text-white/80"
-              )}>
-                {prediction.predictedScore.home}
-              </span>
-              <span className="text-lg text-white/20 font-light">:</span>
-              <span className={cn(
-                "text-3xl sm:text-4xl font-black tabular-nums",
-                prediction.outcome === "away" ? "text-primary" : "text-white/80"
-              )}>
-                {prediction.predictedScore.away}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1.5 w-24">
-              {awayLogo && <img src={awayLogo} alt="" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />}
-              <span className="text-[10px] font-medium text-white/60 truncate max-w-full text-center">{awayTeamName}</span>
-              {prediction.xgAway !== undefined && (
-                <span className="text-[9px] font-bold text-white/40 bg-white/5 px-1.5 py-0.5 rounded">xG: {prediction.xgAway}</span>
-              )}
-            </div>
-          </motion.div>
+           <motion.div
+             initial={{ scale: 0.9, opacity: 0 }}
+             animate={{ scale: 1, opacity: 1 }}
+             transition={{ delay: 0.4, duration: 0.5 }}
+             className="flex items-center justify-center gap-3 sm:gap-5 mb-6"
+           >
+             <div className="flex flex-col items-center gap-1.5 w-24">
+               {homeLogo && <img src={homeLogo} alt="" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />}
+               <span className="text-[10px] font-bold text-white/80 truncate max-w-full text-center">{homeTeamName}</span>
+               {prediction.xgHome !== undefined && (
+                 <span className={cn(
+                   "text-[9px] font-black px-1.5 py-0.5 rounded border tracking-wide",
+                   prediction.xgHome > prediction.xgAway
+                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                     : "bg-white/5 text-white/40 border-white/5"
+                 )}>
+                   xG: {typeof prediction.xgHome === 'number' ? prediction.xgHome.toFixed(1) : prediction.xgHome}
+                 </span>
+               )}
+             </div>
+             
+             <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-primary/30 transition-all duration-300">
+               <span className={cn(
+                 "text-3xl sm:text-4xl font-black tabular-nums transition-all duration-300",
+                 prediction.outcome === "home" ? "text-primary drop-shadow-[0_0_8px_rgba(34,197,94,0.4)] scale-110" : "text-white/80"
+               )}>
+                 {prediction.predictedScore.home}
+               </span>
+               <motion.span 
+                 animate={{ opacity: [0.4, 1, 0.4] }}
+                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                 className="text-lg text-white/30 font-light select-none"
+               >
+                 :
+               </motion.span>
+               <span className={cn(
+                 "text-3xl sm:text-4xl font-black tabular-nums transition-all duration-300",
+                 prediction.outcome === "away" ? "text-primary drop-shadow-[0_0_8px_rgba(34,197,94,0.4)] scale-110" : "text-white/80"
+               )}>
+                 {prediction.predictedScore.away}
+               </span>
+             </div>
+ 
+             <div className="flex flex-col items-center gap-1.5 w-24">
+               {awayLogo && <img src={awayLogo} alt="" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />}
+               <span className="text-[10px] font-bold text-white/80 truncate max-w-full text-center">{awayTeamName}</span>
+               {prediction.xgAway !== undefined && (
+                 <span className={cn(
+                   "text-[9px] font-black px-1.5 py-0.5 rounded border tracking-wide",
+                   prediction.xgAway > prediction.xgHome
+                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                     : "bg-white/5 text-white/40 border-white/5"
+                 )}>
+                   xG: {typeof prediction.xgAway === 'number' ? prediction.xgAway.toFixed(1) : prediction.xgAway}
+                 </span>
+               )}
+             </div>
+           </motion.div>
 
           {prediction.probabilities.home > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between text-[10px] mb-2">
                 <span className="font-bold text-white">{prediction.probabilities.home}%</span>
-                <span className="text-white/40">Probabilités</span>
+                <span className="text-white/40 uppercase tracking-widest text-[9px] font-bold">Probabilités 1X2</span>
                 <span className="font-bold text-white">{prediction.probabilities.away}%</span>
               </div>
-              <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5 bg-white/5">
-                <motion.div
-                  className="bg-gradient-to-r from-primary to-emerald-400 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${prediction.probabilities.home}%` }}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+              <div className="flex h-3 rounded-full overflow-hidden bg-white/5 p-[1px] border border-white/5 shadow-inner">
+                <div
+                  className="bg-gradient-to-r from-primary to-emerald-400 rounded-l-full transition-all duration-1000 ease-out"
+                  style={{ width: `${prediction.probabilities.home}%` }}
                 />
-                <motion.div
-                  className="bg-white/20 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${prediction.probabilities.draw}%` }}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
+                <div
+                  className="bg-white/20 transition-all duration-1000 ease-out"
+                  style={{ width: `${prediction.probabilities.draw}%` }}
                 />
-                <motion.div
-                  className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${prediction.probabilities.away}%` }}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
+                <div
+                  className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-r-full transition-all duration-1000 ease-out"
+                  style={{ width: `${prediction.probabilities.away}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[9px] text-white/30 mt-1">
-                <span>{homeTeamName}</span>
-                <span>Nul {prediction.probabilities.draw}%</span>
-                <span>{awayTeamName}</span>
+              <div className="flex items-center justify-between text-[9px] text-white/30 mt-1.5 px-1">
+                <span className="truncate max-w-[40%] text-left font-medium">{homeTeamName}</span>
+                <span className="font-bold bg-white/5 px-2 py-0.5 rounded text-white/50">Nul {prediction.probabilities.draw}%</span>
+                <span className="truncate max-w-[40%] text-right font-medium">{awayTeamName}</span>
               </div>
             </div>
           )}
@@ -563,7 +678,7 @@ const LiveFootAIPredictionCard = ({
                 <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" />
                 <motion.circle
                   cx="32" cy="32" r="28" fill="none"
-                  stroke="url(#gradient)"
+                  stroke={`url(#${gradientId})`}
                   strokeWidth="4"
                   strokeLinecap="round"
                   strokeDasharray={`${2 * Math.PI * 28}`}
@@ -572,7 +687,7 @@ const LiveFootAIPredictionCard = ({
                   transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
                 />
                 <defs>
-                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#22c55e" />
                     <stop offset="100%" stopColor="#10b981" />
                   </linearGradient>
@@ -598,8 +713,28 @@ const LiveFootAIPredictionCard = ({
               <div className="flex items-center gap-2 mb-3">
                 <Grid3X3 className="h-4 w-4 text-primary" />
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider">Événements du Match</h4>
-                {!isVip && <span className="ml-auto text-[8px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-black"><Crown className="h-2 w-2 inline mr-0.5" />VIP</span>}
+                {!isVip && !hasShared && <span className="ml-auto text-[8px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-black"><Crown className="h-2 w-2 inline mr-0.5" />VIP</span>}
+                {!isVip && hasShared && <span className="ml-auto text-[8px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-black">Débloqué via Partage</span>}
               </div>
+
+              {!isVip && !hasShared && (
+                <div className="rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left mb-2">
+                  <div className="flex items-center gap-2">
+                    <Share2 className="h-4.5 w-4.5 text-amber-400 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-amber-300">📢 Débloquer tous les événements & pronostics</p>
+                      <p className="text-[10px] text-white/50">Partagez ce match avec vos amis sur WhatsApp ou Telegram pour tout afficher gratuitement !</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleSocialShareUnlock}
+                    className="px-3.5 py-1.5 bg-amber-500 text-black text-xs font-black rounded-lg hover:bg-amber-400 transition-colors shrink-0"
+                  >
+                    Partager & Débloquer
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 relative">
                 {Object.entries((prediction as any).detailedPredictions).map(([key, value], idx) => {
                   const labels: Record<string, { label: string, icon: any }> = {
@@ -625,22 +760,22 @@ const LiveFootAIPredictionCard = ({
                   const config = labels[key];
                   if (!config) return null;
                   const Icon = config.icon;
-                  const isLocked = !isVip && idx >= 3;
+                  const isLocked = !isVip && !hasShared && idx >= 3;
                   
                   return (
                     <div key={key} className={cn(
                       "bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center text-center group transition-colors relative overflow-hidden",
                       isLocked ? "" : "hover:bg-white/10",
-                      isVip && "border-amber-500/10 hover:border-amber-500/30"
+                      (isVip || hasShared) && "border-amber-500/10 hover:border-amber-500/30"
                     )}>
                       {isLocked && (
                         <div className="absolute inset-0 backdrop-blur-[6px] bg-black/30 z-10 flex items-center justify-center">
                           <Lock className="h-3.5 w-3.5 text-amber-400/60" />
                         </div>
                       )}
-                      <Icon className={cn("h-4 w-4 mb-2 transition-colors", isVip ? "text-amber-400/70 group-hover:text-amber-400" : "text-primary/60 group-hover:text-primary")} />
+                      <Icon className={cn("h-4 w-4 mb-2 transition-colors", (isVip || hasShared) ? "text-amber-400/70 group-hover:text-amber-400" : "text-primary/60 group-hover:text-primary")} />
                       <p className="text-[9px] text-white/40 uppercase font-bold mb-1">{config.label}</p>
-                      <p className="text-xs font-black text-white">{value as string}</p>
+                      <div className="mt-auto pt-1">{formatPredictionValue(key, value as string)}</div>
                     </div>
                   );
                 })}
@@ -653,10 +788,10 @@ const LiveFootAIPredictionCard = ({
             <p className="text-[9px] sm:text-[10px] font-bold text-white/40 uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <Zap className="h-3 w-3 text-primary" />
               Facteurs clés
-              {!isVip && prediction.factors.length > 1 && <span className="text-amber-400 text-[8px] ml-1">+{prediction.factors.length - 1} VIP</span>}
+              {!isVip && !hasShared && prediction.factors.length > 1 && <span className="text-amber-400 text-[8px] ml-1">+{prediction.factors.length - 1} VIP</span>}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {(isVip ? prediction.factors : prediction.factors.slice(0, 1)).map((factor, i) => (
+              {(isVip || hasShared ? prediction.factors : prediction.factors.slice(0, 1)).map((factor, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -10 }}
@@ -684,11 +819,11 @@ const LiveFootAIPredictionCard = ({
             <p className="text-[9px] sm:text-[10px] font-bold text-white/40 uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <Target className="h-3 w-3 text-cyan-400" />
               Suggestions de paris
-              {!isVip && prediction.bestBets.length > 2 && <span className="text-amber-400 text-[8px] ml-1">+{prediction.bestBets.length - 2} VIP</span>}
+              {!isVip && !hasShared && prediction.bestBets.length > 2 && <span className="text-amber-400 text-[8px] ml-1">+{prediction.bestBets.length - 2} VIP</span>}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {prediction.bestBets.map((bet, i) => {
-                const isLocked = !isVip && i >= 2;
+                const isLocked = !isVip && !hasShared && i >= 2;
                 return (
                   <motion.div
                     key={i}
@@ -697,7 +832,7 @@ const LiveFootAIPredictionCard = ({
                     transition={{ delay: 1.2 + i * 0.1 }}
                     className={cn(
                       "rounded-xl border p-2.5 sm:p-3 text-center transition-colors relative overflow-hidden",
-                      isVip ? "bg-gradient-to-b from-amber-500/5 to-transparent border-amber-500/10 hover:border-amber-500/30" : "bg-white/5 border-white/5 hover:bg-white/8",
+                      (isVip || hasShared) ? "bg-gradient-to-b from-amber-500/5 to-transparent border-amber-500/10 hover:border-amber-500/30" : "bg-white/5 border-white/5 hover:bg-white/8",
                       i === 2 && "col-span-2 sm:col-span-1"
                     )}
                   >
@@ -711,13 +846,13 @@ const LiveFootAIPredictionCard = ({
                     <div className="flex items-center justify-center gap-1 mt-1.5">
                       <div className="h-1 flex-1 rounded-full bg-white/10 overflow-hidden">
                         <motion.div
-                          className={cn("h-full rounded-full", isVip ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-gradient-to-r from-primary to-emerald-500")}
+                          className={cn("h-full rounded-full", (isVip || hasShared) ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-gradient-to-r from-primary to-emerald-500")}
                           initial={{ width: 0 }}
                           animate={{ width: `${bet.confidence}%` }}
                           transition={{ duration: 0.8, delay: 1.4 + i * 0.1 }}
                         />
                       </div>
-                      <span className={cn("text-[8px] sm:text-[9px] font-bold", isVip ? "text-amber-400" : "text-primary")}>{bet.confidence}%</span>
+                      <span className={cn("text-[8px] sm:text-[9px] font-bold", (isVip || hasShared) ? "text-amber-400" : "text-primary")}>{bet.confidence}%</span>
                     </div>
                   </motion.div>
                 );
