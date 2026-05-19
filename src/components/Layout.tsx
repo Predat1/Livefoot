@@ -5,6 +5,7 @@ import Header from "./Header";
 import BottomNav from "./BottomNav";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { cn } from "@/lib/utils";
+import RegisterModal from "./RegisterModal";
 
 interface LayoutProps {
   children: ReactNode;
@@ -78,6 +79,7 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </footer>
       <BottomNav />
+      <RegisterModal />
     </div>
   );
 };
