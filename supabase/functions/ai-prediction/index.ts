@@ -149,6 +149,102 @@ async function setCachedPredictionDB(fixtureId: string, predictionData: any, mat
   if (error) console.error("Error caching prediction in DB:", error);
 }
 
+function getTtlForEndpoint(endpoint: string, params: Record<string, string>): number {
+  // Live fixtures need freshness
+  if (endpoint === "fixtures" && params?.live === "all") return 2 * 60_000;        // 2 min
+  // Fixture sub-data (events, stats) during live matches
+  if (endpoint.startsWith("fixtures/events")) return 60_000;                        // 1 min
+  if (endpoint.startsWith("fixtures/statistics")) return 60_000;                    // 1 min
+  if (endpoint.startsWith("fixtures/players")) return 60_000;                       // 1 min
+  if (endpoint.startsWith("fixtures/lineups")) return 2 * 60_000;                  // 2 min
+  if (endpoint.startsWith("fixtures/headtohead")) return 60 * 60_000;              // 1 hour
+  // Fixture by date or by id
+  if (endpoint === "fixtures") return 5 * 60_000;                                   // 5 min
+  // Standings — very stable
+  if (endpoint === "standings") return 6 * 60 * 60_000;                             // 6 hours
+  // Leagues
+  if (endpoint === "leagues" || endpoint === "leagues/seasons") return 12 * 60 * 60_000; // 12 hours
+  // Teams / Players / Squads
+  if (endpoint.startsWith("teams")) return 6 * 60 * 60_000;                        // 6 hours
+  if (endpoint.startsWith("players")) return 6 * 60 * 60_000;                      // 6 hours
+  // Transfers, trophies, sidelined, coaches, countries, venues
+  if (endpoint === "transfers") return 24 * 60 * 60_000;                            // 24 hours
+  if (endpoint === "trophies") return 24 * 60 * 60_000;                             // 24 hours
+  if (endpoint === "sidelined") return 24 * 60 * 60_000;                            // 24 hours
+  if (endpoint === "coachs") return 24 * 60 * 60_000;                               // 24 hours
+  if (endpoint === "countries") return 24 * 60 * 60_000;                            // 24 hours
+  if (endpoint === "venues") return 24 * 60 * 60_000;                               // 24 hours
+  // Predictions
+  if (endpoint === "predictions") return 12 * 60 * 60_000;                          // 12 hours
+  // Odds
+  if (endpoint === "odds" || endpoint === "odds/live") return 5 * 60_000;           // 5 min
+  // Injuries
+  if (endpoint === "injuries") return 5 * 60_000;                                   // 5 min
+  // Default fallback
+  return 5 * 60_000;                                                                 // 5 min
+}
+
+async function fetchWithCache(
+  supabase: any,
+  apiKey: string,
+  endpoint: string,
+  params: Record<string, string>
+): Promise<any> {
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map((k) => `${k}=${params[k]}`)
+    .join("&");
+  const cacheKey = `${endpoint}?${sortedParams}`;
+  const ttlMs = getTtlForEndpoint(endpoint, params);
+
+  try {
+    const { data: cached, error } = await supabase
+      .from("api_football_cache")
+      .select("data, expires_at")
+      .eq("key", cacheKey)
+      .single();
+
+    if (!error && cached) {
+      const expiresAt = new Date(cached.expires_at).getTime();
+      if (Date.now() <= expiresAt) {
+        console.log(`[ai-prediction] DB CACHE HIT for: ${cacheKey}`);
+        return cached.data;
+      }
+    }
+  } catch (err) {
+    console.error(`[ai-prediction] DB Cache read error:`, err);
+  }
+
+  // Cache miss - Fetch from API-Football
+  const queryParams = new URLSearchParams(params).toString();
+  const url = `https://v3.football.api-sports.io/${endpoint}${queryParams ? `?${queryParams}` : ""}`;
+  
+  console.log(`[ai-prediction] DB CACHE MISS → Upstream: ${url}`);
+  const res = await fetch(url, {
+    headers: {
+      "x-rapidapi-key": apiKey,
+      "x-rapidapi-host": "v3.football.api-sports.io",
+    },
+  });
+
+  const data = await res.json();
+
+  if (res.status === 200 && data && (!data.errors || (Array.isArray(data.errors) && data.errors.length === 0) || Object.keys(data.errors).length === 0)) {
+    try {
+      await supabase.from("api_football_cache").upsert({
+        key: cacheKey,
+        data,
+        expires_at: new Date(Date.now() + ttlMs).toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "key" });
+    } catch (err) {
+      console.error(`[ai-prediction] DB Cache write error:`, err);
+    }
+  }
+
+  return data;
+}
+
 function buildPrompt(
   homeTeam: string, 
   awayTeam: string, 
@@ -420,13 +516,11 @@ serve(async (req) => {
 
     const headers = { "x-apisports-key": apiFootballKey };
 
-    // Fetch prediction data and fixture details in parallel
-    const [statsRes, fixtureRes] = await Promise.all([
-      fetch(`https://v3.football.api-sports.io/predictions?fixture=${fixtureId}`, { headers }),
-      fetch(`https://v3.football.api-sports.io/fixtures?id=${fixtureId}`, { headers }),
+    // Fetch prediction data and fixture details in parallel using DB cache
+    const [statsData, fixtureDataRaw] = await Promise.all([
+      fetchWithCache(supabase, apiFootballKey, "predictions", { fixture: String(fixtureId) }),
+      fetchWithCache(supabase, apiFootballKey, "fixtures", { id: String(fixtureId) }),
     ]);
-    const statsData = await statsRes.json();
-    const fixtureDataRaw = await fixtureRes.json();
     
     // Gestion stricte des erreurs d'API (Quota, Auth, etc.)
     if (statsData.errors && Object.keys(statsData.errors).length > 0) {
@@ -444,22 +538,21 @@ serve(async (req) => {
     // Fetch H2H only if we have team IDs
     let h2hData: any[] = [];
     if (fixtureDetail?.teams?.home?.id && fixtureDetail?.teams?.away?.id) {
-      const h2hRes = await fetch(`https://v3.football.api-sports.io/fixtures/headtohead?h2h=${fixtureDetail.teams.home.id}-${fixtureDetail.teams.away.id}&last=5`, { headers });
-      const h2hJson = await h2hRes.json();
+      const h2hJson = await fetchWithCache(supabase, apiFootballKey, "fixtures/headtohead", {
+        h2h: `${fixtureDetail.teams.home.id}-${fixtureDetail.teams.away.id}`,
+        last: "5"
+      });
       h2hData = h2hJson.response || [];
     }
 
-    // V4: Fetch extra context
-    const [oddsRes, injuriesRes, standingsRes] = await Promise.all([
-      fetch(`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`, { headers }),
-      fetch(`https://v3.football.api-sports.io/injuries?fixture=${fixtureId}`, { headers }),
-      fetch(`https://v3.football.api-sports.io/standings?league=${fixtureDetail?.league?.id}&season=${fixtureDetail?.league?.season}`, { headers }),
-    ]);
-
+    // V4: Fetch extra context with DB cache
     const [oddsJson, injuriesJson, standingsJson] = await Promise.all([
-      oddsRes.json(),
-      injuriesRes.json(),
-      standingsRes.json(),
+      fetchWithCache(supabase, apiFootballKey, "odds", { fixture: String(fixtureId) }),
+      fetchWithCache(supabase, apiFootballKey, "injuries", { fixture: String(fixtureId) }),
+      fetchWithCache(supabase, apiFootballKey, "standings", {
+        league: String(fixtureDetail?.league?.id || ""),
+        season: String(fixtureDetail?.league?.season || "")
+      }),
     ]);
 
     const oddsData = oddsJson.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === "Match Winner");
