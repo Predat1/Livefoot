@@ -22,6 +22,26 @@ function getSupabaseClient() {
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 30; // higher limit for general API proxy
+
+// ─── In-Memory Cache (L1 Cache) ──────────────────────────────
+const localMemoryCache = new Map<string, { data: any; expiresAt: number }>();
+
+function getMemoryCache(key: string): any | null {
+  const entry = localMemoryCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    localMemoryCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setMemoryCache(key: string, data: any, ttlMs: number) {
+  localMemoryCache.set(key, {
+    data,
+    expiresAt: Date.now() + ttlMs
+  });
+}
 const RATE_WINDOW = 60_000;
 
 function checkRateLimit(ip: string): boolean {
@@ -224,11 +244,23 @@ serve(async (req) => {
     const ttl = getTtlForEndpoint(endpoint, params || {});
     const supabase = getSupabaseClient();
 
-    // 4. Check persistent database cache
+    // 4a. Check in-memory cache (L1)
+    const memCached = getMemoryCache(cacheKey);
+    if (memCached) {
+      console.log(`[api-football] MEMORY CACHE HIT: ${cacheKey}`);
+      return new Response(JSON.stringify({ ...memCached, _cached: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'MEMORY_HIT' },
+        status: 200,
+      });
+    }
+
+    // 4b. Check persistent database cache (L2)
     const cachedData = await getCachedResponse(supabase, cacheKey);
 
     if (cachedData) {
       console.log(`[api-football] DATABASE CACHE HIT: ${cacheKey}`);
+      // Populate memory cache for next requests
+      setMemoryCache(cacheKey, cachedData, ttl);
       return new Response(JSON.stringify({ ...cachedData, _cached: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
         status: 200,
@@ -276,8 +308,9 @@ serve(async (req) => {
     
     console.log(`[api-football] Response status: ${response.status}, results: ${data.results || 0}`);
 
-    // 6. Store in database cache (only successful responses)
+    // 6. Store in caches (only successful responses)
     if (response.status === 200 && data && (!data.errors || (Array.isArray(data.errors) && data.errors.length === 0) || Object.keys(data.errors).length === 0)) {
+      setMemoryCache(cacheKey, data, ttl);
       await setCachedResponse(supabase, cacheKey, data, ttl);
     }
 

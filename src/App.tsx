@@ -16,11 +16,11 @@ import { useEffect } from "react";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,   // 5 minutes stale time by default (reduces frequent calls)
       gcTime: 30 * 60 * 1000,
       retry: 1,
-      refetchOnWindowFocus: true, // Enable real-time updates when user returns to app
-      refetchOnReconnect: true,   // Refresh when network reconnects
+      refetchOnWindowFocus: false, // Prevent aggressive refetching on focus shift to save API requests
+      refetchOnReconnect: true,    // Refresh when network reconnects
     },
   },
 });
