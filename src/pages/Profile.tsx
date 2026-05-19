@@ -161,7 +161,7 @@ export default function Profile() {
 
   return (
     <Layout>
-      <SEOHead title="Mon Espace Personnel | LiveFoot" description="Gérez votre compte, votre profil et vos avantages VIP." />
+      <SEOHead title="Mon Espace Personnel | LiveFoot" description="Gérez votre compte, votre profil et vos avantages VIP." noIndex={true} />
       
       <div className="container py-4 sm:py-8 max-w-4xl mx-auto">
         <Link
