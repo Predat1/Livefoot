@@ -97,6 +97,8 @@ function getTtlForEndpoint(endpoint: string, params: Record<string, string>): nu
   if (endpoint.startsWith("fixtures/players")) return 60_000;                       // 1 min
   if (endpoint.startsWith("fixtures/lineups")) return 2 * 60_000;                  // 2 min
   if (endpoint.startsWith("fixtures/headtohead")) return 60 * 60_000;              // 1 hour
+  // Fixtures by team (last 5) — stable
+  if (endpoint === "fixtures" && params?.team) return 2 * 60 * 60_000;              // 2 hours
   // Fixture by date or by id
   if (endpoint === "fixtures") return 5 * 60_000;                                   // 5 min
   // Standings — very stable

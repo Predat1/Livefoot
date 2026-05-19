@@ -166,6 +166,8 @@ function getTtlForEndpoint(endpoint: string, params: Record<string, string>): nu
   if (endpoint.startsWith("fixtures/players")) return 60_000;                       // 1 min
   if (endpoint.startsWith("fixtures/lineups")) return 2 * 60_000;                  // 2 min
   if (endpoint.startsWith("fixtures/headtohead")) return 60 * 60_000;              // 1 hour
+  // Fixtures by team (last 5) — stable
+  if (endpoint === "fixtures" && params?.team) return 2 * 60 * 60_000;              // 2 hours
   // Fixture by date or by id
   if (endpoint === "fixtures") return 5 * 60_000;                                   // 5 min
   // Standings — very stable
@@ -263,12 +265,59 @@ function buildPrompt(
   oddsData: any,
   injuriesData: any[],
   standingsData: any[],
-  weatherData: any
+  weatherData: any,
+  homeRecentMatches: any[],
+  awayRecentMatches: any[],
+  liveStats: any,
+  liveEvents: any[],
+  topStandings: any[],
+  bottomStandings: any[]
 ) {
   const matchStatus = fixtureDetail?.fixture?.status?.long || 'Not Started';
   const currentMinute = fixtureDetail?.fixture?.status?.elapsed || 0;
   const currentScore = `${fixtureDetail?.goals?.home ?? 0}-${fixtureDetail?.goals?.away ?? 0}`;
   const referee = fixtureDetail?.fixture?.referee || "Inconnu";
+
+  const formatRecentMatches = (matches: any[], teamId: number) => {
+    if (!matches || matches.length === 0) return 'Non disponible';
+    return matches.map((m: any) => {
+      const date = m.fixture?.date ? new Date(m.fixture.date).toLocaleDateString("fr-FR") : '';
+      const home = m.teams?.home?.name || '';
+      const away = m.teams?.away?.name || '';
+      const homeScore = m.goals?.home ?? 0;
+      const awayScore = m.goals?.away ?? 0;
+      const isHome = m.teams?.home?.id === teamId;
+      const outcome = (homeScore === awayScore) ? "Nul" 
+        : ((homeScore > awayScore && isHome) || (awayScore > homeScore && !isHome)) ? "Victoire" : "Défaite";
+      return `- ${date} : ${home} ${homeScore}-${awayScore} ${away} (${outcome})`;
+    }).join('\n');
+  };
+
+  const formatLiveStats = (stats: any) => {
+    if (!stats || stats.length === 0) return 'Pas de statistiques en direct disponibles.';
+    return stats.map((teamStats: any) => {
+      const teamName = teamStats.team?.name || '';
+      const statLines = (teamStats.statistics || []).map((s: any) => `  - ${s.type}: ${s.value ?? 0}`).join('\n');
+      return `### ${teamName}\n${statLines}`;
+    }).join('\n\n');
+  };
+
+  const formatLiveEvents = (events: any[]) => {
+    if (!events || events.length === 0) return 'Aucun événement notable (buts, cartons) pour le moment.';
+    return events.map((e: any) => {
+      const min = e.time?.elapsed + (e.time?.extra ? `+${e.time.extra}` : '');
+      const team = e.team?.name || '';
+      const type = e.type || '';
+      const detail = e.detail || '';
+      const player = e.player?.name || '';
+      const assist = e.assist?.name ? ` (assist: ${e.assist.name})` : '';
+      return `- [${min}'] ${team} - ${type} (${detail}) par ${player}${assist}`;
+    }).join('\n');
+  };
+
+  const formatStandingHeader = (standings: any[]) => {
+    return standings.map((s: any) => `- Pos ${s.rank}: ${s.team.name} | Pts: ${s.points} | Matchs: ${s.all?.played} (G:${s.all?.win} N:${s.all?.draw} P:${s.all?.lose}) | Form: ${s.form || '?'}`).join('\n');
+  };
 
   return `
 📊 DATA (Contexte Injecté)
@@ -291,16 +340,35 @@ Winner: ${predictionData?.predictions?.winner?.name || '?'} (${predictionData?.p
 HOME: Forme ${predictionData?.comparison?.form?.home || '?'} | Attaque ${predictionData?.comparison?.att?.home || '?'} | Défense ${predictionData?.comparison?.def?.home || '?'} | Poisson ${predictionData?.comparison?.poisson_distribution?.home || '?'} | Total ${predictionData?.comparison?.total?.home || '?'}
 AWAY: Forme ${predictionData?.comparison?.form?.away || '?'} | Attaque ${predictionData?.comparison?.att?.away || '?'} | Défense ${predictionData?.comparison?.def?.away || '?'} | Poisson ${predictionData?.comparison?.poisson_distribution?.away || '?'} | Total ${predictionData?.comparison?.total?.away || '?'}
 
-# TEAM DETAILS
-HOME Last 5: ${predictionData?.teams?.home?.last_5?.form || '?'} | Goals Avg ${predictionData?.teams?.home?.last_5?.goals?.for?.average || '?'} scored / ${predictionData?.teams?.home?.last_5?.goals?.against?.average || '?'} conceded
-AWAY Last 5: ${predictionData?.teams?.away?.last_5?.form || '?'} | Goals Avg ${predictionData?.teams?.away?.last_5?.goals?.for?.average || '?'} scored / ${predictionData?.teams?.away?.last_5?.goals?.against?.average || '?'} conceded
+# TEAM DETAILS & FORM
+HOME Last 5 matches:
+${formatRecentMatches(homeRecentMatches, fixtureDetail?.teams?.home?.id)}
+
+AWAY Last 5 matches:
+${formatRecentMatches(awayRecentMatches, fixtureDetail?.teams?.away?.id)}
 
 # STANDINGS & H2H
 H2H (Derniers 5 matchs):
-${h2hData.map((m: any) => `- ${m.teams.home.name} ${m.goals.home}-${m.goals.away} ${m.teams.away.name}`).join('\\n')}
+${h2hData.map((m: any) => `- ${m.teams.home.name} ${m.goals.home}-${m.goals.away} ${m.teams.away.name}`).join('\n')}
 
-CLASSEMENT :
-${standingsData.map((s: any) => `- Pos ${s.rank}: ${s.team.name} | Pts: ${s.points} | Form: ${s.form}`).join('\\n')}
+CLASSEMENT GÉNÉRAL (TOP 5 / REFLÉGATIONS) :
+**Top 5 :**
+${formatStandingHeader(topStandings)}
+**Bas de tableau :**
+${formatStandingHeader(bottomStandings)}
+
+**Position des équipes du match :**
+${standingsData.map((s: any) => `- Pos ${s.rank}: ${s.team.name} | Pts: ${s.points} | Form: ${s.form}`).join('\n')}
+
+# LIVE MATCH CONTEXT (Seulement si le match est en cours ou LIVE)
+Statut du Match: ${matchStatus} (Minute: ${currentMinute})
+Score en direct: ${currentScore}
+
+## Statistiques en Direct :
+${formatLiveStats(liveStats)}
+
+## Événements en Direct :
+${formatLiveEvents(liveEvents)}
 
 # MARKET (ODDS)
 ${oddsData ? JSON.stringify(oddsData) : 'Cotes non disponibles'}
@@ -309,7 +377,7 @@ ${oddsData ? JSON.stringify(oddsData) : 'Cotes non disponibles'}
 Referee: ${referee}
 Weather: ${weatherData ? `${weatherData.temperature}°C, ${weatherData.condition}` : 'Inconnu'}
 Injuries:
-${injuriesData.length > 0 ? injuriesData.map((i: any) => `- ${i.team.name}: ${i.player.name} (${i.type})`).join('\\n') : 'Aucune absence majeure signalée'}
+${injuriesData.length > 0 ? injuriesData.map((i: any) => `- ${i.team.name}: ${i.player.name} (${i.type})`).join('\n') : 'Aucune absence majeure signalée'}
 
 ---
 
@@ -569,6 +637,49 @@ serve(async (req) => {
     const teamStandings = leagueStandings.filter((s: any) => 
       s.team.id === fixtureDetail?.teams?.home?.id || s.team.id === fixtureDetail?.teams?.away?.id
     );
+    const topStandings = leagueStandings.slice(0, 5);
+    const bottomStandings = leagueStandings.slice(-3);
+
+    // Fetch last 5 fixtures for both teams (Home / Away) for deeper context
+    let homeRecentMatches: any[] = [];
+    let awayRecentMatches: any[] = [];
+    
+    if (fixtureDetail?.teams?.home?.id && fixtureDetail?.teams?.away?.id) {
+      try {
+        const [homeRecentJson, awayRecentJson] = await Promise.all([
+          fetchWithCache(supabase, apiFootballKey, "fixtures", {
+            team: String(fixtureDetail.teams.home.id),
+            last: "5"
+          }),
+          fetchWithCache(supabase, apiFootballKey, "fixtures", {
+            team: String(fixtureDetail.teams.away.id),
+            last: "5"
+          })
+        ]);
+        homeRecentMatches = homeRecentJson.response || [];
+        awayRecentMatches = awayRecentJson.response || [];
+      } catch (err) {
+        console.error("Error fetching recent fixtures:", err);
+      }
+    }
+
+    // Fetch live statistics and events if match is in progress
+    let liveStats: any = null;
+    let liveEvents: any[] = [];
+    const isLive = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(fixtureDetail?.fixture?.status?.short || "");
+    
+    if (isLive) {
+      try {
+        const [liveStatsJson, liveEventsJson] = await Promise.all([
+          fetchWithCache(supabase, apiFootballKey, "fixtures/statistics", { fixture: String(fixtureId) }),
+          fetchWithCache(supabase, apiFootballKey, "fixtures/events", { fixture: String(fixtureId) })
+        ]);
+        liveStats = liveStatsJson.response;
+        liveEvents = liveEventsJson.response || [];
+      } catch (err) {
+        console.error("Error fetching live details:", err);
+      }
+    }
 
     // Weather: Open-Meteo (Free)
     let weatherData = null;
@@ -608,7 +719,13 @@ serve(async (req) => {
       oddsData,
       injuriesData,
       teamStandings,
-      weatherData
+      weatherData,
+      homeRecentMatches,
+      awayRecentMatches,
+      liveStats,
+      liveEvents,
+      topStandings,
+      bottomStandings
     );
 
     let content: string;
