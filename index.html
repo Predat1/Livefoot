@@ -208,12 +208,11 @@
   </head>
 
   <body class="bg-background text-foreground antialiased">
-    <div id="root">
-      <div id="root-loading">
-        <div class="spinner"></div>
-        <div style="margin-top: 16px; font-weight: 800; letter-spacing: -0.025em;">LIVEFOOT</div>
-      </div>
+    <div id="root-loading">
+      <div class="spinner"></div>
+      <div style="margin-top: 16px; font-weight: 800; letter-spacing: -0.025em;">LIVEFOOT</div>
     </div>
+    <div id="root"></div>
     <script>
       window.addEventListener('error', (e) => {
         console.error('Initial load error:', e);

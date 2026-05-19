@@ -15,6 +15,7 @@ import NotFound from "@/pages/NotFound";
 import Match from "@/pages/Match";
 
 // Lazy: admin pages
+const AdminAI = lazy(() => import("@/pages/Admin/AI"));
 const AdminMonetization = lazy(() => import("@/pages/Admin/Monetization"));
 const AdminAnalytics = lazy(() => import("@/pages/Admin/Analytics"));
 const AdminLogs = lazy(() => import("@/pages/Admin/Logs"));
@@ -115,7 +116,7 @@ const AnimatedRoutes = () => {
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="content" element={<AdminContent />} />
-              <Route path="ai" element={<div className="p-8 text-center text-slate-400">IA & Prédictions - En construction</div>} />
+              <Route path="ai" element={<AdminAI />} />
               <Route path="monetization" element={<AdminMonetization />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="logs" element={<AdminLogs />} />
