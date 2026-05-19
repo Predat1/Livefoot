@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,17 @@ export default function AdminSettings() {
     supportEmail,
     maintenanceMessage,
   });
+
+  // Keep localSettings in sync with siteSettings once loaded
+  useEffect(() => {
+    if (siteSettings) {
+      setLocalSettings({
+        siteName: siteSettings.find((s) => s.key === "site_name")?.value || "LiveFoot",
+        supportEmail: siteSettings.find((s) => s.key === "support_email")?.value || "",
+        maintenanceMessage: siteSettings.find((s) => s.key === "maintenance_message")?.value || "",
+      });
+    }
+  }, [siteSettings]);
 
   const handleToggleFeature = async (key: string, enabled: boolean, currentRollout: number) => {
     try {

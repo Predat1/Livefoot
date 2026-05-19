@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useIsAdmin } from "@/hooks/useAdmin";
+import { useIsAdmin, useAdminRealtime } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -42,6 +42,9 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: isAdmin, isLoading: roleLoading } = useIsAdmin();
+  
+  // Activate real-time admin listener channels
+  useAdminRealtime();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ const modules = [
 ];
 
 export default function AdminAI() {
+  const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: apiStats, isLoading: apiLoading } = useAdminApiUsageStats(7);
   const purgeCache = usePurgeCache();
@@ -54,9 +56,29 @@ export default function AdminAI() {
   const handleRefresh = async () => {
     try {
       await purgeCache.mutateAsync();
-      toast.success("Cache IA et predictions purge");
+      toast.success("Cache IA et prédictions purgé");
     } catch (e: any) {
       toast.error(e.message || "Impossible de purger le cache");
+    }
+  };
+
+  const checkEdgeFunctionsStatus = async () => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+    if (!supabaseUrl) {
+      toast.error("VITE_SUPABASE_URL non configuré");
+      return;
+    }
+    toast.loading("Vérification des Edge Functions...", { id: "check-fns" });
+    try {
+      const start = Date.now();
+      await Promise.all([
+        fetch(`${supabaseUrl}/functions/v1/api-football`, { method: "OPTIONS" }).catch(() => ({ ok: false })),
+        fetch(`${supabaseUrl}/functions/v1/ai-prediction`, { method: "OPTIONS" }).catch(() => ({ ok: false }))
+      ]);
+      const latency = Date.now() - start;
+      toast.success(`Edge Functions opérationnelles ! Latence: ${latency}ms`, { id: "check-fns" });
+    } catch (e) {
+      toast.error("Erreur de connexion aux Edge Functions", { id: "check-fns" });
     }
   };
 
@@ -129,13 +151,26 @@ export default function AdminAI() {
         <CardHeader>
           <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Actions de controle
+            Actions de contrôle
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <ControlAction title="Verifier les fonctions" value="api-football, ai-prediction, ai-chat" />
-          <ControlAction title="Surveiller les quotas" value="Consulte les requetes et erreurs API sur 7 jours" />
-          <ControlAction title="Purger les caches" value="Force une regeneration des resultats IA" />
+          <ControlAction 
+            title="Vérifier les fonctions" 
+            value="Tester l'état de api-football, ai-prediction, ai-chat" 
+            onClick={checkEdgeFunctionsStatus}
+          />
+          <ControlAction 
+            title="Surveiller les quotas" 
+            value="Consulter les requêtes et erreurs API sur 7 jours" 
+            onClick={() => navigate("/admin/logs")}
+          />
+          <ControlAction 
+            title="Purger les caches" 
+            value="Forcer une régénération des résultats IA" 
+            onClick={handleRefresh}
+            disabled={purgeCache.isPending}
+          />
         </CardContent>
       </Card>
     </motion.div>
@@ -172,11 +207,26 @@ function MetricCard({
   );
 }
 
-function ControlAction({ title, value }: { title: string; value: string }) {
+function ControlAction({ 
+  title, 
+  value, 
+  onClick, 
+  disabled 
+}: { 
+  title: string; 
+  value: string; 
+  onClick?: () => void; 
+  disabled?: boolean;
+}) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-4">
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      type="button"
+      className="text-left w-full rounded-lg border border-slate-800 bg-slate-800/40 p-4 hover:bg-slate-800/80 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+    >
       <p className="font-bold text-white">{title}</p>
       <p className="text-sm text-slate-400 mt-1">{value}</p>
-    </div>
+    </button>
   );
 }

@@ -68,6 +68,10 @@ export default function AdminContent() {
     }
   };
 
+  const handleAction = (type: string, id: number) => {
+    toast.info(`${type} pour l'élément #${id} (Simulé)`);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

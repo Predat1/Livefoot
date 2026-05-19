@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,7 +63,8 @@ export function useAdminStats() {
         recent_signups_30d: number;
       };
     },
-    staleTime: 60 * 1000,
+    staleTime: 5000,
+    refetchInterval: 15000,
   });
 }
 
@@ -89,7 +91,8 @@ export function useAdminUsers() {
         is_vip: Boolean(profile.is_vip),
       })) as AdminUserRow[];
     },
-    staleTime: 60 * 1000,
+    staleTime: 5000,
+    refetchInterval: 30000,
   });
 }
 
@@ -999,4 +1002,105 @@ export function useAdminTriggerBackup() {
       qc.invalidateQueries({ queryKey: ["admin-backups"] });
     },
   });
+}
+
+export function useAdminRealtime() {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    // Listen to changes on profiles
+    const profilesChannel = supabase
+      .channel("admin-profiles-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        (payload) => {
+          console.log("[Realtime] Profile change detected:", payload);
+          qc.invalidateQueries({ queryKey: ["admin-stats"] });
+          qc.invalidateQueries({ queryKey: ["admin-users"] });
+          if (payload.new && (payload.new as any).id) {
+            qc.invalidateQueries({ queryKey: ["admin-user-detail", (payload.new as any).id] });
+          }
+        }
+      )
+      .subscribe();
+
+    // Listen to changes on content_moderation_queue
+    const moderationChannel = supabase
+      .channel("admin-moderation-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "content_moderation_queue" },
+        (payload) => {
+          console.log("[Realtime] Moderation change detected:", payload);
+          qc.invalidateQueries({ queryKey: ["admin-moderation-queue"] });
+          qc.invalidateQueries({ queryKey: ["admin-moderation-stats"] });
+          qc.invalidateQueries({ queryKey: ["admin-stats"] });
+        }
+      )
+      .subscribe();
+
+    // Listen to changes on admin_notifications
+    const notificationsChannel = supabase
+      .channel("admin-notifications-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "admin_notifications" },
+        (payload) => {
+          console.log("[Realtime] Admin notification change detected:", payload);
+          qc.invalidateQueries({ queryKey: ["admin-notifications"] });
+        }
+      )
+      .subscribe();
+
+    // Listen to changes on user_roles
+    const rolesChannel = supabase
+      .channel("admin-roles-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_roles" },
+        (payload) => {
+          console.log("[Realtime] User role change detected:", payload);
+          qc.invalidateQueries({ queryKey: ["admin-user-roles"] });
+          qc.invalidateQueries({ queryKey: ["is-admin"] });
+        }
+      )
+      .subscribe();
+
+    // Listen to changes on site_settings
+    const settingsChannel = supabase
+      .channel("admin-settings-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "site_settings" },
+        (payload) => {
+          console.log("[Realtime] Site settings change detected:", payload);
+          qc.invalidateQueries({ queryKey: ["admin-site-settings"] });
+        }
+      )
+      .subscribe();
+
+    // Listen to changes on feature_flags
+    const flagsChannel = supabase
+      .channel("admin-flags-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "feature_flags" },
+        (payload) => {
+          console.log("[Realtime] Feature flag change detected:", payload);
+          qc.invalidateQueries({ queryKey: ["admin-feature-flags"] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(moderationChannel);
+      supabase.removeChannel(notificationsChannel);
+      supabase.removeChannel(rolesChannel);
+      supabase.removeChannel(settingsChannel);
+      supabase.removeChannel(flagsChannel);
+    };
+  }, [qc]);
 }
