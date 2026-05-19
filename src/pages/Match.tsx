@@ -919,10 +919,12 @@ const Match = () => {
               <TrendingUp className="h-4 w-4 text-primary" />
               <h3 className="font-bold text-sm text-foreground">Forme Récente</h3>
             </div>
-            <div className="p-4 sm:p-6 space-y-6">
+            <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:divide-x lg:divide-border/30">
               {[{ id: homeTeamId, name: homeTeam.name, logo: homeTeam.logo },
-                { id: awayTeamId, name: awayTeam.name, logo: awayTeam.logo }].map((team) => (
-                <TeamFormSection key={team.id} teamId={team.id} teamName={team.name} teamLogo={team.logo} />
+                { id: awayTeamId, name: awayTeam.name, logo: awayTeam.logo }].map((team, idx) => (
+                <div key={team.id} className={cn(idx > 0 && "lg:pl-6")}>
+                  <TeamFormSection teamId={team.id} teamName={team.name} teamLogo={team.logo} />
+                </div>
               ))}
             </div>
           </div>
@@ -944,88 +946,92 @@ const Match = () => {
         </TabsContent>
 
 
-        <TabsContent value="predictions" className="mt-0 space-y-6">
-          <SectionErrorBoundary sectionName="Odds Anomaly Detector">
-            <OddsAnomalyDetector
-              oddsData={oddsData || []}
-              liveOddsData={liveOddsData || []}
-              apiPredictions={apiPredictions}
-              homeTeamName={homeTeam.name}
-              awayTeamName={awayTeam.name}
-              leagueName={league?.name}
-            />
-          </SectionErrorBoundary>
+        <TabsContent value="predictions" className="mt-0 focus-visible:outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Main Column (Left/Top) */}
+            <div className="lg:col-span-8 space-y-6">
+              <SectionErrorBoundary sectionName="AI Predictions">
+                <LiveFootAIPrediction
+                  homeTeamId={homeTeamId}
+                  awayTeamId={awayTeamId}
+                  homeTeamName={homeTeam.name}
+                  awayTeamName={awayTeam.name}
+                  homeLogo={homeTeam.logo}
+                  awayLogo={awayTeam.logo}
+                  standings={standingsData || []}
+                  apiPredictions={apiPredictions}
+                  aiExpertPrediction={aiExpertPrediction as any}
+                  injuries={{
+                    home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
+                    away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
+                  }}
+                />
+              </SectionErrorBoundary>
 
-          <SectionErrorBoundary sectionName="AI Predictions">
-            <LiveFootAIPrediction
-              homeTeamId={homeTeamId}
-              awayTeamId={awayTeamId}
-              homeTeamName={homeTeam.name}
-              awayTeamName={awayTeam.name}
-              homeLogo={homeTeam.logo}
-              awayLogo={awayTeam.logo}
-              standings={standingsData || []}
-              apiPredictions={apiPredictions}
-              aiExpertPrediction={aiExpertPrediction as any}
-              injuries={{
-                home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
-                away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
-              }}
-            />
-          </SectionErrorBoundary>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <SectionErrorBoundary sectionName="Value Bet">
+                  <ValueBetDetector
+                    odds={oddsData || []}
+                    prediction={aiExpertPrediction as any}
+                    homeTeamName={homeTeam.name}
+                    awayTeamName={awayTeam.name}
+                  />
+                </SectionErrorBoundary>
 
-          {/* Value Bet Detector */}
-          <SectionErrorBoundary sectionName="Value Bet">
-            <ValueBetDetector
-              odds={oddsData || []}
-              prediction={aiExpertPrediction as any}
-              homeTeamName={homeTeam.name}
-              awayTeamName={awayTeam.name}
-            />
-          </SectionErrorBoundary>
+                <SectionErrorBoundary sectionName="Odds Anomaly Detector">
+                  <OddsAnomalyDetector
+                    oddsData={oddsData || []}
+                    liveOddsData={liveOddsData || []}
+                    apiPredictions={apiPredictions}
+                    homeTeamName={homeTeam.name}
+                    awayTeamName={awayTeam.name}
+                    leagueName={league?.name}
+                  />
+                </SectionErrorBoundary>
+              </div>
 
-          {/* IA Conversationnelle */}
-          <SectionErrorBoundary sectionName="AI Chat">
-            <MatchAIChat
-              fixtureId={matchId}
-              homeTeamName={homeTeam.name}
-              awayTeamName={awayTeam.name}
-              leagueName={league?.name}
-              prediction={aiExpertPrediction as any}
-            />
-          </SectionErrorBoundary>
+              <SectionErrorBoundary sectionName="Scenario Simulator">
+                <LiveScenarioSimulator
+                  homeTeamName={homeTeam.name}
+                  awayTeamName={awayTeam.name}
+                  currentMinute={fix?.fixture?.status?.elapsed || 45}
+                  currentHomeScore={fix?.goals?.home ?? 0}
+                  currentAwayScore={fix?.goals?.away ?? 0}
+                  baseProbabilities={
+                    (aiExpertPrediction as any)?.probabilities ||
+                    { home: 45, draw: 28, away: 27 }
+                  }
+                  xgHome={(aiExpertPrediction as any)?.xgHome || 1.3}
+                  xgAway={(aiExpertPrediction as any)?.xgAway || 1.0}
+                />
+              </SectionErrorBoundary>
+            </div>
 
-          {/* Simulateur de scénarios live */}
-          <SectionErrorBoundary sectionName="Scenario Simulator">
-            <LiveScenarioSimulator
-              homeTeamName={homeTeam.name}
-              awayTeamName={awayTeam.name}
-              currentMinute={fix?.fixture?.status?.elapsed || 45}
-              currentHomeScore={fix?.goals?.home ?? 0}
-              currentAwayScore={fix?.goals?.away ?? 0}
-              baseProbabilities={
-                (aiExpertPrediction as any)?.probabilities ||
-                { home: 45, draw: 28, away: 27 }
-              }
-              xgHome={(aiExpertPrediction as any)?.xgHome || 1.3}
-              xgAway={(aiExpertPrediction as any)?.xgAway || 1.0}
-            />
-          </SectionErrorBoundary>
+            {/* Sidebar (Right/Bottom) */}
+            <div className="lg:col-span-4 space-y-6">
+              <SectionErrorBoundary sectionName="AI Chat">
+                <MatchAIChat
+                  fixtureId={matchId}
+                  homeTeamName={homeTeam.name}
+                  awayTeamName={awayTeam.name}
+                  leagueName={league?.name}
+                  prediction={aiExpertPrediction as any}
+                />
+              </SectionErrorBoundary>
 
-          {/* Profil parieur */}
-          <SectionErrorBoundary sectionName="Betting Profile">
-            <BettingProfileWidget />
-          </SectionErrorBoundary>
+              <SectionErrorBoundary sectionName="Predictive Alerts">
+                <PredictiveAlerts
+                  fixtureId={matchId}
+                  homeTeamName={homeTeam.name}
+                  awayTeamName={awayTeam.name}
+                />
+              </SectionErrorBoundary>
 
-          {/* Alertes prédictives */}
-          <SectionErrorBoundary sectionName="Predictive Alerts">
-            <PredictiveAlerts
-              fixtureId={matchId}
-              homeTeamName={homeTeam.name}
-              awayTeamName={awayTeam.name}
-            />
-          </SectionErrorBoundary>
-
+              <SectionErrorBoundary sectionName="Betting Profile">
+                <BettingProfileWidget />
+              </SectionErrorBoundary>
+            </div>
+          </div>
         </TabsContent>
 
         {/* H2H */}
