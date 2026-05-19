@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
 
 const ALLOWED_ORIGINS = ["https://www.livefoot.fun", "https://www.livefoot.fun", "http://localhost:5173", "http://localhost:8080"];
 
@@ -10,6 +11,14 @@ const getCorsHeaders = (origin: string | null) => {
     "Vary": "Origin",
   };
 };
+
+function getSupabaseClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+}
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 30; // higher limit for general API proxy
@@ -27,19 +36,56 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-// ─── In-Memory Cache ─────────────────────────────────────────
-// Protects against quota exhaustion: multiple users hitting the same
-// endpoint within the TTL window share a single upstream API call.
+// ─── Database-Backed Persistent Cache ─────────────────────────
+// We use a PostgreSQL table `api_football_cache` to store cached responses.
 
-interface CacheEntry {
-  data: unknown;
-  expiresAt: number;
+async function getCachedResponse(supabase: any, key: string): Promise<any | null> {
+  try {
+    const { data, error } = await supabase
+      .from("api_football_cache")
+      .select("data, expires_at")
+      .eq("key", key)
+      .single();
+
+    if (error || !data) return null;
+
+    const expiresAt = new Date(data.expires_at).getTime();
+    if (Date.now() > expiresAt) {
+      // Lazy deletion of expired entry
+      supabase.from("api_football_cache").delete().eq("key", key).catch(() => {});
+      return null;
+    }
+
+    return data.data;
+  } catch (err) {
+    console.error(`[api-football] Cache read error for key ${key}:`, err);
+    return null;
+  }
 }
 
-const cache = new Map<string, CacheEntry>();
+async function setCachedResponse(supabase: any, key: string, data: any, ttlMs: number) {
+  try {
+    const expiresAt = new Date(Date.now() + ttlMs).toISOString();
+    await supabase.from("api_football_cache").upsert({
+      key,
+      data,
+      expires_at: expiresAt,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "key" });
 
-// Max cache entries to prevent memory leaks on long-running instances
-const MAX_CACHE_ENTRIES = 500;
+    // Periodic cleanup of expired entries (approx. 5% of requests)
+    if (Math.random() < 0.05) {
+      supabase
+        .from("api_football_cache")
+        .delete()
+        .lt("expires_at", new Date().toISOString())
+        .then(() => console.log("[api-football] Expired cache clean-up run successfully"))
+        .catch((err: any) => console.error("[api-football] Cache cleanup error:", err));
+    }
+  } catch (err) {
+    console.error(`[api-football] Cache write error for key ${key}:`, err);
+  }
+}
 
 /** TTL (in ms) per endpoint category. More volatile data = shorter TTL. */
 function getTtlForEndpoint(endpoint: string, params: Record<string, string>): number {
@@ -86,21 +132,7 @@ function buildCacheKey(endpoint: string, params: Record<string, string>): string
   return `${endpoint}?${sortedParams}`;
 }
 
-/** Evict expired entries + enforce max size */
-function evictCache(): void {
-  const now = Date.now();
-  for (const [key, entry] of cache) {
-    if (now > entry.expiresAt) cache.delete(key);
-  }
-  // If still over limit, remove oldest entries
-  if (cache.size > MAX_CACHE_ENTRIES) {
-    const entries = [...cache.entries()].sort((a, b) => a[1].expiresAt - b[1].expiresAt);
-    const toRemove = cache.size - MAX_CACHE_ENTRIES;
-    for (let i = 0; i < toRemove; i++) {
-      cache.delete(entries[i][0]);
-    }
-  }
-}
+
 
 // ─── Daily request counter ───────────────────────────────────
 // Tracks actual upstream API calls to prevent exceeding the 7,500/day quota.
@@ -126,7 +158,7 @@ function checkDailyQuota(): boolean {
   return true;
 }
 
-const REQUIRED_ENV = ["API_FOOTBALL_KEY"];
+const REQUIRED_ENV = ["API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 
 serve(async (req) => {
   const origin = req.headers.get("origin");
@@ -186,15 +218,16 @@ serve(async (req) => {
       });
     }
 
-    // 4. Check in-memory cache
     const cacheKey = buildCacheKey(endpoint, params || {});
     const ttl = getTtlForEndpoint(endpoint, params || {});
-    const now = Date.now();
-    const cached = cache.get(cacheKey);
+    const supabase = getSupabaseClient();
 
-    if (cached && now < cached.expiresAt) {
-      console.log(`[api-football] CACHE HIT: ${cacheKey} (expires in ${Math.round((cached.expiresAt - now) / 1000)}s)`);
-      return new Response(JSON.stringify({ ...(cached.data as object), _cached: true }), {
+    // 4. Check persistent database cache
+    const cachedData = await getCachedResponse(supabase, cacheKey);
+
+    if (cachedData) {
+      console.log(`[api-football] DATABASE CACHE HIT: ${cacheKey}`);
+      return new Response(JSON.stringify({ ...cachedData, _cached: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
         status: 200,
       });
@@ -241,11 +274,9 @@ serve(async (req) => {
     
     console.log(`[api-football] Response status: ${response.status}, results: ${data.results || 0}`);
 
-    // 6. Store in cache (only successful responses)
-    if (response.status === 200 && data && !data.errors?.length) {
-      cache.set(cacheKey, { data, expiresAt: now + ttl });
-      // Periodic eviction
-      if (cache.size > MAX_CACHE_ENTRIES * 0.9) evictCache();
+    // 6. Store in database cache (only successful responses)
+    if (response.status === 200 && data && (!data.errors || (Array.isArray(data.errors) && data.errors.length === 0) || Object.keys(data.errors).length === 0)) {
+      await setCachedResponse(supabase, cacheKey, data, ttl);
     }
 
     return new Response(JSON.stringify(data), {
