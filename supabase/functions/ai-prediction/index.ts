@@ -76,9 +76,9 @@ const SYSTEM_INSTRUCTION = `Tu es AnalystePro V4, le système d'intelligence art
 4. Chaque prédiction de marché DOIT avoir sa propre confiance calibrée.`;
 
 // Cache TTLs in milliseconds
-const CACHE_TTL_PREMATCH = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_PREMATCH = 12 * 60 * 60 * 1000; // 12 hours (saves huge AI tokens for upcoming matches)
 const CACHE_TTL_LIVE = 5 * 60 * 1000; // 5 minutes
-const CACHE_TTL_FINISHED = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL_FINISHED = 365 * 24 * 60 * 60 * 1000; // 365 days (match is done, prediction never changes)
 
 // Supabase client initialization helper
 function getSupabaseClient() {
@@ -111,8 +111,16 @@ async function getCachedPredictionDB(fixtureId: string, supabase: any): Promise<
   }
 
   const age = Date.now() - new Date(data.updated_at).getTime();
-  const ttl = data.match_status === "Match Finished" ? CACHE_TTL_FINISHED
-    : data.match_status?.includes("Half") || data.match_status?.includes("progress") ? CACHE_TTL_LIVE
+  const isFinished = 
+    data.match_status === "Match Finished" || 
+    data.match_status === "FT" || 
+    data.match_status === "AET" || 
+    data.match_status === "PEN" ||
+    data.match_status?.toLowerCase().includes("finish") || 
+    data.match_status?.toLowerCase().includes("ended");
+
+  const ttl = isFinished ? CACHE_TTL_FINISHED
+    : data.match_status?.includes("Half") || data.match_status?.includes("progress") || data.match_status === "LIVE" ? CACHE_TTL_LIVE
     : CACHE_TTL_PREMATCH;
 
   if (age > ttl) {
