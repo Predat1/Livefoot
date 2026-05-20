@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ import {
   Clock,
 } from "lucide-react";
 
-const FEATURE_ICONS: Record<string, any> = {
+const FEATURE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   vip_pricing: Crown,
   ai_predictions: Zap,
   referral_system: Users,
@@ -97,8 +97,9 @@ export default function AdminSettings() {
         rolloutPercentage: currentRollout,
       });
       toast.success(`Feature ${key} ${enabled ? "activé" : "désactivé"}`);
-    } catch (e: any) {
-      toast.error(e.message || "Erreur");
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Erreur");
     }
   };
 
@@ -109,8 +110,9 @@ export default function AdminSettings() {
         enabled,
         rolloutPercentage: rollout,
       });
-    } catch (e: any) {
-      toast.error(e.message || "Erreur");
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Erreur");
     }
   };
 
@@ -121,8 +123,9 @@ export default function AdminSettings() {
         message: localSettings.maintenanceMessage,
       });
       toast.success(`Mode maintenance ${enabled ? "activé" : "désactivé"}`);
-    } catch (e: any) {
-      toast.error(e.message || "Erreur");
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Erreur");
     }
   };
 
@@ -130,8 +133,9 @@ export default function AdminSettings() {
     try {
       const result = await purgeCache.mutateAsync();
       toast.success(`Cache purgé - ${result.message}`);
-    } catch (e: any) {
-      toast.error(e.message || "Erreur lors du purge");
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Erreur lors du purge");
     }
   };
 
@@ -146,8 +150,9 @@ export default function AdminSettings() {
       a.click();
       window.URL.revokeObjectURL(url);
       toast.success('Export newsletter téléchargé');
-    } catch (e: any) {
-      toast.error(e.message || 'Erreur lors de l\'export');
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || 'Erreur lors de l\'export');
     }
   };
 
@@ -155,8 +160,9 @@ export default function AdminSettings() {
     try {
       const backupId = await triggerBackup.mutateAsync(type);
       toast.success(`Backup démarré (ID: ${backupId.slice(0, 8)}...)`);
-    } catch (e: any) {
-      toast.error(e.message || 'Erreur backup');
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || 'Erreur backup');
     }
   };
 
@@ -175,8 +181,9 @@ export default function AdminSettings() {
         }),
       ]);
       toast.success("Parametres generaux sauvegardes");
-    } catch (e: any) {
-      toast.error(e.message || "Erreur lors de la sauvegarde");
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Erreur lors de la sauvegarde");
     }
   };
 
@@ -505,7 +512,7 @@ function StatCard({
   loading,
   color,
 }: {
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | number;
   loading?: boolean;

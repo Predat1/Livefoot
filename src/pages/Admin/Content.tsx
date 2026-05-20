@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,8 +63,9 @@ export default function AdminContent() {
     try {
       await moderationAction.mutateAsync({ reportId, action });
       toast.success(`Contenu ${action === "approve" ? "approuvé" : "rejeté"}`);
-    } catch (e: any) {
-      toast.error(e.message || "Erreur lors de la modération");
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Erreur lors de la modération");
     }
   };
 
@@ -334,7 +335,7 @@ function StatCard({
   loading,
   alert,
 }: { 
-  icon: any; 
+  icon: React.ComponentType<{ className?: string }>; 
   label: string; 
   value: string | number; 
   color: string;
@@ -386,14 +387,14 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ContentTable({
+function ContentTable<T>({
   headers,
   data,
   renderRow,
 }: {
   headers: string[];
-  data: any[];
-  renderRow: (item: any) => React.ReactNode;
+  data: T[];
+  renderRow: (item: T) => React.ReactNode;
 }) {
   return (
     <div className="overflow-x-auto">

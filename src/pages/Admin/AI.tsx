@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,8 +58,9 @@ export default function AdminAI() {
     try {
       await purgeCache.mutateAsync();
       toast.success("Cache IA et prédictions purgé");
-    } catch (e: any) {
-      toast.error(e.message || "Impossible de purger le cache");
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Impossible de purger le cache");
     }
   };
 
@@ -184,7 +186,7 @@ function MetricCard({
   loading,
   color,
 }: {
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | number;
   loading?: boolean;
