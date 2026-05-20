@@ -18,6 +18,7 @@ import {
   Sparkles,
   Target,
   Trophy,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -109,9 +110,16 @@ export default function AdminAI() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard icon={Brain} label="Pronostics" value={stats?.total_predictions || 0} loading={statsLoading} color="bg-purple-500" />
-        <MetricCard icon={Activity} label="Requetes API 7j" value={apiStats?.total_requests || 0} loading={apiLoading} color="bg-blue-500" />
-        <MetricCard icon={ShieldCheck} label="Erreurs API" value={apiStats?.total_errors || 0} loading={apiLoading} color="bg-red-500" />
+        <MetricCard icon={Activity} label="Quota restant" value={`${apiStats?.quota_remaining_today ?? 0}/${apiStats?.quota_limit ?? 7000}`} loading={apiLoading} color="bg-blue-500" />
+        <MetricCard icon={Zap} label="Cache hits jour" value={apiStats?.cache_hits_today || 0} loading={apiLoading} color="bg-amber-500" />
         <MetricCard icon={Cpu} label="Temps moyen" value={`${apiStats?.avg_response_time || 0}ms`} loading={apiLoading} color="bg-emerald-500" />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <MetricCard icon={Activity} label="Requetes API 7j" value={apiStats?.total_requests || 0} loading={apiLoading} color="bg-sky-500" />
+        <MetricCard icon={ShieldCheck} label="Erreurs API" value={apiStats?.total_errors || 0} loading={apiLoading} color="bg-red-500" />
+        <MetricCard icon={RefreshCw} label="Stale servis" value={apiStats?.stale_hits_today || 0} loading={apiLoading} color="bg-indigo-500" />
+        <MetricCard icon={ShieldCheck} label="Quota bloque" value={apiStats?.quota_exceeded_today || 0} loading={apiLoading} color="bg-orange-500" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

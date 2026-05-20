@@ -76,17 +76,17 @@ export const getLiveFixtures = () =>
 export const getFixtureById = (id: string) =>
   callApi("fixtures", { id });
 
-export const getFixtureEvents = (fixtureId: string) =>
-  callApi("fixtures/events", { fixture: fixtureId });
+export const getFixtureEvents = (fixtureId: string, extraParams: Record<string, string> = {}) =>
+  callApi("fixtures/events", { fixture: fixtureId, ...extraParams });
 
-export const getFixtureLineups = (fixtureId: string) =>
-  callApi("fixtures/lineups", { fixture: fixtureId });
+export const getFixtureLineups = (fixtureId: string, extraParams: Record<string, string> = {}) =>
+  callApi("fixtures/lineups", { fixture: fixtureId, ...extraParams });
 
-export const getFixtureStatistics = (fixtureId: string) =>
-  callApi("fixtures/statistics", { fixture: fixtureId });
+export const getFixtureStatistics = (fixtureId: string, extraParams: Record<string, string> = {}) =>
+  callApi("fixtures/statistics", { fixture: fixtureId, ...extraParams });
 
-export const getFixturePlayers = (fixtureId: string) =>
-  callApi("fixtures/players", { fixture: fixtureId });
+export const getFixturePlayers = (fixtureId: string, extraParams: Record<string, string> = {}) =>
+  callApi("fixtures/players", { fixture: fixtureId, ...extraParams });
 
 export const getHeadToHead = (h2h: string) =>
   callApi("fixtures/headtohead", { h2h });

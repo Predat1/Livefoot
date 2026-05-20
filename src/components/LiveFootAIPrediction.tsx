@@ -27,6 +27,9 @@ interface LiveFootAIPredictionCardProps {
   standings?: any[];
   injuries?: { home: number; away: number };
   apiPredictions?: any;
+  homeFormData?: TeamFormData[];
+  awayFormData?: TeamFormData[];
+  h2hData?: any[];
   leagueName?: string;
   aiExpertPrediction?: {
     analysis: string;
@@ -63,6 +66,9 @@ const LiveFootAIPredictionCard = ({
   fixtureId, homeTeamId, awayTeamId, homeTeamName, awayTeamName,
   homeLogo, awayLogo, standings, injuries, apiPredictions,
   aiExpertPrediction: initialAiExpertPrediction,
+  homeFormData: initialHomeFormData,
+  awayFormData: initialAwayFormData,
+  h2hData: initialH2hData,
   leagueName = "Football",
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
@@ -81,9 +87,12 @@ const LiveFootAIPredictionCard = ({
 
   const aiExpertPrediction: any = initialAiExpertPrediction || fetchedAiExpertData;
 
-  const { data: homeFormData } = useTeamForm(homeTeamId);
-  const { data: awayFormData } = useTeamForm(awayTeamId);
-  const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
+  const { data: fetchedHomeFormData } = useTeamForm(homeTeamId, { enabled: !initialHomeFormData });
+  const { data: fetchedAwayFormData } = useTeamForm(awayTeamId, { enabled: !initialAwayFormData });
+  const { data: fetchedH2hData } = useHeadToHead(homeTeamId, awayTeamId, { enabled: !initialH2hData });
+  const homeFormData = initialHomeFormData || fetchedHomeFormData;
+  const awayFormData = initialAwayFormData || fetchedAwayFormData;
+  const h2hData = initialH2hData || fetchedH2hData;
 
   const featuredPartner = useMemo(() => getRandomPartner(), []);
 

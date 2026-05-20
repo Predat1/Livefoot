@@ -960,6 +960,21 @@ export interface ApiUsageStats {
   avg_response_time: number;
   top_endpoints: { endpoint: string; count: number }[];
   quota_usage_by_day: { day: string; total: number }[];
+  quota_limit?: number;
+  quota_used_today?: number;
+  quota_remaining_today?: number;
+  cache_hits_today?: number;
+  stale_hits_today?: number;
+  quota_exceeded_today?: number;
+  recent_api_events?: {
+    created_at: string;
+    endpoint: string;
+    status_code: number;
+    response_time_ms: number;
+    quota_remaining: number | null;
+    cache_status: string | null;
+    error_message: string | null;
+  }[];
 }
 
 export function useAdminApiUsageStats(days = 7) {

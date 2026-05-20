@@ -109,6 +109,22 @@ export interface PlayerData {
 }
 
 const fallbackLeagues = mockLeagues as unknown as LeagueData[];
+const LIVE_STATUSES = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
+const FINISHED_STATUSES = ["FT", "AET", "PEN", "AWD", "WO"];
+
+type MatchAwareQueryOptions = {
+  enabled?: boolean;
+  matchStatus?: string;
+};
+
+function isLiveStatus(status?: string) {
+  return !!status && LIVE_STATUSES.includes(status);
+}
+
+function isFinishedStatus(status?: string) {
+  return !!status && FINISHED_STATUSES.includes(status);
+}
+
 
 // ─── Data transformers ────────────────────────────────────────
 
@@ -322,7 +338,7 @@ export interface StandingTeam {
   form: string;
 }
 
-export function useStandings(leagueId: string, season: string) {
+export function useStandings(leagueId: string, season: string, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["standings", leagueId, season],
     queryFn: async () => {
@@ -333,7 +349,7 @@ export function useStandings(leagueId: string, season: string) {
       return leagueData.standings[0] as StandingTeam[];
     },
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    enabled: !!leagueId && !!season,
+    enabled: !!leagueId && !!season && (options.enabled ?? true),
   });
 }
 
@@ -349,56 +365,65 @@ export function useFixtureDetail(fixtureId: string) {
     },
     staleTime: 60 * 1000, // 60 seconds (quota optimization)
     refetchInterval: (query) => {
-      // Refresh every 60 seconds for live matches, 5 minutes for others
       const data = query.state.data as any;
-      const isLive = data?.fixture?.status?.short && 
-        ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(data.fixture.status.short);
-      return isLive ? 60 * 1000 : 5 * 60 * 1000;
+      const status = data?.fixture?.status?.short;
+      if (isLiveStatus(status)) return 60 * 1000;
+      if (isFinishedStatus(status)) return false;
+      return 15 * 60 * 1000;
     },
     refetchIntervalInBackground: false,
     enabled: !!fixtureId,
   });
 }
 
-export function useFixtureEvents(fixtureId: string) {
+export function useFixtureEvents(fixtureId: string, options: MatchAwareQueryOptions = {}) {
+  const isLive = isLiveStatus(options.matchStatus);
+  const isFinished = isFinishedStatus(options.matchStatus);
   return useQuery({
-    queryKey: ["fixture-events", fixtureId],
+    queryKey: ["fixture-events", fixtureId, options.matchStatus || ""],
     queryFn: async () => {
-      const res = await getFixtureEvents(fixtureId);
+      const res = await getFixtureEvents(fixtureId, options.matchStatus ? { _matchStatus: options.matchStatus } : {});
       return res.response || [];
     },
-    staleTime: 60 * 1000, // 60 seconds (quota optimization)
-    refetchInterval: 60 * 1000,
+    staleTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : isLive ? 60 * 1000 : 15 * 60 * 1000,
+    gcTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000,
+    refetchInterval: isLive ? 60 * 1000 : false,
     refetchIntervalInBackground: false,
-    enabled: !!fixtureId,
+    enabled: !!fixtureId && (options.enabled ?? true),
   });
 }
 
-export function useFixtureLineups(fixtureId: string) {
+export function useFixtureLineups(fixtureId: string, options: MatchAwareQueryOptions = {}) {
+  const isLive = isLiveStatus(options.matchStatus);
+  const isFinished = isFinishedStatus(options.matchStatus);
   return useQuery({
-    queryKey: ["fixture-lineups", fixtureId],
+    queryKey: ["fixture-lineups", fixtureId, options.matchStatus || ""],
     queryFn: async () => {
-      const res = await getFixtureLineups(fixtureId);
+      const res = await getFixtureLineups(fixtureId, options.matchStatus ? { _matchStatus: options.matchStatus } : {});
       return res.response || [];
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes (quota optimization)
-    refetchInterval: 2 * 60 * 1000,
+    staleTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : isLive ? 5 * 60 * 1000 : 30 * 60 * 1000,
+    gcTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000,
+    refetchInterval: isLive ? 5 * 60 * 1000 : false,
     refetchIntervalInBackground: false,
-    enabled: !!fixtureId,
+    enabled: !!fixtureId && (options.enabled ?? true),
   });
 }
 
-export function useFixtureStatistics(fixtureId: string) {
+export function useFixtureStatistics(fixtureId: string, options: MatchAwareQueryOptions = {}) {
+  const isLive = isLiveStatus(options.matchStatus);
+  const isFinished = isFinishedStatus(options.matchStatus);
   return useQuery({
-    queryKey: ["fixture-statistics", fixtureId],
+    queryKey: ["fixture-statistics", fixtureId, options.matchStatus || ""],
     queryFn: async () => {
-      const res = await getFixtureStatistics(fixtureId);
+      const res = await getFixtureStatistics(fixtureId, options.matchStatus ? { _matchStatus: options.matchStatus } : {});
       return res.response || [];
     },
-    staleTime: 60 * 1000, // 60 seconds (quota optimization)
-    refetchInterval: 60 * 1000,
+    staleTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : isLive ? 90 * 1000 : 30 * 60 * 1000,
+    gcTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000,
+    refetchInterval: isLive ? 90 * 1000 : false,
     refetchIntervalInBackground: false,
-    enabled: !!fixtureId,
+    enabled: !!fixtureId && (options.enabled ?? true),
   });
 }
 
@@ -887,7 +912,7 @@ export function usePlayerSeasons(playerId: string) {
 
 // ─── Head to Head ────────────────────────────────────────────
 
-export function useHeadToHead(homeId: string, awayId: string) {
+export function useHeadToHead(homeId: string, awayId: string, options: { enabled?: boolean } = {}) {
   const h2h = `${homeId}-${awayId}`;
   return useQuery({
     queryKey: ["h2h", h2h],
@@ -896,7 +921,7 @@ export function useHeadToHead(homeId: string, awayId: string) {
       return res.response || [];
     },
     staleTime: 60 * 60 * 1000,
-    enabled: !!homeId && !!awayId,
+    enabled: !!homeId && !!awayId && (options.enabled ?? true),
   });
 }
 
@@ -999,7 +1024,7 @@ export function useAiExpert(params: {
 
 // ─── Team Recent Form (last 5 fixtures) ─────────────────────
 
-export function useTeamForm(teamId: string) {
+export function useTeamForm(teamId: string, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["team-form", teamId],
     queryFn: async () => {
@@ -1025,30 +1050,33 @@ export function useTeamForm(teamId: string) {
       });
     },
     staleTime: 30 * 60 * 1000, // 30 mins for team form
-    enabled: !!teamId,
+    enabled: !!teamId && (options.enabled ?? true),
   });
 }
 
 // ─── Fixture Player Ratings ─────────────────────────────────
 
-export function useFixturePlayers(fixtureId: string) {
+export function useFixturePlayers(fixtureId: string, options: MatchAwareQueryOptions = {}) {
+  const isLive = isLiveStatus(options.matchStatus);
+  const isFinished = isFinishedStatus(options.matchStatus);
   return useQuery({
-    queryKey: ["fixture-players", fixtureId],
+    queryKey: ["fixture-players", fixtureId, options.matchStatus || ""],
     queryFn: async () => {
       const { getFixturePlayers } = await import("@/services/apiFootball");
-      const res = await getFixturePlayers(fixtureId);
+      const res = await getFixturePlayers(fixtureId, options.matchStatus ? { _matchStatus: options.matchStatus } : {});
       return (res.response || []) as any[];
     },
-    staleTime: 60 * 1000, // 60 seconds (quota optimization)
-    refetchInterval: 60 * 1000,
+    staleTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : isLive ? 2 * 60 * 1000 : 12 * 60 * 60 * 1000,
+    gcTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000,
+    refetchInterval: isLive ? 2 * 60 * 1000 : false,
     refetchIntervalInBackground: false,
-    enabled: !!fixtureId,
+    enabled: !!fixtureId && (options.enabled ?? true),
   });
 }
 
 // ─── Odds ────────────────────────────────────────────────────
 
-export function useFixtureOdds(fixtureId: string) {
+export function useFixtureOdds(fixtureId: string, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["fixture-odds", fixtureId],
     queryFn: async () => {
@@ -1057,12 +1085,12 @@ export function useFixtureOdds(fixtureId: string) {
       return (res.response || []) as any[];
     },
     staleTime: 20 * 60 * 1000, // 20 mins for odds
-    enabled: !!fixtureId,
+    enabled: !!fixtureId && (options.enabled ?? true),
   });
 }
 
 // ─── Injuries ────────────────────────────────────────────────
-export function useFixtureInjuries(fixtureId: string) {
+export function useFixtureInjuries(fixtureId: string, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["fixture-injuries", fixtureId],
     queryFn: async () => {
@@ -1070,8 +1098,8 @@ export function useFixtureInjuries(fixtureId: string) {
       const res = await getInjuries({ fixture: fixtureId });
       return (res.response || []) as any[];
     },
-    staleTime: 5 * 60 * 1000,
-    enabled: !!fixtureId,
+    staleTime: 30 * 60 * 1000,
+    enabled: !!fixtureId && (options.enabled ?? true),
   });
 }
 
@@ -1104,17 +1132,18 @@ export function usePlayerSidelined(playerId: string) {
 }
 
 // ─── Live Odds ───────────────────────────────────────────────
-export function useLiveOdds(fixtureId: string) {
+export function useLiveOdds(fixtureId: string, options: MatchAwareQueryOptions = {}) {
+  const isLive = isLiveStatus(options.matchStatus);
   return useQuery({
-    queryKey: ["live-odds", fixtureId],
+    queryKey: ["live-odds", fixtureId, options.matchStatus || ""],
     queryFn: async () => {
       const { getLiveOdds } = await import("@/services/apiFootball");
-      const res = await getLiveOdds({ fixture: fixtureId });
+      const res = await getLiveOdds(options.matchStatus ? { fixture: fixtureId, _matchStatus: options.matchStatus } : { fixture: fixtureId });
       return (res.response || []) as any[];
     },
-    staleTime: 60 * 1000, // 60 seconds (quota optimization)
-    refetchInterval: 60 * 1000,
+    staleTime: isLive ? 2 * 60 * 1000 : 10 * 60 * 1000,
+    refetchInterval: isLive ? 2 * 60 * 1000 : false,
     refetchIntervalInBackground: false,
-    enabled: !!fixtureId,
+    enabled: !!fixtureId && isLive && (options.enabled ?? true),
   });
 }

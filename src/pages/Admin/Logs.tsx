@@ -11,6 +11,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { toast } from "sonner";
 import {
   useAdminAuditLogForUser,
+  useAdminApiUsageStats,
   useAdminNotifications,
   useMarkNotificationRead,
   type AdminNotification,
@@ -80,15 +81,6 @@ const ACTION_LABELS: Record<string, string> = {
   partner_update: "MàJ partenaire",
 };
 
-// Mock data pour les logs système
-const MOCK_SYSTEM_LOGS = [
-  { id: 1, timestamp: new Date().toISOString(), level: "info", source: "api-football", message: "API quota: 85/100 remaining" },
-  { id: 2, timestamp: new Date(Date.now() - 300000).toISOString(), level: "warning", source: "edge-function", message: "Slow response: ai-prediction (2.3s)" },
-  { id: 3, timestamp: new Date(Date.now() - 600000).toISOString(), level: "error", source: "webhook", message: "Chariow webhook failed: timeout" },
-  { id: 4, timestamp: new Date(Date.now() - 900000).toISOString(), level: "info", source: "auth", message: "New signup: user_12345@example.com" },
-  { id: 5, timestamp: new Date(Date.now() - 1200000).toISOString(), level: "info", source: "database", message: "Auto-vacuum completed" },
-];
-
 const NOTIFICATION_ICONS: Record<string, any> = {
   user_signup: UserPlus,
   vip_purchase: Crown,
@@ -111,6 +103,7 @@ export default function AdminLogs() {
 
   // Hooks Phase 5
   const { data: auditLogs, isLoading } = useAdminAuditLogForUser(null, 100);
+  const { data: apiStats, isLoading: apiStatsLoading } = useAdminApiUsageStats(7);
   const { data: notifications, isLoading: notificationsLoading } = useAdminNotifications(50);
   const markNotificationRead = useMarkNotificationRead();
 
@@ -353,42 +346,62 @@ export default function AdminLogs() {
             <CardContent className="p-0">
               <ScrollArea className="h-[500px]">
                 <div className="p-4 space-y-2 font-mono text-sm">
-                  {MOCK_SYSTEM_LOGS.map((log) => (
-                    <div
-                      key={log.id}
-                      className={cn(
-                        "p-3 rounded-lg border",
-                        log.level === "error" && "bg-red-500/10 border-red-500/30 text-red-400",
-                        log.level === "warning" && "bg-amber-500/10 border-amber-500/30 text-amber-400",
-                        log.level === "info" && "bg-slate-800/50 border-slate-700 text-slate-300"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-slate-500">
-                          {format(new Date(log.timestamp), "HH:mm:ss")}
-                        </span>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px]",
-                            log.level === "error" && "border-red-500/30 text-red-400",
-                            log.level === "warning" && "border-amber-500/30 text-amber-400",
-                            log.level === "info" && "border-slate-500/30 text-slate-400"
-                          )}
-                        >
-                          {log.level.toUpperCase()}
-                        </Badge>
-                        <span className="text-xs text-slate-500">[{log.source}]</span>
-                      </div>
-                      <p className={cn(
-                        log.level === "error" && "text-red-300",
-                        log.level === "warning" && "text-amber-300",
-                        log.level === "info" && "text-slate-300"
-                      )}>
-                        {log.message}
-                      </p>
+                  {apiStatsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
-                  ))}
+                  ) : (apiStats?.recent_api_events || []).map((log) => {
+                    const level = log.status_code >= 500
+                      ? "error"
+                      : log.status_code >= 400 || log.cache_status === "STALE"
+                        ? "warning"
+                        : "info";
+
+                    return (
+                      <div
+                        key={`${log.created_at}-${log.endpoint}-${log.cache_status || "none"}`}
+                        className={cn(
+                          "p-3 rounded-lg border",
+                          level === "error" && "bg-red-500/10 border-red-500/30 text-red-400",
+                          level === "warning" && "bg-amber-500/10 border-amber-500/30 text-amber-400",
+                          level === "info" && "bg-slate-800/50 border-slate-700 text-slate-300"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs text-slate-500">
+                            {format(new Date(log.created_at), "HH:mm:ss")}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px]",
+                              level === "error" && "border-red-500/30 text-red-400",
+                              level === "warning" && "border-amber-500/30 text-amber-400",
+                              level === "info" && "border-slate-500/30 text-slate-400"
+                            )}
+                          >
+                            {level.toUpperCase()}
+                          </Badge>
+                          <span className="text-xs text-slate-500">[{log.endpoint}]</span>
+                          {log.cache_status && <span className="text-xs text-slate-500">cache={log.cache_status}</span>}
+                          {typeof log.quota_remaining === "number" && <span className="text-xs text-slate-500">quota={log.quota_remaining}</span>}
+                        </div>
+                        <p className={cn(
+                          level === "error" && "text-red-300",
+                          level === "warning" && "text-amber-300",
+                          level === "info" && "text-slate-300"
+                        )}>
+                          HTTP {log.status_code} - {log.response_time_ms || 0}ms{log.error_message ? ` - ${log.error_message}` : ""}
+                        </p>
+                      </div>
+                    );
+                  })}
+                  {!apiStatsLoading && (apiStats?.recent_api_events || []).length === 0 && (
+                    <div className="text-center py-12">
+                      <Activity className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                      <p className="text-slate-400">Aucun evenement API recent</p>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>

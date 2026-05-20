@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHeadEnhanced";
 import {
@@ -115,26 +115,39 @@ const Match = () => {
 
   // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
-  const { data: eventsData } = useFixtureEvents(matchId);
-  const { data: lineupsData } = useFixtureLineups(matchId);
-  const { data: statsData } = useFixtureStatistics(matchId);
-  const { data: playersData } = useFixturePlayers(matchId);
   const fix = fixtureData as any;
   const statusRaw = fix?.fixture?.status?.short || "";
   const isMatchLive = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(statusRaw);
+  const isMatchFinished = ["FT", "AET", "PEN", "AWD", "WO"].includes(statusRaw);
+  const defaultMatchTab = isMatchLive ? "live" : isMatchFinished ? "events" : "predictions";
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const selectedTab = activeTab || defaultMatchTab;
+  const shouldLoadEvents = !!matchId && (isMatchLive || isMatchFinished);
+  const shouldLoadLineups = selectedTab === "lineups";
+  const shouldLoadStats = ["stats", "momentum"].includes(selectedTab) && (isMatchLive || isMatchFinished);
+  const shouldLoadPlayers = ["stats", "ratings", "heatmap"].includes(selectedTab) && (isMatchLive || isMatchFinished);
+  const shouldLoadOdds = ["odds", "predictions"].includes(selectedTab);
+  const shouldLoadInjuries = ["injuries", "predictions"].includes(selectedTab);
+  const shouldLoadPredictiveContext = ["predictions", "h2h"].includes(selectedTab);
 
-  const { data: oddsData } = useFixtureOdds(matchId);
-  const { data: injuriesData } = useFixtureInjuries(matchId);
-  const { data: apiPredictions } = useFixturePredictions(matchId);
-  const { data: liveOddsData } = useLiveOdds(isMatchLive ? matchId : "");
+  const { data: eventsData } = useFixtureEvents(matchId, { enabled: shouldLoadEvents, matchStatus: statusRaw });
+  const { data: lineupsData } = useFixtureLineups(matchId, { enabled: shouldLoadLineups, matchStatus: statusRaw });
+  const { data: statsData } = useFixtureStatistics(matchId, { enabled: shouldLoadStats, matchStatus: statusRaw });
+  const { data: playersData } = useFixturePlayers(matchId, { enabled: shouldLoadPlayers, matchStatus: statusRaw });
+
+  const { data: oddsData } = useFixtureOdds(matchId, { enabled: shouldLoadOdds });
+  const { data: injuriesData } = useFixtureInjuries(matchId, { enabled: shouldLoadInjuries });
+  const { data: apiPredictions } = useFixturePredictions(shouldLoadPredictiveContext ? matchId : "");
+  const { data: liveOddsData } = useLiveOdds(matchId, { enabled: shouldLoadOdds, matchStatus: statusRaw });
   const homeTeamId = fix?.teams?.home?.id ? String(fix.teams.home.id) : "";
   const awayTeamId = fix?.teams?.away?.id ? String(fix.teams.away.id) : "";
 
-  const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId);
-  const { data: standingsData } = useTeamForm(homeTeamId);
+  const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId, { enabled: shouldLoadPredictiveContext });
+  const { data: homeFormData } = useTeamForm(homeTeamId, { enabled: shouldLoadPredictiveContext || selectedTab === "form" });
+  const { data: awayFormData } = useTeamForm(awayTeamId, { enabled: shouldLoadPredictiveContext || selectedTab === "form" });
   const leagueId = fix?.league?.id ? String(fix.league.id) : "";
   const season = fix?.league?.season ? String(fix.league.season) : "2024";
-  const { data: leagueStandings } = useStandings(leagueId, season);
+  const { data: leagueStandings } = useStandings(leagueId, season, { enabled: ["predictions", "h2h", "form"].includes(selectedTab) });
   const { data: allNews = [] } = useFootballNews();
 
   // ✅ useAiExpert ici (avant les early returns)
@@ -389,7 +402,7 @@ const Match = () => {
     })();
 
     return (
-      <Tabs defaultValue={isLive ? "live" : hasStats ? "events" : "predictions"} className="w-full">
+      <Tabs value={selectedTab} onValueChange={setActiveTab} className="w-full">
         <div className="sticky top-[52px] sm:top-[56px] z-40 bg-background/80 backdrop-blur-md pt-2 pb-2 -mx-2 px-2 sm:-mx-4 sm:px-4 mb-4 border-b border-border/50">
           <div className="overflow-x-auto scrollbar-hide">
             <TabsList className="inline-flex w-auto min-w-full bg-card/80 border border-border/50 rounded-xl p-1 relative">
@@ -959,9 +972,12 @@ const Match = () => {
                   awayTeamName={awayTeam.name}
                   homeLogo={homeTeam.logo}
                   awayLogo={awayTeam.logo}
-                  standings={standingsData || []}
+                  standings={leagueStandings || []}
                   apiPredictions={apiPredictions}
                   aiExpertPrediction={aiExpertPrediction as any}
+                  homeFormData={homeFormData as any}
+                  awayFormData={awayFormData as any}
+                  h2hData={h2hData as any}
                   injuries={{
                     home: injuries.filter((i: any) => String(i.team?.id) === homeTeamId).length,
                     away: injuries.filter((i: any) => String(i.team?.id) === awayTeamId).length
