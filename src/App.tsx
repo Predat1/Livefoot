@@ -6,10 +6,13 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PredictionTicketProvider } from "@/contexts/PredictionTicketContext";
 import ScrollToTop from "@/components/ScrollToTop";
 import CookieConsent from "@/components/CookieConsent";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
 import OfflineNotification from "@/components/OfflineNotification";
+import PredictionTicketDrawer from "@/components/PredictionTicketDrawer";
+import PredictionTicketButton from "@/components/PredictionTicketButton";
 
 import { useEffect } from "react";
 
@@ -74,7 +77,11 @@ const App = () => {
           <BrowserRouter>
             <ScrollToTop />
             <CookieConsent />
-            <AnimatedRoutes />
+            <PredictionTicketProvider>
+              <AnimatedRoutes />
+              <PredictionTicketDrawer />
+              <PredictionTicketButton />
+            </PredictionTicketProvider>
           </BrowserRouter>
           <Analytics />
         </TooltipProvider>

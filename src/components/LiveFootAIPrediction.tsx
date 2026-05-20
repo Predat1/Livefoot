@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy, TrendingUp, Zap, Sparkles, Target, Share2, Copy, Check,
   AlertTriangle, Eye, User, Clock, Calendar, Swords, Video, ShieldCheck,
-  Grid3X3, Flame, Shield, Loader2, Brain, Star, Crown, Lock
+  Grid3X3, Flame, Shield, Loader2, Brain, Star, Crown, Lock, Ticket
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generatePrediction, type LiveFootAIPrediction, type TeamFormData } from "@/lib/livefoot-ai";
 import { useTeamForm, useHeadToHead, useAiExpert } from "@/hooks/useApiFootball";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePredictionTicket } from "@/contexts/PredictionTicketContext";
 import { toast } from "sonner";
 import { getRandomPartner } from "@/data/partnersData";
 import PartnerCard from "@/components/PartnerCard";
@@ -67,6 +68,7 @@ const LiveFootAIPredictionCard = ({
   const [isCopying, setIsCopying] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const { isVip, user } = useAuth();
+  const { addItem, removeItem, isInTicket, getItemId } = usePredictionTicket();
   
   // Only fetch AI Expert if not already provided by parent (avoids double API call)
   const shouldFetchAi = !initialAiExpertPrediction && !!fixtureId;
@@ -1158,9 +1160,10 @@ const LiveFootAIPredictionCard = ({
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 relative">
                 {filteredEvents.map((event: any) => {
                   const isLocked = !isVip && event.isVip;
+                  const added = isInTicket(fixtureId || "", event.key);
                   return (
                     <div key={event.key} className={cn(
-                      "bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col justify-between items-center text-center group transition-all duration-300 relative overflow-hidden h-[120px]",
+                      "bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col justify-between items-center text-center group transition-all duration-300 relative overflow-hidden min-h-[155px] h-auto pb-2.5",
                       isLocked ? "" : "hover:bg-white/10 hover:scale-[1.02]",
                       isVip && "border-amber-500/10 hover:border-amber-500/30"
                     )}>
@@ -1187,12 +1190,47 @@ const LiveFootAIPredictionCard = ({
                           <span>Confiance</span>
                           <span className={cn(event.isVip ? "text-amber-400" : "text-primary")}>{event.confidence}%</span>
                         </div>
-                        <div className="h-1 rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-1 rounded-full bg-white/10 overflow-hidden mb-1">
                           <div 
                             className={cn("h-full rounded-full", event.isVip ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-gradient-to-r from-primary to-emerald-500")}
                             style={{ width: `${event.confidence}%` }}
                           />
                         </div>
+                        {!isLocked && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (added) {
+                                const itemId = getItemId(fixtureId || "", event.key);
+                                if (itemId) removeItem(itemId);
+                              } else {
+                                addItem({
+                                  fixtureId: fixtureId || "",
+                                  homeTeam: homeTeamName,
+                                  awayTeam: awayTeamName,
+                                  homeLogo,
+                                  awayLogo,
+                                  leagueName,
+                                  predictionKey: event.key,
+                                  predictionLabel: event.label,
+                                  predictionValue: event.value,
+                                  confidence: event.confidence,
+                                  risk: event.risk,
+                                  source: prediction._provider === "local" ? "local" : "ai",
+                                });
+                              }
+                            }}
+                            className={cn(
+                              "w-full mt-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all tracking-wider border",
+                              added
+                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                                : "bg-white/5 text-white/60 border-white/5 hover:bg-white/10 hover:text-white"
+                            )}
+                          >
+                            {added ? "Dans le ticket" : "Ajouter au ticket"}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -1242,6 +1280,8 @@ const LiveFootAIPredictionCard = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {prediction.bestBets.map((bet, i) => {
                 const isLocked = !isVip && i >= 2;
+                const predictionKey = `best_bet_${bet.type || 'bet'}_${i}`;
+                const added = isInTicket(fixtureId || "", predictionKey);
                 return (
                   <motion.div
                     key={i}
@@ -1249,7 +1289,7 @@ const LiveFootAIPredictionCard = ({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.2 + i * 0.1 }}
                     className={cn(
-                      "rounded-xl border p-2.5 sm:p-3 text-center transition-colors relative overflow-hidden",
+                      "rounded-xl border p-2.5 sm:p-3 text-center transition-colors relative overflow-hidden flex flex-col justify-between min-h-[120px]",
                       isVip ? "bg-gradient-to-b from-amber-500/5 to-transparent border-amber-500/10 hover:border-amber-500/30" : "bg-white/5 border-white/5 hover:bg-white/8",
                       i === 2 && "col-span-2 sm:col-span-1"
                     )}
@@ -1259,18 +1299,57 @@ const LiveFootAIPredictionCard = ({
                         <Lock className="h-3.5 w-3.5 text-amber-400/60" />
                       </div>
                     )}
-                    <span className="text-base sm:text-lg">{bet.emoji}</span>
-                    <p className="text-[9px] sm:text-[10px] font-bold text-white mt-1">{bet.label}</p>
-                    <div className="flex items-center justify-center gap-1 mt-1.5">
-                      <div className="h-1 flex-1 rounded-full bg-white/10 overflow-hidden">
-                        <motion.div
-                          className={cn("h-full rounded-full", isVip ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-gradient-to-r from-primary to-emerald-500")}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${bet.confidence}%` }}
-                          transition={{ duration: 0.8, delay: 1.4 + i * 0.1 }}
-                        />
+                    <div>
+                      <span className="text-base sm:text-lg">{bet.emoji}</span>
+                      <p className="text-[9px] sm:text-[10px] font-bold text-white mt-1">{bet.label}</p>
+                    </div>
+                    <div className="mt-2">
+                      <div className="flex items-center justify-center gap-1 mt-1.5 mb-1">
+                        <div className="h-1 flex-1 rounded-full bg-white/10 overflow-hidden">
+                          <motion.div
+                            className={cn("h-full rounded-full", isVip ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-gradient-to-r from-primary to-emerald-500")}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${bet.confidence}%` }}
+                            transition={{ duration: 0.8, delay: 1.4 + i * 0.1 }}
+                          />
+                        </div>
+                        <span className={cn("text-[8px] sm:text-[9px] font-bold", isVip ? "text-amber-400" : "text-primary")}>{bet.confidence}%</span>
                       </div>
-                      <span className={cn("text-[8px] sm:text-[9px] font-bold", isVip ? "text-amber-400" : "text-primary")}>{bet.confidence}%</span>
+                      {!isLocked && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (added) {
+                              const itemId = getItemId(fixtureId || "", predictionKey);
+                              if (itemId) removeItem(itemId);
+                            } else {
+                              addItem({
+                                fixtureId: fixtureId || "",
+                                homeTeam: homeTeamName,
+                                awayTeam: awayTeamName,
+                                homeLogo,
+                                awayLogo,
+                                leagueName,
+                                predictionKey,
+                                predictionLabel: `Suggestion ${bet.type || 'pari'}`,
+                                predictionValue: bet.label,
+                                confidence: bet.confidence,
+                                risk: prediction.risk,
+                                source: prediction._provider === "local" ? "local" : "ai",
+                              });
+                            }
+                          }}
+                          className={cn(
+                            "w-full mt-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all tracking-wider border",
+                            added
+                              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                              : "bg-white/5 text-white/60 border-white/5 hover:bg-white/10 hover:text-white"
+                          )}
+                        >
+                          {added ? "Dans le ticket" : "Ajouter"}
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 );
@@ -1338,20 +1417,58 @@ const LiveFootAIPredictionCard = ({
             <p className="text-[8px] text-white/10 uppercase tracking-tighter">Données Temps Réel</p>
           </div>
           
-          <button
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: `Prono LiveFoot AI: ${homeTeamName} vs ${awayTeamName}`,
-                  text: `L'IA LiveFoot prédit un score de ${prediction.predictedScore.home}-${prediction.predictedScore.away} (${prediction.confidence}% de confiance).`,
-                  url: window.location.href,
-                });
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/60 text-[10px] font-bold hover:bg-white/10 active:scale-95 transition-all"
-          >
-            <Share2 className="h-3.5 w-3.5" /> PARTAGER
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const mainAdded = isInTicket(fixtureId || "", "winner");
+                if (mainAdded) {
+                  const itemId = getItemId(fixtureId || "", "winner");
+                  if (itemId) removeItem(itemId);
+                } else {
+                  addItem({
+                    fixtureId: fixtureId || "",
+                    homeTeam: homeTeamName,
+                    awayTeam: awayTeamName,
+                    homeLogo,
+                    awayLogo,
+                    leagueName,
+                    predictionKey: "winner",
+                    predictionLabel: "Résultat 1X2",
+                    predictionValue: winnerName,
+                    confidence: prediction.confidence,
+                    risk: prediction.risk,
+                    source: prediction._provider === "local" ? "local" : "ai",
+                  });
+                }
+              }}
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all tracking-wider border active:scale-95",
+                isInTicket(fixtureId || "", "winner")
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                  : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10"
+              )}
+            >
+              <Ticket className="h-3.5 w-3.5 shrink-0" />
+              {isInTicket(fixtureId || "", "winner") ? "DANS LE TICKET" : "TICKET"}
+            </button>
+
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: `Prono LiveFoot AI: ${homeTeamName} vs ${awayTeamName}`,
+                    text: `L'IA LiveFoot prédit un score de ${prediction.predictedScore.home}-${prediction.predictedScore.away} (${prediction.confidence}% de confiance).`,
+                    url: window.location.href,
+                  });
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/60 text-[10px] font-bold hover:bg-white/10 active:scale-95 transition-all"
+            >
+              <Share2 className="h-3.5 w-3.5 shrink-0" /> PARTAGER
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
