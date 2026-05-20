@@ -146,13 +146,13 @@ const LiveFootAIPredictionCard = ({
       }
 
       // dnb
-      if (p.winner && p.winner !== "N/A") {
-        let dnbVal = p.winner === "1" ? hTeam : p.winner === "2" ? aTeam : "Nul";
+      if (p.drawNoBet && p.drawNoBet !== "N/A") {
+        let dnbVal = p.drawNoBet === "1" ? hTeam : p.drawNoBet === "2" ? aTeam : p.drawNoBet;
         events.push({
           key: "dnb",
           category: "result",
           label: "Draw no bet",
-          value: dnbVal === "Nul" ? "Nul (DNB)" : dnbVal,
+          value: dnbVal,
           confidence: Math.min(97, baseConf + 10),
           risk: getRisk(Math.min(97, baseConf + 10)),
           isVip: true
@@ -160,15 +160,17 @@ const LiveFootAIPredictionCard = ({
       }
 
       // over/under goals
-      events.push({
-        key: "overUnder05",
-        category: "goals",
-        label: "Buts +/- 0.5",
-        value: (p.exactScore && p.exactScore === "0-0") ? "Moins de 0.5" : "Plus de 0.5",
-        confidence: 97,
-        risk: "low",
-        isVip: true
-      });
+      if (p.overUnder05 && p.overUnder05 !== "N/A") {
+        events.push({
+          key: "overUnder05",
+          category: "goals",
+          label: "Buts +/- 0.5",
+          value: p.overUnder05 === "Over" ? "Plus de 0.5" : "Moins de 0.5",
+          confidence: 97,
+          risk: "low",
+          isVip: true
+        });
+      }
 
       if (p.overUnder15 && p.overUnder15 !== "N/A") {
         events.push({
@@ -203,15 +205,17 @@ const LiveFootAIPredictionCard = ({
           isVip: true
         });
       }
-      events.push({
-        key: "overUnder45",
-        category: "goals",
-        label: "Buts +/- 4.5",
-        value: "Moins de 4.5",
-        confidence: 90,
-        risk: "low",
-        isVip: true
-      });
+      if (p.overUnder45 && p.overUnder45 !== "N/A") {
+        events.push({
+          key: "overUnder45",
+          category: "goals",
+          label: "Buts +/- 4.5",
+          value: p.overUnder45 === "Over" ? "Plus de 4.5" : "Moins de 4.5",
+          confidence: 90,
+          risk: "low",
+          isVip: true
+        });
+      }
 
       // BTTS
       if (p.btts && p.btts !== "N/A") {
@@ -286,15 +290,27 @@ const LiveFootAIPredictionCard = ({
         risk: "high",
         isVip: true
       });
-      events.push({
-        key: "faults",
-        category: "discipline",
-        label: "Fautes total",
-        value: "Plus de 22.5",
-        confidence: 65,
-        risk: "medium",
-        isVip: true
-      });
+      if (p.fouls && p.fouls !== "N/A") {
+        events.push({
+          key: "faults",
+          category: "discipline",
+          label: "Fautes total",
+          value: p.fouls,
+          confidence: 65,
+          risk: "medium",
+          isVip: true
+        });
+      } else {
+        events.push({
+          key: "faults",
+          category: "discipline",
+          label: "Fautes total",
+          value: "Plus de 22.5",
+          confidence: 65,
+          risk: "medium",
+          isVip: true
+        });
+      }
 
       // Stats
       if (p.possession && p.possession !== "N/A") {
@@ -308,35 +324,84 @@ const LiveFootAIPredictionCard = ({
           isVip: true
         });
       }
-      events.push({
-        key: "shotsTotal",
-        category: "stats",
-        label: "Tirs totaux",
-        value: "Plus de 22.5",
-        confidence: 62,
-        risk: "medium",
-        isVip: true
-      });
-      events.push({
-        key: "shotsOnTarget",
-        category: "stats",
-        label: "Tirs cadrés",
-        value: "Plus de 8.5",
-        confidence: 60,
-        risk: "medium",
-        isVip: true
-      });
-      events.push({
-        key: "offsides",
-        category: "stats",
-        label: "Hors-jeu total",
-        value: "Moins de 4.5",
-        confidence: 66,
-        risk: "medium",
-        isVip: true
-      });
+      if (p.shots && p.shots !== "N/A") {
+        events.push({
+          key: "shotsTotal",
+          category: "stats",
+          label: "Tirs totaux",
+          value: p.shots,
+          confidence: 62,
+          risk: "medium",
+          isVip: true
+        });
+      } else {
+        events.push({
+          key: "shotsTotal",
+          category: "stats",
+          label: "Tirs totaux",
+          value: "Plus de 22.5",
+          confidence: 62,
+          risk: "medium",
+          isVip: true
+        });
+      }
+      
+      if (p.shotsOnTarget && p.shotsOnTarget !== "N/A") {
+        events.push({
+          key: "shotsOnTarget",
+          category: "stats",
+          label: "Tirs cadrés",
+          value: p.shotsOnTarget,
+          confidence: 60,
+          risk: "medium",
+          isVip: true
+        });
+      } else {
+        events.push({
+          key: "shotsOnTarget",
+          category: "stats",
+          label: "Tirs cadrés",
+          value: "Plus de 8.5",
+          confidence: 60,
+          risk: "medium",
+          isVip: true
+        });
+      }
+
+      if (p.offsides && p.offsides !== "N/A") {
+        events.push({
+          key: "offsides",
+          category: "stats",
+          label: "Hors-jeu total",
+          value: p.offsides,
+          confidence: 66,
+          risk: "medium",
+          isVip: true
+        });
+      } else {
+        events.push({
+          key: "offsides",
+          category: "stats",
+          label: "Hors-jeu total",
+          value: "Moins de 4.5",
+          confidence: 66,
+          risk: "medium",
+          isVip: true
+        });
+      }
 
       // Special
+      if (p.htft && p.htft !== "N/A") {
+        events.push({
+          key: "htft",
+          category: "special",
+          label: "Mi-temps / Fin",
+          value: p.htft,
+          confidence: Math.max(18, baseConf - 22),
+          risk: getRisk(Math.max(18, baseConf - 22)),
+          isVip: true
+        });
+      }
       if (p.highestScoringHalf && p.highestScoringHalf !== "N/A") {
         let halfVal = p.highestScoringHalf;
         if (halfVal === "1st") halfVal = "1ère mi-temps";
@@ -858,7 +923,7 @@ const LiveFootAIPredictionCard = ({
                 )}
               </div>
               <p className="text-[9px] sm:text-[10px] text-emerald-300/60">
-                {isVip ? "AnalystePro V3 — Précision VIP" : (prediction as any).isExpert ? "Analyse AnalystePro" : "Analyse intelligente"}
+                {prediction._provider === "local" ? "Analyse locale" : isVip ? "AnalystePro V4 — Précision VIP" : "Analyse IA V4"}
               </p>
             </div>
           </div>
@@ -1268,7 +1333,7 @@ const LiveFootAIPredictionCard = ({
         <div className="px-4 sm:px-6 py-3 border-t border-white/5 flex items-center justify-between bg-white/[0.02]">
           <div className="flex flex-col gap-0.5">
             <p className="text-[9px] text-white/20">
-              {isVip ? "AnalystePro V3 — Précision VIP" : "Analyse LiveFoot AI v3.0"}
+              {prediction._provider === "local" ? "Analyse locale" : isVip ? "AnalystePro V4 — Précision VIP" : "Analyse LiveFoot AI V4"}
             </p>
             <p className="text-[8px] text-white/10 uppercase tracking-tighter">Données Temps Réel</p>
           </div>

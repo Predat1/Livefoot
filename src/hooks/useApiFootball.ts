@@ -930,44 +930,58 @@ export function useAiExpert(params: {
   return useQuery({
     queryKey: ["ai-expert", params.fixtureId],
     queryFn: async () => {
-      const { getAiPrediction } = await import("@/services/apiFootball");
-      const { data, error } = await getAiPrediction(params);
-      if (error) throw error;
-      return data as {
-        matchState: string;
-        analysis: string;
-        reasoning: string;
-        predictedScore: string;
-        confidence: number;
-        confidenceStars: number;
-        keyFactor: string;
-        xgHome: number;
-        xgAway: number;
-        valueBet: string | null;
-        predictions: {
-          winner: string;
-          btts: string;
-          bttsConfidence: number;
-          overUnder25: string;
-          overUnder25Confidence: number;
-          overUnder35: string;
-          doubleChance: string;
-          corners: string;
-          cards: string;
-          possession: string;
-          firstScorerTeam: string;
-          anytimeScorer: string;
-          penalty: string;
-          var: string;
-          cleanSheet: string;
-          timingFirstGoal: string;
-          highestScoringHalf: string;
-          winningMargin: string;
+      try {
+        const { getAiPrediction } = await import("@/services/apiFootball");
+        const { data, error } = await getAiPrediction(params);
+        if (error) throw error;
+        return data as {
+          matchState: string;
+          analysis: string;
+          reasoning: string;
+          predictedScore: string;
+          confidence: number;
+          confidenceStars: number;
+          keyFactor: string;
+          xgHome: number;
+          xgAway: number;
+          valueBet: string | null;
+          predictions: {
+            winner: string;
+            btts: string;
+            overUnder05: string;
+            overUnder15: string;
+            overUnder25: string;
+            overUnder35: string;
+            overUnder45: string;
+            doubleChance: string;
+            exactScore: string;
+            corners: string;
+            cards: string;
+            possession: string;
+            shots: string;
+            shotsOnTarget: string;
+            fouls: string;
+            offsides: string;
+            firstScorer: string;
+            anytimeScorer: string;
+            penalty: string;
+            var: string;
+            cleanSheet: string;
+            timingFirstGoal: string;
+            highestScoringHalf: string;
+            winningMargin: string;
+            htft: string;
+            drawNoBet: string;
+          };
+          vipClub?: string;
+          status?: string;
+          message?: string;
+          _provider?: string;
         };
-        vipClub: string;
-        status?: string; // Ajouté pour gérer le 202 Accepted (processing)
-        message?: string;
-      };
+      } catch (error) {
+        console.warn("AI Expert unavailable, falling back to local engine.", error);
+        return null;
+      }
     },
     staleTime: 24 * 60 * 60 * 1000,
     // ✅ N'appelle l'IA que quand toutes les données sont présentes

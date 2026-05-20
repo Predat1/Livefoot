@@ -53,9 +53,17 @@ export default function MatchAIChat({
     setIsLoading(true);
 
     try {
-      const context = prediction
-        ? `Contexte du match : ${homeTeamName} vs ${awayTeamName} (${leagueName || "Football"}). Score prédit: ${prediction.predictedScore?.home ?? "?"}–${prediction.predictedScore?.away ?? "?"}. Confiance: ${prediction.confidence ?? "?"}%. Pronostic: ${prediction.advice ?? ""}. xG domicile: ${prediction.xgHome ?? "N/A"}, xG extérieur: ${prediction.xgAway ?? "N/A"}.`
-        : `Match: ${homeTeamName} vs ${awayTeamName} (${leagueName || "Football"}).`;
+      const predictionDetails = prediction ? [
+        `Score prédit: ${prediction.predictedScore?.home ?? "?"}-${prediction.predictedScore?.away ?? "?"}`,
+        `Confiance globale: ${prediction.confidence ?? "?"}%`,
+        `xG domicile: ${prediction.xgHome ?? "N/A"}`,
+        `xG extérieur: ${prediction.xgAway ?? "N/A"}`,
+        `Meilleur pronostic: ${prediction.advice ?? "N/A"}`,
+        prediction.valueBet ? `Value Bet repéré: ${prediction.valueBet}` : "",
+      ].filter(Boolean).join(". ") : "";
+
+      const context = `Contexte du match : ${homeTeamName} vs ${awayTeamName} (${leagueName || "Football"}). ` + 
+        (prediction ? `Données IA : ${predictionDetails}. ` : `Aucune prédiction pré-calculée. `);
 
       const { data, error } = await supabase.functions.invoke("ai-chat", {
         body: {

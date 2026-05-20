@@ -48,6 +48,7 @@ export interface LiveFootAIPrediction {
   reasoning?: string;
   detailedPredictions?: Record<string, string | number>;
   predictionEvents?: LiveFootAIPredictionEvent[];
+  _provider?: string;
 }
 
 export interface PredictionFactor {
@@ -977,5 +978,6 @@ export function generatePrediction(params: {
     xgHome,
     xgAway,
     predictionEvents,
+    _provider: "local"
   };
 }
