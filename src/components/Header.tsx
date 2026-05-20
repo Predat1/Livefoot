@@ -1,4 +1,4 @@
-import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift, ArrowRight, Crown, LogIn, User, Shield } from "lucide-react";
+import { Search, Menu, X, Trophy, Star, Newspaper, Zap, Users, Loader2, Gift, ArrowRight, Crown, LogIn, User, Shield, Ticket } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -12,6 +12,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePredictionTicket } from "@/contexts/PredictionTicketContext";
 
 
 const Header = () => {
@@ -25,6 +26,7 @@ const Header = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { t } = useTranslation();
   const { user, profile, signOut } = useAuth();
+  const { count: ticketCount } = usePredictionTicket();
 
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -392,6 +394,25 @@ const Header = () => {
             <ThemeToggle />
             <LanguageSwitcher />
 
+            <Link
+              to="/tickets"
+              className={cn(
+                "hidden lg:flex relative h-8 rounded-lg border px-3 items-center gap-1.5 text-xs font-bold transition-colors",
+                isActive("/tickets")
+                  ? "bg-primary/20 border-primary/30 text-primary"
+                  : "bg-header-foreground/5 border-header-foreground/10 text-header-foreground/70 hover:bg-header-foreground/10 hover:text-primary"
+              )}
+              title="Mes tickets de predictions"
+            >
+              <Ticket className="h-3.5 w-3.5" />
+              Mes tickets
+              {ticketCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 rounded-full bg-amber-400 px-1 text-[8px] font-black text-black flex items-center justify-center">
+                  {ticketCount > 9 ? "9+" : ticketCount}
+                </span>
+              )}
+            </Link>
+
             {/* Auth Button */}
             {user ? (
               <div className="flex items-center gap-1">
@@ -505,6 +526,24 @@ const Header = () => {
                 {user ? (
                   <>
                     <Link
+                      to="/tickets"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3",
+                        isActive("/tickets")
+                          ? "bg-primary/15 text-primary"
+                          : "text-header-foreground/70 hover:bg-header-foreground/10 hover:text-header-foreground"
+                      )}
+                    >
+                      <Ticket className="h-4 w-4" />
+                      Mes tickets
+                      {ticketCount > 0 && (
+                        <span className="ml-auto h-5 min-w-5 rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-black flex items-center justify-center">
+                          {ticketCount > 9 ? "9+" : ticketCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
                       to="/profile"
                       onClick={() => setMobileMenuOpen(false)}
                       className="px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3 text-header-foreground/70 hover:bg-header-foreground/10 hover:text-header-foreground"
@@ -521,14 +560,34 @@ const Header = () => {
                     </button>
                   </>
                 ) : (
-                  <Link
-                    to="/auth"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3 text-primary hover:bg-primary/10"
-                  >
-                    <LogIn className="h-4 w-4" />
-                    Connexion / Inscription
-                  </Link>
+                  <>
+                    <Link
+                      to="/tickets"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3",
+                        isActive("/tickets")
+                          ? "bg-primary/15 text-primary"
+                          : "text-header-foreground/70 hover:bg-header-foreground/10 hover:text-header-foreground"
+                      )}
+                    >
+                      <Ticket className="h-4 w-4" />
+                      Mes tickets
+                      {ticketCount > 0 && (
+                        <span className="ml-auto h-5 min-w-5 rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-black flex items-center justify-center">
+                          {ticketCount > 9 ? "9+" : ticketCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
+                      to="/auth"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-3 text-primary hover:bg-primary/10"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Connexion / Inscription
+                    </Link>
+                  </>
                 )}
               </div>
 

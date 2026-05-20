@@ -52,6 +52,7 @@ const PredictionsHistory = lazy(() => import("@/pages/PredictionsHistory"));
 const Bonuses = lazy(() => import("@/pages/Bonuses"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const VipDashboard = lazy(() => import("@/pages/VipDashboard"));
+const Tickets = lazy(() => import("@/pages/Tickets"));
 const PredictionTicketShare = lazy(() => import("@/pages/PredictionTicketShare"));
 
 const PageLoader = () => <BrandedLoader variant="page" message="Chargement..." />;
@@ -127,6 +128,7 @@ const AnimatedRoutes = () => {
             <Route path="/dynamic-sitemap.xml" element={<DynamicSitemap />} />
             <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
             <Route path="/vip" element={<PageTransition><VipDashboard /></PageTransition>} />
+            <Route path="/tickets" element={<PageTransition><Tickets /></PageTransition>} />
             <Route path="/ticket/:shareId" element={<PageTransition><PredictionTicketShare /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>

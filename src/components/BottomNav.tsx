@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Home, Star, Zap, Medal, Brain } from "lucide-react";
+import { Home, Star, Zap, Medal, Brain, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiveFixtures } from "@/hooks/useApiFootball";
+import { usePredictionTicket } from "@/contexts/PredictionTicketContext";
 import { motion } from "framer-motion";
 
 const BottomNav = () => {
@@ -13,11 +14,13 @@ const BottomNav = () => {
   const { totalFavorites } = useFavorites();
   const { user } = useAuth();
   const { data: liveLeagues } = useLiveFixtures();
+  const { count: ticketCount } = usePredictionTicket();
 
   const navItems = [
     { href: "/", icon: Home, label: t("nav.live") }, // Using live as games/matchs for simplicity or t("nav.games")
     { href: "/live", icon: Zap, label: "Live", isLive: true },
     { href: "/daily-picks", icon: Brain, label: t("nav.predictions") },
+    { href: "/tickets", icon: Ticket, label: "Tickets", isTicket: true },
     { href: "/rankings", icon: Medal, label: "Ranking" },
     { href: "/favorites", icon: Star, label: "Favoris" },
   ];
@@ -35,7 +38,7 @@ const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-header/95 backdrop-blur-md border-t border-header-foreground/10 safe-area-bottom">
       <div className="flex items-center justify-around h-14 sm:h-16 px-1">
-        {navItems.map(({ href, icon: Icon, label, isLive }) => {
+        {navItems.map(({ href, icon: Icon, label, isLive, isTicket }) => {
           const active = isActive(href);
           const isProfile = href === "/profile";
           const showAuthHint = isProfile && !user;
@@ -72,6 +75,12 @@ const BottomNav = () => {
                 {isFavoriteTab && totalFavorites > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-primary text-[8px] font-bold text-primary-foreground flex items-center justify-center">
                     {totalFavorites > 9 ? "9+" : totalFavorites}
+                  </span>
+                )}
+
+                {isTicket && ticketCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 h-3.5 min-w-3.5 rounded-full bg-amber-400 text-[8px] font-black text-black flex items-center justify-center px-0.5">
+                    {ticketCount > 9 ? "9+" : ticketCount}
                   </span>
                 )}
 
