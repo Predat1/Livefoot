@@ -567,18 +567,18 @@ const CompetitionDetail = () => {
                   <div className="space-y-2">
                     {fixtures.slice(0, 5).map((match) => (
                       <Link
-                        key={match.fixture.id}
-                        to={`/match/${match.fixture.id}`}
+                        key={match.fixture?.id}
+                        to={`/match/${match.fixture?.id}`}
                         className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-accent transition-colors"
                       >
                         <div className="flex items-center gap-3 flex-1">
-                          <img src={match.teams.home.logo} alt="" className="w-6 h-6 object-contain" />
-                          <span className="font-medium">{match.teams.home.name}</span>
+                          <img src={match.teams?.home?.logo || ""} alt="" className="w-6 h-6 object-contain" />
+                          <span className="font-medium">{match.teams?.home?.name || "Domicile"}</span>
                         </div>
                         <span className="text-muted-foreground text-sm">VS</span>
                         <div className="flex items-center gap-3 flex-1 justify-end">
-                          <span className="font-medium">{match.teams.away.name}</span>
-                          <img src={match.teams.away.logo} alt="" className="w-6 h-6 object-contain" />
+                          <span className="font-medium">{match.teams?.away?.name || "Extérieur"}</span>
+                          <img src={match.teams?.away?.logo || ""} alt="" className="w-6 h-6 object-contain" />
                         </div>
                       </Link>
                     ))}

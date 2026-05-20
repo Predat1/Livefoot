@@ -543,15 +543,15 @@ export function useTeamFixtures(teamId: string, season: string) {
     queryFn: async () => {
       const res = await getFixtures({ team: teamId, season, last: "10" });
       return (res.response || []).map((fix: any) => ({
-        id: String(fix.fixture.id),
-        date: new Date(fix.fixture.date).toLocaleDateString("en-GB", { month: "short", day: "numeric" }),
-        time: new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-        homeTeam: { name: fix.teams.home.name, logo: fix.teams.home.logo },
-        awayTeam: { name: fix.teams.away.name, logo: fix.teams.away.logo },
-        homeScore: fix.goals.home,
-        awayScore: fix.goals.away,
-        status: mapFixtureStatus(fix.fixture.status.short),
-        league: fix.league.name,
+        id: String(fix.fixture?.id),
+        date: fix.fixture?.date ? new Date(fix.fixture.date).toLocaleDateString("en-GB", { month: "short", day: "numeric" }) : "",
+        time: fix.fixture?.date ? new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "",
+        homeTeam: { name: fix.teams?.home?.name || "", logo: fix.teams?.home?.logo || "" },
+        awayTeam: { name: fix.teams?.away?.name || "", logo: fix.teams?.away?.logo || "" },
+        homeScore: fix.goals?.home,
+        awayScore: fix.goals?.away,
+        status: fix.fixture?.status?.short ? mapFixtureStatus(fix.fixture.status.short) : "NS",
+        league: fix.league?.name || "",
       }));
     },
     staleTime: 12 * 60 * 60 * 1000, // 12 hours
@@ -565,12 +565,12 @@ export function useTeamNextFixtures(teamId: string) {
     queryFn: async () => {
       const res = await getFixtures({ team: teamId, next: "5" });
       return (res.response || []).map((fix: any) => ({
-        id: String(fix.fixture.id),
-        date: new Date(fix.fixture.date).toLocaleDateString("en-GB", { month: "short", day: "numeric" }),
-        time: new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-        homeTeam: { name: fix.teams.home.name, logo: fix.teams.home.logo },
-        awayTeam: { name: fix.teams.away.name, logo: fix.teams.away.logo },
-        league: fix.league.name,
+        id: String(fix.fixture?.id),
+        date: fix.fixture?.date ? new Date(fix.fixture.date).toLocaleDateString("en-GB", { month: "short", day: "numeric" }) : "",
+        time: fix.fixture?.date ? new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "",
+        homeTeam: { name: fix.teams?.home?.name || "", logo: fix.teams?.home?.logo || "" },
+        awayTeam: { name: fix.teams?.away?.name || "", logo: fix.teams?.away?.logo || "" },
+        league: fix.league?.name || "",
       }));
     },
     staleTime: 12 * 60 * 60 * 1000, // 12 hours

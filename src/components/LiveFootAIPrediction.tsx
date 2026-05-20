@@ -202,16 +202,16 @@ const LiveFootAIPredictionCard = ({
     }
 
     // Priority 1: Use API Predictions if available
-    if (apiPredictions) {
+    if (apiPredictions && apiPredictions.predictions) {
       try {
         const p = apiPredictions.predictions;
         const h2h = apiPredictions.h2h || [];
         const comp = apiPredictions.comparison;
 
         // Map API percent strings to numbers and normalize to 100%
-        let homeProb = parseInt(p.percent.home) || 33;
-        let drawProb = parseInt(p.percent.draw) || 34;
-        let awayProb = parseInt(p.percent.away) || 33;
+        let homeProb = parseInt(p.percent?.home || "33") || 33;
+        let drawProb = parseInt(p.percent?.draw || "34") || 34;
+        let awayProb = parseInt(p.percent?.away || "33") || 33;
 
         const totalProb = homeProb + drawProb + awayProb;
         if (totalProb > 0 && totalProb !== 100) {
@@ -220,49 +220,51 @@ const LiveFootAIPredictionCard = ({
           awayProb = 100 - homeProb - drawProb; // Ensure exact 100 sum
         }
 
-        const outcome = p.winner.id === parseInt(homeTeamId) ? "home" 
-          : p.winner.id === parseInt(awayTeamId) ? "away" : "draw";
+        const outcome = p.winner?.id === parseInt(homeTeamId) ? "home" 
+          : p.winner?.id === parseInt(awayTeamId) ? "away" : "draw";
 
         // Map factors from comparison
         const factors: any[] = [];
         if (comp) {
-          if (parseInt(comp.form.home) > parseInt(comp.form.away) + 10) {
+          if (comp.form?.home && comp.form?.away && parseInt(comp.form.home) > parseInt(comp.form.away) + 10) {
             factors.push({ icon: "🔥", label: "Forme", description: `${homeTeamName} a une meilleure dynamique (${comp.form.home})`, impact: "positive", team: "home" });
           }
-          if (parseInt(comp.att.home) > parseInt(comp.att.away) + 10) {
+          if (comp.att?.home && comp.att?.away && parseInt(comp.att.home) > parseInt(comp.att.away) + 10) {
             factors.push({ icon: "🎯", label: "Attaque", description: `Offensive plus percutante pour ${homeTeamName}`, impact: "positive", team: "home" });
           }
-          if (parseInt(comp.def.away) > parseInt(comp.def.home) + 10) {
+          if (comp.def?.home && comp.def?.away && parseInt(comp.def.away) > parseInt(comp.def.home) + 10) {
             factors.push({ icon: "🛡️", label: "Défense", description: `Solidité défensive pour ${awayTeamName}`, impact: "positive", team: "away" });
           }
         }
 
         const fallbackBets = [
-          { type: "API", label: p.advice, confidence: Math.max(homeProb, drawProb, awayProb), emoji: "🎯" }
+          { type: "API", label: p.advice || "Conseil non disponible", confidence: Math.max(homeProb, drawProb, awayProb), emoji: "🎯" }
         ];
 
-        if (parseInt(p.goals.home) + parseInt(p.goals.away) > 2.5) {
-          fallbackBets.push({ type: "API", label: "+2.5 Buts", confidence: 65, emoji: "🔥" });
-        } else {
-          fallbackBets.push({ type: "API", label: "-2.5 Buts", confidence: 60, emoji: "🛡️" });
-        }
-        
-        if (parseInt(p.goals.home) > 0 && parseInt(p.goals.away) > 0) {
-          fallbackBets.push({ type: "API", label: "Les 2 marquent: Oui", confidence: 55, emoji: "⚽" });
-        } else {
-          fallbackBets.push({ type: "API", label: "Clean Sheet probable", confidence: 55, emoji: "⛔" });
+        if (p.goals?.home && p.goals?.away) {
+          if (parseInt(p.goals.home) + parseInt(p.goals.away) > 2.5) {
+            fallbackBets.push({ type: "API", label: "+2.5 Buts", confidence: 65, emoji: "🔥" });
+          } else {
+            fallbackBets.push({ type: "API", label: "-2.5 Buts", confidence: 60, emoji: "🛡️" });
+          }
+          
+          if (parseInt(p.goals.home) > 0 && parseInt(p.goals.away) > 0) {
+            fallbackBets.push({ type: "API", label: "Les 2 marquent: Oui", confidence: 55, emoji: "⚽" });
+          } else {
+            fallbackBets.push({ type: "API", label: "Clean Sheet probable", confidence: 55, emoji: "⛔" });
+          }
         }
 
         return {
           outcome,
           confidence: Math.max(homeProb, drawProb, awayProb),
           predictedScore: { 
-            home: parseInt(p.goals.home) || 0, 
-            away: parseInt(p.goals.away) || 0 
+            home: parseInt(p.goals?.home || "0") || 0, 
+            away: parseInt(p.goals?.away || "0") || 0 
           },
           probabilities: { home: homeProb, draw: drawProb, away: awayProb },
           factors: factors.slice(0, 5),
-          advice: p.advice,
+          advice: p.advice || "Pas d'avis particulier",
           risk: (Math.max(homeProb, drawProb, awayProb) > 60) ? "low" : "medium",
           bestBets: fallbackBets.slice(0, 3)
         };
