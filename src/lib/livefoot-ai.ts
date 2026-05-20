@@ -21,6 +21,16 @@ export interface TeamFormData {
   date: string;
 }
 
+export interface LiveFootAIPredictionEvent {
+  key: string;
+  category: "result" | "goals" | "discipline" | "stats" | "special";
+  label: string;
+  value: string | number;
+  confidence: number;
+  risk: "low" | "medium" | "high";
+  isVip?: boolean;
+}
+
 export interface LiveFootAIPrediction {
   outcome: "home" | "draw" | "away";
   confidence: number;
@@ -37,6 +47,7 @@ export interface LiveFootAIPrediction {
   confidenceStars?: number;
   reasoning?: string;
   detailedPredictions?: Record<string, string | number>;
+  predictionEvents?: LiveFootAIPredictionEvent[];
 }
 
 export interface PredictionFactor {
@@ -645,6 +656,315 @@ export function generatePrediction(params: {
     bestBets.push({ type: "Spécial", label: `${awayTeamName} sans encaisser`, confidence: Math.round(aForm.cleanSheetRate * 85), emoji: "🧤" });
   }
 
+  // Heuristic generation of predictionEvents for complete tabular/grouped display
+  const getEventRisk = (conf: number): "low" | "medium" | "high" => {
+    if (conf >= 70) return "low";
+    if (conf >= 54) return "medium";
+    return "high";
+  };
+
+  const predictionEvents: LiveFootAIPredictionEvent[] = [];
+
+  // ─── 1. RESULT CATEGORY ───
+  const winnerValue = outcome === "home" ? homeTeamName : outcome === "away" ? awayTeamName : "Match Nul";
+  predictionEvents.push({
+    key: "winner",
+    category: "result",
+    label: "Résultat 1X2",
+    value: winnerValue,
+    confidence: Math.round(adjustedConf),
+    risk: getEventRisk(Math.round(adjustedConf)),
+    isVip: false
+  });
+
+  predictionEvents.push({
+    key: "exactScore",
+    category: "result",
+    label: "Score exact",
+    value: `${predictedHome}-${predictedAway}`,
+    confidence: Math.max(12, Math.round(adjustedConf) - 28),
+    risk: getEventRisk(Math.max(12, Math.round(adjustedConf) - 28)),
+    isVip: false
+  });
+
+  const dcVal = outcome === "home" ? "1X" : outcome === "away" ? "X2" : "12";
+  const dcConf = Math.min(95, outcome === "home" ? homeProb + drawProb : outcome === "away" ? awayProb + drawProb : homeProb + awayProb);
+  predictionEvents.push({
+    key: "doubleChance",
+    category: "result",
+    label: "Double chance",
+    value: dcVal,
+    confidence: dcConf,
+    risk: getEventRisk(dcConf),
+    isVip: false
+  });
+
+  const dnbVal = homeProb > awayProb ? homeTeamName : awayProb > homeProb ? awayTeamName : "Nul";
+  const dnbConf = Math.min(97, Math.max(homeProb, awayProb) + Math.round(drawProb * 0.35));
+  predictionEvents.push({
+    key: "dnb",
+    category: "result",
+    label: "Draw no bet",
+    value: dnbVal === "Nul" ? "Nul (DNB)" : dnbVal,
+    confidence: dnbConf,
+    risk: getEventRisk(dnbConf),
+    isVip: true
+  });
+
+  // ─── 2. GOALS CATEGORY ───
+  const totalExpectedGoals = xgHome + xgAway;
+  predictionEvents.push({
+    key: "overUnder05",
+    category: "goals",
+    label: "Buts +/- 0.5",
+    value: totalExpectedGoals > 0.5 ? "Plus de 0.5" : "Moins de 0.5",
+    confidence: Math.min(99, Math.round(98 - (drawProb * 0.1))),
+    risk: "low",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "overUnder15",
+    category: "goals",
+    label: "Buts +/- 1.5",
+    value: totalExpectedGoals > 1.5 ? "Plus de 1.5" : "Moins de 1.5",
+    confidence: Math.round(poisson.over15Prob),
+    risk: getEventRisk(poisson.over15Prob),
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "overUnder25",
+    category: "goals",
+    label: "Buts +/- 2.5",
+    value: totalExpectedGoals > 2.5 ? "Plus de 2.5" : "Moins de 2.5",
+    confidence: totalExpectedGoals > 2.5 ? Math.round(poisson.over25Prob) : Math.round(100 - poisson.over25Prob),
+    risk: getEventRisk(totalExpectedGoals > 2.5 ? poisson.over25Prob : 100 - poisson.over25Prob),
+    isVip: false
+  });
+
+  predictionEvents.push({
+    key: "overUnder35",
+    category: "goals",
+    label: "Buts +/- 3.5",
+    value: totalExpectedGoals > 3.5 ? "Plus de 3.5" : "Moins de 3.5",
+    confidence: totalExpectedGoals > 3.5 ? Math.round(poisson.over35Prob) : Math.round(100 - poisson.over35Prob),
+    risk: getEventRisk(totalExpectedGoals > 3.5 ? poisson.over35Prob : 100 - poisson.over35Prob),
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "overUnder45",
+    category: "goals",
+    label: "Buts +/- 4.5",
+    value: totalExpectedGoals > 4.5 ? "Plus de 4.5" : "Moins de 4.5",
+    confidence: Math.round(100 - (poisson.over35Prob * 0.4)),
+    risk: "low",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "btts",
+    category: "goals",
+    label: "Les 2 marquent",
+    value: poisson.bttsProb > 52 ? "Oui" : "Non",
+    confidence: poisson.bttsProb > 52 ? Math.round(poisson.bttsProb) : Math.round(100 - poisson.bttsProb),
+    risk: getEventRisk(poisson.bttsProb > 52 ? poisson.bttsProb : 100 - poisson.bttsProb),
+    isVip: false
+  });
+
+  let csVal = "Aucun";
+  let csConf = 50;
+  if (hForm.cleanSheetRate > 0.4 && aForm.avgGoalsScored < 0.8) {
+    csVal = homeTeamName;
+    csConf = Math.round(hForm.cleanSheetRate * 100);
+  } else if (aForm.cleanSheetRate > 0.4 && hForm.avgGoalsScored < 0.8) {
+    csVal = awayTeamName;
+    csConf = Math.round(aForm.cleanSheetRate * 100);
+  }
+  predictionEvents.push({
+    key: "cleanSheet",
+    category: "goals",
+    label: "Clean sheet",
+    value: csVal === "Aucun" ? "Aucune" : csVal,
+    confidence: csConf,
+    risk: getEventRisk(csConf),
+    isVip: true
+  });
+
+  // ─── 3. DISCIPLINE CATEGORY ───
+  const homeCorners = Math.round(4.5 + (hForm.attackingStrength / 25));
+  const awayCorners = Math.round(4.0 + (aForm.attackingStrength / 25));
+  const totalCorners = homeCorners + awayCorners;
+  predictionEvents.push({
+    key: "corners",
+    category: "discipline",
+    label: "Corners total",
+    value: totalCorners > 9.5 ? "Plus de 9.5" : "Moins de 9.5",
+    confidence: 60,
+    risk: "medium",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "cornersTeam",
+    category: "discipline",
+    label: "Corners par équipe",
+    value: homeCorners > awayCorners ? `${homeTeamName} (+)` : awayCorners > homeCorners ? `${awayTeamName} (+)` : "Égalité",
+    confidence: 58,
+    risk: "medium",
+    isVip: true
+  });
+
+  const cardsVal = (hForm.consistency > 0.6) ? "Moins de 4.5" : "Plus de 3.5";
+  predictionEvents.push({
+    key: "cards",
+    category: "discipline",
+    label: "Cartons total",
+    value: cardsVal,
+    confidence: 62,
+    risk: "medium",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "cardsTeam",
+    category: "discipline",
+    label: "Cartons par équipe",
+    value: hForm.consistency > aForm.consistency ? `${awayTeamName} (+)` : `${homeTeamName} (+)`,
+    confidence: 55,
+    risk: "high",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "faults",
+    category: "discipline",
+    label: "Fautes total",
+    value: "Plus de 21.5",
+    confidence: 65,
+    risk: "medium",
+    isVip: true
+  });
+
+  // ─── 4. STATS CATEGORY ───
+  const homePoss = Math.round(50 + (hForm.attackingStrength - aForm.attackingStrength) * 0.15);
+  const clampedHomePoss = Math.max(38, Math.min(62, homePoss));
+  predictionEvents.push({
+    key: "possession",
+    category: "stats",
+    label: "Possession prévue",
+    value: `${clampedHomePoss}% - ${100 - clampedHomePoss}%`,
+    confidence: 70,
+    risk: "low",
+    isVip: true
+  });
+
+  const totalShots = Math.round(20 + (hForm.attackingStrength + aForm.attackingStrength) * 0.08);
+  predictionEvents.push({
+    key: "shotsTotal",
+    category: "stats",
+    label: "Tirs totaux",
+    value: `Plus de ${totalShots - 2.5}`,
+    confidence: 63,
+    risk: "medium",
+    isVip: true
+  });
+
+  const shotsOnTarget = Math.round(7.5 + (hForm.attackingStrength + aForm.attackingStrength) * 0.03);
+  predictionEvents.push({
+    key: "shotsOnTarget",
+    category: "stats",
+    label: "Tirs cadrés",
+    value: `Plus de ${shotsOnTarget - 1.5}`,
+    confidence: 60,
+    risk: "medium",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "offsides",
+    category: "stats",
+    label: "Hors-jeu total",
+    value: "Moins de 4.5",
+    confidence: 68,
+    risk: "medium",
+    isVip: true
+  });
+
+  // ─── 5. SPECIAL CATEGORY ───
+  predictionEvents.push({
+    key: "htft",
+    category: "special",
+    label: "Mi-temps / Fin",
+    value: htftLabel,
+    confidence: Math.max(18, Math.round(adjustedConf) - 22),
+    risk: getEventRisk(Math.max(18, Math.round(adjustedConf) - 22)),
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "firstScorerTeam",
+    category: "special",
+    label: "1er buteur équipe",
+    value: outcome === "home" ? homeTeamName : outcome === "away" ? awayTeamName : "Aucun",
+    confidence: Math.min(80, Math.max(homeProb, awayProb) + 5),
+    risk: getEventRisk(Math.min(80, Math.max(homeProb, awayProb) + 5)),
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "timingFirstGoal",
+    category: "special",
+    label: "Temps 1er but",
+    value: totalExpectedGoals > 2.5 ? "1-30 min" : "31-75 min",
+    confidence: 58,
+    risk: "high",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "highestScoringHalf",
+    category: "special",
+    label: "Mi-temps + prolifique",
+    value: "2ème mi-temps",
+    confidence: 65,
+    risk: "medium",
+    isVip: true
+  });
+
+  const marginVal = Math.abs(predictedHome - predictedAway);
+  const marginLabel = marginVal === 0 ? "Match Nul" : `${marginVal} but(s)`;
+  predictionEvents.push({
+    key: "winningMargin",
+    category: "special",
+    label: "Marge de victoire",
+    value: marginLabel,
+    confidence: Math.max(30, Math.round(adjustedConf) - 25),
+    risk: getEventRisk(Math.max(30, Math.round(adjustedConf) - 25)),
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "penalty",
+    category: "special",
+    label: "Penalty accordé",
+    value: "Non",
+    confidence: 76,
+    risk: "low",
+    isVip: true
+  });
+
+  predictionEvents.push({
+    key: "var",
+    category: "special",
+    label: "Recours VAR",
+    value: "Oui",
+    confidence: 58,
+    risk: "high",
+    isVip: true
+  });
+
   return {
     outcome,
     confidence: Math.round(adjustedConf),
@@ -656,5 +976,6 @@ export function generatePrediction(params: {
     bestBets,
     xgHome,
     xgAway,
+    predictionEvents,
   };
 }

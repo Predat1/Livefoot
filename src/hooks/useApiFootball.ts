@@ -992,20 +992,20 @@ export function useTeamForm(teamId: string) {
       const res = await getFixtures({ team: teamId, last: "5" });
       const fixtures = res.response || [];
       return (fixtures as any[]).map((fix: any) => {
-        const isHome = String(fix.teams.home.id) === teamId;
-        const goalsFor = isHome ? fix.goals.home : fix.goals.away;
-        const goalsAgainst = isHome ? fix.goals.away : fix.goals.home;
+        const isHome = String(fix.teams?.home?.id || "") === teamId;
+        const goalsFor = isHome ? (fix.goals?.home ?? 0) : (fix.goals?.away ?? 0);
+        const goalsAgainst = isHome ? (fix.goals?.away ?? 0) : (fix.goals?.home ?? 0);
         const won = goalsFor > goalsAgainst;
         const draw = goalsFor === goalsAgainst;
         return {
-          id: String(fix.fixture.id),
+          id: String(fix.fixture?.id || ""),
           result: won ? "W" : draw ? "D" : "L",
           goalsFor,
           goalsAgainst,
-          opponent: isHome ? fix.teams.away.name : fix.teams.home.name,
-          opponentLogo: isHome ? fix.teams.away.logo : fix.teams.home.logo,
-          league: fix.league.name,
-          date: new Date(fix.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
+          opponent: isHome ? (fix.teams?.away?.name || "") : (fix.teams?.home?.name || ""),
+          opponentLogo: isHome ? (fix.teams?.away?.logo || "") : (fix.teams?.home?.logo || ""),
+          league: fix.league?.name || "",
+          date: fix.fixture?.date ? new Date(fix.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "",
         };
       });
     },

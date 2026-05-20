@@ -65,6 +65,7 @@ const LiveFootAIPredictionCard = ({
   leagueName = "Football",
 }: LiveFootAIPredictionCardProps) => {
   const [isCopying, setIsCopying] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
   const { isVip, user } = useAuth();
   
   // Only fetch AI Expert if not already provided by parent (avoids double API call)
@@ -85,6 +86,352 @@ const LiveFootAIPredictionCard = ({
   const featuredPartner = useMemo(() => getRandomPartner(), []);
 
   const prediction = useMemo<LiveFootAIPrediction | null>(() => {
+    // Helper to map expert predictions
+    const mapExpertToEvents = (p: any, hTeam: string, aTeam: string, baseConf: number): any[] => {
+      const events: any[] = [];
+      const getRisk = (conf: number) => {
+        if (conf >= 70) return "low";
+        if (conf >= 54) return "medium";
+        return "high";
+      };
+
+      const getConf = (val: any) => {
+        if (val == null) return baseConf;
+        const num = parseFloat(val);
+        if (isNaN(num)) return baseConf;
+        return num <= 1 ? Math.round(num * 100) : Math.round(num);
+      };
+
+      // winner
+      if (p.winner && p.winner !== "N/A") {
+        let winVal = p.winner;
+        if (winVal === "1") winVal = hTeam;
+        else if (winVal === "2") winVal = aTeam;
+        else if (winVal === "X") winVal = "Match Nul";
+        events.push({
+          key: "winner",
+          category: "result",
+          label: "Résultat 1X2",
+          value: winVal,
+          confidence: getConf(p.winnerConfidence),
+          risk: getRisk(getConf(p.winnerConfidence)),
+          isVip: false
+        });
+      }
+
+      // exactScore
+      if (p.exactScore && p.exactScore !== "N/A") {
+        events.push({
+          key: "exactScore",
+          category: "result",
+          label: "Score exact",
+          value: p.exactScore,
+          confidence: getConf(p.exactScoreConfidence || (baseConf * 0.2)),
+          risk: getRisk(getConf(p.exactScoreConfidence || (baseConf * 0.2))),
+          isVip: true
+        });
+      }
+
+      // doubleChance
+      if (p.doubleChance && p.doubleChance !== "N/A") {
+        events.push({
+          key: "doubleChance",
+          category: "result",
+          label: "Double chance",
+          value: p.doubleChance,
+          confidence: getConf(p.doubleChanceConfidence || (baseConf + 15)),
+          risk: getRisk(getConf(p.doubleChanceConfidence || (baseConf + 15))),
+          isVip: false
+        });
+      }
+
+      // dnb
+      if (p.winner && p.winner !== "N/A") {
+        let dnbVal = p.winner === "1" ? hTeam : p.winner === "2" ? aTeam : "Nul";
+        events.push({
+          key: "dnb",
+          category: "result",
+          label: "Draw no bet",
+          value: dnbVal === "Nul" ? "Nul (DNB)" : dnbVal,
+          confidence: Math.min(97, baseConf + 10),
+          risk: getRisk(Math.min(97, baseConf + 10)),
+          isVip: true
+        });
+      }
+
+      // over/under goals
+      events.push({
+        key: "overUnder05",
+        category: "goals",
+        label: "Buts +/- 0.5",
+        value: (p.exactScore && p.exactScore === "0-0") ? "Moins de 0.5" : "Plus de 0.5",
+        confidence: 97,
+        risk: "low",
+        isVip: true
+      });
+
+      if (p.overUnder15 && p.overUnder15 !== "N/A") {
+        events.push({
+          key: "overUnder15",
+          category: "goals",
+          label: "Buts +/- 1.5",
+          value: p.overUnder15 === "Over" ? "Plus de 1.5" : "Moins de 1.5",
+          confidence: Math.min(98, baseConf + 8),
+          risk: getRisk(Math.min(98, baseConf + 8)),
+          isVip: true
+        });
+      }
+      if (p.overUnder25 && p.overUnder25 !== "N/A") {
+        events.push({
+          key: "overUnder25",
+          category: "goals",
+          label: "Buts +/- 2.5",
+          value: p.overUnder25 === "Over" ? "Plus de 2.5" : "Moins de 2.5",
+          confidence: getConf(p.overUnder25Confidence),
+          risk: getRisk(getConf(p.overUnder25Confidence)),
+          isVip: false
+        });
+      }
+      if (p.overUnder35 && p.overUnder35 !== "N/A") {
+        events.push({
+          key: "overUnder35",
+          category: "goals",
+          label: "Buts +/- 3.5",
+          value: p.overUnder35 === "Over" ? "Plus de 3.5" : "Moins de 3.5",
+          confidence: Math.max(50, baseConf - 10),
+          risk: getRisk(Math.max(50, baseConf - 10)),
+          isVip: true
+        });
+      }
+      events.push({
+        key: "overUnder45",
+        category: "goals",
+        label: "Buts +/- 4.5",
+        value: "Moins de 4.5",
+        confidence: 90,
+        risk: "low",
+        isVip: true
+      });
+
+      // BTTS
+      if (p.btts && p.btts !== "N/A") {
+        events.push({
+          key: "btts",
+          category: "goals",
+          label: "Les 2 marquent",
+          value: p.btts,
+          confidence: getConf(p.bttsConfidence),
+          risk: getRisk(getConf(p.bttsConfidence)),
+          isVip: false
+        });
+      }
+
+      // cleanSheet
+      if (p.cleanSheet && p.cleanSheet !== "N/A") {
+        let csVal = p.cleanSheet;
+        if (csVal === "Home") csVal = hTeam;
+        else if (csVal === "Away") csVal = aTeam;
+        else if (csVal === "None") csVal = "Aucune";
+        events.push({
+          key: "cleanSheet",
+          category: "goals",
+          label: "Clean sheet",
+          value: csVal,
+          confidence: getConf(p.cleanSheetConfidence || (baseConf - 10)),
+          risk: getRisk(getConf(p.cleanSheetConfidence || (baseConf - 10))),
+          isVip: true
+        });
+      }
+
+      // Corners
+      if (p.corners && p.corners !== "N/A") {
+        events.push({
+          key: "corners",
+          category: "discipline",
+          label: "Corners total",
+          value: p.corners === "Over 9.5" ? "Plus de 9.5" : p.corners === "Under 9.5" ? "Moins de 9.5" : p.corners,
+          confidence: getConf(p.cornersConfidence || (baseConf - 12)),
+          risk: getRisk(getConf(p.cornersConfidence || (baseConf - 12))),
+          isVip: true
+        });
+      }
+      events.push({
+        key: "cornersTeam",
+        category: "discipline",
+        label: "Corners par équipe",
+        value: `${hTeam} (+)`,
+        confidence: 58,
+        risk: "medium",
+        isVip: true
+      });
+
+      // Cards
+      if (p.cards && p.cards !== "N/A") {
+        events.push({
+          key: "cards",
+          category: "discipline",
+          label: "Cartons total",
+          value: p.cards === "Over 3.5" ? "Plus de 3.5" : p.cards === "Under 3.5" ? "Moins de 3.5" : p.cards,
+          confidence: getConf(p.cardsConfidence || (baseConf - 15)),
+          risk: getRisk(getConf(p.cardsConfidence || (baseConf - 15))),
+          isVip: true
+        });
+      }
+      events.push({
+        key: "cardsTeam",
+        category: "discipline",
+        label: "Cartons par équipe",
+        value: `${aTeam} (+)`,
+        confidence: 56,
+        risk: "high",
+        isVip: true
+      });
+      events.push({
+        key: "faults",
+        category: "discipline",
+        label: "Fautes total",
+        value: "Plus de 22.5",
+        confidence: 65,
+        risk: "medium",
+        isVip: true
+      });
+
+      // Stats
+      if (p.possession && p.possession !== "N/A") {
+        events.push({
+          key: "possession",
+          category: "stats",
+          label: "Possession prévue",
+          value: p.possession,
+          confidence: 75,
+          risk: "low",
+          isVip: true
+        });
+      }
+      events.push({
+        key: "shotsTotal",
+        category: "stats",
+        label: "Tirs totaux",
+        value: "Plus de 22.5",
+        confidence: 62,
+        risk: "medium",
+        isVip: true
+      });
+      events.push({
+        key: "shotsOnTarget",
+        category: "stats",
+        label: "Tirs cadrés",
+        value: "Plus de 8.5",
+        confidence: 60,
+        risk: "medium",
+        isVip: true
+      });
+      events.push({
+        key: "offsides",
+        category: "stats",
+        label: "Hors-jeu total",
+        value: "Moins de 4.5",
+        confidence: 66,
+        risk: "medium",
+        isVip: true
+      });
+
+      // Special
+      if (p.highestScoringHalf && p.highestScoringHalf !== "N/A") {
+        let halfVal = p.highestScoringHalf;
+        if (halfVal === "1st") halfVal = "1ère mi-temps";
+        else if (halfVal === "2nd") halfVal = "2ème mi-temps";
+        else if (halfVal === "Equal") halfVal = "Égales";
+        events.push({
+          key: "highestScoringHalf",
+          category: "special",
+          label: "Mi-temps + prolifique",
+          value: halfVal,
+          confidence: 65,
+          risk: "medium",
+          isVip: true
+        });
+      }
+
+      if (p.timingFirstGoal && p.timingFirstGoal !== "N/A") {
+        events.push({
+          key: "timingFirstGoal",
+          category: "special",
+          label: "Temps 1er but",
+          value: `${p.timingFirstGoal} min`,
+          confidence: 58,
+          risk: "high",
+          isVip: true
+        });
+      }
+
+      if (p.winningMargin && p.winningMargin !== "N/A") {
+        let marginVal = p.winningMargin;
+        if (marginVal === "Draw") marginVal = "Match Nul";
+        else if (marginVal === "3+") marginVal = "3+ buts";
+        else marginVal = `${marginVal} but(s)`;
+        events.push({
+          key: "winningMargin",
+          category: "special",
+          label: "Marge de victoire",
+          value: marginVal,
+          confidence: Math.max(30, baseConf - 25),
+          risk: getRisk(Math.max(30, baseConf - 25)),
+          isVip: true
+        });
+      }
+
+      if (p.penalty && p.penalty !== "N/A") {
+        events.push({
+          key: "penalty",
+          category: "special",
+          label: "Penalty accordé",
+          value: p.penalty,
+          confidence: 75,
+          risk: "low",
+          isVip: true
+        });
+      }
+
+      if (p.var && p.var !== "N/A") {
+        events.push({
+          key: "var",
+          category: "special",
+          label: "Recours VAR",
+          value: p.var,
+          confidence: 58,
+          risk: "high",
+          isVip: true
+        });
+      }
+
+      if (p.firstScorer && p.firstScorer !== "N/A" && p.firstScorer !== "Inconnu") {
+        events.push({
+          key: "firstScorer",
+          category: "special",
+          label: "1er Buteur",
+          value: p.firstScorer,
+          confidence: 30,
+          risk: "high",
+          isVip: true
+        });
+      }
+
+      if (p.anytimeScorer && p.anytimeScorer !== "N/A" && p.anytimeScorer !== "Inconnu") {
+        events.push({
+          key: "anytimeScorer",
+          category: "special",
+          label: "Buteur probable",
+          value: p.anytimeScorer,
+          confidence: 50,
+          risk: "high",
+          isVip: true
+        });
+      }
+
+      return events;
+    };
+
     // Priority 0: Use AI Expert Prediction from OpenRouter if available
     if (aiExpertPrediction && aiExpertPrediction.status !== "processing" && !aiExpertPrediction.error) {
       try {
@@ -178,6 +525,8 @@ const LiveFootAIPredictionCard = ({
           });
         }
 
+        const events = mapExpertToEvents(aiExpertPrediction.predictions || {}, homeTeamName, awayTeamName, baseConf);
+
         return {
           outcome,
           confidence: baseConf,
@@ -194,7 +543,8 @@ const LiveFootAIPredictionCard = ({
           valueBet: (aiExpertPrediction.valueBet && typeof aiExpertPrediction.valueBet === 'string' && aiExpertPrediction.valueBet.toLowerCase() !== "null") ? aiExpertPrediction.valueBet : null,
           bestBets: extractedBets.slice(0, 6),
           isExpert: true,
-          detailedPredictions: aiExpertPrediction.predictions || {}
+          detailedPredictions: aiExpertPrediction.predictions || {},
+          predictionEvents: events
         };
       } catch (e) {
         console.error("Error mapping Expert prediction:", e);
@@ -255,6 +605,29 @@ const LiveFootAIPredictionCard = ({
           }
         }
 
+        // Build mock detailed predictions from API data
+        const mockP = {
+          winner: outcome === "home" ? "1" : outcome === "away" ? "2" : "X",
+          winnerConfidence: Math.max(homeProb, drawProb, awayProb),
+          btts: (p.goals?.home && p.goals?.away && parseInt(p.goals.home) > 0 && parseInt(p.goals.away) > 0) ? "Oui" : "Non",
+          bttsConfidence: 55,
+          overUnder25: (p.goals?.home && p.goals?.away && (parseInt(p.goals.home) + parseInt(p.goals.away) > 2.5)) ? "Over" : "Under",
+          overUnder25Confidence: 65,
+          doubleChance: outcome === "home" ? "1X" : outcome === "away" ? "X2" : "12",
+          doubleChanceConfidence: Math.max(homeProb, drawProb, awayProb) + 10,
+          exactScore: `${parseInt(p.goals?.home || "0")}-${parseInt(p.goals?.away || "0")}`,
+          cleanSheet: (p.goals?.home === "0" && p.goals?.away === "0") ? "None" : (p.goals?.home === "0" ? "Away" : p.goals?.away === "0" ? "Home" : "None"),
+          corners: "Over 9.5",
+          cards: "Over 3.5",
+          possession: "50%-50%",
+          highestScoringHalf: "2nd",
+          winningMargin: outcome === "draw" ? "Draw" : "1",
+          penalty: "Non",
+          var: "Oui"
+        };
+
+        const events = mapExpertToEvents(mockP, homeTeamName, awayTeamName, Math.max(homeProb, drawProb, awayProb));
+
         return {
           outcome,
           confidence: Math.max(homeProb, drawProb, awayProb),
@@ -266,7 +639,8 @@ const LiveFootAIPredictionCard = ({
           factors: factors.slice(0, 5),
           advice: p.advice || "Pas d'avis particulier",
           risk: (Math.max(homeProb, drawProb, awayProb) > 60) ? "low" : "medium",
-          bestBets: fallbackBets.slice(0, 3)
+          bestBets: fallbackBets.slice(0, 3),
+          predictionEvents: events
         };
       } catch (e) {
         console.error("Error mapping API prediction:", e);
@@ -329,6 +703,97 @@ const LiveFootAIPredictionCard = ({
       setIsCopying(true);
       toast.success("Copié dans le presse-papier !");
       setTimeout(() => setIsCopying(false), 2000);
+    }
+  };
+
+  const categories = [
+    { id: "all", label: "Tous" },
+    { id: "result", label: "Résultats" },
+    { id: "goals", label: "Buts" },
+    { id: "discipline", label: "Discipline" },
+    { id: "stats", label: "Stats" },
+    { id: "special", label: "Spéciaux" },
+  ];
+
+  const filteredEvents = useMemo(() => {
+    if (!prediction?.predictionEvents) return [];
+    if (activeCategory === "all") return prediction.predictionEvents;
+    return prediction.predictionEvents.filter((e: any) => e.category === activeCategory);
+  }, [prediction?.predictionEvents, activeCategory]);
+
+  const getEventIcon = (key: string, isVipEvent: boolean) => {
+    const iconClass = isVipEvent ? "text-amber-400/80" : "text-primary/70";
+    switch (key) {
+      case "winner":
+        return <Trophy className={cn("h-4 w-4", iconClass)} />;
+      case "exactScore":
+        return <Target className={cn("h-4 w-4", iconClass)} />;
+      case "doubleChance":
+        return <Shield className={cn("h-4 w-4", iconClass)} />;
+      case "dnb":
+        return <ShieldCheck className={cn("h-4 w-4", iconClass)} />;
+      case "overUnder05":
+      case "overUnder15":
+      case "overUnder25":
+      case "overUnder35":
+      case "overUnder45":
+        return <Flame className={cn("h-4 w-4", iconClass)} />;
+      case "btts":
+        return <Zap className={cn("h-4 w-4", iconClass)} />;
+      case "cleanSheet":
+        return <ShieldCheck className={cn("h-4 w-4", iconClass)} />;
+      case "corners":
+      case "cornersTeam":
+        return <TrendingUp className={cn("h-4 w-4", iconClass)} />;
+      case "cards":
+      case "cardsTeam":
+        return <AlertTriangle className={cn("h-4 w-4", iconClass)} />;
+      case "faults":
+        return <Swords className={cn("h-4 w-4", iconClass)} />;
+      case "possession":
+        return <Eye className={cn("h-4 w-4", iconClass)} />;
+      case "shotsTotal":
+      case "shotsOnTarget":
+        return <Target className={cn("h-4 w-4", iconClass)} />;
+      case "offsides":
+        return <Clock className={cn("h-4 w-4", iconClass)} />;
+      case "htft":
+        return <Calendar className={cn("h-4 w-4", iconClass)} />;
+      case "firstScorer":
+      case "anytimeScorer":
+      case "firstScorerTeam":
+        return <User className={cn("h-4 w-4", iconClass)} />;
+      case "timingFirstGoal":
+      case "highestScoringHalf":
+        return <Clock className={cn("h-4 w-4", iconClass)} />;
+      case "winningMargin":
+        return <Swords className={cn("h-4 w-4", iconClass)} />;
+      case "penalty":
+        return <Target className={cn("h-4 w-4", iconClass)} />;
+      case "var":
+        return <Video className={cn("h-4 w-4", iconClass)} />;
+      case "valueBet":
+        return <Sparkles className={cn("h-4 w-4", iconClass)} />;
+      default:
+        return <Brain className={cn("h-4 w-4", iconClass)} />;
+    }
+  };
+
+  const getRiskLabel = (risk: "low" | "medium" | "high") => {
+    switch (risk) {
+      case "low": return "Faible";
+      case "medium": return "Modéré";
+      case "high": return "Élevé";
+      default: return "Faible";
+    }
+  };
+
+  const getRiskColor = (risk: "low" | "medium" | "high") => {
+    switch (risk) {
+      case "low": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      case "medium": return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+      case "high": return "text-red-400 bg-red-500/10 border-red-500/20";
+      default: return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
     }
   };
 
@@ -590,8 +1055,8 @@ const LiveFootAIPredictionCard = ({
             </div>
           </motion.div>
 
-          {/* Detailed Expert Predictions Grid — FREE: first 3 visible, rest blurred. VIP: all visible */}
-          {(prediction as any).detailedPredictions && (
+           {/* Detailed Expert Predictions Grid — FREE: first 3 visible, rest blurred. VIP: all visible */}
+          {prediction.predictionEvents && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -600,49 +1065,70 @@ const LiveFootAIPredictionCard = ({
               <div className="flex items-center gap-2 mb-3">
                 <Grid3X3 className="h-4 w-4 text-primary" />
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider">Événements du Match</h4>
-                {!isVip && <span className="ml-auto text-[8px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-black"><Crown className="h-2 w-2 inline mr-0.5" />VIP</span>}
+                {!isVip && (
+                  <span className="ml-auto text-[8px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-black flex items-center gap-1">
+                    <Crown className="h-2 w-2" /> VIP
+                  </span>
+                )}
               </div>
+
+              {/* Tabs pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all border shrink-0",
+                      activeCategory === cat.id
+                        ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
+                        : "bg-white/5 text-white/60 border-white/5 hover:bg-white/8 hover:text-white"
+                    )}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 relative">
-                {Object.entries((prediction as any).detailedPredictions).map(([key, value], idx) => {
-                  const labels: Record<string, { label: string, icon: any }> = {
-                    winner: { label: "Vainqueur", icon: Trophy },
-                    btts: { label: "BTTS", icon: Zap },
-                    overUnder25: { label: "Buts +/- 2.5", icon: Flame },
-                    overUnder35: { label: "Buts +/- 3.5", icon: Flame },
-                    overUnder15: { label: "Buts +/- 1.5", icon: Flame },
-                    doubleChance: { label: "Double Chance", icon: Shield },
-                    exactScore: { label: "Score Exact", icon: Target },
-                    corners: { label: "Corners", icon: TrendingUp },
-                    cards: { label: "Cartons", icon: AlertTriangle },
-                    possession: { label: "Possession", icon: Eye },
-                    firstScorer: { label: "1er Buteur", icon: User },
-                    anytimeScorer: { label: "Buteur", icon: User },
-                    penalty: { label: "Penalty", icon: Target },
-                    var: { label: "VAR", icon: Video },
-                    cleanSheet: { label: "Clean Sheet", icon: ShieldCheck },
-                    timingFirstGoal: { label: "Temps 1er But", icon: Clock },
-                    highestScoringHalf: { label: "Mi-temps +", icon: Calendar },
-                    winningMargin: { label: "Marge", icon: Swords },
-                  };
-                  const config = labels[key];
-                  if (!config) return null;
-                  const Icon = config.icon;
-                  const isLocked = !isVip && idx >= 3;
-                  
+                {filteredEvents.map((event: any) => {
+                  const isLocked = !isVip && event.isVip;
                   return (
-                    <div key={key} className={cn(
-                      "bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center text-center group transition-colors relative overflow-hidden",
-                      isLocked ? "" : "hover:bg-white/10",
+                    <div key={event.key} className={cn(
+                      "bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col justify-between items-center text-center group transition-all duration-300 relative overflow-hidden h-[120px]",
+                      isLocked ? "" : "hover:bg-white/10 hover:scale-[1.02]",
                       isVip && "border-amber-500/10 hover:border-amber-500/30"
                     )}>
                       {isLocked && (
-                        <div className="absolute inset-0 backdrop-blur-[6px] bg-black/30 z-10 flex items-center justify-center">
-                          <Lock className="h-3.5 w-3.5 text-amber-400/60" />
+                        <div className="absolute inset-0 backdrop-blur-[5px] bg-black/55 z-10 flex flex-col items-center justify-center gap-1">
+                          <Lock className="h-4 w-4 text-amber-400" />
+                          <span className="text-[8px] font-black text-amber-400 uppercase tracking-widest">VIP</span>
                         </div>
                       )}
-                      <Icon className={cn("h-4 w-4 mb-2 transition-colors", isVip ? "text-amber-400/70 group-hover:text-amber-400" : "text-primary/60 group-hover:text-primary")} />
-                      <p className="text-[9px] text-white/40 uppercase font-bold mb-1">{config.label}</p>
-                      <p className="text-xs font-black text-white">{value as string}</p>
+                      
+                      <div className="flex flex-col items-center w-full min-w-0">
+                        <div className="flex items-center justify-between w-full gap-1 mb-1">
+                          {getEventIcon(event.key, !!event.isVip)}
+                          <span className={cn("text-[7px] font-black uppercase px-1 py-0.2 rounded border shrink-0", getRiskColor(event.risk))}>
+                            {getRiskLabel(event.risk)}
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-white/40 uppercase font-black tracking-wider mt-1 truncate w-full">{event.label}</p>
+                        <p className="text-xs font-black text-white mt-0.5 truncate w-full">{event.value}</p>
+                      </div>
+
+                      <div className="w-full">
+                        <div className="flex items-center justify-between text-[8px] text-white/40 font-bold mb-1">
+                          <span>Confiance</span>
+                          <span className={cn(event.isVip ? "text-amber-400" : "text-primary")}>{event.confidence}%</span>
+                        </div>
+                        <div className="h-1 rounded-full bg-white/10 overflow-hidden">
+                          <div 
+                            className={cn("h-full rounded-full", event.isVip ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-gradient-to-r from-primary to-emerald-500")}
+                            style={{ width: `${event.confidence}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
