@@ -1020,6 +1020,7 @@ export function useTeamForm(teamId: string) {
           opponentLogo: isHome ? (fix.teams?.away?.logo || "") : (fix.teams?.home?.logo || ""),
           league: fix.league?.name || "",
           date: fix.fixture?.date ? new Date(fix.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "",
+          isHome,
         };
       });
     },
