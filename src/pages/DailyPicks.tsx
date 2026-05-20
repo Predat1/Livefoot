@@ -12,6 +12,7 @@ import { BrandedLoader } from "@/components/BrandedLoader";
 import { Link } from "react-router-dom";
 import { buildEntitySlug } from "@/utils/slugify";
 import { cn } from "@/lib/utils";
+import SocialBanner from "@/components/SocialBanner";
 
 const DailyPicks = () => {
   const [dateOffset, setDateOffset] = useState(0);
@@ -162,6 +163,11 @@ const DailyPicks = () => {
               </Link>
             </div>
           </motion.div>
+        </div>
+
+        {/* Strategic Social Banner - WhatsApp */}
+        <div className="mb-8">
+          <SocialBanner platform="whatsapp" variant="card" />
         </div>
 
         {/* Date Navigation */}

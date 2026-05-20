@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, Clock, User, ExternalLink, Flame, Loader2 } from "
 import ShareButton from "@/components/ShareButton";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import SocialBanner from "@/components/SocialBanner";
 
 const NewsDetail = () => {
   const { newsId } = useParams();
@@ -144,6 +145,11 @@ const NewsDetail = () => {
             <span className="text-sm text-muted-foreground">Share this article</span>
             <ShareButton title={article.title} text={article.summary} url={`/news/${article.id}`} />
           </div>
+        </div>
+
+        {/* Strategic Social Banner - YouTube Video Analysis */}
+        <div className="my-8">
+          <SocialBanner platform="youtube" variant="card" />
         </div>
 
         {/* Related Articles */}

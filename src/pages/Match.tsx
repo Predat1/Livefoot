@@ -34,6 +34,7 @@ import { MatchDetailSkeleton } from "@/components/BrandedLoader";
 import TacticalPitch from "@/components/TacticalPitch";
 import CommunityPredictions from "@/components/CommunityPredictions";
 import TelegramBanner from "@/components/TelegramBanner";
+import SocialBanner from "@/components/SocialBanner";
 import ShotMap from "@/components/ShotMap";
 import HeatMap from "@/components/HeatMap";
 import PlayerRatingStars from "@/components/PlayerRatingStars";
@@ -1030,6 +1031,10 @@ const Match = () => {
               <SectionErrorBoundary sectionName="Betting Profile">
                 <BettingProfileWidget />
               </SectionErrorBoundary>
+
+              <div className="mt-6">
+                <SocialBanner platform="tiktok" variant="card" />
+              </div>
             </div>
           </div>
         </TabsContent>

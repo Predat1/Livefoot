@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import SocialBanner from "@/components/SocialBanner";
 
 const NEWS_SOURCES = ["All", "ESPN", "BBC Sport", "GOAL", "Sky Sports", "L'Équipe", "Marca", "Football Italia", "Sport Bild"];
 
@@ -199,6 +200,11 @@ const News = () => {
                 </div>
               </Link>
             )}
+
+            {/* Strategic Social Banner - Facebook Page */}
+            <div className="mb-6 sm:mb-8">
+              <SocialBanner platform="facebook" variant="inline" />
+            </div>
 
             {/* News Grid */}
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

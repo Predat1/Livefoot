@@ -32,6 +32,7 @@ const TopScorersWidget = lazy(() => import("@/components/TopScorersWidget"));
 const PartnerBanner = lazy(() => import("@/components/PartnerBanner"));
 const TelegramBanner = lazy(() => import("@/components/TelegramBanner"));
 const ShareWidget = lazy(() => import("@/components/ShareWidget"));
+import SocialBanner from "@/components/SocialBanner";
 
 const Index = () => {
   const livefootLogo = useAppLogo();
@@ -558,6 +559,24 @@ const SEO_FAQ = [
             </div>
           </section>
         )}
+
+        {/* Social Community Grid */}
+        <section className="mt-12 mb-8 animate-scale-in">
+          <div className="mb-4 sm:mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
+              <Users className="h-5 w-5 text-primary" />
+              <h2 className="text-base sm:text-lg font-bold text-foreground">Rejoignez nos Réseaux Officiels</h2>
+            </div>
+          </div>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <SocialBanner platform="whatsapp" variant="card" />
+            <SocialBanner platform="tiktok" variant="card" />
+            <SocialBanner platform="youtube" variant="card" />
+            <SocialBanner platform="facebook" variant="card" />
+          </div>
+        </section>
+
         {/* Viral Share Section */}
         <section className="mt-12 mb-8 animate-fade-in">
           <div className="rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border border-primary/20 p-6 sm:p-10 text-center">
