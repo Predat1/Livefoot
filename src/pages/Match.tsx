@@ -477,7 +477,7 @@ const Match = () => {
               {events.length > 0 ? (
                 <div className="relative before:absolute before:inset-0 before:ml-1/2 before:-translate-x-1/2 md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-border/10 before:via-border before:to-border/10 space-y-6">
                   {events.map((event: any, index: number) => {
-                    const isHome = event.team.id === fix.teams.home.id;
+                    const isHome = event?.team?.id === fix?.teams?.home?.id;
                     return (
                       <motion.div 
                         key={index} 
@@ -1112,11 +1112,11 @@ const Match = () => {
                             {new Date(m.fixture.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "2-digit" })}
                           </span>
                           <div className="flex-1 flex items-center gap-1 sm:gap-2 justify-center min-w-0">
-                            <img src={m.teams.home.logo} alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain flex-shrink-0" />
-                            <span className="text-[10px] sm:text-xs font-medium text-foreground truncate hidden sm:inline">{m.teams.home.name}</span>
-                            <span className="font-black text-xs sm:text-sm text-foreground flex-shrink-0">{m.goals.home} - {m.goals.away}</span>
-                            <span className="text-[10px] sm:text-xs font-medium text-foreground truncate hidden sm:inline">{m.teams.away.name}</span>
-                            <img src={m.teams.away.logo} alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain flex-shrink-0" />
+                            <img src={m?.teams?.home?.logo} alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain flex-shrink-0" />
+                            <span className="text-[10px] sm:text-xs font-medium text-foreground truncate hidden sm:inline">{m?.teams?.home?.name}</span>
+                            <span className="font-black text-xs sm:text-sm text-foreground flex-shrink-0">{m?.goals?.home ?? "-"} - {m?.goals?.away ?? "-"}</span>
+                            <span className="text-[10px] sm:text-xs font-medium text-foreground truncate hidden sm:inline">{m?.teams?.away?.name}</span>
+                            <img src={m?.teams?.away?.logo} alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain flex-shrink-0" />
                           </div>
                         </Link>
                       ))}

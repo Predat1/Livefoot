@@ -728,11 +728,9 @@ serve(async (req) => {
       bottomStandings
     );
 
-    let content: string;
-    let provider = "openrouter";
-    
     if (!openRouterKey) throw new Error("Pas de clé OpenRouter");
-    content = await callOpenRouter(prompt, openRouterKey);
+    const content: string = await callOpenRouter(prompt, openRouterKey);
+    const provider = "openrouter";
 
     const aiPrediction = safeParseJSON(content);
     const result = { ...aiPrediction, _provider: provider };

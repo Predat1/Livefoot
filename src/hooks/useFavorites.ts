@@ -16,7 +16,7 @@ const getStoredFavorites = (): Favorites => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return JSON.parse(stored);
-  } catch {}
+  } catch { /* ignore */ }
   return { teams: [], players: [], competitions: [] };
 };
 

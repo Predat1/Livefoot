@@ -158,7 +158,7 @@ const LiveFootAIPredictionCard = ({
 
       // dnb
       if (p.drawNoBet && p.drawNoBet !== "N/A") {
-        let dnbVal = p.drawNoBet === "1" ? hTeam : p.drawNoBet === "2" ? aTeam : p.drawNoBet;
+        const dnbVal = p.drawNoBet === "1" ? hTeam : p.drawNoBet === "2" ? aTeam : p.drawNoBet;
         events.push({
           key: "dnb",
           category: "result",

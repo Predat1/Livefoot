@@ -32,7 +32,7 @@ function playGoalSound() {
     playTone(659, 0.18, 0.15);
     playTone(784, 0.36, 0.15);
     playTone(1047, 0.54, 0.35, 0.4);
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
@@ -72,7 +72,7 @@ async function sendPushNotification(goal: GoalNotification) {
         silent: false,
       } as NotificationOptions);
       return;
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   // Fallback to basic Notification API
@@ -84,7 +84,7 @@ async function sendPushNotification(goal: GoalNotification) {
       tag: goal.id,
       requireInteraction: false,
     });
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soundEnabled: boolean) {

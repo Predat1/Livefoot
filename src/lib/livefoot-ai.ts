@@ -208,7 +208,7 @@ function analyzeForm(form: TeamFormData[], isCurrentTeamHome: boolean = true): F
   const scoringRate    = form.filter(m => m.goalsFor > 0).length / total;
 
   // Streak
-  let streak       = form[0]?.result || "N";
+  const streak       = form[0]?.result || "N";
   let streakLength = 1;
   for (let i = 1; i < form.length; i++) {
     if (form[i].result === streak) streakLength++;
@@ -626,9 +626,9 @@ export function generatePrediction(params: {
   );
 
   // Fusion 60% stat + 40% Poisson
-  let homeProb = Math.round(homeProbStat * 0.60 + poisson.homeWinProb * 0.40);
-  let drawProb = Math.round(drawProbStat  * 0.60 + poisson.drawProb   * 0.40);
-  let awayProb = 100 - homeProb - drawProb;
+  const homeProb = Math.round(homeProbStat * 0.60 + poisson.homeWinProb * 0.40);
+  const drawProb = Math.round(drawProbStat  * 0.60 + poisson.drawProb   * 0.40);
+  const awayProb = 100 - homeProb - drawProb;
 
   // Outcome
   let outcome: "home" | "draw" | "away";

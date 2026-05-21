@@ -51,7 +51,7 @@ export default function RegisterModal() {
   const handleAction = (tab?: "signup" | "login") => {
     setIsOpen(false);
     const redirectParam = encodeURIComponent(location.pathname);
-    let targetPath = `/auth?redirect=${redirectParam}`;
+    const targetPath = `/auth?redirect=${redirectParam}`;
     navigate(targetPath);
   };
 
