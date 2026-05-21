@@ -340,7 +340,7 @@ const TeamDetail = () => {
               ) : recentResults && recentResults.length > 0 ? (
                 <div className="p-4 space-y-2">
                   {recentResults.map((r: any) => {
-                    const isHome = r.homeTeam.name === team.name;
+                    const isHome = r?.homeTeam?.name === team?.name;
                     const won = isHome ? (r.homeScore > r.awayScore) : (r.awayScore > r.homeScore);
                     const draw = r.homeScore === r.awayScore;
                     const result = won ? "W" : draw ? "D" : "L";
@@ -356,11 +356,11 @@ const TeamDetail = () => {
                             {result}
                           </span>
                           <div className="flex items-center gap-2">
-                            {r.homeTeam.logo && <img src={r.homeTeam.logo} alt="" className="h-5 w-5 object-contain" />}
-                            <span className="text-xs font-medium text-foreground">{r.homeTeam.name}</span>
-                            <span className="text-xs font-bold text-foreground">{r.homeScore} - {r.awayScore}</span>
-                            <span className="text-xs font-medium text-foreground">{r.awayTeam.name}</span>
-                            {r.awayTeam.logo && <img src={r.awayTeam.logo} alt="" className="h-5 w-5 object-contain" />}
+                            {r?.homeTeam?.logo && <img src={r.homeTeam.logo} alt="" className="h-5 w-5 object-contain" />}
+                            <span className="text-xs font-medium text-foreground">{r?.homeTeam?.name}</span>
+                            <span className="text-xs font-bold text-foreground">{r?.homeScore ?? "-"} - {r?.awayScore ?? "-"}</span>
+                            <span className="text-xs font-medium text-foreground">{r?.awayTeam?.name}</span>
+                            {r?.awayTeam?.logo && <img src={r.awayTeam.logo} alt="" className="h-5 w-5 object-contain" />}
                           </div>
                         </div>
                         <span className="text-xs text-muted-foreground">{r.date}</span>
@@ -386,11 +386,11 @@ const TeamDetail = () => {
                   {nextFixtures.map((f: any) => (
                     <div key={f.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                       <div className="flex items-center gap-2">
-                        {f.homeTeam.logo && <img src={f.homeTeam.logo} alt="" className="h-5 w-5 object-contain" />}
-                        <span className="text-xs font-medium text-foreground">{f.homeTeam.name}</span>
+                        {f?.homeTeam?.logo && <img src={f.homeTeam.logo} alt="" className="h-5 w-5 object-contain" />}
+                        <span className="text-xs font-medium text-foreground">{f?.homeTeam?.name}</span>
                         <span className="text-xs text-muted-foreground">vs</span>
-                        <span className="text-xs font-medium text-foreground">{f.awayTeam.name}</span>
-                        {f.awayTeam.logo && <img src={f.awayTeam.logo} alt="" className="h-5 w-5 object-contain" />}
+                        <span className="text-xs font-medium text-foreground">{f?.awayTeam?.name}</span>
+                        {f?.awayTeam?.logo && <img src={f.awayTeam.logo} alt="" className="h-5 w-5 object-contain" />}
                       </div>
                       <span className="text-xs text-muted-foreground">{f.date} • {f.time}</span>
                     </div>
