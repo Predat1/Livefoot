@@ -101,12 +101,17 @@ async function setCachedResponse(supabase: any, key: string, data: any, ttlMs: n
     }, { onConflict: "key" });
 
     if (Math.random() < 0.03) {
-      supabase
-        .from("api_football_cache")
-        .delete()
-        .lt("expires_at", new Date(Date.now() - 7 * 24 * 60 * 60_000).toISOString())
-        .then(() => console.log("[api-football] Old expired cache cleanup completed"))
-        .catch((err: any) => console.error("[api-football] Cache cleanup error:", err));
+      (async () => {
+        try {
+          await supabase
+            .from("api_football_cache")
+            .delete()
+            .lt("expires_at", new Date(Date.now() - 7 * 24 * 60 * 60_000).toISOString());
+          console.log("[api-football] Old expired cache cleanup completed");
+        } catch (err) {
+          console.error("[api-football] Cache cleanup error:", err);
+        }
+      })();
     }
   } catch (err) {
     console.error(`[api-football] Cache write error for ${key}:`, err);
@@ -180,10 +185,14 @@ async function consumeDailyQuota(supabase: any): Promise<QuotaState> {
 }
 
 async function recordCacheEvent(supabase: any, cacheStatus: string) {
-  await supabase.rpc("record_api_football_cache_event", {
-    p_day: todayUtc(),
-    p_cache_status: cacheStatus,
-  }).catch((err: any) => console.error("[api-football] Cache event log error:", err));
+  try {
+    await supabase.rpc("record_api_football_cache_event", {
+      p_day: todayUtc(),
+      p_cache_status: cacheStatus,
+    });
+  } catch (err) {
+    console.error("[api-football] Cache event log error:", err);
+  }
 }
 
 async function logApiUsage(supabase: any, entry: {
@@ -197,18 +206,22 @@ async function logApiUsage(supabase: any, entry: {
   cacheKey?: string | null;
   metadata?: Record<string, any>;
 }) {
-  await supabase.from("api_usage_logs").insert({
-    endpoint: `api-football/${entry.endpoint}`,
-    request_method: "POST",
-    status_code: entry.statusCode,
-    response_time_ms: entry.responseTimeMs,
-    quota_used: entry.quotaUsed,
-    quota_remaining: entry.quotaRemaining ?? null,
-    error_message: entry.errorMessage ?? null,
-    cache_status: entry.cacheStatus ?? null,
-    cache_key: entry.cacheKey ?? null,
-    metadata: entry.metadata ?? {},
-  }).catch((err: any) => console.error("[api-football] Usage log error:", err));
+  try {
+    await supabase.from("api_usage_logs").insert({
+      endpoint: `api-football/${entry.endpoint}`,
+      request_method: "POST",
+      status_code: entry.statusCode,
+      response_time_ms: entry.responseTimeMs,
+      quota_used: entry.quotaUsed,
+      quota_remaining: entry.quotaRemaining ?? null,
+      error_message: entry.errorMessage ?? null,
+      cache_status: entry.cacheStatus ?? null,
+      cache_key: entry.cacheKey ?? null,
+      metadata: entry.metadata ?? {},
+    });
+  } catch (err) {
+    console.error("[api-football] Usage log error:", err);
+  }
 }
 
 serve(async (req) => {
@@ -218,7 +231,7 @@ serve(async (req) => {
 
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const supabase = getSupabaseClient();
+  let supabase: any;
   let endpoint = "unknown";
   let cacheKey: string | null = null;
 
@@ -230,6 +243,8 @@ serve(async (req) => {
         code: "ENV_MISSING",
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
     }
+
+    supabase = getSupabaseClient();
 
     let body: { endpoint?: string; params?: Record<string, string> };
     try {
@@ -428,43 +443,62 @@ serve(async (req) => {
   } catch (error) {
     console.error("[api-football] Error:", error);
 
-    if (cacheKey) {
-      const stale = await getCachedResponse(supabase, cacheKey, true);
-      if (stale) {
-        await recordCacheEvent(supabase, "STALE");
-        await logApiUsage(supabase, {
-          endpoint,
-          statusCode: 200,
-          responseTimeMs: Date.now() - startedAt,
-          quotaUsed: 0,
-          quotaRemaining: null,
-          errorMessage: (error as Error).message,
-          cacheStatus: "STALE",
-          cacheKey,
-          metadata: { reason: "upstream_or_internal_error" },
-        });
-        return new Response(JSON.stringify(attachMeta(stale.data, {
-          _cached: true,
-          _stale: true,
-          _staleReason: "upstream_or_internal_error",
-          _quotaRemaining: null,
-          _ttl: 0,
-        })), {
-          headers: { ...corsHeaders, "Content-Type": "application/json", "X-Cache": "STALE" },
-          status: 200,
-        });
+    if (cacheKey && supabase) {
+      try {
+        const stale = await getCachedResponse(supabase, cacheKey, true);
+        if (stale) {
+          try {
+            await recordCacheEvent(supabase, "STALE");
+          } catch (e) {
+            console.error("[api-football] Failed to record cache event:", e);
+          }
+          try {
+            await logApiUsage(supabase, {
+              endpoint,
+              statusCode: 200,
+              responseTimeMs: Date.now() - startedAt,
+              quotaUsed: 0,
+              quotaRemaining: null,
+              errorMessage: (error as Error).message,
+              cacheStatus: "STALE",
+              cacheKey,
+              metadata: { reason: "upstream_or_internal_error" },
+            });
+          } catch (e) {
+            console.error("[api-football] Failed to log API usage:", e);
+          }
+          return new Response(JSON.stringify(attachMeta(stale.data, {
+            _cached: true,
+            _stale: true,
+            _staleReason: "upstream_or_internal_error",
+            _staleError: (error as Error).message,
+            _quotaRemaining: null,
+            _ttl: 0,
+          })), {
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Cache": "STALE" },
+            status: 200,
+          });
+        }
+      } catch (staleErr) {
+        console.error("[api-football] Stale read failed:", staleErr);
       }
     }
 
-    await logApiUsage(supabase, {
-      endpoint,
-      statusCode: 500,
-      responseTimeMs: Date.now() - startedAt,
-      quotaUsed: 0,
-      errorMessage: (error as Error).message,
-      cacheStatus: "ERROR",
-      cacheKey,
-    });
+    if (supabase) {
+      try {
+        await logApiUsage(supabase, {
+          endpoint,
+          statusCode: 500,
+          responseTimeMs: Date.now() - startedAt,
+          quotaUsed: 0,
+          errorMessage: (error as Error).message,
+          cacheStatus: "ERROR",
+          cacheKey,
+        });
+      } catch (logErr) {
+        console.error("[api-football] Usage logging failed:", logErr);
+      }
+    }
 
     return new Response(JSON.stringify({
       error: (error as Error).message,
