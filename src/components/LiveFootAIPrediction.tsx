@@ -739,6 +739,13 @@ const LiveFootAIPredictionCard = ({
     });
   }, [homeFormData, awayFormData, h2hData, standings, homeTeamId, awayTeamId, homeTeamName, awayTeamName, injuries, apiPredictions, aiExpertPrediction]);
 
+  // ✅ filteredEvents DOIT être déclaré AVANT tout early return pour respecter Rules of Hooks
+  const filteredEvents = useMemo(() => {
+    if (!prediction?.predictionEvents) return [];
+    if (activeCategory === "all") return prediction.predictionEvents;
+    return prediction.predictionEvents.filter((e: any) => e.category === activeCategory);
+  }, [prediction?.predictionEvents, activeCategory]);
+
   if (!prediction) {
     const isProcessing = aiExpertPrediction?.status === "processing";
     return (
@@ -790,12 +797,6 @@ const LiveFootAIPredictionCard = ({
     { id: "stats", label: "Stats" },
     { id: "special", label: "Spéciaux" },
   ];
-
-  const filteredEvents = useMemo(() => {
-    if (!prediction?.predictionEvents) return [];
-    if (activeCategory === "all") return prediction.predictionEvents;
-    return prediction.predictionEvents.filter((e: any) => e.category === activeCategory);
-  }, [prediction?.predictionEvents, activeCategory]);
 
   const getEventIcon = (key: string, isVipEvent: boolean) => {
     const iconClass = isVipEvent ? "text-amber-400/80" : "text-primary/70";
@@ -1039,14 +1040,14 @@ const LiveFootAIPredictionCard = ({
                 "text-3xl sm:text-4xl font-black tabular-nums",
                 prediction.outcome === "home" ? "text-primary" : "text-white/80"
               )}>
-                {prediction.predictedScore.home}
+                {prediction.predictedScore?.home ?? 0}
               </span>
               <span className="text-lg text-white/20 font-light">:</span>
               <span className={cn(
                 "text-3xl sm:text-4xl font-black tabular-nums",
                 prediction.outcome === "away" ? "text-primary" : "text-white/80"
               )}>
-                {prediction.predictedScore.away}
+                {prediction.predictedScore?.away ?? 0}
               </span>
             </div>
 
@@ -1059,36 +1060,36 @@ const LiveFootAIPredictionCard = ({
             </div>
           </motion.div>
 
-          {prediction.probabilities.home > 0 && (
+          {(prediction.probabilities?.home ?? 0) > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between text-[10px] mb-2">
-                <span className="font-bold text-white">{prediction.probabilities.home}%</span>
+                <span className="font-bold text-white">{prediction.probabilities?.home ?? 0}%</span>
                 <span className="text-white/40">Probabilités</span>
-                <span className="font-bold text-white">{prediction.probabilities.away}%</span>
+                <span className="font-bold text-white">{prediction.probabilities?.away ?? 0}%</span>
               </div>
               <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5 bg-white/5">
                 <motion.div
                   className="bg-gradient-to-r from-primary to-emerald-400 rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${prediction.probabilities.home}%` }}
+                  animate={{ width: `${prediction.probabilities?.home ?? 0}%` }}
                   transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
                 />
                 <motion.div
                   className="bg-white/20 rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${prediction.probabilities.draw}%` }}
+                  animate={{ width: `${prediction.probabilities?.draw ?? 0}%` }}
                   transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
                 />
                 <motion.div
                   className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${prediction.probabilities.away}%` }}
+                  animate={{ width: `${prediction.probabilities?.away ?? 0}%` }}
                   transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
                 />
               </div>
               <div className="flex items-center justify-between text-[9px] text-white/30 mt-1">
                 <span>{homeTeamName}</span>
-                <span>Nul {prediction.probabilities.draw}%</span>
+                <span>Nul {prediction.probabilities?.draw ?? 0}%</span>
                 <span>{awayTeamName}</span>
               </div>
             </div>
@@ -1468,7 +1469,7 @@ const LiveFootAIPredictionCard = ({
                 if (navigator.share) {
                   navigator.share({
                     title: `Prono LiveFoot AI: ${homeTeamName} vs ${awayTeamName}`,
-                    text: `L'IA LiveFoot prédit un score de ${prediction.predictedScore.home}-${prediction.predictedScore.away} (${prediction.confidence}% de confiance).`,
+                    text: `L'IA LiveFoot prédit un score de ${prediction.predictedScore?.home ?? 0}-${prediction.predictedScore?.away ?? 0} (${prediction.confidence}% de confiance).`,
                     url: window.location.href,
                   });
                 }
