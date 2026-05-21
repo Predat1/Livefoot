@@ -68,12 +68,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user) await fetchProfile(user.id);
   };
 
-  // Derive VIP status from profile column or user metadata
-  const isVip = !!(
-    profile?.is_vip ||
-    user?.user_metadata?.is_vip ||
-    user?.app_metadata?.is_vip
-  );
+  // Derive VIP status — permanent flag OR a non-expired trial date
+  const isVip = !!(() => {
+    // Permanent VIP
+    if (profile?.is_vip || user?.user_metadata?.is_vip || user?.app_metadata?.is_vip) {
+      // If there's an expiry date, still check it hasn't passed
+      if (profile?.vip_expires_at) {
+        return new Date(profile.vip_expires_at) > new Date();
+      }
+      return true;
+    }
+    // Temporary VIP trial (vip_expires_at in the future, is_vip may still be false if not updated)
+    if (profile?.vip_expires_at) {
+      return new Date(profile.vip_expires_at) > new Date();
+    }
+    return false;
+  })();
   
   // Banned status
   const isBanned = profile?.is_banned ?? false;

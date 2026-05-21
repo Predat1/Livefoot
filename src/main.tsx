@@ -14,17 +14,26 @@ try {
   console.warn("Sentry init failed", e);
 }
 
-// Enregistrement du Service Worker
+// ── Service Worker Registration (PWA) ──────────────────────────
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistrations()
-      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
-      .then(() => {
-        if ('caches' in window) {
-          return caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))));
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      console.log('[PWA] Service Worker enregistré:', registration.scope);
+
+      // Listen for messages from the SW (e.g. SW_UPDATED)
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'SW_UPDATED') {
+          console.log('[PWA] Nouvelle version disponible:', event.data.version);
+          // Dispatch custom event so any React component can show a toast
+          window.dispatchEvent(
+            new CustomEvent('pwa-update-available', { detail: { version: event.data.version } })
+          );
         }
-      })
-      .catch(err => console.log('SW cleanup failed!', err));
+      });
+    } catch (err) {
+      console.warn('[PWA] Service Worker registration failed:', err);
+    }
   });
 }
 

@@ -13,6 +13,7 @@ import AnimatedRoutes from "@/components/AnimatedRoutes";
 import OfflineNotification from "@/components/OfflineNotification";
 import PredictionTicketDrawer from "@/components/PredictionTicketDrawer";
 import PredictionTicketButton from "@/components/PredictionTicketButton";
+import InstallPWA from "@/components/InstallPWA";
 
 import { useEffect } from "react";
 
@@ -81,6 +82,7 @@ const App = () => {
               <AnimatedRoutes />
               <PredictionTicketDrawer />
               <PredictionTicketButton />
+              <InstallPWA />
             </PredictionTicketProvider>
           </BrowserRouter>
           <Analytics />

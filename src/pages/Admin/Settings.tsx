@@ -43,6 +43,9 @@ import {
   Download,
   Archive,
   Clock,
+  Gift,
+  Bell,
+  Send,
 } from "lucide-react";
 
 const FEATURE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -221,6 +224,10 @@ export default function AdminSettings() {
             <AlertTriangle className="h-4 w-4 mr-2" />
             Maintenance
           </TabsTrigger>
+          <TabsTrigger value="promo" className="text-xs sm:text-sm">
+            <Gift className="h-4 w-4 mr-2" />
+            Promotion VIP
+          </TabsTrigger>
           <TabsTrigger value="general" className="text-xs sm:text-sm">
             <Settings className="h-4 w-4 mr-2" />
             Général
@@ -307,6 +314,10 @@ export default function AdminSettings() {
               })}
             </div>
           )}
+        </TabsContent>
+        {/* Promotion VIP Tab */}
+        <TabsContent value="promo" className="mt-4 space-y-4">
+          <PromoVipPanel />
         </TabsContent>
 
         {/* Maintenance Tab */}
@@ -505,7 +516,201 @@ export default function AdminSettings() {
   );
 }
 
+// ─── PromoVipPanel ────────────────────────────────────────────────────────────
+
+function PromoVipPanel() {
+  const [metrics, setMetrics] = React.useState<Record<string, any> | null>(null);
+  const [loadingMetrics, setLoadingMetrics] = React.useState(true);
+  const [broadcasting, setBroadcasting] = React.useState(false);
+  const [notifTitle, setNotifTitle] = React.useState("🌟 Offre VIP Exclusive LiveFoot");
+  const [notifMsg, setNotifMsg] = React.useState("Profitez de 7 jours VIP gratuits — accédez à toutes les prédictions IA !");
+
+  const loadMetrics = React.useCallback(async () => {
+    setLoadingMetrics(true);
+    try {
+      const { supabase: globalSupabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await (globalSupabase as any).rpc("get_promo_metrics");
+      if (!error && data) setMetrics(data as Record<string, any>);
+    } catch (e) {
+      console.error("get_promo_metrics error:", e);
+    } finally {
+      setLoadingMetrics(false);
+    }
+  }, []);
+
+  React.useEffect(() => { loadMetrics(); }, [loadMetrics]);
+
+  const handleBroadcast = async () => {
+    setBroadcasting(true);
+    try {
+      const { supabase: globalSupabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await (globalSupabase as any).functions.invoke("broadcast-promo-push", {
+        body: { title: notifTitle, message: notifMsg, url: "/pricing" },
+      });
+      if (error) throw new Error(error.message);
+      toast.success(`📣 Diffusion réussie — ${data?.sent ?? 0} notifications envoyées`);
+    } catch (err: any) {
+      toast.error("Erreur diffusion", err.message);
+    } finally {
+      setBroadcasting(false);
+    }
+  };
+
+  const handleTogglePromo = async (enabled: boolean) => {
+    try {
+      const { supabase: globalSupabase } = await import("@/integrations/supabase/client");
+      await (globalSupabase as any)
+        .from("site_settings")
+        .upsert({ key: "promo_vip_enabled", value: enabled ? "true" : "false", description: "Promotion VIP gratuite 7 jours activée" }, { onConflict: "key" });
+      toast.success(`Promotion ${enabled ? "activée" : "désactivée"}`);
+      loadMetrics();
+    } catch (err: any) {
+      toast.error("Erreur", err.message);
+    }
+  };
+
+  const promoEnabled = metrics?.promo_enabled === "true";
+
+  return (
+    <div className="space-y-4">
+      {/* Stats cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total essais", value: String(metrics?.total_trials ?? "—"), color: "bg-purple-500/20", Icon: Crown },
+          { label: "Essais actifs", value: String(metrics?.active_trials ?? "—"), color: "bg-emerald-500/20", Icon: CheckCircle },
+          { label: "Nouveaux inscrits", value: String(metrics?.new_signup_trials ?? "—"), color: "bg-blue-500/20", Icon: Users },
+          { label: "IPs uniques", value: String(metrics?.unique_ips ?? "—"), color: "bg-amber-500/20", Icon: Activity },
+        ].map((s) => (
+          <Card key={s.label} className="bg-slate-900/50 border-slate-800">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`h-10 w-10 rounded-xl ${s.color} flex items-center justify-center`}>
+                <s.Icon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-lg font-black text-white">
+                  {loadingMetrics ? <Loader2 className="h-4 w-4 animate-spin" /> : s.value}
+                </p>
+                <p className="text-xs text-slate-400">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Promo toggle */}
+      <Card className="bg-slate-900/50 border-slate-800">
+        <CardHeader>
+          <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+            <Gift className="h-5 w-5 text-emerald-400" />
+            Contrôle de la promotion
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Date de fin: {metrics?.promo_end_date ? new Date(String(metrics.promo_end_date)).toLocaleDateString("fr-FR") : "—"}
+            {" · "}Durée: {metrics?.promo_duration_days ?? "—"} jours
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-white font-bold">Promotion VIP gratuite</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {promoEnabled ? "Active — les nouveaux inscrits reçoivent le VIP automatiquement" : "Désactivée"}
+            </p>
+          </div>
+          <Switch
+            checked={!!promoEnabled}
+            onCheckedChange={handleTogglePromo}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Broadcast notification */}
+      <Card className="bg-slate-900/50 border-slate-800">
+        <CardHeader>
+          <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+            <Bell className="h-5 w-5 text-amber-400" />
+            Diffuser une notification push
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Envoyez une notification push à tous les abonnés pour promouvoir l'offre VIP.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <Label className="text-xs text-slate-400 mb-1 block">Titre</Label>
+            <Input
+              value={notifTitle}
+              onChange={(e) => setNotifTitle(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white text-sm"
+              placeholder="Titre de la notification"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400 mb-1 block">Message</Label>
+            <Input
+              value={notifMsg}
+              onChange={(e) => setNotifMsg(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white text-sm"
+              placeholder="Corps de la notification"
+            />
+          </div>
+          <Button
+            onClick={handleBroadcast}
+            disabled={broadcasting}
+            className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black hover:scale-[1.02] transition-all"
+          >
+            {broadcasting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+            {broadcasting ? "Diffusion en cours…" : "Diffuser maintenant"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Recent trials table */}
+      {Array.isArray(metrics?.recent_trials) && (metrics.recent_trials as unknown[]).length > 0 && (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-base font-bold text-white">Derniers essais VIP réclamés</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-slate-500 border-b border-slate-800">
+                  <th className="text-left pb-2">Utilisateur</th>
+                  <th className="text-left pb-2">Source</th>
+                  <th className="text-left pb-2">Réclamé le</th>
+                  <th className="text-left pb-2">Expire le</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {(metrics.recent_trials as Array<Record<string, unknown>>).map((t, i) => (
+                  <tr key={i} className="text-slate-300">
+                    <td className="py-2">{String(t.display_name || t.user_id || "—").slice(0, 20)}</td>
+                    <td className="py-2">
+                      <Badge variant="outline" className={cn(
+                        "text-[10px]",
+                        t.source === "new_signup" ? "text-blue-400 border-blue-500/30" : "text-purple-400 border-purple-500/30"
+                      )}>
+                        {t.source === "new_signup" ? "Nouvel inscrit" : "Existant"}
+                      </Badge>
+                    </td>
+                    <td className="py-2">{t.claimed_at ? new Date(String(t.claimed_at)).toLocaleDateString("fr-FR") : "—"}</td>
+                    <td className="py-2">{t.expires_at ? new Date(String(t.expires_at)).toLocaleDateString("fr-FR") : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 function StatCard({
+
   icon: Icon,
   label,
   value,

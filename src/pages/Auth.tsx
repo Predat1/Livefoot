@@ -57,19 +57,53 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // ── Step 1: Pre-signup IP check ─────────────────────────────────
+    let preSignupToken: string | null = null;
+    let registeredIpHash: string | null = null;
+    try {
+      const checkRes = await supabase.functions.invoke('pre-signup-check', {});
+      if (checkRes.data) {
+        if (checkRes.data.allowed === false) {
+          livefootToast.error(
+            "Inscription impossible",
+            checkRes.data.reason || "Limite d'inscriptions atteinte pour cette adresse IP."
+          );
+          setLoading(false);
+          return;
+        }
+        preSignupToken = checkRes.data.token || null;
+        registeredIpHash = checkRes.data.ip_hash || null;
+      }
+    } catch (_preCheckErr) {
+      // Non-blocking: allow signup even if check fails
+    }
+
+    // ── Step 2: Create account ─────────────────────────────────────
     const { data: signupData, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { display_name: signupName },
+        data: {
+          display_name: signupName,
+          pre_signup_token: preSignupToken,
+        },
       },
     });
     if (error) {
       livefootToast.error("Inscription échouée", error.message);
     } else {
       livefootToast.success("Compte créé !", "Vérifiez votre e-mail pour confirmer votre compte.");
-      // Claim referral if a ref code was in the URL
+      // ── Step 3: Log IP hash for anti-abuse tracking (fire-and-forget)
+      if (signupData?.user?.id && registeredIpHash) {
+        supabase
+          .from('registration_ip_logs')
+          .insert({ user_id: signupData.user.id, ip_hash: registeredIpHash })
+          .then(() => {})
+          .catch(() => {});
+      }
+      // ── Step 4: Claim referral if present
       if (refCode && signupData?.user?.id) {
         try {
           await supabase.functions.invoke("claim-referral", {
