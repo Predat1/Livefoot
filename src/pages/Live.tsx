@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
@@ -29,8 +29,25 @@ const Live = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState<"live" | "map" | "history">("live");
 
-  const { data: liveLeagues, refetch, isLoading: dataLoading } = useLiveFixtures();
+  const { data: liveLeagues, refetch, isLoading: dataLoading, dataUpdatedAt } = useLiveFixtures();
   const { goalHistory, detectGoals, notificationsEnabled, enableNotifications, disableNotifications, isSupported, permissionDenied } = useGoalNotifications(liveLeagues, soundEnabled);
+
+  // Sync countdown with React Query's last update time (avoids double-fetching)
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - dataUpdatedAt) / 1000);
+      setCountdown(Math.max(0, REFRESH_INTERVAL - elapsed));
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [dataUpdatedAt]);
+
+  // Detect goals whenever data refreshes
+  useEffect(() => {
+    if (dataUpdatedAt > 0) {
+      detectGoals();
+      setLastRefreshed(new Date(dataUpdatedAt));
+    }
+  }, [dataUpdatedAt, detectGoals]);
 
   if (dataLoading) {
     return (
@@ -57,21 +74,8 @@ const Live = () => {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await refetch();
-    detectGoals();
-    setLastRefreshed(new Date());
-    setCountdown(REFRESH_INTERVAL);
     setIsRefreshing(false);
-  }, [detectGoals, refetch]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) { handleRefresh(); return REFRESH_INTERVAL; }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [handleRefresh]);
+  }, [refetch]);
 
   return (
     <Layout>

@@ -254,8 +254,12 @@ export function useFixturesByDate(date: Date) {
         return fallbackLeagues;
       }
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes for general lists
-    refetchInterval: 10 * 60 * 1000,
+    staleTime: 30 * 1000, // 30s — always fresh for live match scores
+    refetchInterval: (query) => {
+      const leagues = query.state.data as LeagueData[] | undefined;
+      const hasLive = leagues?.some((l) => l.matches.some((m) => m.status === "live"));
+      return hasLive ? 30 * 1000 : 10 * 60 * 1000; // 30s if live, 10min otherwise
+    },
     refetchIntervalInBackground: false,
   });
 }
@@ -274,8 +278,8 @@ export function useLiveFixtures() {
           .filter((league) => league.matches.length > 0);
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes for Live (quota optimization)
-    refetchInterval: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // 30s — real-time live scores
+    refetchInterval: 30 * 1000,
     refetchIntervalInBackground: false,
   });
 }
@@ -310,14 +314,14 @@ export function useLeagueFixtures(leagueId: string) {
   return useQuery({
     queryKey: ["league-fixtures", leagueId],
     queryFn: async () => {
-      const res = await fetchFromSupabase("fixtures", {
+      const res = await getFixtures({
         league: leagueId,
         season: "2025",
-        status: "NS", // Not started (upcoming)
+        status: "NS",
       });
       return res.response || [];
     },
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 30 * 60 * 1000,
     enabled: !!leagueId,
   });
 }
