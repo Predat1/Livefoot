@@ -523,7 +523,7 @@ function PromoVipPanel() {
   const [loadingMetrics, setLoadingMetrics] = React.useState(true);
   const [broadcasting, setBroadcasting] = React.useState(false);
   const [notifTitle, setNotifTitle] = React.useState("🌟 Offre VIP Exclusive LiveFoot");
-  const [notifMsg, setNotifMsg] = React.useState("Profitez de 7 jours VIP gratuits — accédez à toutes les prédictions IA !");
+  const [notifMsg, setNotifMsg] = React.useState("Profitez de 30 jours VIP gratuits — accédez à toutes les prédictions IA !");
 
   const loadMetrics = React.useCallback(async () => {
     setLoadingMetrics(true);
@@ -561,7 +561,7 @@ function PromoVipPanel() {
       const { supabase: globalSupabase } = await import("@/integrations/supabase/client");
       await (globalSupabase as any)
         .from("site_settings")
-        .upsert({ key: "promo_vip_enabled", value: enabled ? "true" : "false", description: "Promotion VIP gratuite 7 jours activée" }, { onConflict: "key" });
+        .upsert({ key: "promo_vip_enabled", value: enabled ? "true" : "false", description: "Promotion VIP gratuite 30 jours activée" }, { onConflict: "key" });
       toast.success(`Promotion ${enabled ? "activée" : "désactivée"}`);
       loadMetrics();
     } catch (err: any) {
