@@ -232,8 +232,7 @@ async function fetchWithCache(
   console.log(`[ai-prediction] DB CACHE MISS → Upstream: ${url}`);
   const res = await fetch(url, {
     headers: {
-      "x-rapidapi-key": apiKey,
-      "x-rapidapi-host": "v3.football.api-sports.io",
+      "x-apisports-key": apiKey,
     },
   });
 

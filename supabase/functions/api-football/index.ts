@@ -381,8 +381,7 @@ serve(async (req) => {
       const url = `https://v3.football.api-sports.io/${endpoint}${queryParams ? `?${queryParams}` : ""}`;
       const response = await fetch(url, {
         headers: {
-          "x-rapidapi-key": Deno.env.get("API_FOOTBALL_KEY") ?? "",
-          "x-rapidapi-host": "v3.football.api-sports.io",
+          "x-apisports-key": Deno.env.get("API_FOOTBALL_KEY") ?? "",
         },
       });
 
