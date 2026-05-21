@@ -139,8 +139,8 @@ const Match = () => {
   const { data: injuriesData } = useFixtureInjuries(matchId, { enabled: shouldLoadInjuries });
   const { data: apiPredictions } = useFixturePredictions(shouldLoadPredictiveContext ? matchId : "");
   const { data: liveOddsData } = useLiveOdds(matchId, { enabled: shouldLoadOdds, matchStatus: statusRaw });
-  const homeTeamId = fix?.teams?.home?.id ? String(fix.teams.home.id) : "";
-  const awayTeamId = fix?.teams?.away?.id ? String(fix.teams.away.id) : "";
+  const homeTeamId = fix?.teams?.home?.id ? String(fix?.teams?.home?.id) : "";
+  const awayTeamId = fix?.teams?.away?.id ? String(fix?.teams?.away?.id) : "";
 
   const { data: h2hData } = useHeadToHead(homeTeamId, awayTeamId, { enabled: shouldLoadPredictiveContext });
   const { data: homeFormData } = useTeamForm(homeTeamId, { enabled: shouldLoadPredictiveContext || selectedTab === "form" });
@@ -1066,12 +1066,12 @@ const Match = () => {
               {h2hData && h2hData.length > 0 ? (() => {
                 const matches = (h2hData as any[]).slice(0, 10);
                 const homeWins = matches.filter((m: any) =>
-                  (m.teams.home.winner === true && String(m.teams.home.id) === homeTeamId) ||
-                  (m.teams.away.winner === true && String(m.teams.away.id) === homeTeamId)
+                  (m?.teams?.home?.winner === true && String(m?.teams?.home?.id) === homeTeamId) ||
+                  (m?.teams?.away?.winner === true && String(m?.teams?.away?.id) === homeTeamId)
                 ).length;
                 const awayWins = matches.filter((m: any) =>
-                  (m.teams.home.winner === true && String(m.teams.home.id) === awayTeamId) ||
-                  (m.teams.away.winner === true && String(m.teams.away.id) === awayTeamId)
+                  (m?.teams?.home?.winner === true && String(m?.teams?.home?.id) === awayTeamId) ||
+                  (m?.teams?.away?.winner === true && String(m?.teams?.away?.id) === awayTeamId)
                 ).length;
                 const draws = matches.length - homeWins - awayWins;
                 return (
@@ -1396,7 +1396,7 @@ const Match = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex-1 text-center min-w-0 max-w-[35%]"
               >
-                <Link to={fix?.teams?.home?.id ? `/teams/${buildEntitySlug(fix.teams.home.id, homeTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
+                <Link to={fix?.teams?.home?.id ? `/teams/${buildEntitySlug(fix?.teams?.home?.id, homeTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
                   <div className="relative mb-1 sm:mb-4 flex items-center justify-center h-16 w-16 sm:h-28 sm:w-28">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {homeTeam.logo ? (
@@ -1484,7 +1484,7 @@ const Match = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex-1 text-center min-w-0 max-w-[35%]"
               >
-                <Link to={fix?.teams?.away?.id ? `/teams/${buildEntitySlug(fix.teams.away.id, awayTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
+                <Link to={fix?.teams?.away?.id ? `/teams/${buildEntitySlug(fix?.teams?.away?.id, awayTeam.name)}` : "#"} className="group flex flex-col items-center hover:opacity-80 transition-opacity">
                   <div className="relative mb-1 sm:mb-4 flex items-center justify-center h-16 w-16 sm:h-28 sm:w-28">
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {awayTeam.logo ? (
