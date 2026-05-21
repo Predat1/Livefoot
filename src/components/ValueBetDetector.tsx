@@ -34,7 +34,51 @@ export default function ValueBetDetector({
 
   if (!prediction || !odds || odds.length === 0) return null;
 
-  const { probabilities } = prediction;
+  // Safeguard: compute probabilities if missing in prediction object
+  let probabilities = prediction.probabilities;
+  if (!probabilities) {
+    let home = 0, draw = 0, away = 0;
+    const pred = prediction as any;
+    if (pred.homeWinProb && pred.awayWinProb) {
+      home = pred.homeWinProb;
+      draw = pred.drawProb || (100 - pred.homeWinProb - pred.awayWinProb);
+      away = pred.awayWinProb;
+    } else if (pred.confidence && pred.predictedScore) {
+      const conf = Math.round((pred.confidence || 0) * 100);
+      const predictedScore = typeof pred.predictedScore === "string" ? pred.predictedScore : "0-0";
+      const [h, a] = predictedScore.split("-").map(Number);
+      if (!isNaN(h) && !isNaN(a)) {
+        if (h > a) {
+          home = conf;
+          draw = Math.round((100 - conf) * 0.45);
+          away = 100 - home - draw;
+        } else if (a > h) {
+          away = conf;
+          draw = Math.round((100 - conf) * 0.45);
+          home = 100 - away - draw;
+        } else {
+          draw = conf;
+          home = Math.round((100 - conf) * 0.55);
+          away = 100 - draw - home;
+        }
+      }
+    }
+
+    const total = home + draw + away;
+    if (total > 0) {
+      if (total !== 100) {
+        home = Math.round((home / total) * 100);
+        draw = Math.round((draw / total) * 100);
+        away = 100 - home - draw;
+      }
+      probabilities = { home, draw, away };
+    }
+  }
+
+  if (!probabilities || typeof probabilities.home !== "number" || typeof probabilities.draw !== "number" || typeof probabilities.away !== "number") {
+    return null;
+  }
+
 
   // Cherche les value bets dans les cotes bookmakers
   const valueBets: ValueBetResult[] = [];

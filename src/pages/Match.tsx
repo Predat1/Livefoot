@@ -296,6 +296,62 @@ const Match = () => {
   const liveOdds = (liveOddsData || []) as any[];
   const odds = isLive && liveOdds.length > 0 ? liveOdds : preMatchOdds;
 
+  const matchProbabilities = useMemo(() => {
+    let probHome = 45, probDraw = 28, probAway = 27;
+    let hasProbs = false;
+
+    // Source 0: Direct AI V3 probabilities (most precise)
+    if (aiExpertPrediction?.homeWinProb && aiExpertPrediction?.awayWinProb) {
+      probHome = aiExpertPrediction.homeWinProb;
+      probDraw = aiExpertPrediction.drawProb || (100 - aiExpertPrediction.homeWinProb - aiExpertPrediction.awayWinProb);
+      probAway = aiExpertPrediction.awayWinProb;
+      hasProbs = true;
+    }
+
+    // Source 1: API Predictions
+    if (!hasProbs && (apiPredictions as any)?.predictions?.percent) {
+      probHome = parseInt((apiPredictions as any).predictions.percent.home) || 0;
+      probDraw = parseInt((apiPredictions as any).predictions.percent.draw) || 0;
+      probAway = parseInt((apiPredictions as any).predictions.percent.away) || 0;
+      if (probHome + probDraw + probAway > 0) {
+        hasProbs = true;
+      }
+    }
+    
+    // Source 2: AI Expert confidence + predicted score
+    if (!hasProbs && aiExpertPrediction?.confidence && aiExpertPrediction?.predictedScore) {
+      const conf = Math.round((aiExpertPrediction.confidence || 0) * 100);
+      const predictedScore = typeof aiExpertPrediction.predictedScore === "string" ? aiExpertPrediction.predictedScore : "0-0";
+      const [h, a] = predictedScore.split("-").map(Number);
+      if (!isNaN(h) && !isNaN(a)) {
+        if (h > a) {
+          probHome = conf;
+          probDraw = Math.round((100 - conf) * 0.45);
+          probAway = 100 - probHome - probDraw;
+        } else if (a > h) {
+          probAway = conf;
+          probDraw = Math.round((100 - conf) * 0.45);
+          probHome = 100 - probAway - probDraw;
+        } else {
+          probDraw = conf;
+          probHome = Math.round((100 - conf) * 0.55);
+          probAway = 100 - probDraw - probHome;
+        }
+        hasProbs = true;
+      }
+    }
+
+    // Normalize to 100
+    const total = probHome + probDraw + probAway;
+    if (total > 0 && total !== 100) {
+      probHome = Math.round((probHome / total) * 100);
+      probDraw = Math.round((probDraw / total) * 100);
+      probAway = 100 - probHome - probDraw;
+    }
+
+    return { home: probHome, draw: probDraw, away: probAway };
+  }, [aiExpertPrediction, apiPredictions]);
+
 
   const getEventIcon = (type: string, detail?: string) => {
     switch (type) {
@@ -989,7 +1045,7 @@ const Match = () => {
                 <SectionErrorBoundary sectionName="Value Bet">
                   <ValueBetDetector
                     odds={oddsData || []}
-                    prediction={aiExpertPrediction as any}
+                    prediction={{ ...aiExpertPrediction, probabilities: matchProbabilities } as any}
                     homeTeamName={homeTeam.name}
                     awayTeamName={awayTeam.name}
                   />
@@ -1014,10 +1070,7 @@ const Match = () => {
                   currentMinute={fix?.fixture?.status?.elapsed || 45}
                   currentHomeScore={fix?.goals?.home ?? 0}
                   currentAwayScore={fix?.goals?.away ?? 0}
-                  baseProbabilities={
-                    (aiExpertPrediction as any)?.probabilities ||
-                    { home: 45, draw: 28, away: 27 }
-                  }
+                  baseProbabilities={matchProbabilities}
                   xgHome={(aiExpertPrediction as any)?.xgHome || 1.3}
                   xgAway={(aiExpertPrediction as any)?.xgAway || 1.0}
                 />
