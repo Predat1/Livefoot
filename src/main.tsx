@@ -33,16 +33,21 @@ const loadingElement = document.getElementById("root-loading");
 
 // Handler d'erreur global amélioré
 window.onerror = (message, source, lineno, colno, error) => {
-  console.error("Critical crash detected:", message, error);
+  console.error("Critical crash detected:", message, source, lineno, colno, error);
   const displayElement = document.getElementById("root") || document.body;
+  const stackInfo = error?.stack || `${source}:${lineno}:${colno}`;
   
   // Si on crash, on affiche une UI d'urgence stylée inline
   displayElement.innerHTML = `
     <div style="background: #0c0f1d; color: white; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; font-family: sans-serif; text-align: center;">
       <div style="font-size: 60px; margin-bottom: 20px;">⚽</div>
       <div style="color: #ef4444; font-weight: bold; font-size: 20px; margin-bottom: 10px;">Oups ! Une erreur est survenue</div>
-      <div style="font-size: 0.8rem; color: #94a3b8; max-width: 400px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); word-break: break-word;">
-        ${message}
+      <div style="font-size: 0.8rem; color: #94a3b8; max-width: 600px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); word-break: break-word;">
+        <div style="margin-bottom: 8px;">${message}</div>
+        <details style="margin-top: 10px; text-align: left;">
+          <summary style="cursor: pointer; color: #f59e0b; font-size: 0.7rem;">Détails techniques (clique pour voir)</summary>
+          <pre style="font-size: 0.65rem; color: #64748b; white-space: pre-wrap; margin-top: 8px; max-height: 200px; overflow: auto;">${stackInfo}</pre>
+        </details>
       </div>
       <button onclick="window.location.reload()" style="margin-top: 30px; padding: 12px 24px; background: #22c55e; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);">
         Recharger LiveFoot
@@ -51,6 +56,11 @@ window.onerror = (message, source, lineno, colno, error) => {
   `;
   return false;
 };
+
+// Catch unhandled promise rejections
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled promise rejection:", event.reason);
+});
 
 if (rootElement) {
   const root = createRoot(rootElement);

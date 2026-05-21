@@ -22,16 +22,17 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Strip console.* et debugger en production -> -10/20 KB et moins de bruit
+  // Strip console.log/debug/info et debugger en production, mais garde console.error/warn pour debug
   esbuild: mode === "production" ? {
-    drop: ["console", "debugger"],
+    pure: ["console.log", "console.debug", "console.info"],
+    drop: ["debugger"],
     legalComments: "none",
   } : undefined,
   build: {
     // Target moderne -> code plus court (ESM natif partout en 2025)
     target: "es2020",
     cssCodeSplit: true,
-    sourcemap: false,
+    sourcemap: true,
     reportCompressedSize: false, // build plus rapide
     rollupOptions: {
       output: {
