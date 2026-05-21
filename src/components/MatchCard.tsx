@@ -32,12 +32,12 @@ const MatchCard = ({ match }: MatchCardProps) => {
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
   
-  const homeScore = match.homeTeam.score ?? 0;
-  const awayScore = match.awayTeam.score ?? 0;
+  const homeScore = match.homeTeam?.score ?? 0;
+  const awayScore = match.awayTeam?.score ?? 0;
 
   return (
     <MotionLink
-      to={`/match/${buildEntitySlug(match.id, `${match.homeTeam.name}-vs-${match.awayTeam.name}`)}`}
+      to={`/match/${buildEntitySlug(match.id, `${match.homeTeam?.name ?? ''}-vs-${match.awayTeam?.name ?? ''}`)}`}
       className="group relative flex items-center justify-between px-3 sm:px-5 py-4 sm:py-5 transition-colors duration-200 hover:bg-muted/40 border-b border-border/50 last:border-b-0"
       whileHover={{ scale: 1.005, backgroundColor: "hsl(var(--muted) / 0.4)" }}
       whileTap={{ scale: 0.985 }}
@@ -76,17 +76,17 @@ const MatchCard = ({ match }: MatchCardProps) => {
                 : "text-foreground"
           )}
         >
-          {match.homeTeam.name || "Équipe Home"}
+          {match.homeTeam?.name || "Équipe Home"}
         </span>
         <motion.div
           className="flex-shrink-0"
           whileHover={{ scale: 1.1 }}
           transition={{ type: "spring", stiffness: 400, damping: 15 }}
         >
-          {match.homeTeam.logo?.startsWith("http") ? (
-            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
+          {match.homeTeam?.logo?.startsWith("http") ? (
+            <img src={match.homeTeam.logo} alt={match.homeTeam?.name} className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
           ) : (
-            <TeamLogo teamName={match.homeTeam.name} size="sm" />
+            <TeamLogo teamName={match.homeTeam?.name ?? ''} size="sm" />
           )}
         </motion.div>
       </div>

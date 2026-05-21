@@ -201,17 +201,17 @@ const Live = () => {
                               <span className="text-[10px] sm:text-xs font-black text-live">{match.minute}'</span>
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0">
-                              <span className="text-xs sm:text-sm font-bold text-foreground text-right leading-tight truncate">{match.homeTeam.name}</span>
-                              <TeamLogo teamName={match.homeTeam.name} size="sm" />
+                              <span className="text-xs sm:text-sm font-bold text-foreground text-right leading-tight truncate">{match.homeTeam?.name}</span>
+                              <TeamLogo teamName={match.homeTeam?.name ?? ''} size="sm" />
                             </div>
                             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 px-1 sm:px-2">
-                              <span className="text-base sm:text-xl font-black text-live">{match.homeTeam.score}</span>
+                              <span className="text-base sm:text-xl font-black text-live">{match.homeTeam?.score ?? '-'}</span>
                               <span className="text-xs sm:text-sm text-muted-foreground">-</span>
-                              <span className="text-base sm:text-xl font-black text-live">{match.awayTeam.score}</span>
+                              <span className="text-base sm:text-xl font-black text-live">{match.awayTeam?.score ?? '-'}</span>
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-                              <TeamLogo teamName={match.awayTeam.name} size="sm" />
-                              <span className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate">{match.awayTeam.name}</span>
+                              <TeamLogo teamName={match.awayTeam?.name ?? ''} size="sm" />
+                              <span className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate">{match.awayTeam?.name}</span>
                             </div>
                           </div>
                         </Link>

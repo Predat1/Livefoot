@@ -21,6 +21,7 @@ const TopMatches = ({ leagues }: TopMatchesProps) => {
   for (const league of leagues) {
     if (!TOP_LEAGUE_IDS.has(league.id)) continue;
     for (const match of league.matches) {
+      if (!match?.homeTeam || !match?.awayTeam) continue;
       topMatches.push({ ...match, leagueName: league.name, leagueLogo: league.logo, leagueFlag: league.flag });
     }
   }
@@ -50,8 +51,8 @@ const TopMatches = ({ leagues }: TopMatchesProps) => {
         {sorted.map((match, i) => {
           const isLive = match.status === "live";
           const isFinished = match.status === "finished";
-          const homeScore = match.homeTeam.score ?? 0;
-          const awayScore = match.awayTeam.score ?? 0;
+          const homeScore = match.homeTeam?.score ?? 0;
+          const awayScore = match.awayTeam?.score ?? 0;
 
           return (
             <motion.div
@@ -61,7 +62,7 @@ const TopMatches = ({ leagues }: TopMatchesProps) => {
               transition={{ delay: i * 0.06, duration: 0.3 }}
             >
               <Link
-                to={`/match/${buildEntitySlug(match.id, `${match.homeTeam.name}-vs-${match.awayTeam.name}`)}`}
+                to={`/match/${buildEntitySlug(match.id, `${match.homeTeam?.name ?? ''}-vs-${match.awayTeam?.name ?? ''}`)}`}
                 className={cn(
                   "group relative flex flex-col gap-2 rounded-xl border p-3 sm:p-4 transition-all hover:shadow-md hover:-translate-y-0.5 min-w-[260px] shrink-0 sm:min-w-0 sm:shrink",
                   isLive
@@ -97,18 +98,18 @@ const TopMatches = ({ leagues }: TopMatchesProps) => {
                 <div className="flex items-center justify-between gap-2 px-1">
                   {/* Home */}
                   <div className="flex flex-1 flex-col items-center gap-1 min-w-0">
-                    {match.homeTeam.logo?.startsWith("http") ? (
-                      <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="h-8 w-8 object-contain" />
+                    {match.homeTeam?.logo?.startsWith("http") ? (
+                      <img src={match.homeTeam.logo} alt={match.homeTeam?.name} className="h-8 w-8 object-contain" />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-black text-muted-foreground">
-                        {match.homeTeam.name.slice(0, 2).toUpperCase()}
+                        {match.homeTeam?.name?.slice(0, 2).toUpperCase() ?? "??"}
                       </div>
                     )}
                     <span className={cn(
                       "text-[11px] font-semibold text-center leading-tight truncate w-full text-center",
                       isFinished && homeScore > awayScore ? "text-foreground font-black" : "text-muted-foreground"
                     )}>
-                      {match.homeTeam.name}
+                      {match.homeTeam?.name}
                     </span>
                   </div>
 

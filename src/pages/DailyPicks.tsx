@@ -252,15 +252,15 @@ const DailyPicks = () => {
                   </Link>
                 </div>
 
-                <SectionErrorBoundary sectionName={`Prédiction ${match.homeTeam.name} vs ${match.awayTeam.name}`}>
+                <SectionErrorBoundary sectionName={`Prédiction ${match.homeTeam?.name ?? ''} vs ${match.awayTeam?.name ?? ''}`}>
                   <LiveFootAIPrediction
                     fixtureId={match.id}
-                    homeTeamId={match.homeTeam.id}
-                    awayTeamId={match.awayTeam.id}
-                    homeTeamName={match.homeTeam.name}
-                    awayTeamName={match.awayTeam.name}
-                    homeLogo={match.homeTeam.logo}
-                    awayLogo={match.awayTeam.logo}
+                    homeTeamId={match.homeTeam?.id ?? ''}
+                    awayTeamId={match.awayTeam?.id ?? ''}
+                    homeTeamName={match.homeTeam?.name ?? ''}
+                    awayTeamName={match.awayTeam?.name ?? ''}
+                    homeLogo={match.homeTeam?.logo}
+                    awayLogo={match.awayTeam?.logo}
                     leagueName={match.leagueName}
                   />
                 </SectionErrorBoundary>

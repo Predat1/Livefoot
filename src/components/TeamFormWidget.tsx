@@ -117,11 +117,11 @@ const TeamFormWidget = ({ teamId, teamName, teamLogo }: TeamFormWidgetProps) => 
             Prochain match
           </p>
           <div className="flex items-center gap-2 text-xs">
-            <img src={nextMatch.homeTeam.logo} alt="" className="h-4 w-4 object-contain" />
-            <span className="text-foreground font-medium truncate">{nextMatch.homeTeam.name}</span>
+            {nextMatch.homeTeam?.logo && <img src={nextMatch.homeTeam.logo} alt="" className="h-4 w-4 object-contain" />}
+            <span className="text-foreground font-medium truncate">{nextMatch.homeTeam?.name}</span>
             <span className="text-muted-foreground">vs</span>
-            <span className="text-foreground font-medium truncate">{nextMatch.awayTeam.name}</span>
-            <img src={nextMatch.awayTeam.logo} alt="" className="h-4 w-4 object-contain" />
+            <span className="text-foreground font-medium truncate">{nextMatch.awayTeam?.name}</span>
+            {nextMatch.awayTeam?.logo && <img src={nextMatch.awayTeam.logo} alt="" className="h-4 w-4 object-contain" />}
             <span className="text-muted-foreground ml-auto text-[10px]">{nextMatch.date} {nextMatch.time}</span>
           </div>
         </div>

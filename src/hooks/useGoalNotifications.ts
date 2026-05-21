@@ -104,17 +104,17 @@ export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soun
     const initial: GoalNotification[] = [];
     liveMatches.forEach((league) => {
       league.matches.forEach((match) => {
-        const total = (match.homeTeam.score ?? 0) + (match.awayTeam.score ?? 0);
+        const total = (match.homeTeam?.score ?? 0) + (match.awayTeam?.score ?? 0);
         prevGoalsRef.current[match.id] = total;
         if (total > 0) {
           initial.push({
             id: `${match.id}-init`,
             time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
             league: league.name,
-            homeTeam: match.homeTeam.name,
-            awayTeam: match.awayTeam.name,
-            homeScore: match.homeTeam.score ?? 0,
-            awayScore: match.awayTeam.score ?? 0,
+            homeTeam: match.homeTeam?.name ?? '',
+            awayTeam: match.awayTeam?.name ?? '',
+            homeScore: match.homeTeam?.score ?? 0,
+            awayScore: match.awayTeam?.score ?? 0,
             minute: match.minute ?? 0,
             matchId: match.id,
           });
@@ -129,7 +129,7 @@ export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soun
     liveMatches.forEach((league) => {
       league.matches.forEach((match) => {
         const key = match.id;
-        const currentTotal = (match.homeTeam.score ?? 0) + (match.awayTeam.score ?? 0);
+        const currentTotal = (match.homeTeam?.score ?? 0) + (match.awayTeam?.score ?? 0);
         const prev = prevGoalsRef.current[key];
         if (prev !== undefined && currentTotal > prev) {
           if (soundEnabled) playGoalSound();
@@ -137,10 +137,10 @@ export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soun
             id: `${key}-${Date.now()}`,
             time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
             league: league.name,
-            homeTeam: match.homeTeam.name,
-            awayTeam: match.awayTeam.name,
-            homeScore: match.homeTeam.score ?? 0,
-            awayScore: match.awayTeam.score ?? 0,
+            homeTeam: match.homeTeam?.name ?? '',
+            awayTeam: match.awayTeam?.name ?? '',
+            homeScore: match.homeTeam?.score ?? 0,
+            awayScore: match.awayTeam?.score ?? 0,
             minute: match.minute ?? 0,
             matchId: match.id,
           };
