@@ -109,13 +109,30 @@ CREATE TABLE IF NOT EXISTS public.live_match_events (
 
 ALTER TABLE public.live_match_events ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "live_match_events_select_all"
-  ON public.live_match_events FOR SELECT
-  USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'live_match_events'
+      AND policyname = 'live_match_events_select_all'
+  ) THEN
+    CREATE POLICY "live_match_events_select_all"
+      ON public.live_match_events FOR SELECT
+      USING (true);
+  END IF;
 
-CREATE POLICY "live_match_events_service_role"
-  ON public.live_match_events FOR ALL
-  TO service_role USING (true) WITH CHECK (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'live_match_events'
+      AND policyname = 'live_match_events_service_role'
+  ) THEN
+    CREATE POLICY "live_match_events_service_role"
+      ON public.live_match_events FOR ALL
+      TO service_role USING (true) WITH CHECK (true);
+  END IF;
+END $$;
 
 GRANT SELECT ON public.live_match_events TO anon;
 GRANT SELECT ON public.live_match_events TO authenticated;
@@ -128,7 +145,14 @@ CREATE INDEX IF NOT EXISTS idx_live_events_recent
   ON public.live_match_events (detected_at DESC);
 
 -- Activer Supabase Realtime sur cette table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.live_match_events;
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.live_match_events;
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────
 -- 5. Table : live_match_states
@@ -159,13 +183,30 @@ CREATE TABLE IF NOT EXISTS public.live_match_states (
 
 ALTER TABLE public.live_match_states ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "live_match_states_select_all"
-  ON public.live_match_states FOR SELECT
-  USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'live_match_states'
+      AND policyname = 'live_match_states_select_all'
+  ) THEN
+    CREATE POLICY "live_match_states_select_all"
+      ON public.live_match_states FOR SELECT
+      USING (true);
+  END IF;
 
-CREATE POLICY "live_match_states_service_role"
-  ON public.live_match_states FOR ALL
-  TO service_role USING (true) WITH CHECK (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'live_match_states'
+      AND policyname = 'live_match_states_service_role'
+  ) THEN
+    CREATE POLICY "live_match_states_service_role"
+      ON public.live_match_states FOR ALL
+      TO service_role USING (true) WITH CHECK (true);
+  END IF;
+END $$;
 
 GRANT SELECT ON public.live_match_states TO anon;
 GRANT SELECT ON public.live_match_states TO authenticated;
@@ -176,7 +217,14 @@ CREATE INDEX IF NOT EXISTS idx_live_states_status
   WHERE status NOT IN ('FT', 'AET', 'PEN', 'NS');
 
 -- Activer Supabase Realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE public.live_match_states;
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.live_match_states;
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────
 -- 6. Fonction : upsert_live_match_state
@@ -335,7 +383,7 @@ BEGIN
     PERFORM cron.schedule(
       'cleanup-api-football-cache',
       '0 */6 * * *',
-      $$DELETE FROM public.api_football_cache WHERE expires_at < NOW() - INTERVAL '1 hour'$$
+      $cleanup$DELETE FROM public.api_football_cache WHERE expires_at < NOW() - INTERVAL '1 hour'$cleanup$
     );
 
     RAISE NOTICE 'pg_cron jobs créés avec succès.';

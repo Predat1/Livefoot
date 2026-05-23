@@ -27,6 +27,10 @@ type PreviousLiveState = {
   status?: string | null;
 };
 
+type SupabaseError = {
+  message: string;
+};
+
 function getSupabaseClient() {
   return createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -70,16 +74,17 @@ async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>
   const fixtureId = String(fixture?.fixture?.id || "");
   if (!fixtureId) return;
 
-  const { data: previous } = await supabase
+  const { data: previous, error: previousError } = await supabase
     .from("live_match_states")
     .select("home_score, away_score, status")
     .eq("fixture_id", fixtureId)
-    .maybeSingle() as { data: PreviousLiveState | null };
+    .maybeSingle() as { data: PreviousLiveState | null; error: SupabaseError | null };
+  if (previousError) throw new Error(`live_match_states lookup failed: ${previousError.message}`);
 
   const homeScore = fixture?.goals?.home ?? 0;
   const awayScore = fixture?.goals?.away ?? 0;
 
-  await supabase.rpc("upsert_live_match_state", {
+  const { error: upsertError } = await supabase.rpc("upsert_live_match_state", {
     p_fixture_id: fixtureId,
     p_home_team_id: String(fixture?.teams?.home?.id || ""),
     p_home_team: fixture?.teams?.home?.name || "",
@@ -96,11 +101,12 @@ async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>
     p_league_logo: fixture?.league?.logo || "",
     p_league_country: fixture?.league?.country || "",
   });
+  if (upsertError) throw new Error(`upsert_live_match_state failed: ${upsertError.message}`);
 
   const previousTotal = (previous?.home_score ?? 0) + (previous?.away_score ?? 0);
   const currentTotal = homeScore + awayScore;
   if (currentTotal > previousTotal) {
-    await supabase.from("live_match_events").insert({
+    const { error: eventError } = await supabase.from("live_match_events").insert({
       fixture_id: fixtureId,
       event_type: "goal",
       minute: fixture?.fixture?.status?.elapsed ?? null,
@@ -109,10 +115,11 @@ async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>
       detail: "score_change",
       raw_payload: fixture,
     });
+    if (eventError) throw new Error(`live_match_events goal insert failed: ${eventError.message}`);
   }
 
   if (previous?.status !== status && (LIVE_STATUSES.has(status) || FINISHED_STATUSES.has(status))) {
-    await supabase.from("live_match_events").insert({
+    const { error: eventError } = await supabase.from("live_match_events").insert({
       fixture_id: fixtureId,
       event_type: FINISHED_STATUSES.has(status) ? "fulltime" : status === "HT" ? "halftime" : "kickoff",
       minute: fixture?.fixture?.status?.elapsed ?? null,
@@ -121,73 +128,86 @@ async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>
       detail: status,
       raw_payload: fixture,
     });
+    if (eventError) throw new Error(`live_match_events status insert failed: ${eventError.message}`);
   }
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok");
+  try {
+    if (req.method === "OPTIONS") return new Response("ok");
 
-  const missing = REQUIRED_ENV.filter((key) => !Deno.env.get(key));
-  if (missing.length) {
-    return new Response(JSON.stringify({ error: `Missing env: ${missing.join(", ")}` }), { status: 500 });
-  }
+    const missing = REQUIRED_ENV.filter((key) => !Deno.env.get(key));
+    if (missing.length) {
+      return new Response(JSON.stringify({ error: `Missing env: ${missing.join(", ")}` }), { status: 500 });
+    }
 
-  const body = await req.json().catch(() => ({})) as { timezone?: string; date?: string; diagnostic?: boolean };
-  const timezone = body.timezone || "Europe/Rome";
-  const date = body.date || todayInTimeZone(timezone);
-  const diagnostic = body.diagnostic === true;
-  const supabase = getSupabaseClient();
+    const body = await req.json().catch(() => ({})) as { timezone?: string; date?: string; diagnostic?: boolean };
+    const timezone = body.timezone || "Europe/Rome";
+    const date = body.date || todayInTimeZone(timezone);
+    const diagnostic = body.diagnostic === true;
+    const supabase = getSupabaseClient();
 
-  const sources: Array<{ source: string; fixtures: ApiFixture[] }> = [];
-  const live = await fetchApiFootball("fixtures", { live: "all", timezone }).catch((error) => {
-    console.error("[sync-live-fixtures] live=all failed", error);
-    return [];
-  });
-  sources.push({ source: "live=all", fixtures: live });
+    const sources: Array<{ source: string; fixtures: ApiFixture[] }> = [];
+    const live = await fetchApiFootball("fixtures", { live: "all", timezone }).catch((error) => {
+      console.error("[sync-live-fixtures] live=all failed", error);
+      return [];
+    });
+    sources.push({ source: "live=all", fixtures: live });
 
-  const leagueResults = await Promise.allSettled(
-    PRIORITY_LEAGUES.map(async (league) => ({
-      league,
-      fixtures: await fetchApiFootball("fixtures", { date, league, season: "2025", timezone }),
-    })),
-  );
-  for (const result of leagueResults) {
-    if (result.status === "fulfilled") sources.push({ source: `league:${result.value.league}`, fixtures: result.value.fixtures });
-    else console.error("[sync-live-fixtures] priority league failed", result.reason);
-  }
-
-  if (diagnostic) {
-    const teamResults = await Promise.allSettled(
-      DIAGNOSTIC_TEAMS.map(async (team) => ({
-        team,
-        fixtures: await fetchApiFootball("fixtures", { date, team, timezone }),
+    const leagueResults = await Promise.allSettled(
+      PRIORITY_LEAGUES.map(async (league) => ({
+        league,
+        fixtures: await fetchApiFootball("fixtures", { date, league, season: "2025", timezone }),
       })),
     );
-    for (const result of teamResults) {
-      if (result.status === "fulfilled") sources.push({ source: `team:${result.value.team}`, fixtures: result.value.fixtures });
+    for (const result of leagueResults) {
+      if (result.status === "fulfilled") sources.push({ source: `league:${result.value.league}`, fixtures: result.value.fixtures });
+      else console.error("[sync-live-fixtures] priority league failed", result.reason);
     }
+
+    if (diagnostic) {
+      const teamResults = await Promise.allSettled(
+        DIAGNOSTIC_TEAMS.map(async (team) => ({
+          team,
+          fixtures: await fetchApiFootball("fixtures", { date, team, timezone }),
+        })),
+      );
+      for (const result of teamResults) {
+        if (result.status === "fulfilled") sources.push({ source: `team:${result.value.team}`, fixtures: result.value.fixtures });
+      }
+    }
+
+    const allFixtures = dedupeFixtures(sources.flatMap((source) => source.fixtures));
+    const trackedFixtures = allFixtures.filter((fixture) => {
+      const status = fixture?.fixture?.status?.short || "";
+      return LIVE_STATUSES.has(status) || FINISHED_STATUSES.has(status);
+    });
+
+    for (const fixture of trackedFixtures) {
+      await upsertFixtureState(supabase, fixture);
+    }
+
+    try {
+      const { error: cleanupError } = await supabase.rpc("cleanup_finished_matches");
+      if (cleanupError) console.error("[sync-live-fixtures] cleanup failed", cleanupError);
+    } catch (cleanupError) {
+      console.error("[sync-live-fixtures] cleanup failed", cleanupError);
+    }
+
+    return new Response(JSON.stringify({
+      ok: true,
+      timezone,
+      date,
+      totalFixtures: allFixtures.length,
+      trackedFixtures: trackedFixtures.length,
+      sources: sources.map((source) => ({ source: source.source, count: source.fixtures.length })),
+    }), { headers: { "Content-Type": "application/json" } });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[sync-live-fixtures] fatal", error);
+    return new Response(JSON.stringify({ ok: false, error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-
-  const allFixtures = dedupeFixtures(sources.flatMap((source) => source.fixtures));
-  const trackedFixtures = allFixtures.filter((fixture) => {
-    const status = fixture?.fixture?.status?.short || "";
-    return LIVE_STATUSES.has(status) || FINISHED_STATUSES.has(status);
-  });
-
-  for (const fixture of trackedFixtures) {
-    await upsertFixtureState(supabase, fixture);
-  }
-
-  await supabase.rpc("cleanup_finished_matches").catch((error: unknown) => {
-    console.error("[sync-live-fixtures] cleanup failed", error);
-  });
-
-  return new Response(JSON.stringify({
-    ok: true,
-    timezone,
-    date,
-    totalFixtures: allFixtures.length,
-    trackedFixtures: trackedFixtures.length,
-    sources: sources.map((source) => ({ source: source.source, count: source.fixtures.length })),
-  }), { headers: { "Content-Type": "application/json" } });
 });
