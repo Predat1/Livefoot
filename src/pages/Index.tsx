@@ -9,7 +9,7 @@ import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { useFixturesByDate, TIER1_IDS, TIER2_IDS, TIER3_IDS } from "@/hooks/useApiFootball";
+import { useFixturesByDate, useRealtimeLiveFixtures, TIER1_IDS, TIER2_IDS, TIER3_IDS, type LeagueData } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
@@ -42,6 +42,7 @@ const Index = () => {
   const [referralBannerDismissed, setReferralBannerDismissed] = useState(false);
 
   const { data: apiLeagues, isLoading, isError, refetch } = useFixturesByDate(selectedDate);
+  const { data: realtimeLiveLeagues, refetch: refetchRealtimeLive } = useRealtimeLiveFixtures();
   const { favorites } = useFavorites();
   const { data: userCountry } = useUserCountry();
 
@@ -51,7 +52,30 @@ const Index = () => {
 
   // Smart sort: Live > User favorite teams > User favorite leagues > Local league > Tier1 > Tier2 > Tier3 > rest
   const leagues = useMemo(() => {
-    const raw = apiLeagues || [];
+    const liveMatches = new Map<string, any>();
+    for (const league of realtimeLiveLeagues || []) {
+      for (const match of league.matches || []) {
+        liveMatches.set(match.id, { league, match });
+      }
+    }
+
+    const rawMap = new Map<string, LeagueData>();
+    for (const league of apiLeagues || []) {
+      rawMap.set(league.id, {
+        ...league,
+        matches: league.matches.map((match) => liveMatches.get(match.id)?.match || match),
+      });
+    }
+    for (const { league, match } of liveMatches.values()) {
+      const existing = rawMap.get(league.id);
+      if (existing) {
+        if (!existing.matches.some((m) => m.id === match.id)) existing.matches.unshift(match);
+      } else {
+        rawMap.set(league.id, { ...league, matches: [match] });
+      }
+    }
+
+    const raw = Array.from(rawMap.values());
     return [...raw].sort((a, b) => {
       const score = (league: typeof a) => {
         let s = 0;
@@ -73,7 +97,7 @@ const Index = () => {
       };
       return score(b) - score(a);
     });
-  }, [apiLeagues, favoriteCompIds, favoriteTeamIds, localLeagueIds]);
+  }, [apiLeagues, realtimeLiveLeagues, favoriteCompIds, favoriteTeamIds, localLeagueIds]);
 
   const matchCounts = useMemo(() => {
     let all = 0;
@@ -127,8 +151,8 @@ const Index = () => {
   ];
 
   const handleRefresh = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
+    await Promise.allSettled([refetch(), refetchRealtimeLive()]);
+  }, [refetch, refetchRealtimeLive]);
 
   const { containerRef, pullDistance, isRefreshing, progress } = usePullToRefresh({
     onRefresh: handleRefresh,

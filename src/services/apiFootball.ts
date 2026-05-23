@@ -70,11 +70,11 @@ async function callApi<T = unknown>(
 export const getFixtures = (params: Record<string, string>) =>
   callApi("fixtures", params);
 
-export const getLiveFixtures = () =>
-  callApi("fixtures", { live: "all" });
+export const getLiveFixtures = (timezone?: string) =>
+  callApi("fixtures", { live: "all", ...(timezone ? { timezone } : {}) });
 
-export const getFixtureById = (id: string) =>
-  callApi("fixtures", { id });
+export const getFixtureById = (id: string, extraParams: Record<string, string> = {}) =>
+  callApi("fixtures", { id, ...extraParams });
 
 export const getFixtureEvents = (fixtureId: string, extraParams: Record<string, string> = {}) =>
   callApi("fixtures/events", { fixture: fixtureId, ...extraParams });

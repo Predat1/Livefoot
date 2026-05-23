@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getFixtures, getLiveFixtures, getTopScorers, getTopAssists,
@@ -5,8 +6,9 @@ import {
   getFixtureStatistics, getHeadToHead, getLeagues, getTeams, getTeamById,
   getTeamSquad, getTeamStatistics, getTransfers, searchTeamByName, getPredictions,
 } from "@/services/apiFootball";
-import { format } from "date-fns";
 import { mockLeagues } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { formatApiDate, formatMatchTime, getUserMatchTimezone, isStaleLiveUpdate } from "@/utils/matchTime";
 
 // ─── Resilience Helpers ───────────────────────────────────────
 
@@ -64,6 +66,11 @@ export interface MatchData {
   awayTeam: MatchTeam;
   time: string;
   status: "scheduled" | "live" | "finished";
+  kickoffIso?: string;
+  statusShort?: string;
+  timezone?: string;
+  lastUpdatedAt?: string;
+  isStale?: boolean;
   minute?: number;
   isTv?: boolean;
   stadium?: string;
@@ -111,6 +118,7 @@ export interface PlayerData {
 const fallbackLeagues = mockLeagues as unknown as LeagueData[];
 const LIVE_STATUSES = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN", "AWD", "WO"];
+const PRIORITY_LIVE_LEAGUE_IDS = ["135", "39", "140", "78", "61", "2", "3"];
 
 type MatchAwareQueryOptions = {
   enabled?: boolean;
@@ -136,7 +144,7 @@ function mapFixtureStatus(apiStatus: string): "scheduled" | "live" | "finished" 
   return "scheduled";
 }
 
-function transformFixturesToLeagues(fixtures: any[] = []): LeagueData[] {
+function transformFixturesToLeagues(fixtures: any[] = [], timezone = getUserMatchTimezone()): LeagueData[] {
   const leagueMap = new Map<number, LeagueData>();
   
   if (!fixtures || !Array.isArray(fixtures)) return [];
@@ -177,11 +185,12 @@ function transformFixturesToLeagues(fixtures: any[] = []): LeagueData[] {
         logo: awayTeam.logo,
         score: status !== "scheduled" ? fix.goals?.away : undefined,
       },
-      time: new Date(fix.fixture.date).toLocaleTimeString("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: formatMatchTime(fix.fixture.date, timezone),
       status,
+      kickoffIso: fix.fixture.date,
+      statusShort: fix.fixture.status?.short,
+      timezone,
+      lastUpdatedAt: new Date().toISOString(),
       minute: fix.fixture.status?.elapsed || undefined,
       stadium: fix.fixture.venue?.name,
     };
@@ -195,6 +204,105 @@ function transformFixturesToLeagues(fixtures: any[] = []): LeagueData[] {
     if (bLive !== aLive) return bLive - aLive;
     return b.matches.length - a.matches.length;
   });
+}
+
+function mergeLeagueData(...groups: LeagueData[][]): LeagueData[] {
+  const leagueMap = new Map<string, LeagueData>();
+  const seenMatches = new Set<string>();
+
+  for (const group of groups) {
+    for (const league of group || []) {
+      const existing = leagueMap.get(league.id) || { ...league, matches: [] };
+      for (const match of league.matches || []) {
+        if (seenMatches.has(match.id)) continue;
+        seenMatches.add(match.id);
+        existing.matches.push(match);
+      }
+      leagueMap.set(league.id, existing);
+    }
+  }
+
+  return Array.from(leagueMap.values())
+    .map((league) => ({
+      ...league,
+      matches: [...league.matches].sort((a, b) => {
+        const order = { live: 0, scheduled: 1, finished: 2 };
+        return (order[a.status] ?? 1) - (order[b.status] ?? 1);
+      }),
+    }))
+    .filter((league) => league.matches.length > 0)
+    .sort((a, b) => {
+      const aLive = a.matches.some((m) => m.status === "live") ? 1 : 0;
+      const bLive = b.matches.some((m) => m.status === "live") ? 1 : 0;
+      if (bLive !== aLive) return bLive - aLive;
+      return b.matches.length - a.matches.length;
+    });
+}
+
+type LiveMatchStateRow = {
+  fixture_id: string;
+  home_team_id: string | null;
+  home_team: string | null;
+  home_logo: string | null;
+  away_team_id: string | null;
+  away_team: string | null;
+  away_logo: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  minute: number | null;
+  status: string | null;
+  league_id: string | null;
+  league_name: string | null;
+  league_logo: string | null;
+  league_country: string | null;
+  updated_at: string | null;
+};
+
+function transformLiveStatesToLeagues(rows: LiveMatchStateRow[] = [], timezone = getUserMatchTimezone()): LeagueData[] {
+  const leagueMap = new Map<string, LeagueData>();
+
+  for (const row of rows) {
+    if (!row.fixture_id || !row.home_team || !row.away_team) continue;
+    const statusShort = row.status || "";
+    const status = mapFixtureStatus(statusShort);
+    if (status !== "live") continue;
+
+    const leagueId = row.league_id || "live";
+    if (!leagueMap.has(leagueId)) {
+      leagueMap.set(leagueId, {
+        id: leagueId,
+        name: row.league_name || "Matchs en direct",
+        country: row.league_country || "World",
+        logo: row.league_logo || undefined,
+        matches: [],
+      });
+    }
+
+    leagueMap.get(leagueId)!.matches.push({
+      id: row.fixture_id,
+      homeTeam: {
+        id: row.home_team_id || "",
+        name: row.home_team,
+        logo: row.home_logo || undefined,
+        score: row.home_score ?? 0,
+      },
+      awayTeam: {
+        id: row.away_team_id || "",
+        name: row.away_team,
+        logo: row.away_logo || undefined,
+        score: row.away_score ?? 0,
+      },
+      time: "LIVE",
+      status,
+      statusShort,
+      timezone,
+      lastUpdatedAt: row.updated_at || undefined,
+      isStale: isStaleLiveUpdate(row.updated_at),
+      minute: row.minute || undefined,
+    });
+  }
+
+  return mergeLeagueData(Array.from(leagueMap.values()));
 }
 
 function transformTopScorers(scorers: any[] = []): PlayerData[] {
@@ -242,13 +350,26 @@ function transformTopScorers(scorers: any[] = []): PlayerData[] {
 // ─── React Query Hooks ────────────────────────────────────────
 
 export function useFixturesByDate(date: Date) {
-  const dateStr = format(date, "yyyy-MM-dd");
+  const timezone = getUserMatchTimezone();
+  const dateStr = formatApiDate(date, timezone);
   return useQuery({
-    queryKey: ["fixtures", dateStr],
+    queryKey: ["fixtures", dateStr, timezone],
     queryFn: async () => {
       try {
-        const res = await getFixtures({ date: dateStr });
-        return transformFixturesToLeagues(res?.response || []);
+        const [dailyRes, liveRes, ...priorityResults] = await Promise.allSettled([
+          getFixtures({ date: dateStr, timezone }),
+          getLiveFixtures(timezone),
+          ...PRIORITY_LIVE_LEAGUE_IDS.map((league) => getFixtures({ date: dateStr, league, season: "2025", timezone })),
+        ]);
+        const daily = dailyRes.status === "fulfilled" ? transformFixturesToLeagues(dailyRes.value?.response || [], timezone) : [];
+        const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
+        const recoveredLive = priorityResults
+          .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
+          .flatMap((result) => transformFixturesToLeagues(result.value?.response || [], timezone))
+          .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
+          .filter((league) => league.matches.length > 0);
+
+        return mergeLeagueData(directLive, recoveredLive, daily);
       } catch (error) {
         console.warn("Impossible de charger les matchs, affichage du contenu de secours.", error);
         return fallbackLeagues;
@@ -265,23 +386,139 @@ export function useFixturesByDate(date: Date) {
 }
 
 export function useLiveFixtures() {
+  const timezone = getUserMatchTimezone();
   return useQuery({
-    queryKey: ["fixtures", "live"],
+    queryKey: ["fixtures", "live", timezone],
     queryFn: async () => {
-      try {
-        const res = await getLiveFixtures();
-        return transformFixturesToLeagues(res?.response || []);
-      } catch (error) {
-        console.warn("Impossible de charger les matchs en direct, affichage du contenu de secours.", error);
-        return fallbackLeagues
-          .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
-          .filter((league) => league.matches.length > 0);
+      const today = formatApiDate(new Date(), timezone);
+      const [liveRes, ...priorityResults] = await Promise.allSettled([
+        getLiveFixtures(timezone),
+        ...PRIORITY_LIVE_LEAGUE_IDS.map((league) => getFixtures({ date: today, league, season: "2025", timezone })),
+      ]);
+      const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
+      const recoveredLive = priorityResults
+        .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
+        .flatMap((result) => transformFixturesToLeagues(result.value?.response || [], timezone))
+        .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
+        .filter((league) => league.matches.length > 0);
+
+      if (liveRes.status === "rejected") {
+        console.warn("fixtures?live=all indisponible, rattrapage par ligues prioritaires.", liveRes.reason);
       }
+      return mergeLeagueData(directLive, recoveredLive);
     },
     staleTime: 30 * 1000, // 30s — real-time live scores
+    refetchInterval: 15 * 1000,
+    refetchIntervalInBackground: false,
+  });
+}
+
+export function useRealtimeLiveFixtures() {
+  const timezone = getUserMatchTimezone();
+  const [rows, setRows] = useState<LiveMatchStateRow[]>([]);
+
+  const statesQuery = useQuery({
+    queryKey: ["live-match-states", timezone],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("live_match_states")
+        .select("*")
+        .in("status", LIVE_STATUSES)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      const nextRows = (data || []) as LiveMatchStateRow[];
+      setRows(nextRows);
+      return transformLiveStatesToLeagues(nextRows, timezone);
+    },
+    staleTime: 5 * 1000,
     refetchInterval: 30 * 1000,
     refetchIntervalInBackground: false,
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("live-match-states-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "live_match_states" },
+        (payload) => {
+          setRows((current) => {
+            if (payload.eventType === "DELETE") {
+              const oldRow = payload.old as Partial<LiveMatchStateRow>;
+              return current.filter((row) => row.fixture_id !== oldRow.fixture_id);
+            }
+
+            const nextRow = payload.new as LiveMatchStateRow;
+            if (!LIVE_STATUSES.includes(nextRow.status || "")) {
+              return current.filter((row) => row.fixture_id !== nextRow.fixture_id);
+            }
+
+            const exists = current.some((row) => row.fixture_id === nextRow.fixture_id);
+            if (exists) {
+              return current.map((row) => row.fixture_id === nextRow.fixture_id ? nextRow : row);
+            }
+            return [nextRow, ...current];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const realtimeLeagues = useMemo(() => transformLiveStatesToLeagues(rows, timezone), [rows, timezone]);
+
+  return {
+    ...statesQuery,
+    data: realtimeLeagues.length > 0 ? realtimeLeagues : statesQuery.data,
+  };
+}
+
+export function useRealtimeFixtureState(fixtureId: string) {
+  const [row, setRow] = useState<LiveMatchStateRow | null>(null);
+
+  const stateQuery = useQuery({
+    queryKey: ["live-match-state", fixtureId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("live_match_states")
+        .select("*")
+        .eq("fixture_id", fixtureId)
+        .maybeSingle();
+      if (error) throw error;
+      setRow((data || null) as LiveMatchStateRow | null);
+      return (data || null) as LiveMatchStateRow | null;
+    },
+    staleTime: 5 * 1000,
+    refetchInterval: row && LIVE_STATUSES.includes(row.status || "") ? 30 * 1000 : false,
+    enabled: !!fixtureId,
+  });
+
+  useEffect(() => {
+    if (!fixtureId) return;
+    const channel = supabase
+      .channel(`live-match-state-${fixtureId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "live_match_states", filter: `fixture_id=eq.${fixtureId}` },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            setRow(null);
+            return;
+          }
+          setRow(payload.new as LiveMatchStateRow);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fixtureId]);
+
+  return { ...stateQuery, data: row || stateQuery.data };
 }
 
 export function useTopScorers(leagueId: string, season: string) {
@@ -360,18 +597,19 @@ export function useStandings(leagueId: string, season: string, options: { enable
 // ─── Single Fixture ───────────────────────────────────────────
 
 export function useFixtureDetail(fixtureId: string) {
+  const timezone = getUserMatchTimezone();
   return useQuery({
-    queryKey: ["fixture", fixtureId],
+    queryKey: ["fixture", fixtureId, timezone],
     queryFn: async () => {
-      const res = await getFixtureById(fixtureId);
+      const res = await getFixtureById(fixtureId, { timezone });
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 60 * 1000, // 60 seconds (quota optimization)
+    staleTime: 15 * 1000,
     refetchInterval: (query) => {
       const data = query.state.data as any;
       const status = data?.fixture?.status?.short;
-      if (isLiveStatus(status)) return 60 * 1000;
+      if (isLiveStatus(status)) return 15 * 1000;
       if (isFinishedStatus(status)) return false;
       return 15 * 60 * 1000;
     },

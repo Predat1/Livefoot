@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { useLiveFixtures } from "@/hooks/useApiFootball";
+import { useLiveFixtures, useRealtimeLiveFixtures } from "@/hooks/useApiFootball";
 import { useGoalNotifications } from "@/hooks/useGoalNotifications";
 import { Zap, RefreshCw, Clock, Volume2, VolumeX, History, Globe, Loader2, Bell, BellOff } from "lucide-react";
 import TeamLogo from "@/components/TeamLogo";
@@ -29,7 +29,15 @@ const Live = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState<"live" | "map" | "history">("live");
 
-  const { data: liveLeagues, refetch, isLoading: dataLoading, dataUpdatedAt } = useLiveFixtures();
+  const realtimeQuery = useRealtimeLiveFixtures();
+  const fallbackQuery = useLiveFixtures();
+  const hasRealtimeLive = (realtimeQuery.data || []).some((league) => league.matches.length > 0);
+  const liveLeagues = hasRealtimeLive ? realtimeQuery.data : fallbackQuery.data;
+  const refetch = async () => {
+    await Promise.allSettled([realtimeQuery.refetch(), fallbackQuery.refetch()]);
+  };
+  const dataLoading = realtimeQuery.isLoading && fallbackQuery.isLoading;
+  const dataUpdatedAt = hasRealtimeLive ? realtimeQuery.dataUpdatedAt : fallbackQuery.dataUpdatedAt;
   const { goalHistory, detectGoals, notificationsEnabled, enableNotifications, disableNotifications, isSupported, permissionDenied } = useGoalNotifications(liveLeagues, soundEnabled);
 
   // Sync countdown with React Query's last update time (avoids double-fetching)

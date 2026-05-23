@@ -21,9 +21,8 @@ CREATE INDEX IF NOT EXISTS idx_api_football_cache_key_expires
   ON public.api_football_cache (key, expires_at DESC);
 
 -- Index partiel : uniquement les entrées non expirées (hot path)
-CREATE INDEX IF NOT EXISTS idx_api_football_cache_valid
-  ON public.api_football_cache (key)
-  WHERE expires_at > NOW();
+-- Removed invalid partial index using NOW(); Postgres requires immutable
+-- predicates. The key/expires_at index above covers cache lookups.
 
 -- ─────────────────────────────────────────────────────────────────
 -- 2. Fonction : purge manuelle du cache pour forcer un refresh live
@@ -126,8 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_live_events_fixture
   ON public.live_match_events (fixture_id, detected_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_live_events_recent
-  ON public.live_match_events (detected_at DESC)
-  WHERE detected_at > NOW() - INTERVAL '3 hours';
+  ON public.live_match_events (detected_at DESC);
 
 -- Activer Supabase Realtime sur cette table
 ALTER PUBLICATION supabase_realtime ADD TABLE public.live_match_events;

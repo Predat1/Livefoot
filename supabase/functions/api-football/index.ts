@@ -144,15 +144,15 @@ function getTtlForEndpoint(endpoint: string, params: Record<string, string>, pay
     if (endpoint.startsWith("fixtures/lineups")) return 7 * 24 * 60 * 60_000;
   }
 
-  if (endpoint === "fixtures" && params?.live === "all") return 30_000;
-  if (endpoint.startsWith("fixtures/events")) return live ? 60_000 : 15 * 60_000;
+  if (endpoint === "fixtures" && params?.live === "all") return 8_000;
+  if (endpoint.startsWith("fixtures/events")) return live ? 15_000 : 15 * 60_000;
   if (endpoint.startsWith("fixtures/statistics")) return live ? 90_000 : 30 * 60_000;
   if (endpoint.startsWith("fixtures/players")) return live ? 2 * 60_000 : 12 * 60 * 60_000;
   if (endpoint.startsWith("fixtures/lineups")) return live ? 5 * 60_000 : 30 * 60_000;
   if (endpoint.startsWith("fixtures/headtohead")) return 60 * 60_000;
   if (endpoint === "fixtures" && params?.team) return 2 * 60 * 60_000;
-  if (endpoint === "fixtures" && params?.id) return live ? 60_000 : 15 * 60_000;
-  if (endpoint === "fixtures") return 30_000;
+  if (endpoint === "fixtures" && params?.id) return live ? 15_000 : 15 * 60_000;
+  if (endpoint === "fixtures") return 15_000;
   if (endpoint === "standings") return 24 * 60 * 60_000;
   if (endpoint === "leagues" || endpoint === "leagues/seasons") return 24 * 60 * 60_000;
   if (endpoint.startsWith("teams")) return 24 * 60 * 60_000;
@@ -170,6 +170,10 @@ function getTtlForEndpoint(endpoint: string, params: Record<string, string>, pay
 function attachMeta(data: any, meta: Record<string, any>) {
   if (data && typeof data === "object" && !Array.isArray(data)) return { ...data, ...meta };
   return { response: data, ...meta };
+}
+
+function isLiveSensitiveRequest(endpoint: string, params: Record<string, string>): boolean {
+  return endpoint === "fixtures" && (params?.live === "all" || !!params?.id);
 }
 
 async function consumeDailyQuota(supabase: any): Promise<QuotaState> {
@@ -234,6 +238,7 @@ serve(async (req) => {
   let supabase: any;
   let endpoint = "unknown";
   let cacheKey: string | null = null;
+  let requestParams: Record<string, string> = {};
 
   try {
     const missing = REQUIRED_ENV.filter((key) => !Deno.env.get(key));
@@ -258,6 +263,7 @@ serve(async (req) => {
 
     endpoint = body.endpoint || "";
     const params = body.params || {};
+    requestParams = params;
     const upstreamParams = sanitizeParams(params);
 
     if (!endpoint) {
@@ -349,6 +355,14 @@ serve(async (req) => {
 
     const quota = await consumeDailyQuota(supabase);
     if (!quota.allowed) {
+      if (isLiveSensitiveRequest(endpoint, params)) {
+        return new Response(JSON.stringify({
+          error: "Quota journalier API atteint. Donnees live non servies depuis un cache stale.",
+          code: "DAILY_QUOTA_EXCEEDED_LIVE",
+          _quotaRemaining: 0,
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       const stale = await getCachedResponse(supabase, cacheKey, true);
       if (stale) {
         await recordCacheEvent(supabase, "STALE");
@@ -443,7 +457,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("[api-football] Error:", error);
 
-    if (cacheKey && supabase) {
+    if (cacheKey && supabase && !isLiveSensitiveRequest(endpoint, requestParams)) {
       try {
         const stale = await getCachedResponse(supabase, cacheKey, true);
         if (stale) {

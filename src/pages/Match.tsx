@@ -6,7 +6,7 @@ import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
-  useLiveOdds, useStandings,
+  useLiveOdds, useStandings, useRealtimeFixtureState,
 } from "@/hooks/useApiFootball";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { 
@@ -115,8 +115,9 @@ const Match = () => {
 
   // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
+  const { data: realtimeState } = useRealtimeFixtureState(matchId);
   const fix = fixtureData as any;
-  const statusRaw = fix?.fixture?.status?.short || "";
+  const statusRaw = realtimeState?.status || fix?.fixture?.status?.short || "";
   const isMatchLive = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(statusRaw);
   const isMatchFinished = ["FT", "AET", "PEN", "AWD", "WO"].includes(statusRaw);
   const defaultMatchTab = isMatchLive ? "live" : isMatchFinished ? "events" : "predictions";
@@ -304,7 +305,7 @@ const Match = () => {
   }
 
   // ─── Dérivation des données (sécurisée avec optionnal chaining) ─
-  const status = fix?.fixture?.status?.short ? mapFixtureStatus(fix.fixture.status.short) : "scheduled";
+  const status = statusRaw ? mapFixtureStatus(statusRaw) : "scheduled";
   const isLive = status === "live";
   const isFinished = status === "finished";
   const hasStats = isLive || isFinished;
@@ -312,17 +313,17 @@ const Match = () => {
   const homeTeam = { 
     name: fix?.teams?.home?.name || "Équipe domicile", 
     logo: fix?.teams?.home?.logo || "", 
-    score: fix?.goals?.home ?? 0 
+    score: realtimeState?.home_score ?? fix?.goals?.home ?? 0 
   };
   const awayTeam = { 
     name: fix?.teams?.away?.name || "Équipe extérieur", 
     logo: fix?.teams?.away?.logo || "", 
-    score: fix?.goals?.away ?? 0 
+    score: realtimeState?.away_score ?? fix?.goals?.away ?? 0 
   };
   const league = fix?.league || {};
   const venue = fix?.fixture?.venue || {};
   const referee = fix?.fixture?.referee || "Arbitre non communiqué";
-  const minute = fix?.fixture?.status?.elapsed;
+  const minute = realtimeState?.minute ?? fix?.fixture?.status?.elapsed;
   const time = fix?.fixture?.date 
     ? new Date(fix.fixture.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) 
     : "--:--";
