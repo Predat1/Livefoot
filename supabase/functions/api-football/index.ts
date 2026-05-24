@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const ALLOWED_ORIGINS = [
+  "https://livefoot.fun",
   "https://www.livefoot.fun",
   "http://localhost:5173",
   "http://localhost:8080",
@@ -170,6 +171,22 @@ function getTtlForEndpoint(endpoint: string, params: Record<string, string>, pay
 function attachMeta(data: any, meta: Record<string, any>) {
   if (data && typeof data === "object" && !Array.isArray(data)) return { ...data, ...meta };
   return { response: data, ...meta };
+}
+
+function hasApiFootballErrors(data: any): boolean {
+  return data?.errors && !Array.isArray(data.errors) && Object.keys(data.errors).length > 0;
+}
+
+function makeGracefulApiResponse(data: any) {
+  return {
+    get: data?.get ?? "",
+    parameters: data?.parameters ?? {},
+    errors: [],
+    results: Array.isArray(data?.response) ? data.response.length : 0,
+    paging: data?.paging ?? { current: 1, total: 1 },
+    response: Array.isArray(data?.response) ? data.response : [],
+    _upstreamError: data?.errors || data?.error || "upstream_error",
+  };
 }
 
 function isLiveSensitiveRequest(endpoint: string, params: Record<string, string>): boolean {
@@ -416,7 +433,7 @@ serve(async (req) => {
 
       const data = await response.json();
       const finalTtl = getTtlForEndpoint(endpoint, params, data);
-      const hasErrors = data?.errors && !Array.isArray(data.errors) && Object.keys(data.errors).length > 0;
+      const hasErrors = hasApiFootballErrors(data);
 
       if (response.status === 200 && data && !hasErrors) {
         setMemoryCache(cacheKey!, data, finalTtl);
@@ -431,6 +448,57 @@ serve(async (req) => {
     try {
       const result = await upstreamPromise;
       const finalTtl = getTtlForEndpoint(endpoint, params, result.data);
+      const hasErrors = hasApiFootballErrors(result.data);
+
+      if (hasErrors) {
+        const stale = await getCachedResponse(supabase, cacheKey, true);
+        if (stale && !isLiveSensitiveRequest(endpoint, requestParams)) {
+          await recordCacheEvent(supabase, "STALE");
+          await logApiUsage(supabase, {
+            endpoint,
+            statusCode: 200,
+            responseTimeMs: Date.now() - startedAt,
+            quotaUsed: 1,
+            quotaRemaining: result.quota.remaining,
+            errorMessage: JSON.stringify(result.data?.errors || "upstream_error"),
+            cacheStatus: "STALE",
+            cacheKey,
+            metadata: { reason: "upstream_returned_errors" },
+          });
+          return new Response(JSON.stringify(attachMeta(stale.data, {
+            _cached: true,
+            _stale: true,
+            _staleReason: "upstream_returned_errors",
+            _upstreamError: result.data?.errors || result.data?.error || "upstream_error",
+            _quotaRemaining: result.quota.remaining,
+            _ttl: 0,
+          })), {
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Cache": "STALE" },
+            status: 200,
+          });
+        }
+
+        await logApiUsage(supabase, {
+          endpoint,
+          statusCode: 200,
+          responseTimeMs: Date.now() - startedAt,
+          quotaUsed: 1,
+          quotaRemaining: result.quota.remaining,
+          errorMessage: JSON.stringify(result.data?.errors || "upstream_error"),
+          cacheStatus: "UPSTREAM_ERROR",
+          cacheKey,
+        });
+        return new Response(JSON.stringify(attachMeta(makeGracefulApiResponse(result.data), {
+          _cached: false,
+          _stale: false,
+          _quotaRemaining: result.quota.remaining,
+          _ttl: 0,
+        })), {
+          headers: { ...corsHeaders, "Content-Type": "application/json", "X-Cache": "UPSTREAM_ERROR" },
+          status: 200,
+        });
+      }
+
       await logApiUsage(supabase, {
         endpoint,
         statusCode: result.status,
