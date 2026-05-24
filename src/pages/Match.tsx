@@ -108,6 +108,48 @@ function EmptyMatchData({ label }: { label: string }) {
   );
 }
 
+function buildFixtureFromRealtimeState(state: any, fixtureId: string) {
+  if (!state?.fixture_id) return null;
+
+  return {
+    fixture: {
+      id: Number(state.fixture_id) || state.fixture_id,
+      date: state.updated_at || new Date().toISOString(),
+      status: {
+        short: state.status || "LIVE",
+        elapsed: state.minute ?? null,
+      },
+      venue: {},
+      referee: null,
+    },
+    teams: {
+      home: {
+        id: state.home_team_id || "",
+        name: state.home_team || "Equipe domicile",
+        logo: state.home_logo || "",
+      },
+      away: {
+        id: state.away_team_id || "",
+        name: state.away_team || "Equipe exterieur",
+        logo: state.away_logo || "",
+      },
+    },
+    goals: {
+      home: state.home_score ?? 0,
+      away: state.away_score ?? 0,
+    },
+    league: {
+      id: state.league_id || "",
+      name: state.league_name || "Match en direct",
+      logo: state.league_logo || "",
+      country: state.league_country || "",
+      season: new Date().getFullYear(),
+    },
+    _fromRealtimeState: true,
+    _fallbackFixtureId: fixtureId,
+  };
+}
+
 const Match = () => {
   const { matchId: rawMatchId } = useParams();
   const matchId = extractIdFromSlug(rawMatchId || "");
@@ -116,7 +158,11 @@ const Match = () => {
   // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
   const { data: realtimeState } = useRealtimeFixtureState(matchId);
-  const fix = fixtureData as any;
+  const resolvedFixtureData = useMemo(
+    () => fixtureData || buildFixtureFromRealtimeState(realtimeState, matchId),
+    [fixtureData, realtimeState, matchId]
+  );
+  const fix = resolvedFixtureData as any;
   const statusRaw = realtimeState?.status || fix?.fixture?.status?.short || "";
   const isMatchLive = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(statusRaw);
   const isMatchFinished = ["FT", "AET", "PEN", "AWD", "WO"].includes(statusRaw);
@@ -163,7 +209,7 @@ const Match = () => {
   // ✅ useMemo ICI — avant tout early return — avec guard interne
   const momentumTimeline = useMemo(() => {
     // Guard : si pas de données, retourner tableau vide
-    if (!fixtureData || !fix?.teams?.home?.id) return [];
+    if (!resolvedFixtureData || !fix?.teams?.home?.id) return [];
 
     const events = (eventsData || []) as any[];
     const statusRaw = fix?.fixture?.status?.short || "";
@@ -192,7 +238,7 @@ const Match = () => {
       timeline.push({ minute: i, value: currentValue });
     }
     return timeline;
-  }, [fixtureData, eventsData, fix?.teams?.home?.id]);
+  }, [resolvedFixtureData, eventsData, fix?.teams?.home?.id]);
 
   const matchProbabilities = useMemo(() => {
     let probHome = 45, probDraw = 28, probAway = 27;
@@ -266,7 +312,7 @@ const Match = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !resolvedFixtureData) {
     return (
       <Layout>
         <MatchDetailSkeleton />
@@ -274,7 +320,7 @@ const Match = () => {
     );
   }
 
-  if (isError) {
+  if (isError && !resolvedFixtureData) {
     return (
       <Layout>
         <div className="container py-16 text-center">
@@ -293,7 +339,7 @@ const Match = () => {
     );
   }
 
-  if (!fixtureData) {
+  if (!resolvedFixtureData) {
     return (
       <Layout>
         <div className="container py-16 text-center">
