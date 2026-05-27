@@ -9,6 +9,7 @@ import TeamLogo from "@/components/TeamLogo";
 import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
 import { cn } from "@/lib/utils";
+import { sortLeaguesByPriority } from "@/utils/matchRanking";
 
 const REFRESH_INTERVAL = 30;
 
@@ -32,7 +33,7 @@ const Live = () => {
   const realtimeQuery = useRealtimeLiveFixtures();
   const fallbackQuery = useLiveFixtures();
   const hasRealtimeLive = (realtimeQuery.data || []).some((league) => league.matches.length > 0);
-  const liveLeagues = hasRealtimeLive ? realtimeQuery.data : fallbackQuery.data;
+  const liveLeagues = sortLeaguesByPriority(hasRealtimeLive ? realtimeQuery.data || [] : fallbackQuery.data || []);
   const refetch = async () => {
     await Promise.allSettled([realtimeQuery.refetch(), fallbackQuery.refetch()]);
   };

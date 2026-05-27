@@ -9,9 +9,8 @@ import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { useFixturesByDate, useRealtimeLiveFixtures, TIER1_IDS, TIER2_IDS, TIER3_IDS, type LeagueData } from "@/hooks/useApiFootball";
+import { useFixturesByDate, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
-import { useUserCountry, getLeagueIdsForCountry } from "@/hooks/useUserCountry";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2 } from "lucide-react";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -22,6 +21,7 @@ import { MatchSkeleton } from "@/components/BrandedLoader";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
+import { isFavoriteMatch, sortLeaguesByPriority, sortMatchesWithinLeague } from "@/utils/matchRanking";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -44,13 +44,15 @@ const Index = () => {
   const { data: apiLeagues, isLoading, isError, refetch } = useFixturesByDate(selectedDate);
   const { data: realtimeLiveLeagues, refetch: refetchRealtimeLive } = useRealtimeLiveFixtures();
   const { favorites } = useFavorites();
-  const { data: userCountry } = useUserCountry();
 
   const favoriteCompIds = useMemo(() => new Set(favorites?.competitions || []), [favorites?.competitions]);
   const favoriteTeamIds = useMemo(() => new Set((favorites?.teams || []).map(String)), [favorites?.teams]);
-  const localLeagueIds = useMemo(() => getLeagueIdsForCountry(userCountry), [userCountry]);
+  const rankingFavorites = useMemo(() => ({
+    teams: favoriteTeamIds,
+    competitions: favoriteCompIds,
+  }), [favoriteTeamIds, favoriteCompIds]);
 
-  // Smart sort: Live > User favorite teams > User favorite leagues > Local league > Tier1 > Tier2 > Tier3 > rest
+  // BeSoccer-style sort: live > favorites > major competitions > team notoriety > recent events.
   const leagues = useMemo(() => {
     const liveMatches = new Map<string, any>();
     for (const league of realtimeLiveLeagues || []) {
@@ -75,29 +77,13 @@ const Index = () => {
       }
     }
 
-    const raw = Array.from(rawMap.values());
-    return [...raw].sort((a, b) => {
-      const score = (league: typeof a) => {
-        let s = 0;
-        if (!league || !league.matches) return 0;
-        
-        const hasFavoriteTeam = league.matches.some(m => 
-          m && m.homeTeam && m.awayTeam && (favoriteTeamIds.has(String(m.homeTeam.id)) || favoriteTeamIds.has(String(m.awayTeam.id)))
-        );
+    const raw = Array.from(rawMap.values()).map((league) => ({
+      ...league,
+      matches: sortMatchesWithinLeague(league.matches, league, rankingFavorites),
+    }));
 
-        if (league.matches.some((m) => m && m.status === "live")) s += 1000;
-        if (hasFavoriteTeam) s += 600; // Even higher priority for favorite teams
-        if (favoriteCompIds.has(league.id)) s += 500;
-        if (localLeagueIds.has(league.id)) s += 300;
-        if (TIER1_IDS.has(league.id)) s += 200;
-        else if (TIER2_IDS.has(league.id)) s += 150;
-        else if (TIER3_IDS.has(league.id)) s += 100;
-        s += league.matches.length * 0.1;
-        return s;
-      };
-      return score(b) - score(a);
-    });
-  }, [apiLeagues, realtimeLiveLeagues, favoriteCompIds, favoriteTeamIds, localLeagueIds]);
+    return sortLeaguesByPriority(raw, rankingFavorites);
+  }, [apiLeagues, realtimeLiveLeagues, rankingFavorites]);
 
   const matchCounts = useMemo(() => {
     let all = 0;
@@ -105,19 +91,19 @@ const Index = () => {
     let live = 0;
     let scheduled = 0;
     let finished = 0;
+    let favorite = 0;
     for (const league of leagues) {
       for (const match of league.matches) {
         all++;
         if ((match as any).isTv) tv++;
+        if (isFavoriteMatch(match, league.id, rankingFavorites)) favorite++;
         if (match.status === "live") live++;
         else if (match.status === "scheduled") scheduled++;
         else if (match.status === "finished") finished++;
       }
     }
-    return { all, tv, live, scheduled, finished };
-  }, [leagues]);
-
-  const statusOrder = { live: 0, scheduled: 1, finished: 2 };
+    return { all, tv, live, scheduled, finished, favorites: favorite };
+  }, [leagues, rankingFavorites]);
 
   const filteredLeagues = useMemo(() => {
     const filtered = activeFilter === "all"
@@ -130,6 +116,7 @@ const Index = () => {
               if (activeFilter === "live") return match.status === "live";
               if (activeFilter === "scheduled") return match.status === "scheduled";
               if (activeFilter === "finished") return match.status === "finished";
+              if (activeFilter === "favorites") return isFavoriteMatch(match, league.id, rankingFavorites);
               return true;
             }),
           }))
@@ -138,11 +125,9 @@ const Index = () => {
     // Sort matches within each league: Live → À venir → Terminés
     return filtered.map((league) => ({
       ...league,
-      matches: [...league.matches].sort(
-        (a, b) => (statusOrder[a.status] ?? 1) - (statusOrder[b.status] ?? 1)
-      ),
+      matches: sortMatchesWithinLeague(league.matches, league, rankingFavorites),
     }));
-  }, [activeFilter, leagues]);
+  }, [activeFilter, leagues, rankingFavorites]);
 
   const stats = [
     { icon: Trophy, label: "Competitions", value: String(leagues.length) },
@@ -425,6 +410,7 @@ const SEO_FAQ = [
                 : activeFilter === "tv" ? "Matchs Télévisés"
                 : activeFilter === "finished" ? "Matchs Terminés"
                 : activeFilter === "scheduled" ? "Matchs à Venir"
+                : activeFilter === "favorites" ? "Matchs Favoris"
                 : "Matchs du Jour"}
             </h2>
           </div>

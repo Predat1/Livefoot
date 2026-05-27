@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Tv, Radio } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Tv, Radio, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 interface DatePickerProps {
   onDateChange?: (date: Date) => void;
   onFilterChange?: (filter: string) => void;
-  matchCounts?: { all: number; tv: number; live: number; scheduled?: number; finished?: number };
+  matchCounts?: { all: number; tv: number; live: number; scheduled?: number; finished?: number; favorites?: number };
   selectedDate?: Date;
   activeFilter?: string;
 }
@@ -74,6 +74,13 @@ const DatePicker = ({
 
   const dates = generateDates();
 
+  const setRelativeDate = (offset: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    handleDateChange(date);
+    setWeekOffset(0);
+  };
+
   const formatDay = (date: Date) => {
     return date.toLocaleDateString("fr-FR", { weekday: "short" }).toUpperCase();
   };
@@ -100,12 +107,46 @@ const DatePicker = ({
     { id: "live", label: "En Direct", mobileLabel: "Live", count: matchCounts.live, icon: Radio, isLive: true, mobileHidden: false },
     { id: "scheduled", label: "À Venir", mobileLabel: "À Venir", count: matchCounts.scheduled ?? 0, icon: null, mobileHidden: true },
     { id: "finished", label: "Terminés", mobileLabel: "FT", count: matchCounts.finished ?? 0, icon: null, mobileHidden: false },
+    { id: "favorites", label: "Favoris", mobileLabel: "Fav", count: matchCounts.favorites ?? 0, icon: Star, mobileHidden: false },
     { id: "tv", label: "Télévisés", mobileLabel: "TV", count: matchCounts.tv, icon: Tv, mobileHidden: true },
   ];
 
   return (
     <div className="bg-card border-b border-border shadow-sm">
       <div className="container py-4 sm:py-5">
+        <div className="mb-3 flex items-center justify-center gap-1.5 sm:gap-2">
+          {[
+            { label: "Hier", offset: -1 },
+            { label: "Aujourd'hui", offset: 0 },
+            { label: "Demain", offset: 1 },
+          ].map((item) => {
+            const target = new Date();
+            target.setDate(target.getDate() + item.offset);
+            const active = selectedDate.toDateString() === target.toDateString();
+            return (
+              <button
+                key={item.label}
+                onClick={() => setRelativeDate(item.offset)}
+                className={cn(
+                  "rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold transition-colors",
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setCalendarOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <CalendarIcon className="h-3.5 w-3.5" />
+            Calendrier
+          </button>
+        </div>
+
         {/* Date selector */}
         <div className="flex items-center justify-center gap-1 sm:gap-3">
           <Button

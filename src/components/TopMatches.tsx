@@ -4,6 +4,7 @@ import { Flame, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import type { LeagueData, MatchData } from "@/hooks/useApiFootball";
+import { getMatchPriorityScore } from "@/utils/matchRanking";
 
 // IDs of top competitions to consider for "top matches"
 const TOP_LEAGUE_IDS = new Set([
@@ -15,22 +16,24 @@ interface TopMatchesProps {
 }
 
 const TopMatches = ({ leagues }: TopMatchesProps) => {
-  // Collect top matches: live first, then scheduled from top leagues
-  const topMatches: (MatchData & { leagueName: string; leagueLogo?: string; leagueFlag?: string })[] = [];
+  // Collect top matches: live first, then scheduled from major leagues.
+  const topMatches: (MatchData & { leagueId: string; leagueName: string; leagueLogo?: string; leagueFlag?: string })[] = [];
 
   for (const league of leagues) {
     if (!TOP_LEAGUE_IDS.has(league.id)) continue;
     for (const match of league.matches) {
       if (!match?.homeTeam || !match?.awayTeam) continue;
-      topMatches.push({ ...match, leagueName: league.name, leagueLogo: league.logo, leagueFlag: league.flag });
+      topMatches.push({ ...match, leagueId: league.id, leagueName: league.name, leagueLogo: league.logo, leagueFlag: league.flag });
     }
   }
 
-  // Sort: live > scheduled > finished, max 6
+  // Sort: live > major competition/team/event priority > scheduled > finished, max 6
   const sorted = topMatches
     .sort((a, b) => {
       const order = { live: 0, scheduled: 1, finished: 2 };
-      return (order[a.status] ?? 1) - (order[b.status] ?? 1);
+      const statusDiff = (order[a.status] ?? 1) - (order[b.status] ?? 1);
+      if (statusDiff !== 0) return statusDiff;
+      return getMatchPriorityScore(b, { id: b.leagueId, name: b.leagueName }) - getMatchPriorityScore(a, { id: a.leagueId, name: a.leagueName });
     })
     .slice(0, 6);
 

@@ -9,6 +9,7 @@ import {
 import { mockLeagues } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { formatApiDate, formatMatchTime, getUserMatchTimezone, isStaleLiveUpdate } from "@/utils/matchTime";
+import { sortLeaguesByPriority, sortMatchesWithinLeague } from "@/utils/matchRanking";
 
 // ─── Resilience Helpers ───────────────────────────────────────
 
@@ -198,12 +199,7 @@ function transformFixturesToLeagues(fixtures: any[] = [], timezone = getUserMatc
     leagueMap.get(leagueId)!.matches.push(match);
   }
 
-  return Array.from(leagueMap.values()).sort((a, b) => {
-    const aLive = a.matches.some((m) => m.status === "live") ? 1 : 0;
-    const bLive = b.matches.some((m) => m.status === "live") ? 1 : 0;
-    if (bLive !== aLive) return bLive - aLive;
-    return b.matches.length - a.matches.length;
-  });
+  return sortLeaguesByPriority(Array.from(leagueMap.values()));
 }
 
 function mergeLeagueData(...groups: LeagueData[][]): LeagueData[] {
@@ -222,21 +218,12 @@ function mergeLeagueData(...groups: LeagueData[][]): LeagueData[] {
     }
   }
 
-  return Array.from(leagueMap.values())
+  return sortLeaguesByPriority(Array.from(leagueMap.values())
     .map((league) => ({
       ...league,
-      matches: [...league.matches].sort((a, b) => {
-        const order = { live: 0, scheduled: 1, finished: 2 };
-        return (order[a.status] ?? 1) - (order[b.status] ?? 1);
-      }),
+      matches: sortMatchesWithinLeague(league.matches, league),
     }))
-    .filter((league) => league.matches.length > 0)
-    .sort((a, b) => {
-      const aLive = a.matches.some((m) => m.status === "live") ? 1 : 0;
-      const bLive = b.matches.some((m) => m.status === "live") ? 1 : 0;
-      if (bLive !== aLive) return bLive - aLive;
-      return b.matches.length - a.matches.length;
-    });
+    .filter((league) => league.matches.length > 0));
 }
 
 type LiveMatchStateRow = {
