@@ -6,7 +6,7 @@ import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
-  useLiveOdds, useStandings, useRealtimeFixtureState,
+  useLiveOdds, useStandings, useRealtimeFixtureState, useRealtimeFixtureEvents,
 } from "@/hooks/useApiFootball";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { 
@@ -169,7 +169,7 @@ const Match = () => {
   const defaultMatchTab = isMatchLive ? "live" : isMatchFinished ? "events" : "predictions";
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const selectedTab = activeTab || defaultMatchTab;
-  const shouldLoadEvents = !!matchId && (isMatchLive || isMatchFinished);
+  const shouldLoadEvents = !!matchId && (isMatchLive || isMatchFinished || ["events", "live", "momentum"].includes(selectedTab));
   const shouldLoadLineups = selectedTab === "lineups";
   const shouldLoadStats = ["stats", "momentum"].includes(selectedTab) && (isMatchLive || isMatchFinished);
   const shouldLoadPlayers = ["stats", "ratings", "heatmap"].includes(selectedTab) && (isMatchLive || isMatchFinished);
@@ -178,6 +178,7 @@ const Match = () => {
   const shouldLoadPredictiveContext = ["predictions", "h2h"].includes(selectedTab);
 
   const { data: eventsData } = useFixtureEvents(matchId, { enabled: shouldLoadEvents, matchStatus: statusRaw });
+  const { data: realtimeEventsData } = useRealtimeFixtureEvents(matchId, { enabled: shouldLoadEvents, matchStatus: statusRaw });
   const { data: lineupsData } = useFixtureLineups(matchId, { enabled: shouldLoadLineups, matchStatus: statusRaw });
   const { data: statsData } = useFixtureStatistics(matchId, { enabled: shouldLoadStats, matchStatus: statusRaw });
   const { data: playersData } = useFixturePlayers(matchId, { enabled: shouldLoadPlayers, matchStatus: statusRaw });
@@ -389,7 +390,29 @@ const Match = () => {
     date: dateLabel,
   }).toString()}`;
 
-  const events = (eventsData || []) as any[];
+  const events = useMemo(() => {
+    const apiEvents = ((eventsData || []) as any[]);
+    const realtimeEvents = ((realtimeEventsData || []) as any[]);
+    const byKey = new Map<string, any>();
+    for (const event of [...apiEvents, ...realtimeEvents]) {
+      const key = [
+        event?.time?.elapsed ?? "",
+        event?.time?.extra ?? "",
+        event?.type ?? "",
+        event?.detail ?? "",
+        event?.team?.id ?? event?.team?.name ?? "",
+        event?.player?.name ?? "",
+      ].join("|");
+      byKey.set(key, event);
+    }
+    return Array.from(byKey.values()).sort((a, b) => {
+      const minuteA = Number(a?.time?.elapsed ?? 0);
+      const minuteB = Number(b?.time?.elapsed ?? 0);
+      const extraA = Number(a?.time?.extra ?? 0);
+      const extraB = Number(b?.time?.extra ?? 0);
+      return minuteA - minuteB || extraA - extraB;
+    });
+  }, [eventsData, realtimeEventsData]);
   const teamStats = (statsData || []) as any[];
   const lineups = (lineupsData || []) as any[];
   const injuries = (injuriesData || []) as any[];

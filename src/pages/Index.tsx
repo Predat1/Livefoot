@@ -135,6 +135,11 @@ const Index = () => {
     { icon: Zap, label: "Matches", value: String(matchCounts.all) },
   ];
 
+  const handleDateChange = useCallback((date: Date) => {
+    setSelectedDate(date);
+    setActiveFilter("all");
+  }, []);
+
   const handleRefresh = useCallback(async () => {
     await Promise.allSettled([refetch(), refetchRealtimeLive()]);
   }, [refetch, refetchRealtimeLive]);
@@ -250,30 +255,30 @@ const SEO_FAQ = [
       <DatePicker
         selectedDate={selectedDate}
         activeFilter={activeFilter}
-        onDateChange={setSelectedDate}
+        onDateChange={handleDateChange}
         onFilterChange={setActiveFilter}
         matchCounts={matchCounts}
       />
 
       <main className="px-2 sm:container py-4 sm:py-8">
         {/* Stats bar */}
-        <div className="mb-6 grid grid-cols-1 gap-2 min-[420px]:grid-cols-3 sm:mb-8 sm:gap-4">
+        <div className="mb-6 grid grid-cols-3 gap-2 sm:mb-8 sm:gap-4">
           {stats.map((stat, index) => (
             <div 
               key={stat.label}
-              className="flex items-center gap-3 rounded-lg border border-border/50 bg-card p-3 shadow-sm hover-lift animate-scale-in sm:p-4"
+              className="flex min-w-0 items-center gap-2 rounded-lg border border-border/50 bg-card p-2.5 shadow-sm hover-lift animate-scale-in sm:gap-3 sm:p-4"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl gradient-primary shadow-lg shadow-primary/20">
-                <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+              <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/20 min-[430px]:flex sm:h-12 sm:w-12">
+                <stat.icon className="h-5 w-5 text-primary-foreground sm:h-6 sm:w-6" />
               </div>
-              <div className="min-w-0 flex-1 text-left">
+              <div className="min-w-0 flex-1 text-center min-[430px]:text-left">
                 {isLoading ? (
                   <Skeleton className="h-6 w-8 mx-auto sm:mx-0" />
                 ) : (
-                  <p className="text-lg sm:text-2xl font-black text-foreground">{stat.value}</p>
+                  <p className="text-lg font-black leading-tight text-foreground sm:text-2xl">{stat.value}</p>
                 )}
-                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
+                <p className="truncate text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:text-xs">{stat.label}</p>
               </div>
             </div>
           ))}

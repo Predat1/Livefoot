@@ -134,6 +134,11 @@ function isFinishedStatus(status?: string) {
   return !!status && FINISHED_STATUSES.includes(status);
 }
 
+function getFootballSeasonForDate(date: Date) {
+  const year = date.getFullYear();
+  return String(date.getMonth() >= 6 ? year : year - 1);
+}
+
 
 // ─── Data transformers ────────────────────────────────────────
 
@@ -340,6 +345,7 @@ function transformTopScorers(scorers: any[] = []): PlayerData[] {
 export function useFixturesByDate(date: Date) {
   const timezone = getUserMatchTimezone();
   const dateStr = formatApiDate(date, timezone);
+  const season = getFootballSeasonForDate(date);
   return useQuery({
     queryKey: ["fixtures", dateStr, timezone],
     queryFn: async () => {
@@ -347,9 +353,17 @@ export function useFixturesByDate(date: Date) {
         const [dailyRes, liveRes, ...priorityResults] = await Promise.allSettled([
           getFixtures({ date: dateStr, timezone }),
           getLiveFixtures(timezone),
-          ...PRIORITY_LIVE_LEAGUE_IDS.map((league) => getFixtures({ date: dateStr, league, season: "2025", timezone })),
+          ...PRIORITY_LIVE_LEAGUE_IDS.map((league) => getFixtures({ date: dateStr, league, season, timezone })),
         ]);
-        const daily = dailyRes.status === "fulfilled" ? transformFixturesToLeagues(dailyRes.value?.response || [], timezone) : [];
+        let daily = dailyRes.status === "fulfilled" ? transformFixturesToLeagues(dailyRes.value?.response || [], timezone) : [];
+        const selectedStart = new Date(date);
+        selectedStart.setHours(0, 0, 0, 0);
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        if (daily.length === 0 && selectedStart >= todayStart) {
+          const scheduledRetry = await getFixtures({ date: dateStr, status: "NS", timezone });
+          daily = transformFixturesToLeagues(scheduledRetry?.response || [], timezone);
+        }
         const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
         const recoveredLive = priorityResults
           .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
@@ -621,6 +635,115 @@ export function useFixtureEvents(fixtureId: string, options: MatchAwareQueryOpti
     refetchIntervalInBackground: false,
     enabled: !!fixtureId && (options.enabled ?? true),
   });
+}
+
+type LiveMatchEventRow = {
+  id: string;
+  fixture_id: string;
+  event_type: string;
+  minute: number | null;
+  team_id: string | null;
+  team_name: string | null;
+  player_name: string | null;
+  assist_name: string | null;
+  detail: string | null;
+  raw_payload: any;
+  detected_at: string;
+};
+
+function mapRealtimeEventToApiEvent(row: LiveMatchEventRow) {
+  const raw = row.raw_payload || {};
+  const typeMap: Record<string, string> = {
+    goal: "Goal",
+    yellow: "Card",
+    red: "Card",
+    substitution: "subst",
+    var: "Var",
+    penalty: "Goal",
+    kickoff: "Match",
+    halftime: "Match",
+    fulltime: "Match",
+  };
+  const detailMap: Record<string, string> = {
+    yellow: "Yellow Card",
+    red: "Red Card",
+    penalty: "Penalty",
+    kickoff: "Kick Off",
+    halftime: "Halftime",
+    fulltime: "Fulltime",
+  };
+
+  return {
+    time: raw.time || { elapsed: row.minute ?? undefined, extra: null },
+    team: raw.team || { id: row.team_id ? Number(row.team_id) || row.team_id : undefined, name: row.team_name || "" },
+    player: raw.player || { name: row.player_name || "" },
+    assist: raw.assist || { name: row.assist_name || "" },
+    type: raw.type || typeMap[row.event_type] || row.event_type,
+    detail: raw.detail || row.detail || detailMap[row.event_type] || row.event_type,
+    comments: raw.comments || null,
+    _source: "realtime",
+    _detectedAt: row.detected_at,
+  };
+}
+
+export function useRealtimeFixtureEvents(fixtureId: string, options: MatchAwareQueryOptions = {}) {
+  const [rows, setRows] = useState<LiveMatchEventRow[]>([]);
+  const isLive = isLiveStatus(options.matchStatus);
+
+  const eventsQuery = useQuery({
+    queryKey: ["live-match-events", fixtureId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("live_match_events")
+        .select("*")
+        .eq("fixture_id", fixtureId)
+        .order("minute", { ascending: true })
+        .order("detected_at", { ascending: true });
+      if (error) throw error;
+      const nextRows = (data || []) as LiveMatchEventRow[];
+      setRows(nextRows);
+      return nextRows.map(mapRealtimeEventToApiEvent);
+    },
+    staleTime: isLive ? 10 * 1000 : 10 * 60 * 1000,
+    refetchInterval: isLive ? 15 * 1000 : false,
+    enabled: !!fixtureId && (options.enabled ?? true),
+  });
+
+  useEffect(() => {
+    if (!fixtureId || !(options.enabled ?? true)) return;
+    const channel = supabase
+      .channel(`live-match-events-${fixtureId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "live_match_events", filter: `fixture_id=eq.${fixtureId}` },
+        (payload) => {
+          setRows((current) => {
+            if (payload.eventType === "DELETE") {
+              const oldRow = payload.old as Partial<LiveMatchEventRow>;
+              return current.filter((row) => row.id !== oldRow.id);
+            }
+            const nextRow = payload.new as LiveMatchEventRow;
+            const exists = current.some((row) => row.id === nextRow.id);
+            const next = exists
+              ? current.map((row) => row.id === nextRow.id ? nextRow : row)
+              : [...current, nextRow];
+            return next.sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || a.detected_at.localeCompare(b.detected_at));
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fixtureId, options.enabled]);
+
+  const realtimeEvents = useMemo(() => rows.map(mapRealtimeEventToApiEvent), [rows]);
+
+  return {
+    ...eventsQuery,
+    data: realtimeEvents.length > 0 ? realtimeEvents : eventsQuery.data,
+  };
 }
 
 export function useFixtureLineups(fixtureId: string, options: MatchAwareQueryOptions = {}) {
