@@ -70,7 +70,7 @@
     <!-- Theme initialization script - prevents flash -->
     <script>
       (function() {
-        const theme = localStorage.getItem('theme') || 'dark';
+        const theme = localStorage.getItem('theme') || 'system';
         const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const resolvedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
         if (resolvedTheme === 'dark') {

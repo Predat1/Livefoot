@@ -135,7 +135,7 @@ const ShareWidget = ({ title, text, url, variant = "button", className, matchSha
           variant="outline"
           size="icon"
           onClick={copyToClipboard}
-          className="rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
+          className="rounded-lg border-border bg-card hover:bg-muted/60"
         >
           {isCopying ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
         </Button>
@@ -161,7 +161,7 @@ const ShareWidget = ({ title, text, url, variant = "button", className, matchSha
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-bold text-white transition-transform active:scale-95",
+              "flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-bold text-white transition-transform active:scale-95",
               link.color
             )}
           >

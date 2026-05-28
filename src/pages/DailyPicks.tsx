@@ -105,7 +105,7 @@ const DailyPicks = () => {
 
       <div className="container max-w-5xl py-6 sm:py-10">
         {/* Hero Section */}
-        <div className="relative mb-10 rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#0a1a10] via-[#050f0a] to-[#020503] border border-primary/20 p-8 sm:p-12 text-center">
+        <div className="relative mb-8 overflow-hidden rounded-lg border border-primary/20 bg-card p-5 text-center shadow-sm sm:mb-10 sm:p-10 dark:bg-gradient-to-br dark:from-[#0a1a10] dark:via-[#050f0a] dark:to-[#020503]">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-primary/10 rounded-full blur-[100px]" />
 
@@ -117,47 +117,47 @@ const DailyPicks = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] sm:text-xs font-black uppercase tracking-widest">
               <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> IA PRÉDICTION
             </div>
-            <h1 className="text-3xl sm:text-6xl font-black text-white tracking-tighter leading-none">
+            <h1 className="text-3xl font-black leading-none text-foreground sm:text-5xl dark:text-white">
               L'ORACLE <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">LIVEFOOT AI</span>
             </h1>
-            <p className="text-xs sm:text-lg text-emerald-100/60 max-w-2xl mx-auto font-medium px-4">
+            <p className="mx-auto max-w-2xl px-1 text-xs font-medium text-muted-foreground sm:px-4 sm:text-base dark:text-emerald-100/70">
               Notre algorithme analyse données de forme, classements, blessures, H2H et cotes bookmakers pour des pronostics ultra-précis.
             </p>
 
             <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-6 pt-2 sm:pt-4">
               <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-white/5 flex items-center justify-center">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted sm:h-8 sm:w-8 dark:bg-white/5">
                   <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400" />
                 </div>
                 <div className="text-center sm:text-left">
-                  <p className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase">Moteur</p>
-                  <p className="text-[9px] sm:text-xs font-bold text-white">Poisson + xG</p>
+                  <p className="text-[8px] font-bold uppercase text-muted-foreground sm:text-[10px] dark:text-white/40">Moteur</p>
+                  <p className="text-[9px] font-bold text-foreground sm:text-xs dark:text-white">Poisson + xG</p>
                 </div>
               </div>
               <div className="h-full w-px bg-white/10 hidden sm:block" />
               <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-white/5 flex items-center justify-center">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted sm:h-8 sm:w-8 dark:bg-white/5">
                   <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" />
                 </div>
                 <div className="text-center sm:text-left">
-                  <p className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase">Données</p>
-                  <p className="text-[9px] sm:text-xs font-bold text-white">Temps Réel</p>
+                  <p className="text-[8px] font-bold uppercase text-muted-foreground sm:text-[10px] dark:text-white/40">Données</p>
+                  <p className="text-[9px] font-bold text-foreground sm:text-xs dark:text-white">Temps Réel</p>
                 </div>
               </div>
               <div className="h-full w-px bg-white/10 hidden sm:block" />
               <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-white/5 flex items-center justify-center">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted sm:h-8 sm:w-8 dark:bg-white/5">
                   <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-400" />
                 </div>
                 <div className="text-center sm:text-left">
-                  <p className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase">Source</p>
-                  <p className="text-[9px] sm:text-xs font-bold text-white">API-Football Pro</p>
+                  <p className="text-[8px] font-bold uppercase text-muted-foreground sm:text-[10px] dark:text-white/40">Source</p>
+                  <p className="text-[9px] font-bold text-foreground sm:text-xs dark:text-white">API-Football Pro</p>
                 </div>
               </div>
             </div>
 
             <div className="pt-6">
-              <Link to="/history" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10 transition-colors group">
+              <Link to="/history" className="group inline-flex max-w-full items-center justify-center gap-2 rounded-lg border border-border bg-muted/60 px-4 py-2.5 text-center text-xs font-bold text-foreground transition-colors hover:bg-muted sm:px-6 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
                 <Target className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
                 VOIR LE TRACK RECORD (88% DE RÉUSSITE) <ChevronRight className="h-4 w-4" />
               </Link>
@@ -272,7 +272,7 @@ const DailyPicks = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative p-6 sm:p-10 rounded-[2.5rem] bg-gradient-to-r from-primary/10 to-emerald-500/10 border border-primary/20 overflow-hidden"
+              className="relative overflow-hidden rounded-lg border border-primary/20 bg-primary/10 p-5 sm:p-8"
             >
               <div className="absolute top-0 right-0 p-8 opacity-10">
                 <Gift className="h-24 w-24 text-primary" />
@@ -288,7 +288,7 @@ const DailyPicks = () => {
                 </div>
                 <Link
                   to="/bonuses"
-                  className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-sm sm:text-base shadow-xl shadow-primary/30 hover:scale-105 transition-transform whitespace-nowrap"
+                  className="flex w-full items-center justify-center gap-3 rounded-lg bg-primary px-6 py-4 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02] sm:w-auto sm:text-base"
                 >
                   DÉCOUVRIR LES OFFRES <ChevronRight className="h-5 w-5" />
                 </Link>
@@ -296,11 +296,11 @@ const DailyPicks = () => {
             </motion.div>
 
             {/* CTA for more matches */}
-            <div className="text-center py-12 rounded-[2rem] bg-muted/30 border-2 border-dashed border-border/50">
+            <div className="rounded-lg border-2 border-dashed border-border/50 bg-muted/30 py-12 text-center">
               <Trophy className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-lg font-black text-foreground">Plus de pronostics ?</h3>
               <p className="text-sm text-muted-foreground mb-6">Explorez tous les matchs en direct et à venir pour voir les analyses LiveFoot AI.</p>
-              <Link to="/" className="inline-flex items-center gap-2 rounded-2xl gradient-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
+              <Link to="/" className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-4 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02]">
                 EXPLORER LES MATCHS <ChevronRight className="h-4 w-4" />
               </Link>
             </div>

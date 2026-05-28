@@ -122,14 +122,14 @@ const TopMatches = ({ leagues }: TopMatchesProps) => {
                       <div className="flex items-center gap-1.5">
                         <span className={cn(
                           "min-w-[28px] rounded-lg px-2 py-1 text-center text-base font-black shadow-sm",
-                          isLive ? "bg-live text-white" : "bg-score-bg text-primary-foreground"
+                          isLive ? "bg-live text-white" : "bg-score-bg text-foreground"
                         )}>
                           {homeScore}
                         </span>
                         <span className="text-muted-foreground text-sm">-</span>
                         <span className={cn(
                           "min-w-[28px] rounded-lg px-2 py-1 text-center text-base font-black shadow-sm",
-                          isLive ? "bg-live text-white" : "bg-score-bg text-primary-foreground"
+                          isLive ? "bg-live text-white" : "bg-score-bg text-foreground"
                         )}>
                           {awayScore}
                         </span>

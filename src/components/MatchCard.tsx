@@ -109,7 +109,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
                 "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
-                  : "bg-score-bg text-primary-foreground"
+                  : "bg-score-bg text-foreground"
               )}
             >
               {homeScore}
@@ -124,7 +124,7 @@ const MatchCard = ({ match }: MatchCardProps) => {
                 "min-w-[28px] sm:min-w-[36px] rounded-md sm:rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-center text-base sm:text-lg font-black shadow-sm",
                 isLive
                   ? "bg-live text-primary-foreground shadow-live/30"
-                  : "bg-score-bg text-primary-foreground"
+                  : "bg-score-bg text-foreground"
               )}
             >
               {awayScore}

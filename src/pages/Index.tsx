@@ -257,17 +257,17 @@ const SEO_FAQ = [
 
       <main className="px-2 sm:container py-4 sm:py-8">
         {/* Stats bar */}
-        <div className="mb-6 sm:mb-8 grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="mb-6 grid grid-cols-1 gap-2 min-[420px]:grid-cols-3 sm:mb-8 sm:gap-4">
           {stats.map((stat, index) => (
             <div 
               key={stat.label}
-              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 rounded-xl sm:rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50 hover-lift animate-scale-in"
+              className="flex items-center gap-3 rounded-lg border border-border/50 bg-card p-3 shadow-sm hover-lift animate-scale-in sm:p-4"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl gradient-primary shadow-lg shadow-primary/20">
                 <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
-              <div className="text-center sm:text-left">
+              <div className="min-w-0 flex-1 text-left">
                 {isLoading ? (
                   <Skeleton className="h-6 w-8 mx-auto sm:mx-0" />
                 ) : (
@@ -281,7 +281,7 @@ const SEO_FAQ = [
 
         {/* Free AI Predictions Highlight */}
         <section className="mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '300ms' }}>
-          <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1a12] via-[#050f0a] to-[#0c0d12] border border-primary/20 overflow-hidden group">
+          <div className="group relative overflow-hidden rounded-lg border border-primary/20 bg-card shadow-sm dark:bg-gradient-to-br dark:from-[#0c1a12] dark:via-[#050f0a] dark:to-[#0c0d12]">
             <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
               <Zap className="h-16 w-16 sm:h-24 sm:w-24 text-primary" />
             </div>
@@ -289,14 +289,14 @@ const SEO_FAQ = [
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-widest mb-4">
                 <Sparkles className="h-3.5 w-3.5" /> IA Expert 100% Gratuit
               </div>
-              <h2 className="text-xl sm:text-3xl font-black text-white mb-2 leading-tight">
+              <h2 className="mb-2 text-xl font-black leading-tight text-foreground sm:text-3xl dark:text-white">
                 Découvrez les Pronostics de l'IA <span className="text-primary">LiveFoot</span>
               </h2>
-              <p className="text-xs sm:text-sm text-emerald-300/60 max-w-lg mb-6">
+              <p className="mb-6 max-w-lg text-xs text-muted-foreground sm:text-sm dark:text-emerald-300/70">
                 Nos modèles analysent des millions de données (H2H, forme, stats) pour vous offrir les prédictions les plus fiables sur chaque match.
               </p>
-              <div className="flex items-center gap-4">
-                <Button asChild className="rounded-xl px-6 py-5 font-black text-sm">
+              <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:gap-4">
+                <Button asChild className="rounded-lg px-6 py-5 text-sm font-black">
                   <Link to="/daily-picks">VOIR LES PRONOS</Link>
                 </Button>
                 <div className="flex -space-x-2">
@@ -368,19 +368,19 @@ const SEO_FAQ = [
 
         {/* Referral banner — non-VIP uniquement */}
         {user && !isVip && !referralBannerDismissed && activeFilter === "all" && (
-          <div className="mb-4 rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-950/40 to-[#0a0d14] p-4 flex items-center gap-3 relative overflow-hidden">
+          <div className="relative mb-4 flex items-center gap-3 overflow-hidden rounded-lg border border-amber-500/25 bg-amber-500/10 p-4 dark:bg-gradient-to-r dark:from-amber-950/40 dark:to-[#0a0d14]">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
             <div className="h-10 w-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
               <Users className="h-5 w-5 text-amber-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-white">🎁 Invitez 10 amis — Obtenez 48h VIP gratuit</p>
-              <p className="text-[10px] text-white/40">Partagez votre lien depuis votre profil</p>
+              <p className="text-xs font-black text-foreground dark:text-white">Invitez 10 amis - Obtenez 48h VIP gratuit</p>
+              <p className="text-[10px] text-muted-foreground dark:text-white/50">Partagez votre lien depuis votre profil</p>
             </div>
-            <Link to="/profile" className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500 text-black text-[11px] font-black hover:bg-amber-400 transition-colors">
+            <Link to="/profile" className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-[11px] font-black text-black transition-colors hover:bg-amber-400">
               Mon lien
             </Link>
-            <button onClick={() => setReferralBannerDismissed(true)} className="shrink-0 text-white/20 hover:text-white/50 transition-colors text-lg leading-none ml-1">×</button>
+            <button onClick={() => setReferralBannerDismissed(true)} className="ml-1 shrink-0 text-lg leading-none text-muted-foreground transition-colors hover:text-foreground">×</button>
           </div>
         )}
 
@@ -540,7 +540,7 @@ const SEO_FAQ = [
                 <Link
                   key={`${news.id}-${index}`}
                   to={`/news/${news.id}`}
-                  className="group rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden hover-lift transition-all animate-fade-in"
+                  className="group overflow-hidden rounded-lg border border-border/50 bg-card transition-all hover-lift animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="relative h-32 sm:h-40 overflow-hidden">
@@ -596,11 +596,11 @@ const SEO_FAQ = [
 
         {/* Viral Share Section */}
         <section className="mt-12 mb-8 animate-fade-in">
-          <div className="rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border border-primary/20 p-6 sm:p-10 text-center">
-            <div className="mx-auto h-16 w-16 rounded-2xl gradient-primary flex items-center justify-center mb-6 shadow-xl shadow-primary/20 rotate-3">
+          <div className="rounded-lg border border-primary/20 bg-card p-5 text-center sm:p-8">
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/20 sm:h-14 sm:w-14">
               <Share2 className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Tu aimes LiveFoot ?</h2>
+            <h2 className="mb-3 text-xl font-black text-foreground sm:text-2xl">Tu aimes LiveFoot ?</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
               Partage l'application avec tes amis parieurs et fans de foot pour les aider à gagner grâce à nos pronos IA !
             </p>

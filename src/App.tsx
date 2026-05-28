@@ -64,7 +64,7 @@ const App = () => {
   return (
   <ThemeProvider 
     attribute="class" 
-    defaultTheme="dark" 
+    defaultTheme="system"
     enableSystem 
     storageKey="theme"
     disableTransitionOnChange={false}

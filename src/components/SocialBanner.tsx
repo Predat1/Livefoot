@@ -106,13 +106,13 @@ export default function SocialBanner({
         href={config.url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`group flex items-center gap-2.5 rounded-lg border border-border/80 bg-card px-3 py-2 transition-colors hover:border-slate-700 hover:bg-slate-900/40 ${className}`}
+        className={`group flex items-center gap-2.5 rounded-lg border border-border/80 bg-card px-3 py-2 transition-colors hover:border-primary/30 hover:bg-muted/60 ${className}`}
         id={`social-compact-${platform}`}
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-950">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/60 dark:bg-slate-950">
           {config.icon(`h-4 w-4 ${config.textClass}`)}
         </span>
-        <span className="text-[11px] font-bold text-slate-300 transition-colors group-hover:text-white">
+        <span className="text-[11px] font-bold text-foreground transition-colors group-hover:text-primary">
           {config.badge}
         </span>
         <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
@@ -122,16 +122,19 @@ export default function SocialBanner({
 
   if (variant === "card") {
     return (
-      <motion.div
+      <motion.a
+        href={config.url}
+        target="_blank"
+        rel="noopener noreferrer"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`group relative h-full overflow-hidden rounded-lg border ${config.borderClass} bg-card transition-colors hover:border-slate-600/70 hover:bg-slate-900/40 ${className}`}
+        className={`group relative h-full overflow-hidden rounded-lg border ${config.borderClass} bg-card transition-colors hover:border-primary/30 hover:bg-muted/50 ${className}`}
         id={`social-card-${platform}`}
       >
         {dismissible && (
           <button
             onClick={() => setDismissed(true)}
-            className="absolute right-3 top-3 z-10 text-white/30 transition-colors hover:text-white/70"
+            className="absolute right-3 top-3 z-10 text-muted-foreground transition-colors hover:text-foreground"
             id={`dismiss-card-${platform}`}
             aria-label="Masquer"
           >
@@ -139,31 +142,29 @@ export default function SocialBanner({
           </button>
         )}
         <div className="flex h-full items-center gap-3 p-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-slate-950/60">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/70 dark:bg-slate-950/60">
             {config.icon(`h-5 w-5 ${config.textClass}`)}
           </div>
           <div className="min-w-0 flex-1">
-            <span className={`mb-1 inline-flex rounded border border-slate-800 bg-slate-950 px-1.5 py-0.5 text-[9px] font-bold uppercase ${config.textClass}`}>
+            <span className={`mb-1 inline-flex rounded border border-border bg-muted/70 px-1.5 py-0.5 text-[9px] font-bold uppercase dark:border-slate-800 dark:bg-slate-950 ${config.textClass}`}>
               {config.badge}
             </span>
-            <p className="mb-0.5 text-sm font-bold leading-tight text-white">
+            <p className="mb-0.5 text-sm font-bold leading-tight text-foreground">
               {config.title}
             </p>
-            <p className="line-clamp-2 text-[11px] leading-snug text-white/50">
+            <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
               {config.subtitle}
             </p>
           </div>
-          <a
-            href={config.url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <span
             className={`hidden shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-[11px] font-bold transition-transform active:scale-95 sm:flex ${config.btnClass}`}
           >
             {config.actionText}
             <ExternalLink className="h-3 w-3 shrink-0" />
-          </a>
+          </span>
+          <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground sm:hidden" />
         </div>
-      </motion.div>
+      </motion.a>
     );
   }
 
@@ -174,17 +175,17 @@ export default function SocialBanner({
       className={`group relative flex items-center gap-3 overflow-hidden rounded-lg border ${config.borderClass} bg-card px-4 py-3 ${className}`}
       id={`social-inline-${platform}`}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-slate-950/60">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/70 dark:bg-slate-950/60">
         {config.icon(`h-4.5 w-4.5 ${config.textClass}`)}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-white">
+        <p className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-foreground">
           <span>{config.title}</span>
-          <span className={`rounded border border-slate-800 bg-slate-950 px-1.5 py-0.5 text-[8.5px] font-bold uppercase ${config.textClass}`}>
+          <span className={`rounded border border-border bg-muted/70 px-1.5 py-0.5 text-[8.5px] font-bold uppercase dark:border-slate-800 dark:bg-slate-950 ${config.textClass}`}>
             {config.badge}
           </span>
         </p>
-        <p className="truncate text-[10px] text-white/45">{config.subtitle}</p>
+        <p className="truncate text-[10px] text-muted-foreground">{config.subtitle}</p>
       </div>
       <a
         href={config.url}
@@ -198,7 +199,7 @@ export default function SocialBanner({
       {dismissible && (
         <button
           onClick={() => setDismissed(true)}
-          className="ml-1 shrink-0 text-white/30 transition-colors hover:text-white/70"
+          className="ml-1 shrink-0 text-muted-foreground transition-colors hover:text-foreground"
           id={`dismiss-inline-${platform}`}
           aria-label="Masquer"
         >
