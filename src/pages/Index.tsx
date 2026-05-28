@@ -570,16 +570,23 @@ const SEO_FAQ = [
           </section>
         )}
 
-        {/* Social Community Grid */}
-        <section className="mt-12 mb-8 animate-scale-in">
-          <div className="mb-4 sm:mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-6 sm:h-8 w-1 rounded-full gradient-primary" />
-              <Users className="h-5 w-5 text-primary" />
-              <h2 className="text-base sm:text-lg font-bold text-foreground">Rejoignez nos Réseaux Officiels</h2>
+        {/* Social links */}
+        <section className="mt-10 mb-8 animate-scale-in">
+          <div className="mb-3 flex flex-col gap-1 sm:mb-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 h-8 w-1 rounded-full bg-primary" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <h2 className="text-base font-bold text-foreground sm:text-lg">Suivre LiveFoot</h2>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Alertes buts, pronostics, videos et discussions foot sur nos plateformes.
+                </p>
+              </div>
             </div>
           </div>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <SocialBanner platform="whatsapp" variant="card" />
             <SocialBanner platform="tiktok" variant="card" />
             <SocialBanner platform="youtube" variant="card" />
