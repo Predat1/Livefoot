@@ -49,7 +49,7 @@ const Players = () => {
 
   const { data: apiPlayers, isLoading: isLoadingApi } = useTopScorers(selectedLeague, currentSeason);
 
-  const allPlayers = apiPlayers || [];
+  const allPlayers = useMemo(() => apiPlayers || [], [apiPlayers]);
 
   const filteredPlayers = useMemo(() => allPlayers
     .filter((p) => activePosition === "All" || p.position === activePosition)

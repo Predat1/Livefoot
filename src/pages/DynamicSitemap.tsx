@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useTopScorers, useTeamsByLeague, useFixturesByDate } from "@/hooks/useApiFootball";
+import { useQuery } from "@tanstack/react-query";
+import { getTeams, getTopScorers, getFixtures } from "@/services/apiFootball";
 import { buildEntitySlug } from "@/utils/slugify";
 
 const LEAGUES = ["39", "140", "135", "78", "61", "2", "3"]; // PL, Liga, Serie A, BuLi, L1, CL, EL
@@ -7,23 +8,75 @@ const BASE = "https://www.livefoot.fun";
 const SEASON = "2025";
 
 const DynamicSitemap = () => {
-  const teamQueries = LEAGUES.map(id => useTeamsByLeague(id, SEASON));
-  const scorerQueries = LEAGUES.map(id => useTopScorers(id, SEASON));
-  const { data: fixtures, isLoading: fixturesLoading } = useFixturesByDate(new Date());
+  const todayStr = new Date().toISOString().split("T")[0];
 
-  const allTeams = teamQueries.flatMap(q => q.data || []);
-  const allPlayers = scorerQueries.flatMap(q => q.data || []);
-  const allMatches = (fixtures || []).flatMap((l: any) => l.matches || []);
+  const { data, isLoading } = useQuery({
+    queryKey: ["sitemap-data", todayStr],
+    queryFn: async () => {
+      // 1. Fetch teams for all leagues in parallel
+      const teamPromises = LEAGUES.map(async (leagueId) => {
+        try {
+          const res = await getTeams({ league: leagueId, season: SEASON });
+          return (res.response || []).map((item: any) => ({
+            id: String(item.team.id),
+            name: item.team.name,
+          }));
+        } catch (e) {
+          console.warn(`Sitemap: error fetching teams for league ${leagueId}`, e);
+          return [];
+        }
+      });
 
-  const isLoading = teamQueries.some(q => q.isLoading) || scorerQueries.some(q => q.isLoading) || fixturesLoading;
+      // 2. Fetch scorers/players for all leagues in parallel
+      const scorerPromises = LEAGUES.map(async (leagueId) => {
+        try {
+          const res = await getTopScorers(leagueId, SEASON);
+          return (res.response || []).map((item: any) => ({
+            id: String(item.player?.id),
+            name: item.player?.name,
+          }));
+        } catch (e) {
+          console.warn(`Sitemap: error fetching scorers for league ${leagueId}`, e);
+          return [];
+        }
+      });
 
-  // Deduplicate players by id
-  const uniquePlayers = Array.from(new Map(allPlayers.map(p => [p.id, p])).values());
+      // 3. Fetch today's fixtures
+      const fixturesPromise = (async () => {
+        try {
+          const res = await getFixtures({ date: todayStr });
+          return (res.response || []).map((fix: any) => ({
+            id: String(fix.fixture?.id),
+            homeTeam: { name: fix.teams?.home?.name || "" },
+            awayTeam: { name: fix.teams?.away?.name || "" },
+          }));
+        } catch (e) {
+          console.warn("Sitemap: error fetching fixtures", e);
+          return [];
+        }
+      })();
+
+      const [teamsArrays, playersArrays, fixturesArray] = await Promise.all([
+        Promise.all(teamPromises),
+        Promise.all(scorerPromises),
+        fixturesPromise,
+      ]);
+
+      const allTeams = teamsArrays.flat();
+      const allPlayers = playersArrays.flat();
+      const uniquePlayers = Array.from(new Map(allPlayers.map(p => [p.id, p])).values());
+
+      return {
+        teams: allTeams,
+        players: uniquePlayers,
+        matches: fixturesArray,
+      };
+    },
+    staleTime: 12 * 60 * 60 * 1000,
+  });
 
   useEffect(() => {
-    if (isLoading) return;
-
-    const today = new Date().toISOString().split("T")[0];
+    if (isLoading || !data) return;
 
     const staticUrls = [
       { loc: "/", priority: "1.0", freq: "always" },
@@ -43,19 +96,19 @@ const DynamicSitemap = () => {
       { loc: "/terms", priority: "0.2", freq: "monthly" },
     ];
 
-    const teamUrls = allTeams.map(t => ({
+    const teamUrls = data.teams.map(t => ({
       loc: `/teams/${buildEntitySlug(t.id, t.name)}`,
       priority: "0.7",
       freq: "weekly",
     }));
 
-    const playerUrls = uniquePlayers.map(p => ({
+    const playerUrls = data.players.map(p => ({
       loc: `/players/${buildEntitySlug(p.id, p.name)}`,
       priority: "0.6",
       freq: "weekly",
     }));
 
-    const matchUrls = allMatches.map((m: any) => ({
+    const matchUrls = data.matches.map((m: any) => ({
       loc: `/match/${buildEntitySlug(m.id, `${m.homeTeam.name}-vs-${m.awayTeam.name}`)}`,
       priority: "0.9",
       freq: "hourly",
@@ -71,7 +124,7 @@ ${allUrls
     <loc>${BASE}${u.loc}</loc>
     <changefreq>${u.freq}</changefreq>
     <priority>${u.priority}</priority>
-    <lastmod>${today}</lastmod>
+    <lastmod>${todayStr}</lastmod>
   </url>`
   )
   .join("\n")}
@@ -81,13 +134,13 @@ ${allUrls
     document.open("text/xml");
     document.write(xml);
     document.close();
-  }, [isLoading, allTeams.length, uniquePlayers.length]);
+  }, [isLoading, data, todayStr]);
 
   if (isLoading) {
     return <div style={{ padding: 20, fontFamily: "monospace" }}>Generating sitemap...</div>;
   }
 
-  return <></>;
+  return null;
 };
 
 export default DynamicSitemap;

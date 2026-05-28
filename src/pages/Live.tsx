@@ -58,6 +58,12 @@ const Live = () => {
     }
   }, [dataUpdatedAt, detectGoals]);
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  }, [refetch]);
+
   if (dataLoading) {
     return (
       <Layout>
@@ -79,12 +85,6 @@ const Live = () => {
     acc[c].leagues.push(league.name);
     return acc;
   }, {});
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-  }, [refetch]);
 
   return (
     <Layout>

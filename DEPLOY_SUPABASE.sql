@@ -546,7 +546,7 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
     PERFORM cron.schedule('cleanup-finished-matches',   '0 * * * *',    'SELECT public.cleanup_finished_matches()');
-    PERFORM cron.schedule('cleanup-api-football-cache', '0 */6 * * *',  $$DELETE FROM public.api_football_cache WHERE expires_at < NOW() - INTERVAL '1 hour'$$);
+    PERFORM cron.schedule('cleanup-api-football-cache', '0 */6 * * *',  'DELETE FROM public.api_football_cache WHERE expires_at < NOW() - INTERVAL ''1 hour''');
     RAISE NOTICE 'pg_cron : 2 jobs planifiés.';
   ELSE
     RAISE NOTICE 'pg_cron non disponible — pas de cron automatique. Activez-le dans Dashboard > Database > Extensions si nécessaire.';

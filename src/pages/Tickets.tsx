@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -82,7 +82,7 @@ const Tickets = () => {
 
   const activeSummary = useMemo(() => summarizeItems(ticket.items), [ticket.items]);
 
-  const loadSavedTickets = async () => {
+  const loadSavedTickets = useCallback(async () => {
     if (!user) {
       setSavedTickets([]);
       return;
@@ -103,11 +103,11 @@ const Tickets = () => {
     } finally {
       setLoadingSaved(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadSavedTickets();
-  }, [user?.id]);
+  }, [loadSavedTickets]);
 
   const handleSaveActive = async () => {
     await saveTicket();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import type { LeagueData } from "./useApiFootball";
 
 export interface GoalNotification {
@@ -95,7 +95,7 @@ export function useGoalNotifications(liveLeagues: LeagueData[] | undefined, soun
   );
   const initializedRef = useRef(false);
 
-  const liveMatches = liveLeagues || [];
+  const liveMatches = useMemo(() => liveLeagues || [], [liveLeagues]);
 
   // Initialize previous scores on first data load
   useEffect(() => {

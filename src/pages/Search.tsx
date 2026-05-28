@@ -254,6 +254,7 @@ const SearchPage = () => {
   useEffect(() => {
     if (initialQuery) setQuery(initialQuery);
     setTimeout(() => inputRef.current?.focus(), 50);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const groupedResults = results.reduce<Record<string, SearchResult[]>>((acc, r) => {

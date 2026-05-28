@@ -23,7 +23,9 @@ const getStoredFavorites = (): Favorites => {
 const saveStoredFavorites = (fav: Favorites) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(fav));
-  } catch {}
+  } catch (e) {
+    console.warn("Unable to save favorites to localStorage", e);
+  }
 };
 
 const TYPE_MAP: Record<keyof Favorites, string> = {

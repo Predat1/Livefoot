@@ -30,8 +30,8 @@ const FavoritesFeed = lazy(() => import("@/components/FavoritesFeed"));
 const TopMatches = lazy(() => import("@/components/TopMatches"));
 const TopScorersWidget = lazy(() => import("@/components/TopScorersWidget"));
 const PartnerBanner = lazy(() => import("@/components/PartnerBanner"));
-const TelegramBanner = lazy(() => import("@/components/TelegramBanner"));
-const ShareWidget = lazy(() => import("@/components/ShareWidget"));
+import TelegramBanner from "@/components/TelegramBanner";
+import ShareWidget from "@/components/ShareWidget";
 import SocialBanner from "@/components/SocialBanner";
 
 const Index = () => {

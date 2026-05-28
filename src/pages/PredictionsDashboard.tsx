@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
@@ -37,9 +37,9 @@ const PredictionsDashboard = () => {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     const { data: allPreds } = await supabase
       .from("match_predictions")
@@ -67,7 +67,7 @@ const PredictionsDashboard = () => {
       setProfiles(map);
     }
     setLoading(false);
-  };
+  }, [user]);
 
   // My stats & badges
   const myStats = useMemo(() => {

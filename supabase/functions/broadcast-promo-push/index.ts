@@ -186,7 +186,7 @@ serve(async (req) => {
     // ── Parse notification payload ───────────────────────────────
     const body = await req.json();
     const title = body.title || "🌟 Offre VIP Exclusive LiveFoot";
-    const message = body.message || "Profitez de 30 jours VIP gratuits — accédez à toutes les prédictions IA !";
+    const message = body.message || "Profitez de 7 jours VIP gratuits — accédez à toutes les prédictions IA !";
     const url = body.url || "/pricing";
 
     const notifPayload = JSON.stringify({ title, body: message, url, tag: "promo-vip" });

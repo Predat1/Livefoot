@@ -5,6 +5,8 @@ import {
   getStandings, getFixtureById, getFixtureEvents, getFixtureLineups,
   getFixtureStatistics, getHeadToHead, getLeagues, getTeams, getTeamById,
   getTeamSquad, getTeamStatistics, getTransfers, searchTeamByName, getPredictions,
+  getPlayerById, searchPlayerByName, getTrophies, getPlayers, getAiPrediction,
+  getFixturePlayers, getOdds, getInjuries, getCoach, getSidelined, getLiveOdds,
 } from "@/services/apiFootball";
 import { mockLeagues } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
@@ -1177,7 +1179,6 @@ export function usePlayerDetailApi(playerId: string, season = "2024") {
   const directQuery = useQuery({
     queryKey: ["player-detail", playerId, season],
     queryFn: async () => {
-      const { getPlayerById } = await import("@/services/apiFootball");
       const res = await getPlayerById(playerId, season);
       return parsePlayerResponse(res);
     },
@@ -1188,7 +1189,6 @@ export function usePlayerDetailApi(playerId: string, season = "2024") {
   const slugQuery = useQuery({
     queryKey: ["player-search", playerId, season],
     queryFn: async () => {
-      const { searchPlayerByName } = await import("@/services/apiFootball");
       const searchName = playerId.replace(/-/g, " ");
       const res = await searchPlayerByName(searchName, season);
       if (!res.response || res.response.length === 0) return null;
@@ -1212,7 +1212,6 @@ export function usePlayerTrophies(playerId: string) {
   return useQuery({
     queryKey: ["player-trophies", playerId],
     queryFn: async () => {
-      const { getTrophies } = await import("@/services/apiFootball");
       const res = await getTrophies({ player: playerId });
       return (res.response || []) as { league: string; country: string; season: string; place: string }[];
     },
@@ -1227,7 +1226,6 @@ export function usePlayerSeasons(playerId: string) {
   return useQuery({
     queryKey: ["player-seasons", playerId],
     queryFn: async () => {
-      const { getPlayers } = await import("@/services/apiFootball");
       const seasons = ["2024", "2023"]; // Reduced from 5 to 2 seasons (quota optimization)
       
       const responses = await Promise.allSettled(
@@ -1309,7 +1307,6 @@ export function useAiExpert(params: {
     queryKey: ["ai-expert", params.fixtureId],
     queryFn: async () => {
       try {
-        const { getAiPrediction } = await import("@/services/apiFootball");
         const { data, error } = await getAiPrediction(params);
         if (error) throw error;
         return data as {
@@ -1415,7 +1412,6 @@ export function useFixturePlayers(fixtureId: string, options: MatchAwareQueryOpt
   return useQuery({
     queryKey: ["fixture-players", fixtureId, options.matchStatus || ""],
     queryFn: async () => {
-      const { getFixturePlayers } = await import("@/services/apiFootball");
       const res = await getFixturePlayers(fixtureId, options.matchStatus ? { _matchStatus: options.matchStatus } : {});
       return (res.response || []) as any[];
     },
@@ -1433,7 +1429,6 @@ export function useFixtureOdds(fixtureId: string, options: { enabled?: boolean }
   return useQuery({
     queryKey: ["fixture-odds", fixtureId],
     queryFn: async () => {
-      const { getOdds } = await import("@/services/apiFootball");
       const res = await getOdds({ fixture: fixtureId });
       return (res.response || []) as any[];
     },
@@ -1447,7 +1442,6 @@ export function useFixtureInjuries(fixtureId: string, options: { enabled?: boole
   return useQuery({
     queryKey: ["fixture-injuries", fixtureId],
     queryFn: async () => {
-      const { getInjuries } = await import("@/services/apiFootball");
       const res = await getInjuries({ fixture: fixtureId });
       return (res.response || []) as any[];
     },
@@ -1461,7 +1455,6 @@ export function useTeamCoach(teamId: string) {
   return useQuery({
     queryKey: ["team-coach", teamId],
     queryFn: async () => {
-      const { getCoach } = await import("@/services/apiFootball");
       const res = await getCoach({ team: teamId });
       return (res.response?.[0] || null) as any;
     },
@@ -1475,7 +1468,6 @@ export function usePlayerSidelined(playerId: string) {
   return useQuery({
     queryKey: ["player-sidelined", playerId],
     queryFn: async () => {
-      const { getSidelined } = await import("@/services/apiFootball");
       const res = await getSidelined({ player: playerId });
       return (res.response || []) as any[];
     },
@@ -1490,7 +1482,6 @@ export function useLiveOdds(fixtureId: string, options: MatchAwareQueryOptions =
   return useQuery({
     queryKey: ["live-odds", fixtureId, options.matchStatus || ""],
     queryFn: async () => {
-      const { getLiveOdds } = await import("@/services/apiFootball");
       const res = await getLiveOdds(options.matchStatus ? { fixture: fixtureId, _matchStatus: options.matchStatus } : { fixture: fixtureId });
       return (res.response || []) as any[];
     },

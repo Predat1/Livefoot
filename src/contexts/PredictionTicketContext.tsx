@@ -91,7 +91,7 @@ export const PredictionTicketProvider: React.FC<{ children: React.ReactNode }> =
           });
         }
       });
-  }, [user?.id]);
+  }, [user]);
 
   // ─── addItem ─────────────────────────────────────────────────────────────
   const addItem = useCallback((item: Omit<PredictionTicketItem, "id" | "createdAt">) => {
@@ -158,7 +158,7 @@ export const PredictionTicketProvider: React.FC<{ children: React.ReactNode }> =
     const categories = [...new Set(items.map(i => i.predictionKey))];
 
     return { count: items.length, avgConfidence, globalRisk, matchCount, categories };
-  }, [ticket.items]);
+  }, [ticket]);
 
   // ─── saveTicket ──────────────────────────────────────────────────────────
   const saveTicket = useCallback(async () => {

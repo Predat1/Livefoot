@@ -121,8 +121,8 @@ export function LLMOptimizedContent({
   );
 }
 
-// Hook pour générer des faits optimisés pour les matchs
-export function useMatchFacts(
+// Fonction pure pour générer des faits optimisés pour les matchs
+export function getMatchFacts(
   homeTeam: string,
   awayTeam: string,
   league: string,
@@ -163,8 +163,8 @@ export function useMatchFacts(
   ];
 }
 
-// Hook pour générer des faits optimisés pour les compétitions
-export function useCompetitionFacts(
+// Fonction pure pour générer des faits optimisés pour les compétitions
+export function getCompetitionFacts(
   competitionName: string,
   country: string,
   founded: string,

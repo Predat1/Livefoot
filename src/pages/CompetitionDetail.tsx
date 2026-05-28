@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHeadEnhanced";
 import { SEOFAQSnippet } from "@/components/SEOFAQSnippet";
-import { LLMOptimizedContent, useCompetitionFacts } from "@/components/LLMOptimizedContent";
+import { LLMOptimizedContent, getCompetitionFacts } from "@/components/LLMOptimizedContent";
 import {
   useStandings,
   useTopScorers,
@@ -611,7 +611,7 @@ const CompetitionDetail = () => {
 
         {/* LLM Optimized Content - Pour citations IA */}
         <LLMOptimizedContent
-          facts={useCompetitionFacts(
+          facts={getCompetitionFacts(
             seoData.name,
             seoData.country,
             seoData.founded,

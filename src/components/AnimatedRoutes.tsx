@@ -7,14 +7,14 @@ import ProtectedRoute from "./ProtectedRoute";
 
 // Eager: core pages
 import AdminLayout from "@/components/Admin/AdminLayout";
-import AdminDashboard from "@/pages/Admin";
-import AdminUsers from "@/pages/Admin/Users";
-import AdminContent from "@/pages/Admin/Content";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import Match from "@/pages/Match";
 
 // Lazy: admin pages
+const AdminDashboard = lazy(() => import("@/pages/Admin"));
+const AdminUsers = lazy(() => import("@/pages/Admin/Users"));
+const AdminContent = lazy(() => import("@/pages/Admin/Content"));
 const AdminAI = lazy(() => import("@/pages/Admin/AI"));
 const AdminMonetization = lazy(() => import("@/pages/Admin/Monetization"));
 const AdminAnalytics = lazy(() => import("@/pages/Admin/Analytics"));
@@ -45,7 +45,6 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const Rankings = lazy(() => import("@/pages/Rankings"));
 const PredictionsDashboard = lazy(() => import("@/pages/PredictionsDashboard"));
 const Explorer = lazy(() => import("@/pages/Explorer"));
-const Admin = lazy(() => import("@/pages/Admin"));
 const DynamicSitemap = lazy(() => import("@/pages/DynamicSitemap"));
 const DailyPicks = lazy(() => import("@/pages/DailyPicks"));
 const PredictionsHistory = lazy(() => import("@/pages/PredictionsHistory"));
