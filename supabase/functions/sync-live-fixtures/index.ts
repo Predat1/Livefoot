@@ -6,6 +6,7 @@ const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
 const PRIORITY_LEAGUES = ["135", "39", "140", "78", "61", "2", "3"];
 const DIAGNOSTIC_TEAMS = ["500", "505"]; // Bologna, Inter in API-Football.
+const STALE_LIVE_MINUTES = 10;
 
 type ApiFixture = {
   fixture?: {
@@ -132,6 +133,22 @@ async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>
   }
 }
 
+async function pruneMissingLiveStates(supabase: ReturnType<typeof getSupabaseClient>, trackedFixtureIds: Set<string>) {
+  const cutoff = new Date(Date.now() - STALE_LIVE_MINUTES * 60_000).toISOString();
+  let query = supabase
+    .from("live_match_states")
+    .delete()
+    .in("status", Array.from(LIVE_STATUSES))
+    .lt("updated_at", cutoff);
+
+  if (trackedFixtureIds.size > 0) {
+    query = query.not("fixture_id", "in", `(${Array.from(trackedFixtureIds).join(",")})`);
+  }
+
+  const { error } = await query;
+  if (error) throw new Error(`stale live cleanup failed: ${error.message}`);
+}
+
 serve(async (req) => {
   try {
     if (req.method === "OPTIONS") return new Response("ok");
@@ -186,6 +203,11 @@ serve(async (req) => {
     for (const fixture of trackedFixtures) {
       await upsertFixtureState(supabase, fixture);
     }
+
+    await pruneMissingLiveStates(
+      supabase,
+      new Set(trackedFixtures.map((fixture) => String(fixture?.fixture?.id || "")).filter(Boolean)),
+    );
 
     try {
       const { error: cleanupError } = await supabase.rpc("cleanup_finished_matches");

@@ -250,6 +250,7 @@ function transformLiveStatesToLeagues(rows: LiveMatchStateRow[] = [], timezone =
 
   for (const row of rows) {
     if (!row.fixture_id || !row.home_team || !row.away_team) continue;
+    if (isStaleLiveUpdate(row.updated_at, 2 * 60_000)) continue;
     const statusShort = row.status || "";
     const status = mapFixtureStatus(statusShort);
     if (status !== "live") continue;
@@ -414,7 +415,7 @@ export function useRealtimeLiveFixtures() {
         .order("updated_at", { ascending: false });
       if (error) throw error;
       const nextRows = (data || []) as LiveMatchStateRow[];
-      setRows(nextRows);
+      setRows(nextRows.filter((row) => !isStaleLiveUpdate(row.updated_at, 2 * 60_000)));
       return transformLiveStatesToLeagues(nextRows, timezone);
     },
     staleTime: 5 * 1000,
@@ -436,7 +437,7 @@ export function useRealtimeLiveFixtures() {
             }
 
             const nextRow = payload.new as LiveMatchStateRow;
-            if (!LIVE_STATUSES.includes(nextRow.status || "")) {
+            if (!LIVE_STATUSES.includes(nextRow.status || "") || isStaleLiveUpdate(nextRow.updated_at, 2 * 60_000)) {
               return current.filter((row) => row.fixture_id !== nextRow.fixture_id);
             }
 
