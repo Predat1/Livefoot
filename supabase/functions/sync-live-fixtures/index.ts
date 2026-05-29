@@ -4,7 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 const REQUIRED_ENV = ["API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]);
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
-const PRIORITY_LEAGUES = ["135", "39", "140", "78", "61", "2", "3"];
+const PRIORITY_LEAGUES = [
+  "2", "3", "848", "39", "140", "135", "78", "61",
+  "88", "94", "203", "253", "262", "307", "71", "128", "144", "179", "197",
+];
 const DIAGNOSTIC_TEAMS = ["500", "505"]; // Bologna, Inter in API-Football.
 const STALE_LIVE_MINUTES = 10;
 
@@ -48,6 +51,12 @@ function todayInTimeZone(timezone: string) {
     timeZone: timezone,
   }).formatToParts(new Date());
   return `${parts.find((part) => part.type === "year")?.value}-${parts.find((part) => part.type === "month")?.value}-${parts.find((part) => part.type === "day")?.value}`;
+}
+
+function footballSeasonForDate(date: string) {
+  const parsed = new Date(`${date}T12:00:00Z`);
+  const year = parsed.getUTCFullYear();
+  return String(parsed.getUTCMonth() >= 6 ? year : year - 1);
 }
 
 async function fetchApiFootball(endpoint: string, params: Record<string, string>) {
@@ -161,6 +170,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({})) as { timezone?: string; date?: string; diagnostic?: boolean };
     const timezone = body.timezone || "Europe/Rome";
     const date = body.date || todayInTimeZone(timezone);
+    const season = footballSeasonForDate(date);
     const diagnostic = body.diagnostic === true;
     const supabase = getSupabaseClient();
 
@@ -171,15 +181,27 @@ serve(async (req) => {
     });
     sources.push({ source: "live=all", fixtures: live });
 
-    const leagueResults = await Promise.allSettled(
-      PRIORITY_LEAGUES.map(async (league) => ({
-        league,
-        fixtures: await fetchApiFootball("fixtures", { date, league, season: "2025", timezone }),
-      })),
+    const allToday = await fetchApiFootball("fixtures", { date, timezone }).catch((error) => {
+      console.error("[sync-live-fixtures] date-wide recovery failed", error);
+      return [];
+    });
+    sources.push({ source: "date:all", fixtures: allToday });
+
+    const hasLiveCoverage = sources.some((source) =>
+      source.fixtures.some((fixture) => LIVE_STATUSES.has(fixture?.fixture?.status?.short || "")),
     );
-    for (const result of leagueResults) {
-      if (result.status === "fulfilled") sources.push({ source: `league:${result.value.league}`, fixtures: result.value.fixtures });
-      else console.error("[sync-live-fixtures] priority league failed", result.reason);
+
+    if (!hasLiveCoverage) {
+      const leagueResults = await Promise.allSettled(
+        PRIORITY_LEAGUES.map(async (league) => ({
+          league,
+          fixtures: await fetchApiFootball("fixtures", { date, league, season, timezone }),
+        })),
+      );
+      for (const result of leagueResults) {
+        if (result.status === "fulfilled") sources.push({ source: `league:${result.value.league}`, fixtures: result.value.fixtures });
+        else console.error("[sync-live-fixtures] priority league failed", result.reason);
+      }
     }
 
     if (diagnostic) {

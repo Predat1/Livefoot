@@ -121,7 +121,10 @@ export interface PlayerData {
 const fallbackLeagues = mockLeagues as unknown as LeagueData[];
 const LIVE_STATUSES = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN", "AWD", "WO"];
-const PRIORITY_LIVE_LEAGUE_IDS = ["135", "39", "140", "78", "61", "2", "3"];
+const PRIORITY_LIVE_LEAGUE_IDS = [
+  "2", "3", "848", "39", "140", "135", "78", "61",
+  "88", "94", "203", "253", "262", "307", "71", "128", "144", "179", "197",
+];
 
 type MatchAwareQueryOptions = {
   enabled?: boolean;
@@ -139,6 +142,18 @@ function isFinishedStatus(status?: string) {
 function getFootballSeasonForDate(date: Date) {
   const year = date.getFullYear();
   return String(date.getMonth() >= 6 ? year : year - 1);
+}
+
+async function fetchPriorityLiveLeagues(dateStr: string, season: string, timezone: string): Promise<LeagueData[]> {
+  const results = await Promise.allSettled(
+    PRIORITY_LIVE_LEAGUE_IDS.map((league) => getFixtures({ date: dateStr, league, season, timezone })),
+  );
+
+  return results
+    .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
+    .flatMap((result) => transformFixturesToLeagues(result.value?.response || [], timezone))
+    .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
+    .filter((league) => league.matches.length > 0);
 }
 
 
@@ -352,10 +367,9 @@ export function useFixturesByDate(date: Date) {
     queryKey: ["fixtures", dateStr, timezone],
     queryFn: async () => {
       try {
-        const [dailyRes, liveRes, ...priorityResults] = await Promise.allSettled([
+        const [dailyRes, liveRes] = await Promise.allSettled([
           getFixtures({ date: dateStr, timezone }),
           getLiveFixtures(timezone),
-          ...PRIORITY_LIVE_LEAGUE_IDS.map((league) => getFixtures({ date: dateStr, league, season, timezone })),
         ]);
         let daily = dailyRes.status === "fulfilled" ? transformFixturesToLeagues(dailyRes.value?.response || [], timezone) : [];
         const selectedStart = new Date(date);
@@ -367,11 +381,9 @@ export function useFixturesByDate(date: Date) {
           daily = transformFixturesToLeagues(scheduledRetry?.response || [], timezone);
         }
         const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
-        const recoveredLive = priorityResults
-          .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
-          .flatMap((result) => transformFixturesToLeagues(result.value?.response || [], timezone))
-          .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
-          .filter((league) => league.matches.length > 0);
+        const hasLiveCoverage = directLive.some((league) => league.matches.some((match) => match.status === "live"))
+          || daily.some((league) => league.matches.some((match) => match.status === "live"));
+        const recoveredLive = hasLiveCoverage ? [] : await fetchPriorityLiveLeagues(dateStr, season, timezone);
 
         return mergeLeagueData(directLive, recoveredLive, daily);
       } catch (error) {
@@ -395,21 +407,24 @@ export function useLiveFixtures() {
     queryKey: ["fixtures", "live", timezone],
     queryFn: async () => {
       const today = formatApiDate(new Date(), timezone);
-      const [liveRes, ...priorityResults] = await Promise.allSettled([
+      const season = getFootballSeasonForDate(new Date());
+      const [liveRes, todayRes] = await Promise.allSettled([
         getLiveFixtures(timezone),
-        ...PRIORITY_LIVE_LEAGUE_IDS.map((league) => getFixtures({ date: today, league, season: "2025", timezone })),
+        getFixtures({ date: today, timezone }),
       ]);
       const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
-      const recoveredLive = priorityResults
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
-        .flatMap((result) => transformFixturesToLeagues(result.value?.response || [], timezone))
+      const dateWideLive = todayRes.status === "fulfilled" ? transformFixturesToLeagues(todayRes.value?.response || [], timezone) : [];
+      const recoveredDateLive = dateWideLive
         .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
         .filter((league) => league.matches.length > 0);
+      const hasLiveCoverage = directLive.some((league) => league.matches.some((match) => match.status === "live"))
+        || recoveredDateLive.length > 0;
+      const recoveredPriorityLive = hasLiveCoverage ? [] : await fetchPriorityLiveLeagues(today, season, timezone);
 
       if (liveRes.status === "rejected") {
-        console.warn("fixtures?live=all indisponible, rattrapage par ligues prioritaires.", liveRes.reason);
+        console.warn("fixtures?live=all indisponible, rattrapage par date puis ligues prioritaires.", liveRes.reason);
       }
-      return mergeLeagueData(directLive, recoveredLive);
+      return mergeLeagueData(directLive, recoveredDateLive, recoveredPriorityLive);
     },
     staleTime: 30 * 1000, // 30s — real-time live scores
     refetchInterval: 15 * 1000,
