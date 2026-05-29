@@ -115,9 +115,14 @@ const TEAM_NAME_WEIGHTS: Record<string, number> = {
 
 const COUNTRY_ALIASES: Record<string, string[]> = {
   "england": ["england", "united kingdom", "great britain"],
+  "cameroon": ["cameroon", "cameroun"],
   "saudi-arabia": ["saudi arabia", "saudi-arabia"],
   "usa": ["usa", "united states", "united states of america"],
 };
+
+const ELITE_TIER_BOOST = 300000;
+const LOCAL_TIER_BOOST = 200000;
+const STRONG_TIER_BOOST = 100000;
 
 export const LEAGUE_PRIORITY_SCORES: Record<string, number> = {
   "2": 980,   // Champions League
@@ -180,39 +185,30 @@ function getLeagueWeight(league?: Partial<RankingLeague> | RankingMatch["league"
   const id = asId(league?.id);
   if (LEAGUE_PRIORITY_SCORES[id] != null) return LEAGUE_PRIORITY_SCORES[id];
   const name = normalize(league?.name);
+  const country = normalize(league?.country);
   if (name.includes("champions league")) return 830;
   if (name.includes("europa league")) return 810;
   if (name.includes("conference league")) return 790;
-  if (name.includes("serie a")) return 920;
-  if (name.includes("premier league")) return 900;
-  if (name.includes("la liga")) return 880;
-  if (name.includes("ligue 1")) return 860;
-  if (name.includes("bundesliga")) return 840;
-  if (name.includes("eredivisie")) return 720;
-  if (name.includes("primeira liga") || name.includes("liga portugal")) return 710;
-  if (name.includes("super lig")) return 690;
-  if (name.includes("major league soccer") || name === "mls") return 670;
-  if (name.includes("saudi pro")) return 660;
-  if (name.includes("liga mx")) return 650;
-  if (name.includes("brasileirao") || name.includes("serie a betano")) return 640;
+  if (name.includes("serie a") && country === "italy") return 920;
+  if (name.includes("premier league") && country === "england") return 900;
+  if (name.includes("la liga") && country === "spain") return 880;
+  if (name.includes("ligue 1") && country === "france") return 860;
+  if (name.includes("bundesliga") && country === "germany") return 840;
+  if (name.includes("eredivisie") && country === "netherlands") return 720;
+  if ((name.includes("primeira liga") || name.includes("liga portugal")) && country === "portugal") return 710;
+  if (name.includes("super lig") && country === "turkey") return 690;
+  if ((name.includes("major league soccer") || name === "mls") && country === "usa") return 670;
+  if (name.includes("saudi pro") && country === "saudi-arabia") return 660;
+  if (name.includes("liga mx") && country === "mexico") return 650;
+  if ((name.includes("brasileirao") || name.includes("serie a betano") || name === "serie a") && country === "brazil") return 640;
   return 250;
 }
 
-function getCompetitionTierBoost(league?: Partial<RankingLeague> | RankingMatch["league"]): number {
-  const id = asId(league?.id);
-  if (ELITE_COMPETITION_IDS.has(id)) return 100000;
-  if (STRONG_COMPETITION_IDS.has(id)) return 50000;
-  const weight = getLeagueWeight(league);
-  if (weight >= 890) return 100000;
-  if (weight >= 600) return 50000;
-  return 0;
-}
-
-function getLocalityBoost(
+function isLocalLeague(
   league?: Partial<RankingLeague> | RankingMatch["league"],
   userCountries: string[] = [],
-): number {
-  if (!league?.country || userCountries.length === 0) return 0;
+): boolean {
+  if (!league?.country || userCountries.length === 0) return false;
 
   const leagueCountry = normalize(league.country);
   const localCountries = userCountries.flatMap((country) => {
@@ -220,7 +216,26 @@ function getLocalityBoost(
     return [normalized, ...(COUNTRY_ALIASES[normalized] || [])];
   });
 
-  return localCountries.some((country) => leagueCountry === normalize(country)) ? 30000 : 0;
+  return localCountries.some((country) => leagueCountry === normalize(country));
+}
+
+function getCompetitionTierBoost(
+  league?: Partial<RankingLeague> | RankingMatch["league"],
+  userCountries: string[] = [],
+): number {
+  const id = asId(league?.id);
+  const weight = getLeagueWeight(league);
+  if (ELITE_COMPETITION_IDS.has(id) || weight >= 890) return ELITE_TIER_BOOST;
+  if (isLocalLeague(league, userCountries)) return LOCAL_TIER_BOOST;
+  if (STRONG_COMPETITION_IDS.has(id) || weight >= 600) return STRONG_TIER_BOOST;
+  return 0;
+}
+
+function getLocalityBoost(
+  league?: Partial<RankingLeague> | RankingMatch["league"],
+  userCountries: string[] = [],
+): number {
+  return isLocalLeague(league, userCountries) ? 1200 : 0;
 }
 
 function getTeamWeight(team?: RankingTeam): number {
@@ -276,7 +291,7 @@ export function getMatchPriorityScore(
 
   let score = getStatusWeight(match);
   score += getLeagueWeight(league || match.league);
-  score += getLocalityBoost(league || match.league, favorites.userCountries) / 100;
+  score += getLocalityBoost(league || match.league, favorites.userCountries);
   score += teamWeight * 8;
   score += getEventWeight(match);
   if (status === "live") score += Math.min(Number(minute) || 0, 120) * 4;
@@ -331,7 +346,7 @@ export function sortLeaguesByPriority<TLeague extends RankingLeague>(
         );
         const liveBoost = league.matches.some((match) => getRankingStatus(match) === "live") ? 5000 : 0;
         const scheduledBoost = league.matches.some((match) => getRankingStatus(match) === "scheduled") ? 1200 : 0;
-        return getCompetitionTierBoost(league)
+        return getCompetitionTierBoost(league, favorites.userCountries)
           + getLeagueWeight(league) * 100
           + getLocalityBoost(league, favorites.userCountries)
           + liveBoost
