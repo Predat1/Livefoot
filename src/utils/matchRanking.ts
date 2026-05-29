@@ -81,6 +81,16 @@ const TOP_CLUBS_IDS = new Set([
 ]);
 
 const ELITE_COMPETITION_IDS = new Set(["2", "3", "848", "39", "140", "135", "78", "61"]);
+const FEATURED_COMPETITION_IDS = new Set([
+  "10",  // International friendlies
+  "11",  // Copa Sudamericana
+  "13",  // Copa Libertadores
+  "119", // Danish Superliga
+  "136", // Serie B
+  "203", // Super Lig
+  "531", // UEFA youth / U17-style competitions in API-Football datasets
+  "667", // Club Friendlies
+]);
 const STRONG_COMPETITION_IDS = new Set([
   "88", "94", "203", "253", "262", "307", "71", "128", "144", "179", "197",
 ]);
@@ -122,6 +132,7 @@ const COUNTRY_ALIASES: Record<string, string[]> = {
 
 const ELITE_TIER_BOOST = 300000;
 const LOCAL_TIER_BOOST = 200000;
+const FEATURED_TIER_BOOST = 150000;
 const STRONG_TIER_BOOST = 100000;
 
 export const LEAGUE_PRIORITY_SCORES: Record<string, number> = {
@@ -186,6 +197,14 @@ function getLeagueWeight(league?: Partial<RankingLeague> | RankingMatch["league"
   if (LEAGUE_PRIORITY_SCORES[id] != null) return LEAGUE_PRIORITY_SCORES[id];
   const name = normalize(league?.name);
   const country = normalize(league?.country);
+  if (name.includes("international") && (name.includes("friendly") || name.includes("friendlies"))) return 875;
+  if (name.includes("amical") && name.includes("international")) return 875;
+  if (name.includes("copa libertadores") || name.includes("libertadores")) return 870;
+  if (name.includes("copa sudamericana") || name.includes("sudamericana")) return 860;
+  if (name.includes("euro u17") || name.includes("u17 championship") || name.includes("u17 european")) return 850;
+  if ((name.includes("club friendly") || name.includes("club friendlies")) && country === "world") return 825;
+  if ((name.includes("promotion") || name.includes("barrage")) && name.includes("ligue 1")) return 820;
+  if (name.includes("primera rfef") && (name.includes("promotion") || name.includes("barrage"))) return 705;
   if (name.includes("champions league")) return 830;
   if (name.includes("europa league")) return 810;
   if (name.includes("conference league")) return 790;
@@ -197,6 +216,8 @@ function getLeagueWeight(league?: Partial<RankingLeague> | RankingMatch["league"
   if (name.includes("eredivisie") && country === "netherlands") return 720;
   if ((name.includes("primeira liga") || name.includes("liga portugal")) && country === "portugal") return 710;
   if (name.includes("super lig") && country === "turkey") return 690;
+  if (name.includes("superliga") && country === "denmark") return 665;
+  if (name.includes("serie b") && country === "italy") return 700;
   if ((name.includes("major league soccer") || name === "mls") && country === "usa") return 670;
   if (name.includes("saudi pro") && country === "saudi-arabia") return 660;
   if (name.includes("liga mx") && country === "mexico") return 650;
@@ -227,6 +248,7 @@ function getCompetitionTierBoost(
   const weight = getLeagueWeight(league);
   if (ELITE_COMPETITION_IDS.has(id) || weight >= 890) return ELITE_TIER_BOOST;
   if (isLocalLeague(league, userCountries)) return LOCAL_TIER_BOOST;
+  if (FEATURED_COMPETITION_IDS.has(id) || weight >= 800) return FEATURED_TIER_BOOST;
   if (STRONG_COMPETITION_IDS.has(id) || weight >= 600) return STRONG_TIER_BOOST;
   return 0;
 }

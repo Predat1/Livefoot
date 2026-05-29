@@ -6,6 +6,7 @@ const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
 const PRIORITY_LEAGUES = [
   "2", "3", "848", "39", "140", "135", "78", "61",
+  "10", "11", "13", "119", "136", "531", "667",
   "88", "94", "203", "253", "262", "307", "71", "128", "144", "179", "197",
 ];
 const DIAGNOSTIC_TEAMS = ["500", "505"]; // Bologna, Inter in API-Football.
