@@ -135,6 +135,12 @@ const RangeSlider = ({
 
 /* ─── Result card ─── */
 const typeConfig = {
+  match: {
+    label: "Matchs",
+    icon: <Zap className="h-4 w-4 text-primary" />,
+    color: "bg-primary/10 text-primary",
+    tag: "Match",
+  },
   team: {
     label: "Équipes",
     icon: <Users className="h-4 w-4 text-primary" />,
@@ -184,6 +190,11 @@ const ResultRow = ({ result }: { result: SearchResult }) => {
       <Link to={result.href} className="flex-shrink-0 relative z-10">
         {result.type === "team" && <TeamLogo teamName={result.name} size="sm" />}
         {result.type === "player" && <PlayerAvatar name={result.name} size="sm" />}
+        {result.type === "match" && (
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/10">
+            {result.image ? <img src={result.image} alt="" className="h-7 w-7 object-contain" /> : <Zap className="h-4 w-4 text-primary" />}
+          </div>
+        )}
         {result.type === "competition" && (
           <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10 shadow-sm group-hover:border-primary/30 transition-colors">
             <LeagueLogo leagueId={result.id} size="sm" />
@@ -263,12 +274,13 @@ const SearchPage = () => {
     return acc;
   }, {});
 
-  const typeOrder: (keyof typeof typeConfig)[] = ["player", "team", "competition", "news"];
+  const typeOrder: (keyof typeof typeConfig)[] = ["match", "team", "competition", "player", "news"];
   const hasQuery = debouncedQuery.length >= 1;
   const hasFilters = activeFilterCount > 0;
   const showResults = hasQuery || hasFilters;
 
   const TYPE_LABELS = [
+    { key: "match" as const, label: "Matchs" },
     { key: "player" as const, label: "Joueurs" },
     { key: "team" as const, label: "Équipes" },
     { key: "competition" as const, label: "Compétitions" },
@@ -288,7 +300,7 @@ const SearchPage = () => {
     <Layout>
       <SEOHead
         title={query ? `Recherche : ${query}` : "Recherche avancée"}
-        description="Recherchez des équipes, joueurs, compétitions et actualités football avec filtres avancés."
+        description="Recherchez des matchs, equipes, joueurs, competitions et actualites football avec filtres avances."
       />
 
       <div className="container py-4 sm:py-8 max-w-4xl">
@@ -298,7 +310,7 @@ const SearchPage = () => {
             <div className="h-6 w-1 rounded-full gradient-primary" />
             <h1 className="text-xl sm:text-2xl font-black text-foreground">Recherche</h1>
           </div>
-          <p className="text-xs text-muted-foreground ml-3">Équipes, joueurs, compétitions et actualités</p>
+          <p className="text-xs text-muted-foreground ml-3">Matchs, equipes, joueurs, competitions et actualites</p>
         </div>
 
         {/* Search bar */}
@@ -306,7 +318,7 @@ const SearchPage = () => {
           <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             ref={inputRef}
-            placeholder="Rechercher... (ex : Mbappé, Arsenal, Ligue 1)"
+            placeholder="Rechercher... (ex : Inter, Bologna Inter, Serie A)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-12 pr-12 h-12 sm:h-14 rounded-2xl border-border/60 bg-card text-sm sm:text-base focus-visible:ring-primary"
@@ -445,7 +457,7 @@ const SearchPage = () => {
         {/* Active filter tags */}
         {activeFilterCount > 0 && !filtersOpen && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {filters.types.length < 4 &&
+            {filters.types.length < DEFAULT_FILTERS.types.length &&
               TYPE_LABELS.filter(({ key }) => !filters.types.includes(key)).map(({ key, label }) => (
                 <span key={key} className="flex items-center gap-1 rounded-full bg-muted/60 px-2.5 py-1 text-xs text-muted-foreground">
                   {label} exclu
@@ -570,7 +582,11 @@ const SearchPage = () => {
         {/* Results section */}
         {query && (
           <div className="mt-6 space-y-6 pb-20">
-            {Object.entries(groupedResults).map(([type, items]) => (
+            {typeOrder
+              .filter((type) => groupedResults[type]?.length)
+              .map((type) => {
+                const items = groupedResults[type];
+                return (
               <motion.section 
                 key={type}
                 initial={{ opacity: 0, x: -10 }}
@@ -591,7 +607,8 @@ const SearchPage = () => {
                   ))}
                 </div>
               </motion.section>
-            ))}
+                );
+              })}
 
             {results.length === 0 && !isLoading && query.length >= 2 && (
               <div className="text-center py-20">

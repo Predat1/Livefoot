@@ -201,6 +201,10 @@ function getLeagueWeight(league?: Partial<RankingLeague> | RankingMatch["league"
   if (name.includes("amical") && name.includes("international")) return 875;
   if (name.includes("copa libertadores") || name.includes("libertadores")) return 870;
   if (name.includes("copa sudamericana") || name.includes("sudamericana")) return 860;
+  if (
+    (name.includes("u17") || name.includes("u-17") || name.includes("under 17")) &&
+    (name.includes("africa") || name.includes("afcon") || name.includes("caf") || name.includes("coupe d'afrique"))
+  ) return 865;
   if (name.includes("euro u17") || name.includes("u17 championship") || name.includes("u17 european")) return 850;
   if ((name.includes("club friendly") || name.includes("club friendlies")) && country === "world") return 825;
   if ((name.includes("promotion") || name.includes("barrage")) && name.includes("ligue 1")) return 820;

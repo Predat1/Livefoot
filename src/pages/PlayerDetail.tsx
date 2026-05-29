@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHeadEnhanced";
-import { usePlayerDetailApi, usePlayerTrophies, usePlayerSeasons, useTopScorers, usePlayerSidelined } from "@/hooks/useApiFootball";
+import { getFootballSeasonForDate, usePlayerDetailApi, usePlayerTrophies, usePlayerSeasons, useTopScorers, usePlayerSidelined } from "@/hooks/useApiFootball";
 import { ArrowLeft, Star, Target, TrendingUp, User, Shirt, Ruler, Weight, Calendar, ChevronDown, ChevronUp, Timer, Footprints, Crosshair, Shield, Zap, Trophy, Loader2, GitCompare, Search, X, Activity } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import TeamLogo from "@/components/TeamLogo";
@@ -70,12 +70,13 @@ const PlayerDetail = () => {
   const [compareSearch, setCompareSearch] = useState("");
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
   const [compareLeague, setCompareLeague] = useState("39");
+  const currentSeason = getFootballSeasonForDate(new Date());
 
   // Fetch compare player data
-  const { data: comparePlayer, isLoading: compareLoading } = usePlayerDetailApi(comparePlayerId || "", "2024");
+  const { data: comparePlayer, isLoading: compareLoading } = usePlayerDetailApi(comparePlayerId || "", currentSeason);
 
   // Fetch players list for compare search
-  const { data: leaguePlayers } = useTopScorers(compareLeague, "2024");
+  const { data: leaguePlayers } = useTopScorers(compareLeague, currentSeason);
   const searchablePlayers = (leaguePlayers || []).filter(p =>
     p.id !== playerId &&
     (compareSearch === "" || p.name.toLowerCase().includes(compareSearch.toLowerCase()) || p.team.toLowerCase().includes(compareSearch.toLowerCase()))

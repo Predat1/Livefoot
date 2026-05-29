@@ -140,7 +140,7 @@ function isFinishedStatus(status?: string) {
   return !!status && FINISHED_STATUSES.includes(status);
 }
 
-function getFootballSeasonForDate(date: Date) {
+export function getFootballSeasonForDate(date: Date) {
   const year = date.getFullYear();
   return String(date.getMonth() >= 6 ? year : year - 1);
 }
@@ -548,8 +548,8 @@ export function useTopScorers(leagueId: string, season: string) {
       const res = await getTopScorers(leagueId, season);
       return transformTopScorers(res.response);
     },
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000,
     enabled: !!leagueId && !!season,
   });
 }
@@ -561,7 +561,7 @@ export function useTopAssists(leagueId: string, season: string) {
       const res = await getTopAssists(leagueId, season);
       return transformTopScorers(res.response);
     },
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    staleTime: 30 * 60 * 1000,
     enabled: !!leagueId && !!season,
   });
 }
@@ -1133,7 +1133,7 @@ export function useAllLeagues() {
 
 // ─── Player Detail ───────────────────────────────────────────
 
-export function usePlayerDetailApi(playerId: string, season = "2024") {
+export function usePlayerDetailApi(playerId: string, season = getFootballSeasonForDate(new Date())) {
   const isNumeric = /^\d+$/.test(playerId);
 
   const parsePlayerResponse = (res: any) => {
@@ -1200,7 +1200,7 @@ export function usePlayerDetailApi(playerId: string, season = "2024") {
       const res = await getPlayerById(playerId, season);
       return parsePlayerResponse(res);
     },
-    staleTime: 60 * 60 * 1000, // 1 hour for standings
+    staleTime: 30 * 60 * 1000,
     enabled: !!playerId && isNumeric,
   });
 
@@ -1217,7 +1217,7 @@ export function usePlayerDetailApi(playerId: string, season = "2024") {
       ) || res.response[0];
       return parsePlayerResponse({ response: [best] });
     },
-    staleTime: 60 * 60 * 1000, // 1 hour for squad
+    staleTime: 30 * 60 * 1000,
     enabled: !!playerId && !isNumeric,
   });
 
@@ -1244,7 +1244,8 @@ export function usePlayerSeasons(playerId: string) {
   return useQuery({
     queryKey: ["player-seasons", playerId],
     queryFn: async () => {
-      const seasons = ["2024", "2023"]; // Reduced from 5 to 2 seasons (quota optimization)
+      const currentSeason = Number(getFootballSeasonForDate(new Date()));
+      const seasons = Array.from({ length: 5 }, (_, index) => String(currentSeason - index));
       
       const responses = await Promise.allSettled(
         seasons.map(season => getPlayers({ id: playerId, season }))

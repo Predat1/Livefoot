@@ -52,6 +52,7 @@ const Header = () => {
 
   const getResultIcon = (type: string) => {
     switch (type) {
+      case "match": return <Zap className="h-4 w-4 text-primary" />;
       case "team": return <Users className="h-4 w-4 text-primary" />;
       case "player": return <Star className="h-4 w-4 text-primary" />;
       case "competition": return <Trophy className="h-4 w-4 text-primary" />;
@@ -120,171 +121,114 @@ const Header = () => {
     return null;
   };
 
+  const resultGroups = [
+    { type: "match", label: "Matchs" },
+    { type: "team", label: "Equipes" },
+    { type: "competition", label: "Competitions" },
+    { type: "player", label: "Joueurs" },
+    { type: "news", label: "Actualites" },
+  ] as const;
+
   const searchResults = (
+    <div className="z-50 max-h-[70vh] overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+      <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          {results.length > 0 ? `${results.length} resultat${results.length > 1 ? "s" : ""}` : "Recherche"}
+        </span>
+        {query && <span className="max-w-[170px] truncate text-[10px] text-muted-foreground">"{query}"</span>}
+      </div>
 
-    <div className="bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50">
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-8 gap-3">
-          <Loader2 className="h-6 w-6 text-primary animate-spin" />
-          <div className="max-h-[70vh] overflow-y-auto rounded-2xl border border-border/50 bg-card/98 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-            {/* Header with query info */}
-            <div className="sticky top-0 z-10 bg-card/98 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                {results.length > 0 ? `${results.length} résultat${results.length > 1 ? 's' : ''}` : 'Recherche'}
-              </span>
-              {query && (
-                <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
-                  "{query}"
-                </span>
-              )}
-            </div>
+      <div className="max-h-[56vh] overflow-y-auto p-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            Recherche en cours...
+          </div>
+        ) : results.length > 0 ? (
+          <>
+            {resultGroups.map(({ type, label }) => {
+              const typeResults = results.filter((result) => result.type === type).slice(0, type === "match" ? 6 : 4);
+              if (typeResults.length === 0) return null;
 
-            <div className="p-2">
-              {results.length > 0 ? (
-                <>
-                  {/* Group results by type */}
-                  {['teams', 'players', 'competitions'].map(type => {
-                    const typeResults = results.filter(r => r.type === type);
-                    if (typeResults.length === 0) return null;
+              return (
+                <div key={type} className="mb-2 last:mb-0">
+                  <div className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                    {getResultIcon(type)}
+                    <span>{label}</span>
+                    <span className="h-px flex-1 bg-border/50" />
+                  </div>
+
+                  {typeResults.map((result, index) => {
+                    const favType = getFavoriteType(result.type);
+                    const isFav = favType ? isFavorite(favType as any, result.id) : false;
 
                     return (
-                      <div key={type} className="mb-2 last:mb-0">
-                        <div className="flex items-center gap-2 px-3 py-1.5">
-                          {type === 'teams' && <Shield className="h-3.5 w-3.5 text-primary" />}
-                          {type === 'players' && <User className="h-3.5 w-3.5 text-accent" />}
-                          {type === 'competitions' && <Trophy className="h-3.5 w-3.5 text-amber-500" />}
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                            {type === 'teams' ? 'Équipes' : type === 'players' ? 'Joueurs' : 'Compétitions'}
-                          </span>
-                          <div className="flex-1 h-px bg-border/30 ml-2" />
+                      <motion.button
+                        key={`${result.type}-${result.id}`}
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        onClick={() => handleSearchSelect(result.href)}
+                        className="group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted/60"
+                      >
+                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted">
+                          {result.image ? <img src={result.image} alt="" className="h-full w-full object-contain p-1" /> : getResultIcon(result.type)}
                         </div>
-
-                        {typeResults.map((r, index) => {
-                          const isFav = isFavorite(type as any, r.id);
-                          return (
-                            <motion.button
-                              key={`${r.type}-${r.id}`}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.03 }}
-                              onClick={() => navigateTo(r)}
-                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-primary/5 active:scale-[0.98] group"
-                            >
-                              <div className="relative h-9 w-9 rounded-xl bg-muted flex items-center justify-center overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all group-hover:shadow-md">
-                                {r.image ? (
-                                  <img src={r.image} alt="" className="h-full w-full object-cover" />
-                                ) : (
-                                  getResultIcon(r.type)
-                                )}
-                                {isFav && (
-                                  <div className="absolute -top-1 -right-1">
-                                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{r.name}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">{r.subtitle}</p>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    toggleFavorite(type as any, r.id, r.name);
-                                  }}
-                                  className="p-1.5 rounded-full hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
-                                >
-                                  <Star className={cn("h-3.5 w-3.5", isFav ? "fill-amber-400 text-amber-400" : "text-muted-foreground/50")} />
-                                </div>
-                                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
-                              </div>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-foreground group-hover:text-primary">{result.name}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">{result.subtitle}</p>
+                        </div>
+                        {favType && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(favType as any, result.id, result.name);
+                            }}
+                            className="rounded-full p-1.5 text-muted-foreground opacity-70 transition hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+                          >
+                            <Star className={cn("h-3.5 w-3.5", isFav && "fill-amber-400 text-amber-400")} />
+                          </button>
+                        )}
+                        <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/50" />
+                      </motion.button>
                     );
                   })}
-
-                  <Link
-                    to={`/search?q=${encodeURIComponent(query)}`}
-                    className="flex items-center justify-center gap-2 w-full mt-2 py-3 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 text-xs font-black text-primary transition-all hover:scale-[1.02] active:scale-[0.98]"
-                    onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                    Voir tous les résultats
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </>
-              ) : query.length >= 3 ? (
-                <div className="py-10 text-center px-4">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-                    <Search className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm font-medium text-foreground mb-1">Aucun résultat</p>
-                  <p className="text-xs text-muted-foreground mb-4">pour "{query}"</p>
-                  <Link
-                    to={`/search?q=${encodeURIComponent(query)}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
-                    onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
-                  >
-                    Recherche avancée <ArrowRight className="h-3 w-3" />
-                  </Link>
                 </div>
-              ) : (
-                <div className="py-8 text-center px-4">
-                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-muted mb-2">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Tapez au moins 3 caractères</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">pour commencer la recherche</p>
-                </div>
-              )}
-            </div>
+              );
+            })}
 
-            {/* Footer with keyboard hints */}
-            <div className="sticky bottom-0 bg-card/98 backdrop-blur-xl border-t border-border/30 px-4 py-2 flex items-center justify-between text-[10px] text-muted-foreground">
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[9px]">↑↓</kbd>
-                  <span>naviguer</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[9px]">↵</kbd>
-                  <span>sélectionner</span>
-                </span>
-              </div>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[9px]">esc</kbd>
-                <span>fermer</span>
-              </span>
+            <Link
+              to={`/search?q=${encodeURIComponent(query)}`}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-primary/15 bg-primary/5 py-2.5 text-xs font-black text-primary transition hover:bg-primary/10"
+              onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
+            >
+              <Search className="h-3.5 w-3.5" />
+              Voir la recherche complete
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </>
+        ) : query.trim().length >= 2 ? (
+          <div className="px-4 py-8 text-center">
+            <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+              <Search className="h-5 w-5 text-muted-foreground" />
             </div>
+            <p className="mb-1 text-sm font-bold text-foreground">Aucun resultat rapide</p>
+            <p className="mb-4 text-xs text-muted-foreground">Essayez la recherche complete pour "{query}".</p>
+            <Link
+              to={`/search?q=${encodeURIComponent(query)}`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/20"
+              onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
+            >
+              Recherche avancee <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
-        </div>
-      ) : query.length >= 3 ? (
-        <div className="py-10 text-center px-4">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-            <Search className="h-5 w-5 text-muted-foreground" />
+        ) : (
+          <div className="px-4 py-7 text-center">
+            <p className="text-xs text-muted-foreground">Tapez au moins 2 caracteres</p>
           </div>
-          <p className="text-sm font-medium text-foreground mb-1">Aucun résultat</p>
-          <p className="text-xs text-muted-foreground mb-4">pour "{query}"</p>
-          <Link
-            to={`/search?q=${encodeURIComponent(query)}`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
-            onClick={() => { setSearchOpen(false); setMobileSearchOpen(false); }}
-          >
-            Recherche avancée <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-      ) : (
-        <div className="py-8 text-center px-4">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-muted mb-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-xs text-muted-foreground">Tapez au moins 3 caractères</p>
-          <p className="text-[10px] text-muted-foreground/60 mt-1">pour commencer la recherche</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 
@@ -353,6 +297,8 @@ const Header = () => {
                       setSearchOpen(false);
                       setQuery('');
                       searchInputRef.current?.blur();
+                    } else if (e.key === 'Enter' && query.trim().length >= 2) {
+                      handleSearchSelect(`/search?q=${encodeURIComponent(query)}`);
                     }
                   }}
                   className="h-9 xl:h-10 w-[200px] xl:w-[320px] rounded-xl border border-header-foreground/20 bg-header-foreground/10 pl-10 pr-16 text-[12px] xl:text-sm text-header-foreground placeholder:text-header-foreground/40 transition-all duration-300 group-focus-within:w-[280px] xl:group-focus-within:w-[400px] group-focus-within:bg-header-foreground/20 group-focus-within:border-primary/30 focus-visible:ring-2 focus-visible:ring-primary/20"
@@ -372,7 +318,7 @@ const Header = () => {
                 </div>
               </div>
             </div>
-            {searchOpen && results.length > 0 && (
+            {searchOpen && query.trim().length >= 2 && (
               <div className="absolute top-full mt-2 right-0 w-[280px] xl:w-[400px]">
                 {searchResults}
               </div>
@@ -477,6 +423,14 @@ const Header = () => {
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && query.trim().length >= 2) {
+                    handleSearchSelect(`/search?q=${encodeURIComponent(query)}`);
+                  } else if (e.key === 'Escape') {
+                    setMobileSearchOpen(false);
+                    setSearchOpen(false);
+                  }
+                }}
                 autoFocus
                 className="h-10 w-full rounded-xl border-header-foreground/10 bg-header-foreground/5 pl-10 pr-10 text-sm text-header-foreground placeholder:text-header-foreground/40 focus-visible:ring-primary"
               />
@@ -487,7 +441,7 @@ const Header = () => {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            {searchOpen && results.length > 0 && (
+            {searchOpen && query.trim().length >= 2 && (
               <div className="mt-2 max-h-[60vh] overflow-y-auto rounded-xl">
                 {searchResults}
               </div>

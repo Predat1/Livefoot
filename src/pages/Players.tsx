@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import Layout from "@/components/Layout";
 import { positions } from "@/data/playersData";
-import { useTopScorers } from "@/hooks/useApiFootball";
+import { getFootballSeasonForDate, useTopScorers } from "@/hooks/useApiFootball";
 import { Search, Star, Target, TrendingUp, X, GitCompare, ChevronDown, ChevronUp, Trophy, Activity, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ const LEAGUES = [
   { id: "61", name: "Ligue 1", country: "France" },
 ];
 
-const currentSeason = "2025";
+const currentSeason = getFootballSeasonForDate(new Date());
 
 const Players = () => {
   const [activePosition, setActivePosition] = useState("All");
