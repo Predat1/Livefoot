@@ -8,7 +8,7 @@ import {
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
   useLiveOdds, useStandings, useRealtimeFixtureState, useRealtimeFixtureEvents,
-  useMatchSnapshot, buildFixtureFromMatchSnapshot, type LeagueData,
+  type LeagueData,
 } from "@/hooks/useApiFootball";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { 
@@ -208,7 +208,6 @@ const Match = () => {
 
   // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
-  const { data: snapshotData } = useMatchSnapshot(matchId);
   const { data: realtimeState } = useRealtimeFixtureState(matchId);
   const cachedFixtureData = useMemo(() => {
     if (!matchId) return null;
@@ -224,8 +223,8 @@ const Match = () => {
     return null;
   }, [queryClient, matchId]);
   const resolvedFixtureData = useMemo(
-    () => fixtureData || buildFixtureFromRealtimeState(realtimeState, matchId) || buildFixtureFromMatchSnapshot(snapshotData, matchId) || cachedFixtureData,
-    [fixtureData, realtimeState, matchId, snapshotData, cachedFixtureData]
+    () => fixtureData || buildFixtureFromRealtimeState(realtimeState, matchId) || cachedFixtureData,
+    [fixtureData, realtimeState, matchId, cachedFixtureData]
   );
   const fix = resolvedFixtureData as any;
   const statusRaw = realtimeState?.status || fix?.fixture?.status?.short || "";

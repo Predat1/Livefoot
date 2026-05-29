@@ -9,7 +9,7 @@ import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { getFootballSeasonForDate, useFixturesByDate, useMatchSnapshotsByDate, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
+import { getFootballSeasonForDate, useFixturesByDate, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2 } from "lucide-react";
@@ -45,7 +45,6 @@ const Index = () => {
   const [referralBannerDismissed, setReferralBannerDismissed] = useState(false);
 
   const { data: apiLeagues, isLoading, isError, refetch } = useFixturesByDate(selectedDate);
-  const { data: snapshotLeagues, refetch: refetchSnapshots } = useMatchSnapshotsByDate(selectedDate);
   const { data: realtimeLiveLeagues, refetch: refetchRealtimeLive } = useRealtimeLiveFixtures();
   const { favorites } = useFavorites();
 
@@ -68,20 +67,7 @@ const Index = () => {
     }
 
     const rawMap = new Map<string, LeagueData>();
-    for (const league of snapshotLeagues || []) {
-      rawMap.set(league.id, {
-        ...league,
-        matches: league.matches.map((match) => liveMatches.get(match.id)?.match || match),
-      });
-    }
     for (const league of apiLeagues || []) {
-      const existing = rawMap.get(league.id);
-      if (existing) {
-        for (const match of league.matches) {
-          if (!existing.matches.some((item) => item.id === match.id)) existing.matches.push(liveMatches.get(match.id)?.match || match);
-        }
-        continue;
-      }
       rawMap.set(league.id, {
         ...league,
         matches: league.matches.map((match) => liveMatches.get(match.id)?.match || match),
@@ -102,7 +88,7 @@ const Index = () => {
     }));
 
     return sortLeaguesByPriority(raw, rankingFavorites);
-  }, [apiLeagues, realtimeLiveLeagues, rankingFavorites, snapshotLeagues]);
+  }, [apiLeagues, realtimeLiveLeagues, rankingFavorites]);
 
   const matchCounts = useMemo(() => {
     let all = 0;
@@ -160,8 +146,8 @@ const Index = () => {
   }, []);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.allSettled([refetch(), refetchRealtimeLive(), refetchSnapshots()]);
-  }, [refetch, refetchRealtimeLive, refetchSnapshots]);
+    await Promise.allSettled([refetch(), refetchRealtimeLive()]);
+  }, [refetch, refetchRealtimeLive]);
 
   const { containerRef, pullDistance, isRefreshing, progress } = usePullToRefresh({
     onRefresh: handleRefresh,

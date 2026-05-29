@@ -268,33 +268,6 @@ type LiveMatchStateRow = {
   updated_at: string | null;
 };
 
-export type MatchSnapshotRow = {
-  fixture_id: string;
-  provider: string;
-  provider_fixture_id: string;
-  match_date: string;
-  kickoff_at: string | null;
-  home_team_id: string | null;
-  home_team: string;
-  home_logo: string | null;
-  away_team_id: string | null;
-  away_team: string;
-  away_logo: string | null;
-  home_score: number | null;
-  away_score: number | null;
-  minute: number | null;
-  status: string;
-  league_id: string | null;
-  league_name: string | null;
-  league_logo: string | null;
-  league_country: string | null;
-  coverage_level: string | null;
-  source_priority: number | null;
-  raw_payload: any;
-  last_seen_at: string | null;
-  updated_at: string | null;
-};
-
 function transformLiveStatesToLeagues(rows: LiveMatchStateRow[] = [], timezone = getUserMatchTimezone()): LeagueData[] {
   const leagueMap = new Map<string, LeagueData>();
 
@@ -341,106 +314,6 @@ function transformLiveStatesToLeagues(rows: LiveMatchStateRow[] = [], timezone =
   }
 
   return mergeLeagueData(Array.from(leagueMap.values()));
-}
-
-function transformSnapshotsToLeagues(
-  rows: MatchSnapshotRow[] = [],
-  timezone = getUserMatchTimezone(),
-  options: { liveOnly?: boolean } = {},
-): LeagueData[] {
-  const leagueMap = new Map<string, LeagueData>();
-
-  for (const row of rows) {
-    if (!row.fixture_id || !row.home_team || !row.away_team) continue;
-    const statusShort = row.status || "NS";
-    const status = mapFixtureStatus(statusShort);
-    if (options.liveOnly && status !== "live") continue;
-
-    const isLive = status === "live";
-    const isFinished = status === "finished";
-    const leagueId = row.league_id || `snapshot-${row.league_name || "football"}`;
-    if (!leagueMap.has(leagueId)) {
-      leagueMap.set(leagueId, {
-        id: leagueId,
-        name: row.league_name || "Football",
-        country: row.league_country || "World",
-        logo: row.league_logo || undefined,
-        matches: [],
-      });
-    }
-
-    leagueMap.get(leagueId)!.matches.push({
-      id: row.fixture_id,
-      homeTeam: {
-        id: row.home_team_id || "",
-        name: row.home_team,
-        logo: row.home_logo || undefined,
-        score: isLive || isFinished ? row.home_score ?? 0 : undefined,
-      },
-      awayTeam: {
-        id: row.away_team_id || "",
-        name: row.away_team,
-        logo: row.away_logo || undefined,
-        score: isLive || isFinished ? row.away_score ?? 0 : undefined,
-      },
-      time: isLive ? "LIVE" : formatMatchTime(row.kickoff_at, timezone),
-      status,
-      statusShort,
-      timezone,
-      kickoffIso: row.kickoff_at || undefined,
-      lastUpdatedAt: row.updated_at || undefined,
-      isStale: isLive ? isStaleLiveUpdate(row.updated_at) : false,
-      minute: row.minute || undefined,
-    });
-  }
-
-  return mergeLeagueData(Array.from(leagueMap.values()));
-}
-
-export function buildFixtureFromMatchSnapshot(row: MatchSnapshotRow | null | undefined, fixtureId?: string) {
-  if (!row?.fixture_id) return null;
-  const status = mapFixtureStatus(row.status || "NS");
-
-  return {
-    fixture: {
-      id: Number(row.fixture_id) || row.fixture_id || fixtureId,
-      date: row.kickoff_at || row.updated_at || new Date().toISOString(),
-      status: {
-        short: row.status || "NS",
-        elapsed: row.minute ?? null,
-      },
-      venue: {},
-      referee: null,
-    },
-    teams: {
-      home: {
-        id: row.home_team_id || "",
-        name: row.home_team,
-        logo: row.home_logo || "",
-      },
-      away: {
-        id: row.away_team_id || "",
-        name: row.away_team,
-        logo: row.away_logo || "",
-      },
-    },
-    goals: {
-      home: status !== "scheduled" ? row.home_score ?? 0 : null,
-      away: status !== "scheduled" ? row.away_score ?? 0 : null,
-    },
-    league: {
-      id: row.league_id || "",
-      name: row.league_name || "Football",
-      logo: row.league_logo || "",
-      country: row.league_country || "",
-      season: row.kickoff_at ? new Date(row.kickoff_at).getFullYear() : new Date().getFullYear(),
-    },
-    _fromMatchSnapshot: true,
-    _provider: row.provider,
-    _coverageLevel: row.coverage_level,
-    _lastUpdatedAt: row.updated_at,
-    _fallbackFixtureId: fixtureId || row.fixture_id,
-  };
 }
 
 function transformTopScorers(scorers: any[] = []): PlayerData[] {
@@ -509,9 +382,7 @@ export function useFixturesByDate(date: Date) {
           daily = transformFixturesToLeagues(scheduledRetry?.response || [], timezone);
         }
         const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
-        const hasLiveCoverage = directLive.some((league) => league.matches.some((match) => match.status === "live"))
-          || daily.some((league) => league.matches.some((match) => match.status === "live"));
-        const recoveredLive = hasLiveCoverage ? [] : await fetchPriorityLiveLeagues(dateStr, season, timezone);
+        const recoveredLive = await fetchPriorityLiveLeagues(dateStr, season, timezone);
 
         return mergeLeagueData(directLive, recoveredLive, daily);
       } catch (error) {
@@ -526,71 +397,6 @@ export function useFixturesByDate(date: Date) {
       return hasLive ? 30 * 1000 : 10 * 60 * 1000; // 30s if live, 10min otherwise
     },
     refetchIntervalInBackground: false,
-  });
-}
-
-export function useMatchSnapshotsByDate(date: Date) {
-  const timezone = getUserMatchTimezone();
-  const dateStr = formatApiDate(date, timezone);
-
-  return useQuery({
-    queryKey: ["match-snapshots", dateStr, timezone],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("match_snapshots")
-        .select("*")
-        .eq("match_date", dateStr)
-        .order("source_priority", { ascending: false })
-        .order("updated_at", { ascending: false });
-      if (error) throw error;
-      return transformSnapshotsToLeagues((data || []) as MatchSnapshotRow[], timezone);
-    },
-    staleTime: 5 * 1000,
-    refetchInterval: 30 * 1000,
-    refetchIntervalInBackground: false,
-  });
-}
-
-export function useLiveSnapshots() {
-  const timezone = getUserMatchTimezone();
-
-  return useQuery({
-    queryKey: ["match-snapshots", "live", timezone],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("match_snapshots")
-        .select("*")
-        .in("status", LIVE_STATUSES)
-        .order("source_priority", { ascending: false })
-        .order("updated_at", { ascending: false });
-      if (error) throw error;
-      const rows = ((data || []) as MatchSnapshotRow[]).filter((row) => !isStaleLiveUpdate(row.updated_at, 2 * 60_000));
-      return transformSnapshotsToLeagues(rows, timezone, { liveOnly: true });
-    },
-    staleTime: 5 * 1000,
-    refetchInterval: 15 * 1000,
-    refetchIntervalInBackground: false,
-  });
-}
-
-export function useMatchSnapshot(fixtureId: string) {
-  return useQuery({
-    queryKey: ["match-snapshot", fixtureId],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("match_snapshots")
-        .select("*")
-        .eq("fixture_id", fixtureId)
-        .maybeSingle();
-      if (error) throw error;
-      return (data || null) as MatchSnapshotRow | null;
-    },
-    staleTime: 5 * 1000,
-    refetchInterval: (query) => {
-      const status = (query.state.data as MatchSnapshotRow | null)?.status || "";
-      return isLiveStatus(status) ? 15 * 1000 : false;
-    },
-    enabled: !!fixtureId,
   });
 }
 
@@ -610,9 +416,7 @@ export function useLiveFixtures() {
       const recoveredDateLive = dateWideLive
         .map((league) => ({ ...league, matches: league.matches.filter((match) => match.status === "live") }))
         .filter((league) => league.matches.length > 0);
-      const hasLiveCoverage = directLive.some((league) => league.matches.some((match) => match.status === "live"))
-        || recoveredDateLive.length > 0;
-      const recoveredPriorityLive = hasLiveCoverage ? [] : await fetchPriorityLiveLeagues(today, season, timezone);
+      const recoveredPriorityLive = await fetchPriorityLiveLeagues(today, season, timezone);
 
       if (liveRes.status === "rejected") {
         console.warn("fixtures?live=all indisponible, rattrapage par date puis ligues prioritaires.", liveRes.reason);

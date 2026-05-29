@@ -392,12 +392,9 @@ export const useSearch = (debounceMs = 300) => {
     const cachedLive = queryClient
       .getQueriesData<LeagueData[]>({ queryKey: ["live-match-states"] })
       .flatMap(([, data]) => transformLeagueMatches(data || []));
-    const cachedSnapshots = queryClient
-      .getQueriesData<LeagueData[]>({ queryKey: ["match-snapshots"] })
-      .flatMap(([, data]) => transformLeagueMatches(data || []));
     const newsCache = queryClient.getQueryData<NewsArticle[]>(["football-news"]) || [];
 
-    const baseResults = unique([...cachedLive, ...cachedSnapshots, ...cachedFixtures, ...apiResults, ...getFallbackResults()], (item) => `${item.type}-${item.id}`);
+    const baseResults = unique([...cachedLive, ...cachedFixtures, ...apiResults, ...getFallbackResults()], (item) => `${item.type}-${item.id}`);
 
     if (filters.types.includes("news")) {
       const news = newsCache.length > 0 ? newsCache : mockNews;

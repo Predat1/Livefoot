@@ -190,7 +190,7 @@ function makeGracefulApiResponse(data: any) {
 }
 
 function isLiveSensitiveRequest(endpoint: string, params: Record<string, string>): boolean {
-  return endpoint === "fixtures" && (params?.live === "all" || !!params?.id);
+  return endpoint === "fixtures" && (params?.live === "all" || !!params?.id || !!params?.date || !!params?.status);
 }
 
 async function consumeDailyQuota(supabase: any): Promise<QuotaState> {

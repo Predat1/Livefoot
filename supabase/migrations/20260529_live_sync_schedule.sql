@@ -1,4 +1,4 @@
--- Keep the live sync cadence aligned with the match_snapshots pipeline.
+-- Keep the API-Football live sync cadence aligned with the realtime pipeline.
 
 DO $$
 DECLARE
