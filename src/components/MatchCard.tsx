@@ -18,6 +18,8 @@ interface Match {
   time: string;
   status: "scheduled" | "live" | "finished";
   minute?: number;
+  lastUpdatedAt?: string;
+  isStale?: boolean;
 }
 
 interface MatchCardProps {
@@ -31,6 +33,9 @@ const MatchCard = ({ match }: MatchCardProps) => {
   
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
+  const freshnessSeconds = match.lastUpdatedAt
+    ? Math.max(0, Math.floor((Date.now() - new Date(match.lastUpdatedAt).getTime()) / 1000))
+    : null;
   
   const homeScore = match.homeTeam?.score ?? 0;
   const awayScore = match.awayTeam?.score ?? 0;
@@ -148,6 +153,16 @@ const MatchCard = ({ match }: MatchCardProps) => {
               {match.minute}'
             </span>
           </div>
+        )}
+        {isLive && freshnessSeconds !== null && (
+          <span
+            className={cn(
+              "mt-1 text-[8px] sm:text-[10px] font-semibold",
+              match.isStale ? "text-amber-500" : "text-muted-foreground",
+            )}
+          >
+            {match.isStale ? "retard donnees" : `maj ${freshnessSeconds}s`}
+          </span>
         )}
         {isLive && (
           <div className="mt-1 px-1.5 py-0.5 rounded-full bg-primary/20 flex items-center gap-1 animate-pulse">

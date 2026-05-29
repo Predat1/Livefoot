@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { useLiveFixtures, useRealtimeLiveFixtures } from "@/hooks/useApiFootball";
+import { useLiveFixtures, useLiveSnapshots, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
 import { useGoalNotifications } from "@/hooks/useGoalNotifications";
 import { Zap, RefreshCw, Clock, Volume2, VolumeX, History, Globe, Loader2, Bell, BellOff } from "lucide-react";
 import TeamLogo from "@/components/TeamLogo";
@@ -32,18 +32,43 @@ const Live = () => {
   const [activeTab, setActiveTab] = useState<"live" | "map" | "history">("live");
 
   const realtimeQuery = useRealtimeLiveFixtures();
+  const snapshotQuery = useLiveSnapshots();
   const fallbackQuery = useLiveFixtures();
   const hasRealtimeLive = (realtimeQuery.data || []).some((league) => league.matches.length > 0);
+  const hasSnapshotLive = (snapshotQuery.data || []).some((league) => league.matches.length > 0);
   const userCountries = useMemo(() => getUserCountryCandidates(), []);
+  const mergeLiveLeagues = useCallback((groups: LeagueData[][]) => {
+    const leagueMap = new Map<string, LeagueData>();
+    const seenMatches = new Set<string>();
+    for (const group of groups) {
+      for (const league of group || []) {
+        const existing = leagueMap.get(league.id) || { ...league, matches: [] };
+        for (const match of league.matches || []) {
+          if (seenMatches.has(match.id)) continue;
+          seenMatches.add(match.id);
+          existing.matches.push(match);
+        }
+        leagueMap.set(league.id, existing);
+      }
+    }
+    return Array.from(leagueMap.values()).filter((league) => league.matches.length > 0);
+  }, []);
   const liveLeagues = useMemo(
-    () => sortLeaguesByPriority(hasRealtimeLive ? realtimeQuery.data || [] : fallbackQuery.data || [], { userCountries }),
-    [fallbackQuery.data, hasRealtimeLive, realtimeQuery.data, userCountries],
+    () => sortLeaguesByPriority(
+      mergeLiveLeagues([
+        realtimeQuery.data || [],
+        snapshotQuery.data || [],
+        hasRealtimeLive || hasSnapshotLive ? [] : fallbackQuery.data || [],
+      ]),
+      { userCountries },
+    ),
+    [fallbackQuery.data, hasRealtimeLive, hasSnapshotLive, mergeLiveLeagues, realtimeQuery.data, snapshotQuery.data, userCountries],
   );
   const refetch = async () => {
-    await Promise.allSettled([realtimeQuery.refetch(), fallbackQuery.refetch()]);
+    await Promise.allSettled([realtimeQuery.refetch(), snapshotQuery.refetch(), fallbackQuery.refetch()]);
   };
-  const dataLoading = realtimeQuery.isLoading && fallbackQuery.isLoading;
-  const dataUpdatedAt = hasRealtimeLive ? realtimeQuery.dataUpdatedAt : fallbackQuery.dataUpdatedAt;
+  const dataLoading = realtimeQuery.isLoading && snapshotQuery.isLoading && fallbackQuery.isLoading;
+  const dataUpdatedAt = hasRealtimeLive ? realtimeQuery.dataUpdatedAt : hasSnapshotLive ? snapshotQuery.dataUpdatedAt : fallbackQuery.dataUpdatedAt;
   const { goalHistory, detectGoals, notificationsEnabled, enableNotifications, disableNotifications, isSupported, permissionDenied } = useGoalNotifications(liveLeagues, soundEnabled);
 
   // Sync countdown with React Query's last update time (avoids double-fetching)

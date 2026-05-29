@@ -58,8 +58,8 @@ BEGIN
 
   IF has_cron AND has_net AND has_project_url AND has_publishable_key THEN
     PERFORM cron.schedule(
-      'sync-live-fixtures-20s',
-      '20 seconds',
+      'sync-live-fixtures-15s',
+      '15 seconds',
       $job$
         SELECT net.http_post(
           url := (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'project_url') || '/functions/v1/sync-live-fixtures',
@@ -67,7 +67,7 @@ BEGIN
             'Content-Type', 'application/json',
             'Authorization', 'Bearer ' || (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'publishable_key')
           ),
-          body := jsonb_build_object('timezone', 'Europe/Rome'),
+          body := jsonb_build_object('timezone', 'Africa/Douala'),
           timeout_milliseconds := 15000
         );
       $job$

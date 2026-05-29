@@ -4,17 +4,22 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 const REQUIRED_ENV = ["API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]);
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
+const ACTIVE_STATUSES = new Set([...LIVE_STATUSES, ...FINISHED_STATUSES]);
 const PRIORITY_LEAGUES = [
-  "2", "3", "848", "39", "140", "135", "78", "61",
-  "10", "11", "13", "119", "136", "531", "667",
-  "88", "94", "203", "253", "262", "307", "71", "128", "144", "179", "197",
+  "1", "2", "3", "4", "5", "9", "10", "11", "13", "15", "36", "37",
+  "39", "40", "61", "62", "71", "72", "78", "79", "88", "89", "94", "95",
+  "119", "128", "135", "136", "140", "141", "144", "179", "197", "203",
+  "233", "253", "262", "270", "271", "307", "531", "667", "848",
 ];
-const DIAGNOSTIC_TEAMS = ["500", "505"]; // Bologna, Inter in API-Football.
+const DIAGNOSTIC_SEARCHES = [
+  "Iran", "Gambia", "South Africa", "Nicaragua", "Iraq", "Andorra", "France U17", "Denmark U17",
+];
 const STALE_LIVE_MINUTES = 10;
 
 type ApiFixture = {
   fixture?: {
     id?: number | string;
+    date?: string;
     status?: { short?: string; elapsed?: number | null };
   };
   teams?: {
@@ -24,6 +29,31 @@ type ApiFixture = {
   goals?: { home?: number | null; away?: number | null };
   league?: { id?: number | string; name?: string; logo?: string; country?: string };
   [key: string]: unknown;
+};
+
+type NormalizedFixture = {
+  fixtureId: string;
+  provider: string;
+  providerFixtureId: string;
+  matchDate: string;
+  kickoffAt: string | null;
+  homeTeamId: string;
+  homeTeam: string;
+  homeLogo: string;
+  awayTeamId: string;
+  awayTeam: string;
+  awayLogo: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  minute: number | null;
+  status: string;
+  leagueId: string;
+  leagueName: string;
+  leagueLogo: string;
+  leagueCountry: string;
+  coverageLevel: "elite" | "featured" | "local" | "standard";
+  sourcePriority: number;
+  rawPayload: unknown;
 };
 
 type PreviousLiveState = {
@@ -54,10 +84,50 @@ function todayInTimeZone(timezone: string) {
   return `${parts.find((part) => part.type === "year")?.value}-${parts.find((part) => part.type === "month")?.value}-${parts.find((part) => part.type === "day")?.value}`;
 }
 
+function dateInTimeZone(isoDate: string | null | undefined, timezone: string) {
+  if (!isoDate) return todayInTimeZone(timezone);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: timezone,
+  }).formatToParts(new Date(isoDate));
+  return `${parts.find((part) => part.type === "year")?.value}-${parts.find((part) => part.type === "month")?.value}-${parts.find((part) => part.type === "day")?.value}`;
+}
+
 function footballSeasonForDate(date: string) {
   const parsed = new Date(`${date}T12:00:00Z`);
   const year = parsed.getUTCFullYear();
   return String(parsed.getUTCMonth() >= 6 ? year : year - 1);
+}
+
+function normalize(value?: string) {
+  return (value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getCoverageLevel(leagueId: string, leagueName: string, leagueCountry: string): NormalizedFixture["coverageLevel"] {
+  const name = normalize(leagueName);
+  const country = normalize(leagueCountry);
+  if (["1", "2", "3", "4", "5", "9", "39", "61", "78", "135", "140", "848"].includes(leagueId)) return "elite";
+  if (
+    name.includes("international") ||
+    name.includes("friendly") ||
+    name.includes("amical") ||
+    name.includes("u17") ||
+    name.includes("u20") ||
+    name.includes("u21") ||
+    name.includes("libertadores") ||
+    name.includes("sudamericana") ||
+    name.includes("promotion") ||
+    name.includes("barrage") ||
+    name.includes("caf") ||
+    name.includes("afcon")
+  ) return "featured";
+  if (["cameroon", "cameroun", "france", "south-africa", "south africa"].includes(country)) return "local";
+  return "standard";
 }
 
 async function fetchApiFootball(endpoint: string, params: Record<string, string>) {
@@ -70,47 +140,184 @@ async function fetchApiFootball(endpoint: string, params: Record<string, string>
   return payload.response || [];
 }
 
-function dedupeFixtures(fixtures: ApiFixture[]) {
-  const map = new Map<string, ApiFixture>();
+async function fetchSportmonks(path: string, params: Record<string, string>) {
+  const token = Deno.env.get("SPORTMONKS_API_TOKEN");
+  if (!token) return [];
+
+  const query = new URLSearchParams({
+    api_token: token,
+    include: "participants;league;state;scores;events",
+    locale: "en",
+    ...params,
+  }).toString();
+  const response = await fetch(`https://api.sportmonks.com/v3/football/${path}?${query}`);
+  const payload = await response.json() as { data?: unknown[]; message?: string; errors?: unknown };
+  if (!response.ok) throw new Error(`sportmonks ${path} failed: ${response.status} ${JSON.stringify(payload.errors || payload.message || "")}`);
+  return Array.isArray(payload.data) ? payload.data : [];
+}
+
+function dedupeFixtures(fixtures: NormalizedFixture[]) {
+  const map = new Map<string, NormalizedFixture>();
   for (const fixture of fixtures) {
-    const id = String(fixture?.fixture?.id || "");
-    if (!id || map.has(id)) continue;
-    map.set(id, fixture);
+    if (!fixture.fixtureId) continue;
+    const previous = map.get(fixture.fixtureId);
+    if (!previous || fixture.sourcePriority >= previous.sourcePriority) map.set(fixture.fixtureId, fixture);
   }
   return Array.from(map.values());
 }
 
-async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>, fixture: ApiFixture) {
-  const status = fixture?.fixture?.status?.short || "NS";
+function normalizeApiFixture(fixture: ApiFixture, timezone: string): NormalizedFixture | null {
   const fixtureId = String(fixture?.fixture?.id || "");
-  if (!fixtureId) return;
+  const homeTeam = fixture?.teams?.home?.name || "";
+  const awayTeam = fixture?.teams?.away?.name || "";
+  if (!fixtureId || !homeTeam || !awayTeam) return null;
+
+  const status = fixture?.fixture?.status?.short || "NS";
+  const leagueId = String(fixture?.league?.id || "");
+  const leagueName = fixture?.league?.name || "Football";
+  const leagueCountry = fixture?.league?.country || "";
+  const coverageLevel = getCoverageLevel(leagueId, leagueName, leagueCountry);
+
+  return {
+    fixtureId,
+    provider: "api-football",
+    providerFixtureId: fixtureId,
+    matchDate: dateInTimeZone(fixture?.fixture?.date, timezone),
+    kickoffAt: fixture?.fixture?.date || null,
+    homeTeamId: String(fixture?.teams?.home?.id || ""),
+    homeTeam,
+    homeLogo: fixture?.teams?.home?.logo || "",
+    awayTeamId: String(fixture?.teams?.away?.id || ""),
+    awayTeam,
+    awayLogo: fixture?.teams?.away?.logo || "",
+    homeScore: fixture?.goals?.home ?? null,
+    awayScore: fixture?.goals?.away ?? null,
+    minute: fixture?.fixture?.status?.elapsed ?? null,
+    status,
+    leagueId,
+    leagueName,
+    leagueLogo: fixture?.league?.logo || "",
+    leagueCountry,
+    coverageLevel,
+    sourcePriority: coverageLevel === "elite" ? 80 : coverageLevel === "featured" ? 75 : 65,
+    rawPayload: fixture,
+  };
+}
+
+function findScore(scores: any[] = [], side: "home" | "away") {
+  const score = scores.find((item) => {
+    const participant = item?.score?.participant || item?.participant;
+    const description = normalize(item?.description || item?.type?.name || "");
+    return normalize(participant) === side && (description.includes("current") || description.includes("fulltime") || description.includes("2nd"));
+  }) || scores.find((item) => normalize(item?.score?.participant || item?.participant) === side);
+  const value = score?.score?.goals ?? score?.goals ?? score?.value;
+  return typeof value === "number" ? value : value == null ? null : Number(value);
+}
+
+function normalizeSportmonksFixture(item: any, timezone: string): NormalizedFixture | null {
+  const id = String(item?.id || "");
+  const participants = Array.isArray(item?.participants) ? item.participants : [];
+  const home = participants.find((p: any) => p?.meta?.location === "home") || participants[0];
+  const away = participants.find((p: any) => p?.meta?.location === "away") || participants[1];
+  if (!id || !home?.name || !away?.name) return null;
+
+  const stateName = normalize(item?.state?.short_name || item?.state?.name || "");
+  const status =
+    stateName.includes("ft") || stateName.includes("finished") ? "FT" :
+    stateName.includes("half") ? "HT" :
+    stateName.includes("2nd") || stateName.includes("second") ? "2H" :
+    stateName.includes("1st") || stateName.includes("first") || stateName.includes("inplay") || stateName.includes("live") ? "LIVE" :
+    stateName.includes("postponed") ? "PST" :
+    "NS";
+  const leagueId = item?.league_id ? String(item.league_id) : item?.league?.id ? String(item.league.id) : "";
+  const leagueName = item?.league?.name || "Football";
+  const leagueCountry = item?.league?.country?.name || item?.league?.country_name || "";
+  const coverageLevel = getCoverageLevel(leagueId, leagueName, leagueCountry);
+  const scores = Array.isArray(item?.scores) ? item.scores : [];
+
+  return {
+    fixtureId: `sm-${id}`,
+    provider: "sportmonks",
+    providerFixtureId: id,
+    matchDate: dateInTimeZone(item?.starting_at ? `${String(item.starting_at).replace(" ", "T")}Z` : null, timezone),
+    kickoffAt: item?.starting_at ? `${String(item.starting_at).replace(" ", "T")}Z` : null,
+    homeTeamId: home?.id ? String(home.id) : "",
+    homeTeam: home.name,
+    homeLogo: home?.image_path || "",
+    awayTeamId: away?.id ? String(away.id) : "",
+    awayTeam: away.name,
+    awayLogo: away?.image_path || "",
+    homeScore: findScore(scores, "home"),
+    awayScore: findScore(scores, "away"),
+    minute: item?.state?.minute ?? item?.periods?.[0]?.minutes ?? null,
+    status,
+    leagueId,
+    leagueName,
+    leagueLogo: item?.league?.image_path || "",
+    leagueCountry,
+    coverageLevel,
+    sourcePriority: coverageLevel === "elite" ? 95 : coverageLevel === "featured" ? 92 : 85,
+    rawPayload: item,
+  };
+}
+
+async function upsertSnapshot(supabase: ReturnType<typeof getSupabaseClient>, fixture: NormalizedFixture) {
+  const { error } = await supabase.rpc("upsert_match_snapshot", {
+    p_fixture_id: fixture.fixtureId,
+    p_provider: fixture.provider,
+    p_provider_fixture_id: fixture.providerFixtureId,
+    p_match_date: fixture.matchDate,
+    p_kickoff_at: fixture.kickoffAt,
+    p_home_team_id: fixture.homeTeamId,
+    p_home_team: fixture.homeTeam,
+    p_home_logo: fixture.homeLogo,
+    p_away_team_id: fixture.awayTeamId,
+    p_away_team: fixture.awayTeam,
+    p_away_logo: fixture.awayLogo,
+    p_home_score: fixture.homeScore,
+    p_away_score: fixture.awayScore,
+    p_minute: fixture.minute,
+    p_status: fixture.status,
+    p_league_id: fixture.leagueId,
+    p_league_name: fixture.leagueName,
+    p_league_logo: fixture.leagueLogo,
+    p_league_country: fixture.leagueCountry,
+    p_coverage_level: fixture.coverageLevel,
+    p_source_priority: fixture.sourcePriority,
+    p_raw_payload: fixture.rawPayload,
+  });
+  if (error) throw new Error(`upsert_match_snapshot failed: ${error.message}`);
+}
+
+async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>, fixture: NormalizedFixture) {
+  if (!ACTIVE_STATUSES.has(fixture.status)) return;
 
   const { data: previous, error: previousError } = await supabase
     .from("live_match_states")
     .select("home_score, away_score, status")
-    .eq("fixture_id", fixtureId)
+    .eq("fixture_id", fixture.fixtureId)
     .maybeSingle() as { data: PreviousLiveState | null; error: SupabaseError | null };
   if (previousError) throw new Error(`live_match_states lookup failed: ${previousError.message}`);
 
-  const homeScore = fixture?.goals?.home ?? 0;
-  const awayScore = fixture?.goals?.away ?? 0;
+  const homeScore = fixture.homeScore ?? 0;
+  const awayScore = fixture.awayScore ?? 0;
 
   const { error: upsertError } = await supabase.rpc("upsert_live_match_state", {
-    p_fixture_id: fixtureId,
-    p_home_team_id: String(fixture?.teams?.home?.id || ""),
-    p_home_team: fixture?.teams?.home?.name || "",
-    p_home_logo: fixture?.teams?.home?.logo || "",
-    p_away_team_id: String(fixture?.teams?.away?.id || ""),
-    p_away_team: fixture?.teams?.away?.name || "",
-    p_away_logo: fixture?.teams?.away?.logo || "",
+    p_fixture_id: fixture.fixtureId,
+    p_home_team_id: fixture.homeTeamId,
+    p_home_team: fixture.homeTeam,
+    p_home_logo: fixture.homeLogo,
+    p_away_team_id: fixture.awayTeamId,
+    p_away_team: fixture.awayTeam,
+    p_away_logo: fixture.awayLogo,
     p_home_score: homeScore,
     p_away_score: awayScore,
-    p_minute: fixture?.fixture?.status?.elapsed ?? null,
-    p_status: status,
-    p_league_id: String(fixture?.league?.id || ""),
-    p_league_name: fixture?.league?.name || "",
-    p_league_logo: fixture?.league?.logo || "",
-    p_league_country: fixture?.league?.country || "",
+    p_minute: fixture.minute,
+    p_status: fixture.status,
+    p_league_id: fixture.leagueId,
+    p_league_name: fixture.leagueName,
+    p_league_logo: fixture.leagueLogo,
+    p_league_country: fixture.leagueCountry,
   });
   if (upsertError) throw new Error(`upsert_live_match_state failed: ${upsertError.message}`);
 
@@ -118,26 +325,26 @@ async function upsertFixtureState(supabase: ReturnType<typeof getSupabaseClient>
   const currentTotal = homeScore + awayScore;
   if (currentTotal > previousTotal) {
     const { error: eventError } = await supabase.from("live_match_events").insert({
-      fixture_id: fixtureId,
+      fixture_id: fixture.fixtureId,
       event_type: "goal",
-      minute: fixture?.fixture?.status?.elapsed ?? null,
+      minute: fixture.minute,
       home_score: homeScore,
       away_score: awayScore,
       detail: "score_change",
-      raw_payload: fixture,
+      raw_payload: fixture.rawPayload,
     });
     if (eventError) throw new Error(`live_match_events goal insert failed: ${eventError.message}`);
   }
 
-  if (previous?.status !== status && (LIVE_STATUSES.has(status) || FINISHED_STATUSES.has(status))) {
+  if (previous?.status !== fixture.status && ACTIVE_STATUSES.has(fixture.status)) {
     const { error: eventError } = await supabase.from("live_match_events").insert({
-      fixture_id: fixtureId,
-      event_type: FINISHED_STATUSES.has(status) ? "fulltime" : status === "HT" ? "halftime" : "kickoff",
-      minute: fixture?.fixture?.status?.elapsed ?? null,
+      fixture_id: fixture.fixtureId,
+      event_type: FINISHED_STATUSES.has(fixture.status) ? "fulltime" : fixture.status === "HT" ? "halftime" : "kickoff",
+      minute: fixture.minute,
       home_score: homeScore,
       away_score: awayScore,
-      detail: status,
-      raw_payload: fixture,
+      detail: fixture.status,
+      raw_payload: fixture.rawPayload,
     });
     if (eventError) throw new Error(`live_match_events status insert failed: ${eventError.message}`);
   }
@@ -169,83 +376,100 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({})) as { timezone?: string; date?: string; diagnostic?: boolean };
-    const timezone = body.timezone || "Europe/Rome";
+    const timezone = body.timezone || "Africa/Douala";
     const date = body.date || todayInTimeZone(timezone);
     const season = footballSeasonForDate(date);
-    const diagnostic = body.diagnostic === true;
+    const diagnostic = body.diagnostic === true || Deno.env.get("LIVE_SYNC_DEBUG") === "true";
     const supabase = getSupabaseClient();
 
-    const sources: Array<{ source: string; fixtures: ApiFixture[] }> = [];
-    const live = await fetchApiFootball("fixtures", { live: "all", timezone }).catch((error) => {
-      console.error("[sync-live-fixtures] live=all failed", error);
-      return [];
-    });
-    sources.push({ source: "live=all", fixtures: live });
+    const sources: Array<{ source: string; count: number }> = [];
+    const normalized: NormalizedFixture[] = [];
 
-    const allToday = await fetchApiFootball("fixtures", { date, timezone }).catch((error) => {
-      console.error("[sync-live-fixtures] date-wide recovery failed", error);
-      return [];
-    });
-    sources.push({ source: "date:all", fixtures: allToday });
-
-    const hasLiveCoverage = sources.some((source) =>
-      source.fixtures.some((fixture) => LIVE_STATUSES.has(fixture?.fixture?.status?.short || "")),
-    );
-
-    if (!hasLiveCoverage) {
-      const leagueResults = await Promise.allSettled(
-        PRIORITY_LEAGUES.map(async (league) => ({
-          league,
-          fixtures: await fetchApiFootball("fixtures", { date, league, season, timezone }),
-        })),
-      );
-      for (const result of leagueResults) {
-        if (result.status === "fulfilled") sources.push({ source: `league:${result.value.league}`, fixtures: result.value.fixtures });
-        else console.error("[sync-live-fixtures] priority league failed", result.reason);
-      }
-    }
+    const apiRequests: Array<Promise<{ source: string; fixtures: ApiFixture[] }>> = [
+      fetchApiFootball("fixtures", { live: "all", timezone }).then((fixtures) => ({ source: "api:live=all", fixtures })),
+      fetchApiFootball("fixtures", { date, timezone }).then((fixtures) => ({ source: "api:date", fixtures })),
+      ...PRIORITY_LEAGUES.map((league) =>
+        fetchApiFootball("fixtures", { date, league, season, timezone }).then((fixtures) => ({ source: `api:league:${league}`, fixtures })),
+      ),
+    ];
 
     if (diagnostic) {
-      const teamResults = await Promise.allSettled(
-        DIAGNOSTIC_TEAMS.map(async (team) => ({
-          team,
-          fixtures: await fetchApiFootball("fixtures", { date, team, timezone }),
-        })),
-      );
-      for (const result of teamResults) {
-        if (result.status === "fulfilled") sources.push({ source: `team:${result.value.team}`, fixtures: result.value.fixtures });
+      for (const search of DIAGNOSTIC_SEARCHES) {
+        apiRequests.push(fetchApiFootball("teams", { search }).then((teams: any[]) => ({
+          source: `api:team-search:${search}`,
+          fixtures: teams.slice(0, 2).flatMap(() => []),
+        })));
       }
     }
 
-    const allFixtures = dedupeFixtures(sources.flatMap((source) => source.fixtures));
-    const trackedFixtures = allFixtures.filter((fixture) => {
-      const status = fixture?.fixture?.status?.short || "";
-      return LIVE_STATUSES.has(status) || FINISHED_STATUSES.has(status);
-    });
+    const apiResults = await Promise.allSettled(apiRequests);
+    for (const result of apiResults) {
+      if (result.status !== "fulfilled") {
+        console.error("[sync-live-fixtures] API-Football source failed", result.reason);
+        continue;
+      }
+      sources.push({ source: result.value.source, count: result.value.fixtures.length });
+      for (const fixture of result.value.fixtures) {
+        const item = normalizeApiFixture(fixture, timezone);
+        if (item) normalized.push(item);
+      }
+    }
+
+    const sportmonksEnabled = !!Deno.env.get("SPORTMONKS_API_TOKEN");
+    if (sportmonksEnabled) {
+      const sportmonksResults = await Promise.allSettled([
+        fetchSportmonks("livescores/inplay", {}),
+        fetchSportmonks("livescores/latest", {}),
+        fetchSportmonks(`fixtures/date/${date}`, {}),
+      ]);
+      for (const [index, result] of sportmonksResults.entries()) {
+        const source = ["sportmonks:inplay", "sportmonks:latest", "sportmonks:date"][index];
+        if (result.status !== "fulfilled") {
+          console.error(`[sync-live-fixtures] ${source} failed`, result.reason);
+          continue;
+        }
+        sources.push({ source, count: result.value.length });
+        for (const fixture of result.value) {
+          const item = normalizeSportmonksFixture(fixture, timezone);
+          if (item) normalized.push(item);
+        }
+      }
+    }
+
+    const allFixtures = dedupeFixtures(normalized);
+    const trackedFixtures = allFixtures.filter((fixture) => fixture.matchDate === date || ACTIVE_STATUSES.has(fixture.status));
 
     for (const fixture of trackedFixtures) {
+      await upsertSnapshot(supabase, fixture);
       await upsertFixtureState(supabase, fixture);
     }
 
     await pruneMissingLiveStates(
       supabase,
-      new Set(trackedFixtures.map((fixture) => String(fixture?.fixture?.id || "")).filter(Boolean)),
+      new Set(trackedFixtures.filter((fixture) => LIVE_STATUSES.has(fixture.status)).map((fixture) => fixture.fixtureId)),
     );
 
     try {
-      const { error: cleanupError } = await supabase.rpc("cleanup_finished_matches");
-      if (cleanupError) console.error("[sync-live-fixtures] cleanup failed", cleanupError);
+      await supabase.rpc("cleanup_finished_matches");
+      await supabase.rpc("cleanup_match_snapshots");
     } catch (cleanupError) {
       console.error("[sync-live-fixtures] cleanup failed", cleanupError);
+    }
+
+    const importantLive = trackedFixtures.filter((fixture) => LIVE_STATUSES.has(fixture.status) && fixture.coverageLevel !== "standard");
+    if (importantLive.length === 0) {
+      console.warn("[sync-live-fixtures] no important live match detected", { date, sportmonksEnabled });
     }
 
     return new Response(JSON.stringify({
       ok: true,
       timezone,
       date,
+      sportmonksEnabled,
       totalFixtures: allFixtures.length,
       trackedFixtures: trackedFixtures.length,
-      sources: sources.map((source) => ({ source: source.source, count: source.fixtures.length })),
+      activeFixtures: trackedFixtures.filter((fixture) => ACTIVE_STATUSES.has(fixture.status)).length,
+      sources,
     }), { headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
