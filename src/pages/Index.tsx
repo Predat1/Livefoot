@@ -150,7 +150,7 @@ const Index = () => {
 
   const { items: visibleLeagues, hasMore, isLoading: isLoadingMore, loadMoreRef } = useInfiniteScroll({
     initialItems: filteredLeagues,
-    itemsPerPage: 5,
+    itemsPerPage: 10,
   });
 
   const { data: newsArticles = [] } = useFootballNews();

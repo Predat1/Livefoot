@@ -1,12 +1,13 @@
 import { useParams, Link } from "react-router-dom";
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHeadEnhanced";
 import {
   useFixtureDetail, useFixtureEvents, useFixtureLineups, useFixtureStatistics,
   useHeadToHead, useFixturePlayers, useFixtureOdds, useFixtureInjuries,
   useTeamForm, useTeamNextFixtures, useFixturePredictions, useAiExpert,
-  useLiveOdds, useStandings, useRealtimeFixtureState, useRealtimeFixtureEvents,
+  useLiveOdds, useStandings, useRealtimeFixtureState, useRealtimeFixtureEvents, type LeagueData,
 } from "@/hooks/useApiFootball";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { 
@@ -150,17 +151,79 @@ function buildFixtureFromRealtimeState(state: any, fixtureId: string) {
   };
 }
 
+function buildFixtureFromCachedMatch(match: any, league: any, fixtureId: string) {
+  if (!match?.id) return null;
+
+  const kickoffIso = match.kickoffIso || match.fixture?.date || new Date().toISOString();
+  const statusShort =
+    match.statusShort ||
+    match.fixture?.status?.short ||
+    (match.status === "live" ? "LIVE" : match.status === "finished" ? "FT" : "NS");
+
+  return {
+    fixture: {
+      id: Number(match.id) || match.id || fixtureId,
+      date: kickoffIso,
+      status: {
+        short: statusShort,
+        elapsed: match.minute ?? match.fixture?.status?.elapsed ?? null,
+      },
+      venue: { name: match.stadium || match.fixture?.venue?.name || "" },
+      referee: null,
+    },
+    teams: {
+      home: {
+        id: match.homeTeam?.id || match.teams?.home?.id || "",
+        name: match.homeTeam?.name || match.teams?.home?.name || "Equipe domicile",
+        logo: match.homeTeam?.logo || match.teams?.home?.logo || "",
+      },
+      away: {
+        id: match.awayTeam?.id || match.teams?.away?.id || "",
+        name: match.awayTeam?.name || match.teams?.away?.name || "Equipe exterieur",
+        logo: match.awayTeam?.logo || match.teams?.away?.logo || "",
+      },
+    },
+    goals: {
+      home: match.homeTeam?.score ?? match.goals?.home ?? null,
+      away: match.awayTeam?.score ?? match.goals?.away ?? null,
+    },
+    league: {
+      id: league?.id || match.league?.id || "",
+      name: league?.name || match.league?.name || "Football",
+      logo: league?.logo || match.league?.logo || "",
+      country: league?.country || match.league?.country || "",
+      season: new Date(kickoffIso).getFullYear(),
+    },
+    _fromCachedFixture: true,
+    _fallbackFixtureId: fixtureId,
+  };
+}
+
 const Match = () => {
   const { matchId: rawMatchId } = useParams();
   const matchId = extractIdFromSlug(rawMatchId || "");
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // ─── Tous les hooks en premier, sans exception ────────────────
   const { data: fixtureData, isLoading, isError, error: fetchError } = useFixtureDetail(matchId);
   const { data: realtimeState } = useRealtimeFixtureState(matchId);
+  const cachedFixtureData = useMemo(() => {
+    if (!matchId) return null;
+
+    const fixtureQueries = queryClient.getQueriesData<LeagueData[]>({ queryKey: ["fixtures"] });
+    for (const [, leagues] of fixtureQueries) {
+      for (const league of leagues || []) {
+        const match = league.matches?.find((item) => String(item.id) === String(matchId));
+        if (match) return buildFixtureFromCachedMatch(match, league, matchId);
+      }
+    }
+
+    return null;
+  }, [queryClient, matchId]);
   const resolvedFixtureData = useMemo(
-    () => fixtureData || buildFixtureFromRealtimeState(realtimeState, matchId),
-    [fixtureData, realtimeState, matchId]
+    () => fixtureData || buildFixtureFromRealtimeState(realtimeState, matchId) || cachedFixtureData,
+    [fixtureData, realtimeState, matchId, cachedFixtureData]
   );
   const fix = resolvedFixtureData as any;
   const statusRaw = realtimeState?.status || fix?.fixture?.status?.short || "";
@@ -297,6 +360,30 @@ const Match = () => {
     return { home: probHome, draw: probDraw, away: probAway };
   }, [aiExpertPrediction, apiPredictions]);
 
+  const events = useMemo(() => {
+    const apiEvents = ((eventsData || []) as any[]);
+    const realtimeEvents = ((realtimeEventsData || []) as any[]);
+    const byKey = new Map<string, any>();
+    for (const event of [...apiEvents, ...realtimeEvents]) {
+      const key = [
+        event?.time?.elapsed ?? "",
+        event?.time?.extra ?? "",
+        event?.type ?? "",
+        event?.detail ?? "",
+        event?.team?.id ?? event?.team?.name ?? "",
+        event?.player?.name ?? "",
+      ].join("|");
+      byKey.set(key, event);
+    }
+    return Array.from(byKey.values()).sort((a, b) => {
+      const minuteA = Number(a?.time?.elapsed ?? 0);
+      const minuteB = Number(b?.time?.elapsed ?? 0);
+      const extraA = Number(a?.time?.extra ?? 0);
+      const extraB = Number(b?.time?.extra ?? 0);
+      return minuteA - minuteB || extraA - extraB;
+    });
+  }, [eventsData, realtimeEventsData]);
+
   // ─── Early returns APRÈS tous les hooks ───────────────────────
   if (!matchId) {
     return (
@@ -390,29 +477,6 @@ const Match = () => {
     date: dateLabel,
   }).toString()}`;
 
-  const events = useMemo(() => {
-    const apiEvents = ((eventsData || []) as any[]);
-    const realtimeEvents = ((realtimeEventsData || []) as any[]);
-    const byKey = new Map<string, any>();
-    for (const event of [...apiEvents, ...realtimeEvents]) {
-      const key = [
-        event?.time?.elapsed ?? "",
-        event?.time?.extra ?? "",
-        event?.type ?? "",
-        event?.detail ?? "",
-        event?.team?.id ?? event?.team?.name ?? "",
-        event?.player?.name ?? "",
-      ].join("|");
-      byKey.set(key, event);
-    }
-    return Array.from(byKey.values()).sort((a, b) => {
-      const minuteA = Number(a?.time?.elapsed ?? 0);
-      const minuteB = Number(b?.time?.elapsed ?? 0);
-      const extraA = Number(a?.time?.extra ?? 0);
-      const extraB = Number(b?.time?.extra ?? 0);
-      return minuteA - minuteB || extraA - extraB;
-    });
-  }, [eventsData, realtimeEventsData]);
   const teamStats = (statsData || []) as any[];
   const lineups = (lineupsData || []) as any[];
   const injuries = (injuriesData || []) as any[];
