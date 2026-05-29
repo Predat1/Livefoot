@@ -22,6 +22,7 @@ import PlayerAvatar from "@/components/PlayerAvatar";
 import { cn } from "@/lib/utils";
 import { buildEntitySlug } from "@/utils/slugify";
 import { isFavoriteMatch, sortLeaguesByPriority, sortMatchesWithinLeague } from "@/utils/matchRanking";
+import { getUserCountryCandidates } from "@/utils/userLocation";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -45,14 +46,16 @@ const Index = () => {
   const { data: realtimeLiveLeagues, refetch: refetchRealtimeLive } = useRealtimeLiveFixtures();
   const { favorites } = useFavorites();
 
+  const userCountries = useMemo(() => getUserCountryCandidates(), []);
   const favoriteCompIds = useMemo(() => new Set(favorites?.competitions || []), [favorites?.competitions]);
   const favoriteTeamIds = useMemo(() => new Set((favorites?.teams || []).map(String)), [favorites?.teams]);
   const rankingFavorites = useMemo(() => ({
     teams: favoriteTeamIds,
     competitions: favoriteCompIds,
-  }), [favoriteTeamIds, favoriteCompIds]);
+    userCountries,
+  }), [favoriteTeamIds, favoriteCompIds, userCountries]);
 
-  // BeSoccer-style sort: live > favorites > major competitions > team notoriety > recent events.
+  // BeSoccer-style sort: live > favorites > major competitions > local competitions > team notoriety.
   const leagues = useMemo(() => {
     const liveMatches = new Map<string, any>();
     for (const league of realtimeLiveLeagues || []) {

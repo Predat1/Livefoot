@@ -4,6 +4,7 @@
  * Order of intent:
  * - live matches first
  * - major competitions before secondary competitions
+ * - user's local competitions after popular competitions
  * - famous teams before low-signal teams
  * - recent goals/cards and advanced live minutes get extra visibility
  * - scheduled matches sort by kickoff, finished matches by most recent
@@ -45,6 +46,7 @@ export interface RankingMatch {
   league?: {
     id?: string | number;
     name?: string;
+    country?: string;
     round?: string;
   };
 }
@@ -66,6 +68,7 @@ export interface RankedMatch {
 export type FavoriteSets = {
   teams?: Set<string>;
   competitions?: Set<string>;
+  userCountries?: string[];
 };
 
 const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]);
@@ -108,6 +111,12 @@ const TEAM_NAME_WEIGHTS: Record<string, number> = {
   marseille: 68,
   lyon: 66,
   monaco: 66,
+};
+
+const COUNTRY_ALIASES: Record<string, string[]> = {
+  "england": ["england", "united kingdom", "great britain"],
+  "saudi-arabia": ["saudi arabia", "saudi-arabia"],
+  "usa": ["usa", "united states", "united states of america"],
 };
 
 export const LEAGUE_PRIORITY_SCORES: Record<string, number> = {
@@ -199,6 +208,21 @@ function getCompetitionTierBoost(league?: Partial<RankingLeague> | RankingMatch[
   return 0;
 }
 
+function getLocalityBoost(
+  league?: Partial<RankingLeague> | RankingMatch["league"],
+  userCountries: string[] = [],
+): number {
+  if (!league?.country || userCountries.length === 0) return 0;
+
+  const leagueCountry = normalize(league.country);
+  const localCountries = userCountries.flatMap((country) => {
+    const normalized = normalize(country);
+    return [normalized, ...(COUNTRY_ALIASES[normalized] || [])];
+  });
+
+  return localCountries.some((country) => leagueCountry === normalize(country)) ? 30000 : 0;
+}
+
 function getTeamWeight(team?: RankingTeam): number {
   const id = asId(team?.id);
   if (TOP_CLUBS_IDS.has(id)) return 90;
@@ -252,6 +276,7 @@ export function getMatchPriorityScore(
 
   let score = getStatusWeight(match);
   score += getLeagueWeight(league || match.league);
+  score += getLocalityBoost(league || match.league, favorites.userCountries) / 100;
   score += teamWeight * 8;
   score += getEventWeight(match);
   if (status === "live") score += Math.min(Number(minute) || 0, 120) * 4;
@@ -308,6 +333,7 @@ export function sortLeaguesByPriority<TLeague extends RankingLeague>(
         const scheduledBoost = league.matches.some((match) => getRankingStatus(match) === "scheduled") ? 1200 : 0;
         return getCompetitionTierBoost(league)
           + getLeagueWeight(league) * 100
+          + getLocalityBoost(league, favorites.userCountries)
           + liveBoost
           + scheduledBoost
           + Math.min(bestMatch, 2500)

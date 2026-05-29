@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
@@ -10,6 +10,7 @@ import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
 import { cn } from "@/lib/utils";
 import { sortLeaguesByPriority } from "@/utils/matchRanking";
+import { getUserCountryCandidates } from "@/utils/userLocation";
 
 const REFRESH_INTERVAL = 30;
 
@@ -33,7 +34,11 @@ const Live = () => {
   const realtimeQuery = useRealtimeLiveFixtures();
   const fallbackQuery = useLiveFixtures();
   const hasRealtimeLive = (realtimeQuery.data || []).some((league) => league.matches.length > 0);
-  const liveLeagues = sortLeaguesByPriority(hasRealtimeLive ? realtimeQuery.data || [] : fallbackQuery.data || []);
+  const userCountries = useMemo(() => getUserCountryCandidates(), []);
+  const liveLeagues = useMemo(
+    () => sortLeaguesByPriority(hasRealtimeLive ? realtimeQuery.data || [] : fallbackQuery.data || [], { userCountries }),
+    [fallbackQuery.data, hasRealtimeLive, realtimeQuery.data, userCountries],
+  );
   const refetch = async () => {
     await Promise.allSettled([realtimeQuery.refetch(), fallbackQuery.refetch()]);
   };
