@@ -9,7 +9,7 @@ import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { useFixturesByDate, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
+import { getFootballSeasonForDate, useFixturesByDate, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
 import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2 } from "lucide-react";
@@ -34,6 +34,8 @@ const PartnerBanner = lazy(() => import("@/components/PartnerBanner"));
 import TelegramBanner from "@/components/TelegramBanner";
 import ShareWidget from "@/components/ShareWidget";
 import SocialBanner from "@/components/SocialBanner";
+
+const currentFootballSeason = getFootballSeasonForDate(new Date());
 
 const Index = () => {
   const livefootLogo = useAppLogo();
@@ -458,35 +460,35 @@ const SEO_FAQ = [
                   {index === 0 && (
                     <SectionErrorBoundary>
                       <Suspense fallback={null}>
-                        <TopScorersWidget leagueId="61" season="2024" title="Meilleurs Buteurs - Ligue 1" className="my-6" />
+                        <TopScorersWidget leagueId="61" season={currentFootballSeason} title="Meilleurs Buteurs - Ligue 1" className="my-6" />
                       </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 1 && (
                     <SectionErrorBoundary>
                       <Suspense fallback={null}>
-                        <TopScorersWidget leagueId="39" season="2024" title="Meilleurs Buteurs - Premier League" className="my-6" />
+                        <TopScorersWidget leagueId="39" season={currentFootballSeason} title="Meilleurs Buteurs - Premier League" className="my-6" />
                       </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 2 && (
                     <SectionErrorBoundary>
                       <Suspense fallback={null}>
-                        <TopScorersWidget leagueId="140" season="2024" title="Meilleurs Buteurs - La Liga" className="my-6" />
+                        <TopScorersWidget leagueId="140" season={currentFootballSeason} title="Meilleurs Buteurs - La Liga" className="my-6" />
                       </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 3 && (
                     <SectionErrorBoundary>
                       <Suspense fallback={null}>
-                        <TopScorersWidget leagueId="135" season="2024" title="Meilleurs Buteurs - Serie A" className="my-6" />
+                        <TopScorersWidget leagueId="135" season={currentFootballSeason} title="Meilleurs Buteurs - Serie A" className="my-6" />
                       </Suspense>
                     </SectionErrorBoundary>
                   )}
                   {index === 4 && (
                     <SectionErrorBoundary>
                       <Suspense fallback={null}>
-                        <TopScorersWidget leagueId="78" season="2024" title="Meilleurs Buteurs - Bundesliga" className="my-6" />
+                        <TopScorersWidget leagueId="78" season={currentFootballSeason} title="Meilleurs Buteurs - Bundesliga" className="my-6" />
                       </Suspense>
                     </SectionErrorBoundary>
                   )}
