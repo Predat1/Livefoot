@@ -54,8 +54,25 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("@sentry")) {
             return "sentry";
           }
-          // Tout le reste (React, Router, Supabase, Radix, etc.) dans vendor
-          // pour éviter les dépendances circulaires entre chunks
+          if (id.includes("@supabase")) {
+            return "supabase";
+          }
+          if (id.includes("@tanstack/react-query")) {
+            return "query";
+          }
+          if (id.includes("framer-motion") || id.includes("motion-dom")) {
+            return "motion";
+          }
+          if (id.includes("react-helmet-async") || id.includes("i18next") || id.includes("react-i18next")) {
+            return "app-runtime";
+          }
+          if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("vaul")) {
+            return "ui";
+          }
+          if (id.includes("date-fns")) {
+            return "date";
+          }
+          // Tout le reste dans vendor pour les petites dependances partagees.
           return "vendor";
         },
       },
