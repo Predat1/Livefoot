@@ -11,7 +11,11 @@ const PRIORITY_LEAGUES = [
   "119", "128", "135", "136", "140", "141", "144", "179", "197", "203",
   "233", "253", "262", "270", "271", "307", "531", "667", "848",
 ];
-const LIVE_SYNC_INTERVAL_SECONDS = 15;
+const CRON_TICK_SECONDS = 15;
+const LIVE_ALL_SECONDS = 30;
+const DATE_TODAY_SECONDS = 300;
+const PRIORITY_LEAGUE_SECONDS = 600;
+const ADJACENT_DATES_SECONDS = 1800;
 const DIAGNOSTIC_SEARCHES = [
   "Iran", "Gambia", "South Africa", "Nicaragua", "Iraq", "Andorra", "France U17", "Denmark U17",
 ];
@@ -114,11 +118,11 @@ function footballSeasonForDate(date: string) {
 }
 
 function isCadenceWindow(startedAt: number, intervalSeconds: number) {
-  return Math.floor(startedAt / 1000) % intervalSeconds < LIVE_SYNC_INTERVAL_SECONDS;
+  return Math.floor(startedAt / 1000) % intervalSeconds < CRON_TICK_SECONDS;
 }
 
 function priorityLeagueForSlot(startedAt: number) {
-  const slot = Math.floor(startedAt / 180_000);
+  const slot = Math.floor(startedAt / (PRIORITY_LEAGUE_SECONDS * 1000));
   return PRIORITY_LEAGUES[slot % PRIORITY_LEAGUES.length];
 }
 
@@ -393,28 +397,45 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: `Missing env: ${missing.join(", ")}` }), { status: 500 });
     }
 
-    const body = await req.json().catch(() => ({})) as { timezone?: string; date?: string; diagnostic?: boolean };
+    const body = await req.json().catch(() => ({})) as { timezone?: string; date?: string; diagnostic?: boolean; force?: boolean };
     timezone = body.timezone || "Africa/Douala";
     date = body.date || dateInTimeZone(new Date(), timezone);
     const yesterday = addDays(date, -1);
     const tomorrow = addDays(date, 1);
     const season = footballSeasonForDate(date);
     const diagnosticEnabled = body.diagnostic === true || Deno.env.get("LIVE_SYNC_DEBUG") === "true";
+    const forcedRun = body.force === true || diagnosticEnabled;
+
+    if (!forcedRun && !isCadenceWindow(startedAt, LIVE_ALL_SECONDS)) {
+      return new Response(JSON.stringify({
+        ok: true,
+        provider: "api-football",
+        skipped: true,
+        reason: "quota_safe_cadence",
+        timezone,
+        date,
+        diagnostic: {
+          liveAllSeconds: LIVE_ALL_SECONDS,
+          cronTickSeconds: CRON_TICK_SECONDS,
+        },
+      }), { headers: { "Content-Type": "application/json" } });
+    }
+
     supabase = getSupabaseClient();
 
     const liveAllResult = await runFixtureSource("live=all", () => fetchApiFootball("fixtures", { live: "all", timezone }));
     const requests: Array<Promise<{ source: string; fixtures: ApiFixture[]; error: SyncError | null }>> = [];
 
-    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, 120)) {
+    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, DATE_TODAY_SECONDS)) {
       requests.push(runFixtureSource("date:today", () => fetchApiFootball("fixtures", { date, timezone })));
     }
 
-    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, 180)) {
+    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, PRIORITY_LEAGUE_SECONDS)) {
       const league = priorityLeagueForSlot(startedAt);
       requests.push(runFixtureSource(`league:${league}`, () => fetchApiFootball("fixtures", { date, league, season, timezone })));
     }
 
-    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, 600)) {
+    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, ADJACENT_DATES_SECONDS)) {
       requests.push(runFixtureSource("date:yesterday", () => fetchApiFootball("fixtures", { date: yesterday, timezone })));
       requests.push(runFixtureSource("date:tomorrow", () => fetchApiFootball("fixtures", { date: tomorrow, timezone })));
     }
@@ -492,10 +513,16 @@ serve(async (req) => {
       failedSourceCount: errors.length,
       zeroSourceCount: sources.filter((source) => source.count === 0).length,
       cadence: {
-        liveAllSeconds: 15,
-        dateTodaySeconds: 120,
-        rotatedPriorityLeagueSeconds: 180,
-        yesterdayTomorrowSeconds: 600,
+        liveAllSeconds: LIVE_ALL_SECONDS,
+        dateTodaySeconds: DATE_TODAY_SECONDS,
+        rotatedPriorityLeagueSeconds: PRIORITY_LEAGUE_SECONDS,
+        yesterdayTomorrowSeconds: ADJACENT_DATES_SECONDS,
+        estimatedServerRequestsPerDay: Math.round(
+          86400 / LIVE_ALL_SECONDS +
+          86400 / DATE_TODAY_SECONDS +
+          86400 / PRIORITY_LEAGUE_SECONDS +
+          (86400 / ADJACENT_DATES_SECONDS) * 2,
+        ),
       },
       activePriorityLeague: priorityLeagueForSlot(startedAt),
       timezoneChecks: timezoneDiagnostic,
