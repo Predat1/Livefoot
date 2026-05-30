@@ -468,6 +468,31 @@ serve(async (req) => {
 
     const quotaBlock = await getDailyQuotaBlock(supabase);
     if (quotaBlock && !forcedRun) {
+      const quotaErrors: SyncError[] = [{
+        source: "quota-breaker",
+        message: "API-Football daily quota already exhausted. Upstream calls are paused until reset.",
+        blocking: true,
+      }];
+      const quotaDiagnostic = {
+        quotaBlockedSince: quotaBlock.since,
+        quotaResetAt: quotaBlock.resetAt,
+        liveAllSeconds: LIVE_ALL_SECONDS,
+        cronTickSeconds: CRON_TICK_SECONDS,
+      };
+      await insertSyncRun(supabase, {
+        date,
+        timezone,
+        ok: false,
+        totalFixtures: 0,
+        trackedFixtures: 0,
+        liveFixtures: 0,
+        finishedFixtures: 0,
+        sources: [{ source: "quota-breaker", count: 0 }],
+        errors: quotaErrors,
+        diagnostic: quotaDiagnostic,
+        startedAt,
+      });
+
       return new Response(JSON.stringify({
         ok: false,
         provider: "api-football",
@@ -475,17 +500,8 @@ serve(async (req) => {
         reason: "upstream_daily_quota_exhausted",
         timezone,
         date,
-        errors: [{
-          source: "quota-breaker",
-          message: "API-Football daily quota already exhausted. Upstream calls are paused until reset.",
-          blocking: true,
-        }],
-        diagnostic: {
-          quotaBlockedSince: quotaBlock.since,
-          quotaResetAt: quotaBlock.resetAt,
-          liveAllSeconds: LIVE_ALL_SECONDS,
-          cronTickSeconds: CRON_TICK_SECONDS,
-        },
+        errors: quotaErrors,
+        diagnostic: quotaDiagnostic,
       }), {
         status: 429,
         headers: {
