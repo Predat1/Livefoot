@@ -57,6 +57,8 @@ const Live = () => {
   const latestSyncAt = health?.latest_sync_at ? new Date(health.latest_sync_at) : null;
   const syncAgeSeconds = latestSyncAt ? Math.floor((Date.now() - latestSyncAt.getTime()) / 1000) : null;
   const hasProviderIssue = Boolean(lastHealthError);
+  const hasQuotaIssue = lastHealthError.toLowerCase().includes("request limit for the day") ||
+    lastHealthError.toLowerCase().includes("quota");
 
   // Sync countdown with React Query's last update time (avoids double-fetching)
   useEffect(() => {
@@ -195,11 +197,17 @@ const Live = () => {
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="min-w-0">
                 <p className="font-bold">
-                  {hasProviderIssue ? "API-Football signale un problème fournisseur" : "Aucun live fourni par API-Football"}
+                  {hasProviderIssue
+                    ? hasQuotaIssue
+                      ? "Quota API-Football atteint"
+                      : "API-Football signale un problème fournisseur"
+                    : "Aucun live fourni par API-Football"}
                 </p>
                 <p className="mt-1 text-xs opacity-85">
                   {hasProviderIssue
-                    ? lastHealthError
+                    ? hasQuotaIssue
+                      ? "La sync live est mise en pause jusqu'au reset du quota. Les données cache restent disponibles pour éviter une page vide quand elles existent."
+                      : lastHealthError
                     : "La page affiche uniquement les matchs renvoyés par API-Football. Aucun faux match de secours n'est ajouté."}
                   {syncAgeSeconds !== null && ` Dernière sync il y a ${Math.max(0, syncAgeSeconds)}s.`}
                 </p>
@@ -241,7 +249,9 @@ const Live = () => {
                 <h2 className="text-xl font-bold text-foreground">Aucun match en direct</h2>
                 <p className="text-muted-foreground text-center max-w-sm text-sm">
                   {hasProviderIssue
-                    ? "API-Football ne fournit pas les données live pour le moment."
+                    ? hasQuotaIssue
+                      ? "Quota API-Football atteint: reprise automatique au prochain reset."
+                      : "API-Football ne fournit pas les données live pour le moment."
                     : providerReturnedNoLive
                     ? "API-Football a bien été interrogé, mais ne renvoie aucun live actuellement."
                     : "Reviens bientôt !"}

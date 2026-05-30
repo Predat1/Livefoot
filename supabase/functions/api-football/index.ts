@@ -9,7 +9,7 @@ const ALLOWED_ORIGINS = [
 ];
 
 const REQUIRED_ENV = ["API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
-const DAILY_LIMIT = 7000;
+const DAILY_LIMIT = 4000;
 const RATE_LIMIT = 30;
 const RATE_WINDOW = 60_000;
 
@@ -177,6 +177,27 @@ function hasApiFootballErrors(data: any): boolean {
   return data?.errors && !Array.isArray(data.errors) && Object.keys(data.errors).length > 0;
 }
 
+function normalizeApiErrors(data: any) {
+  const rawErrors = data?.errors || data?.error;
+  if (!rawErrors) return [];
+  if (Array.isArray(rawErrors)) return rawErrors.map((error) => String(error)).filter(Boolean);
+  if (typeof rawErrors === "string") return rawErrors ? [rawErrors] : [];
+  if (typeof rawErrors === "object") {
+    return Object.values(rawErrors)
+      .flatMap((value) => Array.isArray(value) ? value : [value])
+      .map((value) => String(value))
+      .filter(Boolean);
+  }
+  return [String(rawErrors)].filter(Boolean);
+}
+
+function isDailyQuotaError(data: any) {
+  const text = normalizeApiErrors(data).join(" ").toLowerCase();
+  return text.includes("request limit for the day") ||
+    text.includes("quota") ||
+    (text.includes("limit") && text.includes("day"));
+}
+
 function makeGracefulApiResponse(data: any) {
   return {
     get: data?.get ?? "",
@@ -190,7 +211,48 @@ function makeGracefulApiResponse(data: any) {
 }
 
 function isLiveSensitiveRequest(endpoint: string, params: Record<string, string>): boolean {
-  return endpoint === "fixtures" && (params?.live === "all" || !!params?.id || !!params?.date || !!params?.status);
+  return endpoint === "fixtures" && params?.live === "all";
+}
+
+async function getUpstreamQuotaBlock(supabase: any) {
+  const startOfUtcDay = new Date();
+  startOfUtcDay.setUTCHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("live_sync_runs")
+    .select("finished_at, errors")
+    .eq("provider", "api-football")
+    .eq("ok", false)
+    .gte("finished_at", startOfUtcDay.toISOString())
+    .order("finished_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("[api-football] upstream quota block lookup failed:", error);
+    return null;
+  }
+
+  const blockedRun = (data || []).find((run: any) => {
+    const errors = Array.isArray(run.errors) ? run.errors : [];
+    return errors.some((entry: any) => {
+      const text = [
+        entry?.message,
+        ...(Array.isArray(entry?.apiErrors) ? entry.apiErrors : []),
+      ].filter(Boolean).join(" ").toLowerCase();
+      return text.includes("request limit for the day") ||
+        text.includes("quota") ||
+        (text.includes("limit") && text.includes("day"));
+    });
+  });
+
+  if (!blockedRun) return null;
+
+  const resetAt = new Date(startOfUtcDay);
+  resetAt.setUTCDate(resetAt.getUTCDate() + 1);
+  return {
+    since: blockedRun.finished_at,
+    resetAt: resetAt.toISOString(),
+  };
 }
 
 async function consumeDailyQuota(supabase: any): Promise<QuotaState> {
@@ -343,6 +405,66 @@ serve(async (req) => {
       })), {
         headers: { ...corsHeaders, "Content-Type": "application/json", "X-Cache": "HIT" },
         status: 200,
+      });
+    }
+
+    const upstreamQuotaBlock = await getUpstreamQuotaBlock(supabase);
+    if (upstreamQuotaBlock) {
+      const stale = await getCachedResponse(supabase, cacheKey, true);
+      if (stale && !isLiveSensitiveRequest(endpoint, params)) {
+        await recordCacheEvent(supabase, "STALE");
+        await logApiUsage(supabase, {
+          endpoint,
+          statusCode: 200,
+          responseTimeMs: Date.now() - startedAt,
+          quotaUsed: 0,
+          quotaRemaining: null,
+          cacheStatus: "STALE",
+          cacheKey,
+          metadata: {
+            reason: "upstream_daily_quota_exhausted",
+            quotaResetAt: upstreamQuotaBlock.resetAt,
+          },
+        });
+        return new Response(JSON.stringify(attachMeta(stale.data, {
+          _cached: true,
+          _stale: true,
+          _staleReason: "upstream_daily_quota_exhausted",
+          _quotaRemaining: null,
+          _quotaResetAt: upstreamQuotaBlock.resetAt,
+          _ttl: 0,
+        })), {
+          headers: { ...corsHeaders, "Content-Type": "application/json", "X-Cache": "STALE" },
+          status: 200,
+        });
+      }
+
+      await logApiUsage(supabase, {
+        endpoint,
+        statusCode: 429,
+        responseTimeMs: Date.now() - startedAt,
+        quotaUsed: 0,
+        quotaRemaining: null,
+        errorMessage: "Upstream API-Football daily quota exhausted",
+        cacheStatus: "BYPASS_UPSTREAM",
+        cacheKey,
+        metadata: {
+          reason: "upstream_daily_quota_exhausted",
+          quotaResetAt: upstreamQuotaBlock.resetAt,
+        },
+      });
+      return new Response(JSON.stringify({
+        error: "Quota journalier API-Football atteint. Les appels upstream sont suspendus jusqu'au reset.",
+        code: "UPSTREAM_DAILY_QUOTA_EXHAUSTED",
+        _quotaRemaining: 0,
+        _quotaResetAt: upstreamQuotaBlock.resetAt,
+      }), {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Retry-After": String(Math.max(60, Math.ceil((new Date(upstreamQuotaBlock.resetAt).getTime() - Date.now()) / 1000))),
+        },
       });
     }
 

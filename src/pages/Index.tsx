@@ -151,6 +151,8 @@ const Index = () => {
   const latestSyncAt = liveHealth?.latest_sync_at ? new Date(liveHealth.latest_sync_at) : null;
   const syncAgeSeconds = latestSyncAt ? Math.floor((Date.now() - latestSyncAt.getTime()) / 1000) : null;
   const hasProviderIssue = Boolean(lastHealthError);
+  const hasQuotaIssue = lastHealthError.toLowerCase().includes("request limit for the day") ||
+    lastHealthError.toLowerCase().includes("quota");
   const providerReturnedNoFixtures = !hasProviderIssue && !isLoading && matchCounts.all === 0 && (liveHealth?.recent_sync_runs || 0) > 0;
 
   const handleDateChange = useCallback((date: Date) => {
@@ -290,11 +292,17 @@ const SEO_FAQ = [
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="min-w-0">
                 <p className="font-bold">
-                  {hasProviderIssue ? "API-Football signale un problème fournisseur" : "Aucun match fourni par API-Football pour cette date"}
+                  {hasProviderIssue
+                    ? hasQuotaIssue
+                      ? "Quota API-Football atteint"
+                      : "API-Football signale un problème fournisseur"
+                    : "Aucun match fourni par API-Football pour cette date"}
                 </p>
                 <p className="mt-1 text-xs opacity-85">
                   {hasProviderIssue
-                    ? lastHealthError
+                    ? hasQuotaIssue
+                      ? "Les appels directs sont suspendus pour protéger l'abonnement. Les matchs déjà en cache restent affichés quand ils existent."
+                      : lastHealthError
                     : "La page n'affiche plus de faux matchs de secours. Les données apparaîtront dès que l'API renverra des fixtures."}
                   {syncAgeSeconds !== null && ` Dernière sync il y a ${Math.max(0, syncAgeSeconds)}s.`}
                 </p>

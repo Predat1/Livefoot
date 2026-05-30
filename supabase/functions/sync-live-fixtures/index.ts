@@ -12,7 +12,7 @@ const PRIORITY_LEAGUES = [
   "233", "253", "262", "270", "271", "307", "531", "667", "848",
 ];
 const CRON_TICK_SECONDS = 15;
-const LIVE_ALL_SECONDS = 30;
+const LIVE_ALL_SECONDS = 45;
 const DATE_TODAY_SECONDS = 300;
 const PRIORITY_LEAGUE_SECONDS = 600;
 const ADJACENT_DATES_SECONDS = 1800;
@@ -158,6 +158,13 @@ function normalizeApiErrors(payload: { errors?: unknown; error?: unknown }) {
   return [String(rawErrors)].filter(Boolean);
 }
 
+function isDailyQuotaError(errors: string[]) {
+  const text = errors.join(" ").toLowerCase();
+  return text.includes("request limit for the day") ||
+    text.includes("quota") ||
+    (text.includes("limit") && text.includes("day"));
+}
+
 function isBlockingApiError(errors: string[]) {
   const text = errors.join(" ").toLowerCase();
   return [
@@ -176,6 +183,42 @@ function isBlockingApiError(errors: string[]) {
     "not allowed",
     "exceeded",
   ].some((needle) => text.includes(needle));
+}
+
+async function getDailyQuotaBlock(supabase: ReturnType<typeof getSupabaseClient>) {
+  const startOfUtcDay = new Date();
+  startOfUtcDay.setUTCHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("live_sync_runs")
+    .select("finished_at, errors")
+    .eq("provider", "api-football")
+    .eq("ok", false)
+    .gte("finished_at", startOfUtcDay.toISOString())
+    .order("finished_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("[sync-live-fixtures] quota block lookup failed", error);
+    return null;
+  }
+
+  const blockedRun = (data || []).find((run: any) => {
+    const errors = Array.isArray(run.errors) ? run.errors : [];
+    return errors.some((entry: any) => isDailyQuotaError([
+      entry?.message,
+      ...(Array.isArray(entry?.apiErrors) ? entry.apiErrors : []),
+    ].filter(Boolean)));
+  });
+
+  if (!blockedRun) return null;
+
+  const resetAt = new Date(startOfUtcDay);
+  resetAt.setUTCDate(resetAt.getUTCDate() + 1);
+  return {
+    since: blockedRun.finished_at,
+    resetAt: resetAt.toISOString(),
+  };
 }
 
 function describeUnknownError(error: unknown): SyncError {
@@ -422,6 +465,35 @@ serve(async (req) => {
     }
 
     supabase = getSupabaseClient();
+
+    const quotaBlock = await getDailyQuotaBlock(supabase);
+    if (quotaBlock && !forcedRun) {
+      return new Response(JSON.stringify({
+        ok: false,
+        provider: "api-football",
+        skipped: true,
+        reason: "upstream_daily_quota_exhausted",
+        timezone,
+        date,
+        errors: [{
+          source: "quota-breaker",
+          message: "API-Football daily quota already exhausted. Upstream calls are paused until reset.",
+          blocking: true,
+        }],
+        diagnostic: {
+          quotaBlockedSince: quotaBlock.since,
+          quotaResetAt: quotaBlock.resetAt,
+          liveAllSeconds: LIVE_ALL_SECONDS,
+          cronTickSeconds: CRON_TICK_SECONDS,
+        },
+      }), {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(Math.max(60, Math.ceil((new Date(quotaBlock.resetAt).getTime() - Date.now()) / 1000))),
+        },
+      });
+    }
 
     const liveAllResult = await runFixtureSource("live=all", () => fetchApiFootball("fixtures", { live: "all", timezone }));
     const requests: Array<Promise<{ source: string; fixtures: ApiFixture[]; error: SyncError | null }>> = [];

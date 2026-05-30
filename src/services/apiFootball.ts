@@ -8,6 +8,11 @@ interface ApiFootballResponse<T = unknown> {
   paging: { current: number; total: number };
   response: T[];
   _cached?: boolean;
+  _stale?: boolean;
+  _staleReason?: string;
+  _upstreamError?: unknown;
+  _quotaResetAt?: string;
+  code?: string;
 }
 
 async function callApi<T = unknown>(
@@ -48,6 +53,16 @@ async function callApi<T = unknown>(
     // Check for API-level errors from API-Football
     if (response.errors && !Array.isArray(response.errors) && Object.keys(response.errors).length > 0) {
       throw new Error(Object.values(response.errors).join(", "));
+    }
+
+    if (response._upstreamError && !response._stale) {
+      const upstreamMessage =
+        typeof response._upstreamError === "string"
+          ? response._upstreamError
+          : Array.isArray(response._upstreamError)
+          ? response._upstreamError.join(", ")
+          : Object.values(response._upstreamError as Record<string, unknown> || {}).join(", ");
+      throw new Error(upstreamMessage || "API-Football a retourné une erreur fournisseur.");
     }
 
     return response;
