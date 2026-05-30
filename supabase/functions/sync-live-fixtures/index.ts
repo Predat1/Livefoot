@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const REQUIRED_ENV = ["API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
-const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]);
+const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT", "SUSP"]);
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
 const TRACKED_STATUSES = new Set([...LIVE_STATUSES, ...FINISHED_STATUSES]);
 const PRIORITY_LEAGUES = [
@@ -11,6 +11,7 @@ const PRIORITY_LEAGUES = [
   "119", "128", "135", "136", "140", "141", "144", "179", "197", "203",
   "233", "253", "262", "270", "271", "307", "531", "667", "848",
 ];
+const LIVE_SYNC_INTERVAL_SECONDS = 15;
 const DIAGNOSTIC_SEARCHES = [
   "Iran", "Gambia", "South Africa", "Nicaragua", "Iraq", "Andorra", "France U17", "Denmark U17",
 ];
@@ -45,6 +46,43 @@ type SupabaseError = {
   message: string;
 };
 
+type SourceCount = {
+  source: string;
+  count: number;
+};
+
+type SyncError = {
+  source: string;
+  status?: number;
+  message: string;
+  apiErrors?: string[];
+  rateLimit?: RateLimitInfo;
+  blocking?: boolean;
+};
+
+type RateLimitInfo = {
+  requestsLimit: string | null;
+  requestsRemaining: string | null;
+  minuteLimit: string | null;
+  minuteRemaining: string | null;
+};
+
+class ApiFootballSourceError extends Error {
+  status?: number;
+  apiErrors: string[];
+  rateLimit: RateLimitInfo;
+  blocking: boolean;
+
+  constructor(message: string, options: { status?: number; apiErrors?: string[]; rateLimit?: RateLimitInfo; blocking?: boolean } = {}) {
+    super(message);
+    this.name = "ApiFootballSourceError";
+    this.status = options.status;
+    this.apiErrors = options.apiErrors || [];
+    this.rateLimit = options.rateLimit || emptyRateLimitInfo();
+    this.blocking = options.blocking ?? false;
+  }
+}
+
 function getSupabaseClient() {
   return createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -75,13 +113,99 @@ function footballSeasonForDate(date: string) {
   return String(parsed.getUTCMonth() >= 6 ? year : year - 1);
 }
 
+function isCadenceWindow(startedAt: number, intervalSeconds: number) {
+  return Math.floor(startedAt / 1000) % intervalSeconds < LIVE_SYNC_INTERVAL_SECONDS;
+}
+
+function priorityLeagueForSlot(startedAt: number) {
+  const slot = Math.floor(startedAt / 180_000);
+  return PRIORITY_LEAGUES[slot % PRIORITY_LEAGUES.length];
+}
+
+function emptyRateLimitInfo(): RateLimitInfo {
+  return {
+    requestsLimit: null,
+    requestsRemaining: null,
+    minuteLimit: null,
+    minuteRemaining: null,
+  };
+}
+
+function extractRateLimitInfo(headers: Headers): RateLimitInfo {
+  return {
+    requestsLimit: headers.get("x-ratelimit-requests-limit"),
+    requestsRemaining: headers.get("x-ratelimit-requests-remaining"),
+    minuteLimit: headers.get("x-ratelimit-limit"),
+    minuteRemaining: headers.get("x-ratelimit-remaining"),
+  };
+}
+
+function normalizeApiErrors(payload: { errors?: unknown; error?: unknown }) {
+  const rawErrors = payload?.errors ?? payload?.error;
+  if (!rawErrors) return [];
+  if (Array.isArray(rawErrors)) return rawErrors.map((error) => String(error)).filter(Boolean);
+  if (typeof rawErrors === "string") return rawErrors ? [rawErrors] : [];
+  if (typeof rawErrors === "object") {
+    return Object.values(rawErrors as Record<string, unknown>)
+      .flatMap((value) => Array.isArray(value) ? value : [value])
+      .map((value) => String(value))
+      .filter(Boolean);
+  }
+  return [String(rawErrors)].filter(Boolean);
+}
+
+function isBlockingApiError(errors: string[]) {
+  const text = errors.join(" ").toLowerCase();
+  return [
+    "key",
+    "token",
+    "subscription",
+    "plan",
+    "quota",
+    "rate",
+    "limit",
+    "access",
+    "permission",
+    "blocked",
+    "forbidden",
+    "unauthorized",
+    "not allowed",
+    "exceeded",
+  ].some((needle) => text.includes(needle));
+}
+
+function describeUnknownError(error: unknown): SyncError {
+  if (error instanceof ApiFootballSourceError) {
+    return {
+      source: "unknown",
+      status: error.status,
+      message: error.message,
+      apiErrors: error.apiErrors,
+      rateLimit: error.rateLimit,
+      blocking: error.blocking,
+    };
+  }
+  return {
+    source: "unknown",
+    message: error instanceof Error ? error.message : String(error),
+  };
+}
+
 async function fetchApiFootball<T = ApiFixture>(endpoint: string, params: Record<string, string>) {
   const query = new URLSearchParams(params).toString();
   const response = await fetch(`https://v3.football.api-sports.io/${endpoint}${query ? `?${query}` : ""}`, {
     headers: { "x-apisports-key": Deno.env.get("API_FOOTBALL_KEY") ?? "" },
   });
+  const rateLimit = extractRateLimitInfo(response.headers);
   const payload = await response.json() as { response?: T[]; errors?: unknown; error?: unknown };
-  if (!response.ok) throw new Error(`${endpoint} failed: ${response.status} ${JSON.stringify(payload.errors || payload.error || "")}`);
+  const apiErrors = normalizeApiErrors(payload);
+  if (!response.ok || apiErrors.length > 0) {
+    const blocking = isBlockingApiError(apiErrors) || [401, 403, 429].includes(response.status);
+    throw new ApiFootballSourceError(
+      `${endpoint} failed: ${response.status}${apiErrors.length ? ` ${apiErrors.join("; ")}` : ""}`,
+      { status: response.status, apiErrors, rateLimit, blocking },
+    );
+  }
   return payload.response || [];
 }
 
@@ -192,7 +316,75 @@ async function fetchDiagnosticTeamFixtures(search: string, date: string, timezon
     .flatMap((result) => result.value);
 }
 
+async function insertSyncRun(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  input: {
+    date: string;
+    timezone: string;
+    ok: boolean;
+    totalFixtures: number;
+    trackedFixtures: number;
+    liveFixtures: number;
+    finishedFixtures: number;
+    sources: SourceCount[];
+    errors: SyncError[];
+    diagnostic: Record<string, unknown>;
+    startedAt: number;
+  },
+) {
+  const now = new Date();
+  const { error } = await supabase.from("live_sync_runs").insert({
+    provider: "api-football",
+    run_date: input.date,
+    timezone: input.timezone,
+    ok: input.ok,
+    total_fixtures: input.totalFixtures,
+    tracked_fixtures: input.trackedFixtures,
+    live_fixtures: input.liveFixtures,
+    finished_fixtures: input.finishedFixtures,
+    sources: input.sources,
+    errors: input.errors,
+    diagnostic: input.diagnostic,
+    started_at: new Date(input.startedAt).toISOString(),
+    finished_at: now.toISOString(),
+    duration_ms: Math.max(0, now.getTime() - input.startedAt),
+  });
+  if (error) console.error("[sync-live-fixtures] live_sync_runs insert failed", error);
+}
+
+async function runFixtureSource(source: string, fetcher: () => Promise<ApiFixture[]>) {
+  try {
+    const fixtures = await fetcher();
+    return { source, fixtures, error: null as SyncError | null };
+  } catch (error) {
+    const syncError = describeUnknownError(error);
+    syncError.source = source;
+    return { source, fixtures: [] as ApiFixture[], error: syncError };
+  }
+}
+
+async function runTimezoneDiagnostic(date: string) {
+  const checks = await Promise.all([
+    runFixtureSource("diagnostic:date:no-timezone", () => fetchApiFootball("fixtures", { date })),
+    runFixtureSource("diagnostic:date:UTC", () => fetchApiFootball("fixtures", { date, timezone: "UTC" })),
+  ]);
+
+  return checks.map((check) => ({
+    source: check.source,
+    count: check.fixtures.length,
+    error: check.error,
+  }));
+}
+
 serve(async (req) => {
+  const startedAt = Date.now();
+  let supabase: ReturnType<typeof getSupabaseClient> | null = null;
+  let date = "";
+  let timezone = "Africa/Douala";
+  let sources: SourceCount[] = [];
+  let errors: SyncError[] = [];
+  let diagnostic: Record<string, unknown> = {};
+
   try {
     if (req.method === "OPTIONS") return new Response("ok");
 
@@ -202,49 +394,61 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({})) as { timezone?: string; date?: string; diagnostic?: boolean };
-    const timezone = body.timezone || "Africa/Douala";
-    const date = body.date || dateInTimeZone(new Date(), timezone);
+    timezone = body.timezone || "Africa/Douala";
+    date = body.date || dateInTimeZone(new Date(), timezone);
     const yesterday = addDays(date, -1);
     const tomorrow = addDays(date, 1);
     const season = footballSeasonForDate(date);
-    const diagnostic = body.diagnostic === true || Deno.env.get("LIVE_SYNC_DEBUG") === "true";
-    const supabase = getSupabaseClient();
+    const diagnosticEnabled = body.diagnostic === true || Deno.env.get("LIVE_SYNC_DEBUG") === "true";
+    supabase = getSupabaseClient();
 
-    const requests: Array<Promise<{ source: string; fixtures: ApiFixture[] }>> = [
-      fetchApiFootball("fixtures", { live: "all", timezone }).then((fixtures) => ({ source: "live=all", fixtures })),
-      fetchApiFootball("fixtures", { date, timezone }).then((fixtures) => ({ source: "date:today", fixtures })),
-      fetchApiFootball("fixtures", { date: yesterday, timezone }).then((fixtures) => ({ source: "date:yesterday", fixtures })),
-      fetchApiFootball("fixtures", { date: tomorrow, timezone }).then((fixtures) => ({ source: "date:tomorrow", fixtures })),
-      ...PRIORITY_LEAGUES.map((league) =>
-        fetchApiFootball("fixtures", { date, league, season, timezone })
-          .then((fixtures) => ({ source: `league:${league}`, fixtures })),
-      ),
-    ];
+    const liveAllResult = await runFixtureSource("live=all", () => fetchApiFootball("fixtures", { live: "all", timezone }));
+    const requests: Array<Promise<{ source: string; fixtures: ApiFixture[]; error: SyncError | null }>> = [];
 
-    if (diagnostic) {
-      for (const search of DIAGNOSTIC_SEARCHES) {
+    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, 120)) {
+      requests.push(runFixtureSource("date:today", () => fetchApiFootball("fixtures", { date, timezone })));
+    }
+
+    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, 180)) {
+      const league = priorityLeagueForSlot(startedAt);
+      requests.push(runFixtureSource(`league:${league}`, () => fetchApiFootball("fixtures", { date, league, season, timezone })));
+    }
+
+    if (!liveAllResult.error?.blocking && isCadenceWindow(startedAt, 600)) {
+      requests.push(runFixtureSource("date:yesterday", () => fetchApiFootball("fixtures", { date: yesterday, timezone })));
+      requests.push(runFixtureSource("date:tomorrow", () => fetchApiFootball("fixtures", { date: tomorrow, timezone })));
+    }
+
+    if (!liveAllResult.error?.blocking && diagnosticEnabled) {
+      const diagnosticSlot = Math.floor(startedAt / 60_000);
+      const searches = [
+        DIAGNOSTIC_SEARCHES[diagnosticSlot % DIAGNOSTIC_SEARCHES.length],
+        DIAGNOSTIC_SEARCHES[(diagnosticSlot + 1) % DIAGNOSTIC_SEARCHES.length],
+      ];
+      for (const search of searches) {
         requests.push(
-          fetchDiagnosticTeamFixtures(search, date, timezone)
-            .then((fixtures) => ({ source: `diagnostic:${search}`, fixtures })),
+          runFixtureSource(`diagnostic:${search}`, () => fetchDiagnosticTeamFixtures(search, date, timezone)),
         );
       }
     }
 
-    const results = await Promise.allSettled(requests);
-    const sources: Array<{ source: string; count: number }> = [];
+    const results = [liveAllResult, ...await Promise.all(requests)];
     const allFixtures: ApiFixture[] = [];
 
     for (const result of results) {
-      if (result.status !== "fulfilled") {
-        console.error("[sync-live-fixtures] API-Football source failed", result.reason);
+      sources.push({ source: result.source, count: result.fixtures.length });
+      if (result.error) {
+        errors.push(result.error);
+        console.error("[sync-live-fixtures] API-Football source failed", result.error);
         continue;
       }
-      sources.push({ source: result.value.source, count: result.value.fixtures.length });
-      allFixtures.push(...result.value.fixtures);
+      allFixtures.push(...result.fixtures);
     }
 
     const dedupedFixtures = dedupeFixtures(allFixtures);
     const trackedFixtures = dedupedFixtures.filter((fixture) => TRACKED_STATUSES.has(fixture?.fixture?.status?.short || ""));
+    const liveFixtures = trackedFixtures.filter((fixture) => LIVE_STATUSES.has(fixture?.fixture?.status?.short || ""));
+    const finishedFixtures = trackedFixtures.filter((fixture) => FINISHED_STATUSES.has(fixture?.fixture?.status?.short || ""));
 
     for (const fixture of trackedFixtures) {
       await upsertFixtureState(supabase, fixture);
@@ -262,8 +466,80 @@ serve(async (req) => {
       console.error("[sync-live-fixtures] cleanup failed", cleanupError);
     }
 
+    const initialBlockingErrors = errors.filter((error) => error.blocking);
+    const timezoneDiagnostic = dedupedFixtures.length === 0 && initialBlockingErrors.length === 0
+      ? await runTimezoneDiagnostic(date)
+      : [];
+    for (const check of timezoneDiagnostic) {
+      sources.push({ source: check.source, count: check.count });
+      if (check.error) errors.push(check.error);
+    }
+
+    const timezoneMismatch = dedupedFixtures.length === 0 && timezoneDiagnostic.some((check) => check.count > 0);
+    if (timezoneMismatch) {
+      errors.push({
+        source: "diagnostic:timezone",
+        message: "API-Football returned fixtures in timezone diagnostic while primary scans returned zero.",
+      });
+    }
+    const blockingErrors = errors.filter((error) => error.blocking);
+
+    diagnostic = {
+      timezone,
+      requestedDate: date,
+      season,
+      sourceCount: sources.length,
+      failedSourceCount: errors.length,
+      zeroSourceCount: sources.filter((source) => source.count === 0).length,
+      cadence: {
+        liveAllSeconds: 15,
+        dateTodaySeconds: 120,
+        rotatedPriorityLeagueSeconds: 180,
+        yesterdayTomorrowSeconds: 600,
+      },
+      activePriorityLeague: priorityLeagueForSlot(startedAt),
+      timezoneChecks: timezoneDiagnostic,
+      fallbackHint: dedupedFixtures.length === 0
+        ? "API-Football returned no fixtures for live/date/priority league scans. Check API key, plan coverage, date, timezone, and API-Football account status."
+        : null,
+    };
+
     if (dedupedFixtures.length === 0) {
       console.warn("[sync-live-fixtures] API-Football returned zero fixtures for all sources", { date, timezone });
+    }
+
+    const ok = !timezoneMismatch && blockingErrors.length === 0 && !(dedupedFixtures.length === 0 && errors.length > 0);
+    await insertSyncRun(supabase, {
+      date,
+      timezone,
+      ok,
+      totalFixtures: dedupedFixtures.length,
+      trackedFixtures: trackedFixtures.length,
+      liveFixtures: liveFixtures.length,
+      finishedFixtures: finishedFixtures.length,
+      sources,
+      errors,
+      diagnostic,
+      startedAt,
+    });
+
+    if (!ok) {
+      return new Response(JSON.stringify({
+        ok: false,
+        provider: "api-football",
+        timezone,
+        date,
+        totalFixtures: dedupedFixtures.length,
+        trackedFixtures: trackedFixtures.length,
+        liveFixtures: liveFixtures.length,
+        finishedFixtures: finishedFixtures.length,
+        sources,
+        errors,
+        diagnostic,
+      }), {
+        status: blockingErrors.length > 0 ? 502 : 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({
@@ -273,12 +549,31 @@ serve(async (req) => {
       date,
       totalFixtures: dedupedFixtures.length,
       trackedFixtures: trackedFixtures.length,
-      liveFixtures: trackedFixtures.filter((fixture) => LIVE_STATUSES.has(fixture?.fixture?.status?.short || "")).length,
+      liveFixtures: liveFixtures.length,
+      finishedFixtures: finishedFixtures.length,
       sources,
+      errors,
+      diagnostic,
     }), { headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("[sync-live-fixtures] fatal", error);
+    errors.push({ source: "fatal", message });
+    if (supabase) {
+      await insertSyncRun(supabase, {
+        date: date || dateInTimeZone(new Date(), timezone),
+        timezone,
+        ok: false,
+        totalFixtures: 0,
+        trackedFixtures: 0,
+        liveFixtures: 0,
+        finishedFixtures: 0,
+        sources,
+        errors,
+        diagnostic,
+        startedAt,
+      });
+    }
     return new Response(JSON.stringify({ ok: false, error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

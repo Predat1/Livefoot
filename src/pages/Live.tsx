@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SEOHead from "@/components/SEOHead";
-import { useLiveFixtures, useRealtimeLiveFixtures } from "@/hooks/useApiFootball";
+import { useLiveDataHealth, useLiveFixtures, useRealtimeLiveFixtures } from "@/hooks/useApiFootball";
 import { useGoalNotifications } from "@/hooks/useGoalNotifications";
-import { Zap, RefreshCw, Clock, Volume2, VolumeX, History, Globe, Loader2, Bell, BellOff } from "lucide-react";
+import { Zap, RefreshCw, Clock, Volume2, VolumeX, History, Globe, Loader2, Bell, BellOff, AlertTriangle } from "lucide-react";
 import TeamLogo from "@/components/TeamLogo";
 import LeagueLogo from "@/components/LeagueLogo";
 import CountryFlag from "@/components/CountryFlag";
@@ -33,6 +33,7 @@ const Live = () => {
 
   const realtimeQuery = useRealtimeLiveFixtures();
   const fallbackQuery = useLiveFixtures();
+  const healthQuery = useLiveDataHealth();
   const hasRealtimeLive = (realtimeQuery.data || []).some((league) => league.matches.length > 0);
   const userCountries = useMemo(() => getUserCountryCandidates(), []);
   const liveLeagues = useMemo(
@@ -45,6 +46,17 @@ const Live = () => {
   const dataLoading = realtimeQuery.isLoading && fallbackQuery.isLoading;
   const dataUpdatedAt = hasRealtimeLive ? realtimeQuery.dataUpdatedAt : fallbackQuery.dataUpdatedAt;
   const { goalHistory, detectGoals, notificationsEnabled, enableNotifications, disableNotifications, isSupported, permissionDenied } = useGoalNotifications(liveLeagues, soundEnabled);
+  const health = healthQuery.data;
+  const lastHealthError = Array.isArray(health?.last_error) && health.last_error.length > 0
+    ? health.last_error
+        .map((entry: any) => entry?.message || entry?.apiErrors?.join(", "))
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(" | ")
+    : "";
+  const latestSyncAt = health?.latest_sync_at ? new Date(health.latest_sync_at) : null;
+  const syncAgeSeconds = latestSyncAt ? Math.floor((Date.now() - latestSyncAt.getTime()) / 1000) : null;
+  const hasProviderIssue = Boolean(lastHealthError);
 
   // Sync countdown with React Query's last update time (avoids double-fetching)
   useEffect(() => {
@@ -82,6 +94,7 @@ const Live = () => {
 
   const liveMatches = liveLeagues || [];
   const totalLive = liveMatches.reduce((acc, l) => acc + l.matches.length, 0);
+  const providerReturnedNoLive = !hasProviderIssue && totalLive === 0 && (health?.recent_sync_runs || 0) > 0;
 
   const matchesByCountry = liveMatches.reduce<Record<string, { count: number; leagues: string[] }>>((acc, league) => {
     const c = league.country;
@@ -151,6 +164,14 @@ const Live = () => {
               <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span className="font-bold text-foreground">{countdown}s</span>
             </div>
+            {syncAgeSeconds !== null && (
+              <div className={cn(
+                "rounded-lg px-2 py-1 text-[10px] font-bold sm:text-xs",
+                syncAgeSeconds > 45 ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"
+              )}>
+                {syncAgeSeconds > 45 ? "Retard données" : `Maj ${Math.max(0, syncAgeSeconds)}s`}
+              </div>
+            )}
             <button onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1 sm:gap-1.5 rounded-lg bg-primary/10 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-60">
               <RefreshCw className={cn("h-3 w-3 sm:h-3.5 sm:w-3.5", isRefreshing && "animate-spin")} />
               <span className="hidden sm:inline">Actualiser</span>
@@ -162,6 +183,30 @@ const Live = () => {
         <div className="mb-5 h-0.5 w-full rounded-full bg-muted overflow-hidden">
           <div className="h-full bg-live transition-all duration-1000 ease-linear" style={{ width: `${(countdown / REFRESH_INTERVAL) * 100}%` }} />
         </div>
+
+        {(hasProviderIssue || providerReturnedNoLive) && (
+          <div className={cn(
+            "mb-5 rounded-lg border p-3 text-sm",
+            hasProviderIssue
+              ? "border-destructive/30 bg-destructive/5 text-destructive"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          )}>
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <p className="font-bold">
+                  {hasProviderIssue ? "API-Football signale un problème fournisseur" : "Aucun live fourni par API-Football"}
+                </p>
+                <p className="mt-1 text-xs opacity-85">
+                  {hasProviderIssue
+                    ? lastHealthError
+                    : "La page affiche uniquement les matchs renvoyés par API-Football. Aucun faux match de secours n'est ajouté."}
+                  {syncAgeSeconds !== null && ` Dernière sync il y a ${Math.max(0, syncAgeSeconds)}s.`}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-1 mb-5 bg-muted/50 rounded-xl p-1">
@@ -194,7 +239,13 @@ const Live = () => {
                   <Zap className="h-10 w-10 text-muted-foreground" />
                 </div>
                 <h2 className="text-xl font-bold text-foreground">Aucun match en direct</h2>
-                <p className="text-muted-foreground text-center max-w-sm text-sm">Reviens bientôt !</p>
+                <p className="text-muted-foreground text-center max-w-sm text-sm">
+                  {hasProviderIssue
+                    ? "API-Football ne fournit pas les données live pour le moment."
+                    : providerReturnedNoLive
+                    ? "API-Football a bien été interrogé, mais ne renvoie aucun live actuellement."
+                    : "Reviens bientôt !"}
+                </p>
                 <Link to="/" className="mt-2 rounded-xl bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/20 transition-colors">Voir tous les matchs</Link>
               </div>
             ) : (

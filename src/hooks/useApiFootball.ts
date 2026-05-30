@@ -8,7 +8,6 @@ import {
   getPlayerById, searchPlayerByName, getTrophies, getPlayers, getAiPrediction,
   getFixturePlayers, getOdds, getInjuries, getCoach, getSidelined, getLiveOdds,
 } from "@/services/apiFootball";
-import { mockLeagues } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { formatApiDate, formatMatchTime, getUserMatchTimezone, isStaleLiveUpdate } from "@/utils/matchTime";
 import { sortLeaguesByPriority, sortMatchesWithinLeague } from "@/utils/matchRanking";
@@ -118,8 +117,27 @@ export interface PlayerData {
   photoUrl: string;
 }
 
-const fallbackLeagues = mockLeagues as unknown as LeagueData[];
-const LIVE_STATUSES = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
+export interface LiveDataHealth {
+  provider?: string;
+  latest_sync_at?: string | null;
+  latest_success_at?: string | null;
+  last_error?: unknown;
+  source_counts?: { source: string; count: number }[];
+  last_diagnostic?: Record<string, unknown>;
+  last_total_fixtures?: number;
+  last_tracked_fixtures?: number;
+  last_live_fixtures?: number;
+  last_finished_fixtures?: number;
+  active_matches?: number;
+  stale_active_matches?: number;
+  finished_recent?: number;
+  latest_state_update_at?: string | null;
+  recent_events?: number;
+  recent_proxy_calls?: number;
+  recent_sync_runs?: number;
+}
+
+const LIVE_STATUSES = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT", "SUSP"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN", "AWD", "WO"];
 const PRIORITY_LIVE_LEAGUE_IDS = [
   "2", "3", "848", "39", "140", "135", "78", "61",
@@ -161,7 +179,7 @@ async function fetchPriorityLiveLeagues(dateStr: string, season: string, timezon
 // ─── Data transformers ────────────────────────────────────────
 
 function mapFixtureStatus(apiStatus: string): "scheduled" | "live" | "finished" {
-  const liveStatuses = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
+  const liveStatuses = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT", "SUSP"];
   const finishedStatuses = ["FT", "AET", "PEN", "AWD", "WO"];
   if (liveStatuses.includes(apiStatus)) return "live";
   if (finishedStatuses.includes(apiStatus)) return "finished";
@@ -367,28 +385,38 @@ export function useFixturesByDate(date: Date) {
   return useQuery({
     queryKey: ["fixtures", dateStr, timezone],
     queryFn: async () => {
-      try {
-        const [dailyRes, liveRes] = await Promise.allSettled([
-          getFixtures({ date: dateStr, timezone }),
-          getLiveFixtures(timezone),
-        ]);
-        let daily = dailyRes.status === "fulfilled" ? transformFixturesToLeagues(dailyRes.value?.response || [], timezone) : [];
-        const selectedStart = new Date(date);
-        selectedStart.setHours(0, 0, 0, 0);
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        if (daily.length === 0 && selectedStart >= todayStart) {
+      const requestErrors: unknown[] = [];
+      const [dailyRes, liveRes] = await Promise.allSettled([
+        getFixtures({ date: dateStr, timezone }),
+        getLiveFixtures(timezone),
+      ]);
+      let daily = dailyRes.status === "fulfilled" ? transformFixturesToLeagues(dailyRes.value?.response || [], timezone) : [];
+      if (dailyRes.status === "rejected") requestErrors.push(dailyRes.reason);
+      if (liveRes.status === "rejected") requestErrors.push(liveRes.reason);
+
+      const selectedStart = new Date(date);
+      selectedStart.setHours(0, 0, 0, 0);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      if (daily.length === 0 && selectedStart >= todayStart) {
+        try {
           const scheduledRetry = await getFixtures({ date: dateStr, status: "NS", timezone });
           daily = transformFixturesToLeagues(scheduledRetry?.response || [], timezone);
+        } catch (error) {
+          requestErrors.push(error);
         }
-        const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
-        const recoveredLive = await fetchPriorityLiveLeagues(dateStr, season, timezone);
-
-        return mergeLeagueData(directLive, recoveredLive, daily);
-      } catch (error) {
-        console.warn("Impossible de charger les matchs, affichage du contenu de secours.", error);
-        return fallbackLeagues;
       }
+      const directLive = liveRes.status === "fulfilled" ? transformFixturesToLeagues(liveRes.value?.response || [], timezone) : [];
+      const recoveredLive = await fetchPriorityLiveLeagues(dateStr, season, timezone);
+      const merged = mergeLeagueData(directLive, recoveredLive, daily);
+
+      if (merged.length === 0 && requestErrors.length > 0) {
+        throw requestErrors[0] instanceof Error
+          ? requestErrors[0]
+          : new Error("API-Football n'a pas pu charger les matchs pour cette date.");
+      }
+
+      return merged;
     },
     staleTime: 30 * 1000, // 30s — always fresh for live match scores
     refetchInterval: (query) => {
@@ -421,7 +449,13 @@ export function useLiveFixtures() {
       if (liveRes.status === "rejected") {
         console.warn("fixtures?live=all indisponible, rattrapage par date puis ligues prioritaires.", liveRes.reason);
       }
-      return mergeLeagueData(directLive, recoveredDateLive, recoveredPriorityLive);
+      const merged = mergeLeagueData(directLive, recoveredDateLive, recoveredPriorityLive);
+      if (merged.length === 0 && liveRes.status === "rejected" && todayRes.status === "rejected") {
+        throw liveRes.reason instanceof Error
+          ? liveRes.reason
+          : new Error("API-Football n'a pas pu charger les matchs live.");
+      }
+      return merged;
     },
     staleTime: 30 * 1000, // 30s — real-time live scores
     refetchInterval: 15 * 1000,
@@ -535,6 +569,20 @@ export function useRealtimeFixtureState(fixtureId: string) {
   }, [fixtureId]);
 
   return { ...stateQuery, data: row || stateQuery.data };
+}
+
+export function useLiveDataHealth() {
+  return useQuery({
+    queryKey: ["live-data-health"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_live_data_health");
+      if (error) throw error;
+      return (data || {}) as LiveDataHealth;
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 15 * 1000,
+    refetchIntervalInBackground: false,
+  });
 }
 
 export function useTopScorers(leagueId: string, season: string) {

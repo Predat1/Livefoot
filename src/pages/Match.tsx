@@ -49,7 +49,7 @@ import {
 } from "recharts";
 
 function mapFixtureStatus(s: string): "scheduled" | "live" | "finished" {
-  const live = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"];
+  const live = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT", "SUSP"];
   const finished = ["FT", "AET", "PEN", "AWD", "WO"];
   if (live.includes(s)) return "live";
   if (finished.includes(s)) return "finished";
@@ -228,7 +228,7 @@ const Match = () => {
   );
   const fix = resolvedFixtureData as any;
   const statusRaw = realtimeState?.status || fix?.fixture?.status?.short || "";
-  const isMatchLive = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"].includes(statusRaw);
+  const isMatchLive = ["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT", "SUSP"].includes(statusRaw);
   const isMatchFinished = ["FT", "AET", "PEN", "AWD", "WO"].includes(statusRaw);
   const defaultMatchTab = isMatchLive ? "live" : isMatchFinished ? "events" : "predictions";
   const [activeTab, setActiveTab] = useState<string | null>(null);
@@ -278,7 +278,7 @@ const Match = () => {
 
     const events = (eventsData || []) as any[];
     const statusRaw = fix?.fixture?.status?.short || "";
-    const isLiveLocal = ["1H","2H","HT","ET","P","BT","LIVE","INT"].includes(statusRaw);
+    const isLiveLocal = ["1H","2H","HT","ET","P","BT","LIVE","INT","SUSP"].includes(statusRaw);
     const isFinishedLocal = ["FT","AET","PEN","AWD","WO"].includes(statusRaw);
     const minuteLocal = fix?.fixture?.status?.elapsed;
 

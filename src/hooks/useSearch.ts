@@ -57,7 +57,7 @@ export const DEFAULT_FILTERS: SearchFilters = {
   marketValueMax: 500,
 };
 
-const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]);
+const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT", "SUSP"]);
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
 
 const SEARCH_ALIASES: Record<string, string[]> = {

@@ -9,10 +9,10 @@ import InfiniteScrollLoader from "@/components/InfiniteScrollLoader";
 import { useFootballNews } from "@/hooks/useFootballNews";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { getFootballSeasonForDate, useFixturesByDate, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
+import { getFootballSeasonForDate, useFixturesByDate, useLiveDataHealth, useRealtimeLiveFixtures, type LeagueData } from "@/hooks/useApiFootball";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCommunityTopRated } from "@/hooks/useCommunityRatings";
-import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2 } from "lucide-react";
+import { Trophy, TrendingUp, Zap, ArrowRight, Calendar, Eye, Flame, Loader2, WifiOff, Star, Users, Sparkles, Share2, AlertTriangle } from "lucide-react";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -44,8 +44,9 @@ const Index = () => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [referralBannerDismissed, setReferralBannerDismissed] = useState(false);
 
-  const { data: apiLeagues, isLoading, isError, refetch } = useFixturesByDate(selectedDate);
+  const { data: apiLeagues, isLoading, isError, error: fixturesError, refetch } = useFixturesByDate(selectedDate);
   const { data: realtimeLiveLeagues, refetch: refetchRealtimeLive } = useRealtimeLiveFixtures();
+  const { data: liveHealth } = useLiveDataHealth();
   const { favorites } = useFavorites();
 
   const userCountries = useMemo(() => getUserCountryCandidates(), []);
@@ -139,6 +140,18 @@ const Index = () => {
     { icon: TrendingUp, label: "Live", value: String(matchCounts.live) },
     { icon: Zap, label: "Matches", value: String(matchCounts.all) },
   ];
+
+  const lastHealthError = Array.isArray(liveHealth?.last_error) && liveHealth.last_error.length > 0
+    ? liveHealth.last_error
+        .map((entry: any) => entry?.message || entry?.apiErrors?.join(", "))
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(" | ")
+    : "";
+  const latestSyncAt = liveHealth?.latest_sync_at ? new Date(liveHealth.latest_sync_at) : null;
+  const syncAgeSeconds = latestSyncAt ? Math.floor((Date.now() - latestSyncAt.getTime()) / 1000) : null;
+  const hasProviderIssue = Boolean(lastHealthError);
+  const providerReturnedNoFixtures = !hasProviderIssue && !isLoading && matchCounts.all === 0 && (liveHealth?.recent_sync_runs || 0) > 0;
 
   const handleDateChange = useCallback((date: Date) => {
     setSelectedDate(date);
@@ -266,6 +279,30 @@ const SEO_FAQ = [
       />
 
       <main className="px-2 sm:container py-4 sm:py-8">
+        {(hasProviderIssue || providerReturnedNoFixtures) && (
+          <div className={cn(
+            "mb-4 rounded-lg border p-3 text-sm",
+            hasProviderIssue
+              ? "border-destructive/30 bg-destructive/5 text-destructive"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          )}>
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <p className="font-bold">
+                  {hasProviderIssue ? "API-Football signale un problème fournisseur" : "Aucun match fourni par API-Football pour cette date"}
+                </p>
+                <p className="mt-1 text-xs opacity-85">
+                  {hasProviderIssue
+                    ? lastHealthError
+                    : "La page n'affiche plus de faux matchs de secours. Les données apparaîtront dès que l'API renverra des fixtures."}
+                  {syncAgeSeconds !== null && ` Dernière sync il y a ${Math.max(0, syncAgeSeconds)}s.`}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats bar */}
         <div className="mb-6 grid grid-cols-3 gap-2 sm:mb-8 sm:gap-4">
           {stats.map((stat, index) => (
@@ -439,7 +476,9 @@ const SEO_FAQ = [
         {isError && !isLoading && (
           <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl bg-card border border-border/50">
             <WifiOff className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-muted-foreground text-sm mb-3">Impossible de charger les matchs. Veuillez réessayer.</p>
+            <p className="text-muted-foreground text-sm mb-3">
+              {fixturesError instanceof Error ? fixturesError.message : "Impossible de charger les matchs. Veuillez réessayer."}
+            </p>
             <button
               onClick={() => refetch()}
               className="rounded-lg gradient-primary px-4 py-2 text-sm font-medium text-primary-foreground"

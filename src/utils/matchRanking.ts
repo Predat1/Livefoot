@@ -71,7 +71,7 @@ export type FavoriteSets = {
   userCountries?: string[];
 };
 
-const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT"]);
+const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "P", "BT", "LIVE", "INT", "SUSP"]);
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
 
 const TOP_CLUBS_IDS = new Set([
