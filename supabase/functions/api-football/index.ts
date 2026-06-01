@@ -145,15 +145,15 @@ function getTtlForEndpoint(endpoint: string, params: Record<string, string>, pay
     if (endpoint.startsWith("fixtures/lineups")) return 7 * 24 * 60 * 60_000;
   }
 
-  if (endpoint === "fixtures" && params?.live === "all") return 8_000;
-  if (endpoint.startsWith("fixtures/events")) return live ? 15_000 : 15 * 60_000;
-  if (endpoint.startsWith("fixtures/statistics")) return live ? 90_000 : 30 * 60_000;
-  if (endpoint.startsWith("fixtures/players")) return live ? 2 * 60_000 : 12 * 60 * 60_000;
-  if (endpoint.startsWith("fixtures/lineups")) return live ? 5 * 60_000 : 30 * 60_000;
+  if (endpoint === "fixtures" && params?.live === "all") return 5_000;
+  if (endpoint.startsWith("fixtures/events")) return live ? 5_000 : 15 * 60_000;
+  if (endpoint.startsWith("fixtures/statistics")) return live ? 5_000 : 30 * 60_000;
+  if (endpoint.startsWith("fixtures/players")) return live ? 10_000 : 12 * 60 * 60_000;
+  if (endpoint.startsWith("fixtures/lineups")) return live ? 30_000 : 30 * 60_000;
   if (endpoint.startsWith("fixtures/headtohead")) return 60 * 60_000;
   if (endpoint === "fixtures" && params?.team) return 2 * 60 * 60_000;
-  if (endpoint === "fixtures" && params?.id) return live ? 15_000 : 15 * 60_000;
-  if (endpoint === "fixtures") return 15_000;
+  if (endpoint === "fixtures" && params?.id) return live ? 5_000 : 15 * 60_000;
+  if (endpoint === "fixtures") return 5_000;
   if (endpoint === "standings") return 24 * 60 * 60_000;
   if (endpoint === "leagues" || endpoint === "leagues/seasons") return 24 * 60 * 60_000;
   if (endpoint.startsWith("teams")) return 24 * 60 * 60_000;

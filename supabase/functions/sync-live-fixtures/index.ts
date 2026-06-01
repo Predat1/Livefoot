@@ -12,7 +12,7 @@ const PRIORITY_LEAGUES = [
   "233", "253", "262", "270", "271", "307", "531", "667", "848",
 ];
 const CRON_TICK_SECONDS = 15;
-const LIVE_ALL_SECONDS = 45;
+const LIVE_ALL_SECONDS = 15;
 const DATE_TODAY_SECONDS = 300;
 const PRIORITY_LEAGUE_SECONDS = 600;
 const ADJACENT_DATES_SECONDS = 1800;
@@ -576,7 +576,10 @@ serve(async (req) => {
     }
 
     const initialBlockingErrors = errors.filter((error) => error.blocking);
-    const timezoneDiagnostic = dedupedFixtures.length === 0 && initialBlockingErrors.length === 0
+    const dateTodayScanned = results.some((r) => r.source === "date:today");
+    const dateTodayCount = results.find((r) => r.source === "date:today")?.fixtures.length ?? 0;
+
+    const timezoneDiagnostic = dedupedFixtures.length === 0 && dateTodayScanned && dateTodayCount === 0 && initialBlockingErrors.length === 0
       ? await runTimezoneDiagnostic(date)
       : [];
     for (const check of timezoneDiagnostic) {
@@ -584,7 +587,7 @@ serve(async (req) => {
       if (check.error) errors.push(check.error);
     }
 
-    const timezoneMismatch = dedupedFixtures.length === 0 && timezoneDiagnostic.some((check) => check.count > 0);
+    const timezoneMismatch = dedupedFixtures.length === 0 && dateTodayScanned && dateTodayCount === 0 && timezoneDiagnostic.some((check) => check.count > 0);
     if (timezoneMismatch) {
       errors.push({
         source: "diagnostic:timezone",

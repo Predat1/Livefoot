@@ -418,11 +418,11 @@ export function useFixturesByDate(date: Date) {
 
       return merged;
     },
-    staleTime: 30 * 1000, // 30s — always fresh for live match scores
+    staleTime: 15 * 1000, // 15s — always fresh for live match scores
     refetchInterval: (query) => {
       const leagues = query.state.data as LeagueData[] | undefined;
       const hasLive = leagues?.some((l) => l.matches.some((m) => m.status === "live"));
-      return hasLive ? 30 * 1000 : 10 * 60 * 1000; // 30s if live, 10min otherwise
+      return hasLive ? 15 * 1000 : 10 * 60 * 1000; // 15s if live, 10min otherwise
     },
     refetchIntervalInBackground: false,
   });
@@ -457,7 +457,7 @@ export function useLiveFixtures() {
       }
       return merged;
     },
-    staleTime: 30 * 1000, // 30s — real-time live scores
+    staleTime: 15 * 1000, // 15s — real-time live scores
     refetchInterval: 15 * 1000,
     refetchIntervalInBackground: false,
   });
@@ -669,11 +669,11 @@ export function useFixtureDetail(fixtureId: string) {
       if (!res.response || res.response.length === 0) return null;
       return res.response[0];
     },
-    staleTime: 15 * 1000,
+    staleTime: 5 * 1000,
     refetchInterval: (query) => {
       const data = query.state.data as any;
       const status = data?.fixture?.status?.short;
-      if (isLiveStatus(status)) return 15 * 1000;
+      if (isLiveStatus(status)) return 5 * 1000;
       if (isFinishedStatus(status)) return false;
       return 15 * 60 * 1000;
     },
@@ -691,9 +691,9 @@ export function useFixtureEvents(fixtureId: string, options: MatchAwareQueryOpti
       const res = await getFixtureEvents(fixtureId, options.matchStatus ? { _matchStatus: options.matchStatus } : {});
       return res.response || [];
     },
-    staleTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : isLive ? 60 * 1000 : 15 * 60 * 1000,
+    staleTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : isLive ? 5 * 1000 : 15 * 60 * 1000,
     gcTime: isFinished ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000,
-    refetchInterval: isLive ? 60 * 1000 : false,
+    refetchInterval: isLive ? 5 * 1000 : false,
     refetchIntervalInBackground: false,
     enabled: !!fixtureId && (options.enabled ?? true),
   });
@@ -766,8 +766,8 @@ export function useRealtimeFixtureEvents(fixtureId: string, options: MatchAwareQ
       setRows(nextRows);
       return nextRows.map(mapRealtimeEventToApiEvent);
     },
-    staleTime: isLive ? 10 * 1000 : 10 * 60 * 1000,
-    refetchInterval: isLive ? 15 * 1000 : false,
+    staleTime: isLive ? 5 * 1000 : 10 * 60 * 1000,
+    refetchInterval: isLive ? 5 * 1000 : false,
     enabled: !!fixtureId && (options.enabled ?? true),
   });
 
