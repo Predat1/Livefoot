@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // broadcast-promo-push Edge Function
 //
 // PURPOSE: Admin-triggered endpoint that fetches all push
-//   subscriptions and sends a promotional VIP notification.
+//   subscriptions and sends a promotional Premium notification.
 //   Uses the Web Push Protocol with VAPID signing.
 //
 // Requires Supabase secrets:
@@ -185,9 +185,9 @@ serve(async (req) => {
 
     // ── Parse notification payload ───────────────────────────────
     const body = await req.json();
-    const title = body.title || "🌟 Offre VIP Exclusive LiveFoot";
-    const message = body.message || "Profitez de 7 jours VIP gratuits — accédez à toutes les prédictions IA !";
-    const url = body.url || "/pricing";
+    const title = body.title || "Premium LiveFoot activé";
+    const message = body.message || "Votre accès Premium gratuit est activé pendant 1 an. Profitez des prédictions IA dès maintenant.";
+    const url = body.url || "/vip";
 
     const notifPayload = JSON.stringify({ title, body: message, url, tag: "promo-vip" });
 
