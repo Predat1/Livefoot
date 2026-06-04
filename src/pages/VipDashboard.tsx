@@ -218,7 +218,7 @@ export default function VipDashboard() {
       const { data, error } = await supabase.rpc("activate_existing_user_promo");
       if (error) throw new Error(error.message);
       if (data?.success) {
-        toast.success("🎉 VIP 7 jours activé !", "Profitez de toutes les fonctionnalités premium.");
+        toast.success("🎉 Premium 1 an activé !", "Profitez de toutes les fonctionnalités premium.");
         setPromoClaimed(true);
         setPromoAvailable(false);
         await refreshProfile();
@@ -251,10 +251,10 @@ export default function VipDashboard() {
           >
             <div className="flex items-center gap-2 mb-2">
               <Gift className="h-5 w-5 text-emerald-400" />
-              <span className="text-emerald-400 font-black text-sm">Offre limitée — VIP gratuit 7 jours</span>
+              <span className="text-emerald-400 font-black text-sm">Premium gratuit pendant 1 an</span>
             </div>
             <p className="text-xs text-white/60 mb-3">
-              Profitez de toutes les fonctionnalités VIP pendant 7 jours. Aucune carte requise.
+              Profitez de toutes les fonctionnalités Premium pendant 1 an. Aucune carte requise.
             </p>
             <Button
               onClick={handleClaimPromo}
@@ -278,7 +278,7 @@ export default function VipDashboard() {
             className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3"
           >
             <CheckCircle className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-            <p className="text-sm text-emerald-400 font-bold">VIP 7 jours activé ! Rechargez la page.</p>
+            <p className="text-sm text-emerald-400 font-bold">Premium 1 an activé ! Rechargez la page.</p>
           </motion.div>
         )}
 

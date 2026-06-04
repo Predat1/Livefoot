@@ -523,7 +523,7 @@ function PromoVipPanel() {
   const [loadingMetrics, setLoadingMetrics] = React.useState(true);
   const [broadcasting, setBroadcasting] = React.useState(false);
   const [notifTitle, setNotifTitle] = React.useState("🌟 Offre VIP Exclusive LiveFoot");
-  const [notifMsg, setNotifMsg] = React.useState("Profitez de 7 jours VIP gratuits — accédez à toutes les prédictions IA !");
+  const [notifMsg, setNotifMsg] = React.useState("Profitez de 1 an Premium gratuit — accédez à toutes les prédictions IA !");
 
   const loadMetrics = React.useCallback(async () => {
     setLoadingMetrics(true);
@@ -561,7 +561,7 @@ function PromoVipPanel() {
       const { supabase: globalSupabase } = await import("@/integrations/supabase/client");
       await (globalSupabase as any)
         .from("site_settings")
-        .upsert({ key: "promo_vip_enabled", value: enabled ? "true" : "false", description: "Promotion VIP gratuite 7 jours activée" }, { onConflict: "key" });
+        .upsert({ key: "promo_vip_enabled", value: enabled ? "true" : "false", description: "Premium gratuit 1 an activé" }, { onConflict: "key" });
       toast.success(`Promotion ${enabled ? "activée" : "désactivée"}`);
       loadMetrics();
     } catch (err: any) {
@@ -576,8 +576,8 @@ function PromoVipPanel() {
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total essais", value: String(metrics?.total_trials ?? "—"), color: "bg-purple-500/20", Icon: Crown },
-          { label: "Essais actifs", value: String(metrics?.active_trials ?? "—"), color: "bg-emerald-500/20", Icon: CheckCircle },
+          { label: "Total Premium", value: String(metrics?.total_trials ?? "—"), color: "bg-purple-500/20", Icon: Crown },
+          { label: "Premium actifs", value: String(metrics?.active_trials ?? "—"), color: "bg-emerald-500/20", Icon: CheckCircle },
           { label: "Nouveaux inscrits", value: String(metrics?.new_signup_trials ?? "—"), color: "bg-blue-500/20", Icon: Users },
           { label: "IPs uniques", value: String(metrics?.unique_ips ?? "—"), color: "bg-amber-500/20", Icon: Activity },
         ].map((s) => (
@@ -611,7 +611,7 @@ function PromoVipPanel() {
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-white font-bold">Promotion VIP gratuite</p>
+            <p className="text-sm text-white font-bold">Premium gratuit 1 an</p>
             <p className="text-xs text-slate-400 mt-0.5">
               {promoEnabled ? "Active — les nouveaux inscrits reçoivent le VIP automatiquement" : "Désactivée"}
             </p>
@@ -672,7 +672,7 @@ function PromoVipPanel() {
       {Array.isArray(metrics?.recent_trials) && (metrics.recent_trials as unknown[]).length > 0 && (
         <Card className="bg-slate-900/50 border-slate-800">
           <CardHeader>
-            <CardTitle className="text-base font-bold text-white">Derniers essais VIP réclamés</CardTitle>
+            <CardTitle className="text-base font-bold text-white">Derniers accès Premium activés</CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -691,9 +691,9 @@ function PromoVipPanel() {
                     <td className="py-2">
                       <Badge variant="outline" className={cn(
                         "text-[10px]",
-                        t.source === "new_signup" ? "text-blue-400 border-blue-500/30" : "text-purple-400 border-purple-500/30"
+                        String(t.source).includes("signup") ? "text-blue-400 border-blue-500/30" : "text-purple-400 border-purple-500/30"
                       )}>
-                        {t.source === "new_signup" ? "Nouvel inscrit" : "Existant"}
+                        {String(t.source).includes("signup") ? "Nouvel inscrit" : "Existant"}
                       </Badge>
                     </td>
                     <td className="py-2">{t.claimed_at ? new Date(String(t.claimed_at)).toLocaleDateString("fr-FR") : "—"}</td>
