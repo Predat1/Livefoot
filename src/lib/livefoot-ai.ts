@@ -89,6 +89,21 @@ export interface LiveFootAIPrediction {
   confidenceStars?: number;
   reasoning?: string;
   analysis?: string;
+  dataQuality?: {
+    level: "high" | "medium" | "low";
+    usableSignals?: string[];
+    missing?: string[];
+  };
+  safestPick?: string;
+  avoidMarkets?: string[];
+  marketEdges?: Array<{
+    market: string;
+    pick: string;
+    modelProb: number;
+    bookmakerProb?: number;
+    edge?: number;
+    confidence?: number;
+  }>;
   detailedPredictions?: Record<string, string | number>;
   predictionEvents?: LiveFootAIPredictionEvent[];
   _provider?: string;
@@ -787,7 +802,7 @@ export function generatePrediction(params: {
   predictionEvents.push({ key: "dnb", category: "result", label: "Draw no bet", value: dnbTeam, confidence: dnbConf, risk: "medium", isVip: true, probability: dnbConf, rationale: "Remboursé si match nul" });
 
   // Goals
-  predictionEvents.push({ key: "overUnder05", category: "goals", label: "Buts +/- 0.5", value: "Plus de 0.5", confidence: Math.round(poisson.over05Prob), risk: "low", isVip: true, probability: Math.round(poisson.over05Prob), rationale: "Quasi-certitude statistique" });
+  predictionEvents.push({ key: "overUnder05", category: "goals", label: "Buts +/- 0.5", value: "Plus de 0.5", confidence: Math.round(poisson.over05Prob), risk: "low", isVip: true, probability: Math.round(poisson.over05Prob), rationale: "Projection issue de la distribution de buts" });
   const ov15conf = Math.round(poisson.over15Prob > 50 ? poisson.over15Prob : 100 - poisson.over15Prob);
   predictionEvents.push({ key: "overUnder15", category: "goals", label: "Buts +/- 1.5", value: poisson.over15Prob > 50 ? "Plus de 1.5" : "Moins de 1.5", confidence: ov15conf, risk: getEventRisk(ov15conf), isVip: true, probability: ov15conf, rationale: "Rythme de jeu récent" });
   const ov25conf = Math.round(poisson.over25Prob > 50 ? poisson.over25Prob : 100 - poisson.over25Prob);
@@ -826,7 +841,7 @@ export function generatePrediction(params: {
   predictionEvents.push({ key: "htft", category: "special", label: "Mi-temps / Fin", value: htftLabel, confidence: Math.max(18, finalConfidence - 22), risk: getEventRisk(Math.max(18, finalConfidence - 22)), isVip: true, probability: Math.max(18, finalConfidence - 22), rationale: "Cohérence de la performance mi-temps/finale" });
   predictionEvents.push({ key: "firstScorerTeam", category: "special", label: "1er buteur équipe", value: outcome === "home" ? homeTeamName : outcome === "away" ? awayTeamName : "Aucun", confidence: Math.min(80, Math.max(homeProb, awayProb) + 5), risk: "medium", isVip: true, probability: Math.min(80, Math.max(homeProb, awayProb) + 5), rationale: "Favori offensif" });
   predictionEvents.push({ key: "timingFirstGoal", category: "special", label: "Temps 1er but", value: totalExpectedGoals > 2.5 ? "1-30 min" : "31-75 min", confidence: 58, risk: "high", isVip: true, probability: 58, rationale: "Intensité de début de match" });
-  predictionEvents.push({ key: "highestScoringHalf", category: "special", label: "Mi-temps + prolifique", value: "2ème mi-temps", confidence: 65, risk: "medium", isVip: true, probability: 65, rationale: "Statistique historique universelle" });
+  predictionEvents.push({ key: "highestScoringHalf", category: "special", label: "Mi-temps + prolifique", value: "2ème mi-temps", confidence: 58, risk: "medium", isVip: true, probability: 58, rationale: "Lecture prudente faute de stats de rythme par mi-temps" });
   const marginVal   = Math.abs(predictedHome - predictedAway);
   const marginLabel = marginVal === 0 ? "Match Nul" : `${marginVal} but(s)`;
   predictionEvents.push({ key: "winningMargin", category: "special", label: "Marge de victoire", value: marginLabel, confidence: Math.max(30, finalConfidence - 25), risk: getEventRisk(Math.max(30, finalConfidence - 25)), isVip: true, probability: Math.max(30, finalConfidence - 25), rationale: "Calculé par Poisson" });
@@ -886,7 +901,7 @@ export function generatePrediction(params: {
     _provider: "local",
 
     // Elite
-    modelVersion: "LiveFoot AnalystePro Elite V4",
+    modelVersion: "LiveFoot AnalystePro Elite V5",
     fixtureId: `${homeTeamId}_${awayTeamId}`,
     predictionType: "pre_match",
     dataQualityScore,

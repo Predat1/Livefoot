@@ -290,7 +290,7 @@ export default function VipDashboard() {
         <p className="text-sm text-white/60 mb-8 leading-relaxed">
           Le Dashboard VIP regroupe en temps réel les{" "}
           <strong className="text-white">meilleurs Value Bets</strong> du jour et les{" "}
-          <strong className="text-white">alertes d'intégrité</strong> générées par l'AnalystePro V4.
+          <strong className="text-white">alertes d'intégrité</strong> générées par l'AnalystePro V5.
         </p>
 
         {!user && (
@@ -541,7 +541,7 @@ export default function VipDashboard() {
                   <Activity className="h-4 w-4 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-black text-white text-sm">Performance AnalystePro V4</h3>
+                  <h3 className="font-black text-white text-sm">Performance AnalystePro V5</h3>
                   <p className="text-[10px] text-white/50">Statistiques sur les 30 derniers jours</p>
                 </div>
               </div>

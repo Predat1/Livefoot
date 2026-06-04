@@ -33,7 +33,7 @@ export default function MatchAIChat({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `Bonjour ! Je suis l'IA AnalystePro V4. Posez-moi n'importe quelle question sur **${homeTeamName} vs ${awayTeamName}**. J'ai analysé toutes les données disponibles : forme, H2H, blessures, cotes et météo.`,
+      content: `Bonjour ! Je suis l'IA AnalystePro V5. Posez-moi n'importe quelle question sur **${homeTeamName} vs ${awayTeamName}**. Je croise les données disponibles : forme, H2H, blessures, cotes, météo et niveau de fiabilité des signaux.`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -155,7 +155,7 @@ export default function MatchAIChat({
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-white flex items-center gap-2">
-                      AnalystePro V4
+                      AnalystePro V5
                       {!isVip && (
                         <span className="text-[9px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5">
                           <Crown className="h-2.5 w-2.5" /> VIP

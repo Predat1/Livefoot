@@ -17,7 +17,7 @@ import { trackConversionEvent } from "@/lib/conversionTracking";
 
 // Features de base communes à tous les plans
 const BASE_FEATURES = [
-  { icon: "🤖", text: "Accès illimité à l'IA AnalystePro V4", highlight: false },
+  { icon: "🤖", text: "Accès illimité à l'IA AnalystePro V5", highlight: false },
   { icon: "🎯", text: "Détecteur de matchs truqués & anomalies de cotes", highlight: false },
   { icon: "📈", text: "Value Bets exclusifs générés par l'IA", highlight: false },
   { icon: "📊", text: "Confiance par marché (1X2, BTTS, O/U, Handicap)", highlight: false },
@@ -222,7 +222,7 @@ export default function Pricing() {
               transition={{ delay: 0.2 }}
               className="text-base sm:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed"
             >
-              Débloquez l'IA <strong className="text-white">AnalystePro V4</strong>. Un algorithme propriétaire conçu pour repérer les failles des bookmakers, les mouvements de cotes suspects et les Value Bets à forte rentabilité.
+              Débloquez l'IA <strong className="text-white">AnalystePro V5</strong>. Un algorithme propriétaire conçu pour repérer les failles des bookmakers, les mouvements de cotes suspects et les Value Bets à forte rentabilité.
             </motion.p>
           </div>
 
@@ -436,7 +436,7 @@ export default function Pricing() {
               {/* Rows */}
               {[
                 {
-                  icon: "🤖", label: "AnalystePro V4", desc: "Pronos 1X2 / BTTS / O/U / Score",
+                  icon: "🤖", label: "AnalystePro V5", desc: "Pronos 1X2 / BTTS / O/U / Score",
                   weekly: true, monthly: true, quarterly: true, annual: true,
                 },
                 {
@@ -568,7 +568,7 @@ export default function Pricing() {
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                 <h4 className="text-base font-bold text-white mb-2">{t("pricing.faq_why_expensive_title")}</h4>
-                <p className="text-sm text-white/60 leading-relaxed">L'AnalystePro V4 n'est pas un robot de conseils aléatoires. Il implémente le modèle Double Poisson Dixon-Coles, la pondération ELO exponentielle, la détection de Value Bets en temps réel et une IA conversationnelle — et tourne sur des serveurs d'intelligence artificielle surpuissants (Gemini 2.5 Flash + fallback Claude). Ce coût d'infrastructure garantit la meilleure précision du marché. Un seul pari Value Bet suffit généralement à rentabiliser le mois.</p>
+                <p className="text-sm text-white/60 leading-relaxed">L'AnalystePro V5 n'est pas un robot de conseils aléatoires. Il croise les signaux disponibles, mesure la qualité des données, calibre la confiance et refuse les marchés trop fragiles quand les informations clés manquent. Un seul pari Value Bet solide peut généralement rentabiliser le mois.</p>
               </div>
             </div>
           </div>

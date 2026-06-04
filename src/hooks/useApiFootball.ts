@@ -1374,15 +1374,32 @@ export function useAiExpert(params: {
         if (error) throw error;
         return data as {
           matchState: string;
+          dataQuality?: {
+            level: "high" | "medium" | "low";
+            usableSignals?: string[];
+            missing?: string[];
+          };
           analysis: string;
           reasoning: string;
           predictedScore: string;
           confidence: number;
           confidenceStars: number;
           keyFactor: string;
+          riskLevel?: "low" | "medium" | "high";
           xgHome: number;
           xgAway: number;
           valueBet: string | null;
+          valueBetOdds?: string | null;
+          safestPick?: string;
+          avoidMarkets?: string[];
+          marketEdges?: Array<{
+            market: string;
+            pick: string;
+            modelProb: number;
+            bookmakerProb?: number;
+            edge?: number;
+            confidence?: number;
+          }>;
           predictions: {
             winner: string;
             btts: string;

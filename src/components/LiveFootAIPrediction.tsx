@@ -33,9 +33,25 @@ interface LiveFootAIPredictionCardProps {
   leagueName?: string;
   aiExpertPrediction?: {
     analysis: string;
+    dataQuality?: {
+      level: "high" | "medium" | "low";
+      usableSignals?: string[];
+      missing?: string[];
+    };
     predictedScore: string;
     confidence: number;
     keyFactor: string;
+    riskLevel?: "low" | "medium" | "high";
+    safestPick?: string;
+    avoidMarkets?: string[];
+    marketEdges?: Array<{
+      market: string;
+      pick: string;
+      modelProb: number;
+      bookmakerProb?: number;
+      edge?: number;
+      confidence?: number;
+    }>;
     predictions?: {
       winner: string;
       btts: string;
@@ -522,7 +538,12 @@ const LiveFootAIPredictionCard = ({
         const outcome = (homeScore > awayScore) ? "home" : (homeScore < awayScore) ? "away" : "draw";
         
         const extractedBets: { type: string; label: string; confidence: number; emoji: string }[] = [];
-        const baseConf = Math.round((aiExpertPrediction.confidence || 0) * 100);
+        const rawConfidence = Number(aiExpertPrediction.confidence || 0);
+        const baseConf = Math.max(0, Math.min(100, Math.round(rawConfidence <= 1 ? rawConfidence * 100 : rawConfidence)));
+        const expertRisk: "low" | "medium" | "high" =
+          aiExpertPrediction.riskLevel === "low" || aiExpertPrediction.riskLevel === "medium" || aiExpertPrediction.riskLevel === "high"
+            ? aiExpertPrediction.riskLevel
+            : baseConf > 70 ? "low" : baseConf > 50 ? "medium" : "high";
         
         // Compute real probabilities from AI confidence + outcome
         let homeProb = 0, drawProb = 0, awayProb = 0;
@@ -558,6 +579,22 @@ const LiveFootAIPredictionCard = ({
           if (p.highestScoringHalf && p.highestScoringHalf !== "N/A") extractedBets.push({ type: "Half", label: `Mi-temps +: ${p.highestScoringHalf}`, confidence: Math.max(45, baseConf - 15), emoji: "⏱️" });
           if (p.winningMargin && p.winningMargin !== "N/A") extractedBets.push({ type: "Marge", label: `Marge: ${p.winningMargin}`, confidence: Math.max(35, baseConf - 25), emoji: "📊" });
           if (p.exactScore && p.exactScore !== "N/A") extractedBets.push({ type: "Score Exact", label: `Score: ${p.exactScore}`, confidence: Math.max(15, baseConf - 35), emoji: "🎯" });
+        }
+        if (aiExpertPrediction.safestPick && aiExpertPrediction.safestPick !== "Aucun pari fort") {
+          extractedBets.unshift({ type: "Safe", label: aiExpertPrediction.safestPick, confidence: Math.max(45, Math.min(88, baseConf)), emoji: "🛡️" });
+        }
+        if (Array.isArray(aiExpertPrediction.marketEdges)) {
+          aiExpertPrediction.marketEdges
+            .filter((edge: any) => edge?.pick && Number(edge?.edge || 0) >= 8)
+            .slice(0, 2)
+            .forEach((edge: any) => {
+              extractedBets.push({
+                type: edge.market || "Value",
+                label: `${edge.pick}${edge.edge ? ` (+${edge.edge} pts)` : ""}`,
+                confidence: Math.round((edge.confidence && edge.confidence <= 1 ? edge.confidence * 100 : edge.confidence) || Math.max(45, baseConf - 8)),
+                emoji: "💎"
+              });
+            });
         }
         if (extractedBets.length === 0) {
           extractedBets.push({ type: "AI", label: `Score prédit: ${predictedScore}`, confidence: baseConf, emoji: "✨" });
@@ -600,6 +637,34 @@ const LiveFootAIPredictionCard = ({
             team: "both"
           });
         }
+        if (aiExpertPrediction.dataQuality) {
+          const missing = aiExpertPrediction.dataQuality.missing?.filter(Boolean).slice(0, 3).join(", ");
+          factors.push({
+            icon: "🧪",
+            label: `Qualité data: ${aiExpertPrediction.dataQuality.level}`,
+            description: missing ? `Données manquantes: ${missing}` : `Signaux exploités: ${(aiExpertPrediction.dataQuality.usableSignals || []).slice(0, 3).join(", ")}`,
+            impact: aiExpertPrediction.dataQuality.level === "high" ? "positive" : aiExpertPrediction.dataQuality.level === "low" ? "negative" : "neutral",
+            team: "both"
+          });
+        }
+        if (aiExpertPrediction.safestPick) {
+          factors.push({
+            icon: "🛡️",
+            label: "Pick prudent",
+            description: aiExpertPrediction.safestPick,
+            impact: aiExpertPrediction.safestPick === "Aucun pari fort" ? "neutral" : "positive",
+            team: "both"
+          });
+        }
+        if (Array.isArray(aiExpertPrediction.avoidMarkets) && aiExpertPrediction.avoidMarkets.length > 0) {
+          factors.push({
+            icon: "⚠️",
+            label: "Marchés à éviter",
+            description: aiExpertPrediction.avoidMarkets.slice(0, 3).join(", "),
+            impact: "negative",
+            team: "both"
+          });
+        }
 
         const events = mapExpertToEvents(aiExpertPrediction.predictions || {}, homeTeamName, awayTeamName, baseConf);
 
@@ -611,14 +676,18 @@ const LiveFootAIPredictionCard = ({
           factors: factors.slice(0, 5),
           advice: aiExpertPrediction.analysis || "",
           reasoning: aiExpertPrediction.reasoning,
-          risk: baseConf > 70 ? "low" : baseConf > 50 ? "medium" : "high",
+          risk: expertRisk,
           matchState: aiExpertPrediction.matchState,
-          confidenceStars: aiExpertPrediction.confidenceStars || Math.round((aiExpertPrediction.confidence || 0) * 5),
+          confidenceStars: aiExpertPrediction.confidenceStars || Math.round(baseConf / 20),
           xgHome: aiExpertPrediction.xgHome,
           xgAway: aiExpertPrediction.xgAway,
           valueBet: (aiExpertPrediction.valueBet && typeof aiExpertPrediction.valueBet === 'string' && aiExpertPrediction.valueBet.toLowerCase() !== "null") ? aiExpertPrediction.valueBet : null,
           bestBets: extractedBets.slice(0, 6),
           isExpert: true,
+          dataQuality: aiExpertPrediction.dataQuality,
+          safestPick: aiExpertPrediction.safestPick,
+          avoidMarkets: aiExpertPrediction.avoidMarkets,
+          marketEdges: aiExpertPrediction.marketEdges,
           detailedPredictions: aiExpertPrediction.predictions || {},
           predictionEvents: events
         };
@@ -755,7 +824,7 @@ const LiveFootAIPredictionCard = ({
             <Brain className="h-6 w-6 text-primary" />
           </div>
           <p className="text-sm font-bold text-foreground">
-            {isProcessing ? "Initialisation de l'AnalystePro V3..." : "LiveFoot AI rassemble les données..."}
+            {isProcessing ? "Initialisation de l'AnalystePro V5..." : "LiveFoot AI rassemble les données..."}
           </p>
           {isProcessing && (
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Génération du rapport en cours</p>
@@ -942,7 +1011,7 @@ const LiveFootAIPredictionCard = ({
                 )}
               </div>
               <p className="text-[9px] text-muted-foreground sm:text-[10px] dark:text-emerald-300/60">
-                {prediction._provider === "local" ? "Analyse locale" : isVip ? "AnalystePro V4 — Précision VIP" : "Analyse IA V4"}
+                {prediction._provider === "local" ? "Analyse locale calibrée" : isVip ? "AnalystePro V5 — analyse VIP" : "Analyse IA V5"}
               </p>
             </div>
           </div>
@@ -1462,7 +1531,7 @@ const LiveFootAIPredictionCard = ({
         <div className="px-4 sm:px-6 py-3 border-t border-white/5 flex items-center justify-between bg-white/[0.02]">
           <div className="flex flex-col gap-0.5">
             <p className="text-[9px] text-white/20">
-              {prediction._provider === "local" ? "Analyse locale" : isVip ? "AnalystePro V4 — Précision VIP" : "Analyse LiveFoot AI V4"}
+              {prediction._provider === "local" ? "Analyse locale calibrée" : isVip ? "AnalystePro V5 — analyse VIP" : "Analyse LiveFoot AI V5"}
             </p>
             <p className="text-[8px] text-white/10 uppercase tracking-tighter">Données Temps Réel</p>
           </div>

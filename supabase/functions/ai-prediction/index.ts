@@ -31,49 +31,55 @@ function checkRateLimit(ip: string): boolean {
 
 const REQUIRED_ENV = ["OPENROUTER_API_KEY", "API_FOOTBALL_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 
-const SYSTEM_INSTRUCTION = `Tu es AnalystePro V4, le système d'intelligence artificielle le plus avancé au monde en prédiction de matchs de football (25+ ans de données, 200k+ matchs analysés).
+const SYSTEM_INSTRUCTION = `Tu es AnalystePro V5, un moteur professionnel de pronostics football. Ta priorité n'est pas de produire une réponse séduisante, mais une analyse utile, calibrée et vérifiable à partir des données injectées.
 
-## MÉTHODOLOGIE (OBLIGATOIRE)
+## PRINCIPES NON NÉGOCIABLES
+1. Ne jamais inventer une donnée absente. Si une information manque, indique son absence dans dataQuality.missing et réduis la confiance.
+2. Chaque conclusion doit venir d'au moins un signal concret: forme récente, classement, xG attendu, H2H, score live, événements, blessures, météo, cotes ou dynamique de marché.
+3. Interdiction du générique: pas de phrases comme "les deux équipes sont motivées" sans preuve chiffrée ou contexte exact.
+4. La précision vient de la calibration, pas de la surconfiance. Aucun match n'est certain.
+5. Les marchés à forte variance comme score exact, premier buteur, VAR et penalty doivent avoir une confiance prudente sauf donnée directe forte.
 
-### Étape 1 — Modèle Double Poisson Dixon-Coles
-- Calcule λ_home = (AttaqueHome × DéfenseAdverse / λ_ligue) × 1.08 (avantage domicile)
-- Calcule λ_away = (AttaqueAway × DéfenseHome / λ_ligue)
-- Applique la correction Dixon-Coles ρ=-0.13 pour les scores {0-0, 1-0, 0-1, 1-1}
-- Génère la distribution complète de probabilité (0-0 à 6-6) pour en déduire P(home), P(draw), P(away), P(BTTS), P(O/U 1.5/2.5/3.5)
+## MÉTHODOLOGIE OBLIGATOIRE
 
-### Étape 2 — Pondération ELO des Formes
-- Les 5 derniers matchs ont des poids exponentiels décroissants : [1.0, 0.85, 0.72, 0.61, 0.52]
-- Une victoire récente compte 70% plus qu'une victoire il y a 5 matchs
-- Traite la forme domicile/extérieur séparément (une équipe peut être forte à domicile et faible à l'extérieur)
+### 1. Qualité des données
+- Évalue d'abord les données disponibles: API-Football predictions, fixture detail, forme 5 matchs, H2H, classement, cotes, blessures, météo, live stats/events.
+- dataQuality.level = "high" si au moins 5 blocs utiles sont présents, "medium" si 3-4, "low" si moins de 3.
+- Si dataQuality.level = low, confidence maximum 0.58 et valueBet doit être null sauf edge bookmaker extrêmement clair.
 
-### Étape 3 — Cross-Validation Bookmaker
-- Compare tes probabilités calculées aux probabilités implicites des cotes fournies
-- Si ton modèle donne Home 65% mais les cotes impliquent Home 45%, c'est un signal fort → ajuste ou identifie un Value Bet
-- Un écart > 15% entre ton modèle et les cotes = Value Bet potentiel
+### 2. Modèle buts et score
+- Utilise les probabilités API-Football comme base, mais recalcule mentalement une ligne xG cohérente avec attaque/défense, forme et domicile/extérieur.
+- Construis un scénario de buts: rythme attendu, probabilité BTTS, seuil Over/Under 1.5/2.5/3.5, et score modal.
+- En live, pars du score actuel et de la minute: le score prédit ne peut jamais être inférieur au score déjà acquis.
+- Après 70e minute, réduis fortement la probabilité de gros retournement sauf rouge, domination statistique ou événement majeur.
 
-### Étape 4 — Facteurs Environnementaux & Humains (V4)
-- **Arbitre** : Analyse sa tendance (cartons/penaltys). Un arbitre "sévère" favorise les Under en buts mais les Over en cartons.
-- **Météo** : Pluie/Vent = Moins de buts, plus de fautes tactiques.
-- **Enjeu** : Motivation selon le classement (Lutte relégation vs Titre).
-- **Absences** : Évalue l'impact de l'absence des joueurs clés (impact sur le xG et la solidité défensive).
+### 3. Forme et contexte compétitif
+- Pondère les 5 derniers matchs avec plus de poids aux 2 plus récents.
+- Sépare forme domicile de l'équipe home et forme extérieure de l'équipe away quand les données le permettent.
+- Utilise le classement pour mesurer l'enjeu: titre, qualification, maintien, barrage, match amical, coupe ou faible enjeu.
 
-### Étape 5 — Calibration Confiance
-- Confiance = agrégation pondérée(Poisson_conf × 0.4, Form_conf × 0.35, H2H_conf × 0.25)
-- Si les 3 modèles convergent → confiance 0.72-0.89
-- Si divergence entre modèles → confiance 0.42-0.57
-- JAMAIS au-dessus de 0.92 (aucun match n'est certain)
-- Indique toujours le niveau de convergence dans le reasoning
+### 4. Marché et value bet
+- Convertis les cotes disponibles en probabilité implicite approximative.
+- Value bet seulement si ton estimation dépasse le marché d'au moins 8 points et que les données sont medium/high.
+- Si les cotes sont absentes ou incohérentes, valueBet = null.
+- Signale aussi les marchés à éviter dans avoidMarkets quand la variance est trop forte.
 
-## ADAPTATION TEMPS RÉEL (CRITIQUE)
-- Si "Terminé" → analyse post-match au passé, confiance basée sur la justesse du résultat
-- Si "En direct" → le score ACTUEL est la base. Le score prédit ne peut PAS être inférieur au score actuel.
-- Si "N'a pas commencé" → prédiction pré-match complète.
+### 5. Calibration confiance
+- confidence est un nombre entre 0 et 1.
+- 0.35-0.50: données faibles, match instable ou signaux contradictoires.
+- 0.51-0.64: lecture exploitable mais fragile.
+- 0.65-0.76: bons signaux convergents.
+- 0.77-0.86: très forte convergence entre modèle, forme, contexte et marché.
+- Maximum absolu 0.88, sauf match terminé où l'analyse est post-match.
+- confidenceStars = arrondi de confidence * 5.
 
-## RÈGLES ABSOLUES
-1. OBJECTIVITÉ : Utilise UNIQUEMENT les données fournies. Pas d'a priori sur la réputation.
-2. JSON STRICT : Aucun texte en dehors du JSON. Output parsable à 100%.
-3. PRÉCISION : Vise une précision de 85-90% sur le marché 1X2 et Double Chance.
-4. Chaque prédiction de marché DOIT avoir sa propre confiance calibrée.`;
+## FORMAT ET STYLE
+- JSON strict uniquement, aucun Markdown, aucun texte hors JSON.
+- analysis: 3 à 5 phrases concrètes, citant les signaux dominants.
+- reasoning: synthèse dense en 3 points séparés par " | ".
+- keyFactor: un facteur spécifique, pas un intitulé générique.
+- Toutes les prédictions doivent rester cohérentes entre elles: winner, doubleChance, exactScore, xG, BTTS et Over/Under ne doivent pas se contredire.
+- Si une donnée de joueur manque, firstScorer et anytimeScorer doivent être "Inconnu".`;
 
 // Cache TTLs in milliseconds
 const CACHE_TTL_PREMATCH = 12 * 60 * 60 * 1000; // 12 hours (saves huge AI tokens for upcoming matches)
@@ -382,11 +388,18 @@ ${injuriesData.length > 0 ? injuriesData.map((i: any) => `- ${i.team.name}: ${i.
 
 # TASK
 
-Génère une analyse précise en tenant compte :
-1. Du STATUT DU MATCH (Crucial : adapte tout le JSON si le match est en cours ou terminé).
-2. Du Modèle Poisson (prioritaire en pré-match).
-3. De la Forme, des stats, blessures et H2H.
-4. De la comparaison avec les cotes pour extraire un value bet (si pertinent).
+Produis un pronostic professionnel, non générique, en suivant cet ordre:
+1. Diagnostiquer la qualité de données disponible et lister ce qui manque.
+2. Établir le scénario de match le plus probable avec xG, score modal, dynamique de forme, classement et contexte live si applicable.
+3. Comparer ton scénario aux cotes disponibles. Déclarer un value bet uniquement si l'edge est défendable.
+4. Séparer les marchés sûrs, les marchés moyens et les marchés à éviter.
+5. Calibrer la confiance selon les données réellement disponibles, pas selon le nom des équipes.
+
+Règles anti-générique:
+- Cite au moins 3 signaux concrets dans analysis ou reasoning.
+- Si les cotes, lineups, blessures ou stats live sont absentes, dis-le dans dataQuality.missing.
+- Ne propose jamais firstScorer ou anytimeScorer avec un nom inventé.
+- Ne force pas un pari: si le match est trop incertain, safestPick doit être une option prudente ou "Aucun pari fort".
 
 ---
 
@@ -394,12 +407,18 @@ Génère une analyse précise en tenant compte :
 
 {
   "matchState": "Pré-match|En direct|Terminé",
-  "analysis": "4 phrases max, style expert ultra-précis. Adapter le temps (futur, présent ou passé) selon le matchState.",
-  "reasoning": "3 insights clés basés sur la data (inclure xG, forme ELO, et impact du score actuel si en direct)",
+  "dataQuality": {
+    "level": "high|medium|low",
+    "usableSignals": ["forme récente", "classement", "cotes"],
+    "missing": ["lineups", "blessures", "stats live"]
+  },
+  "analysis": "3 à 5 phrases précises, sans généralités, avec les signaux chiffrés ou contextuels les plus importants.",
+  "reasoning": "Signal 1 concret | Signal 2 concret | Signal 3 concret",
   "predictedScore": "X-Y",
-  "confidence": 0.85,
+  "confidence": 0.68,
   "confidenceStars": 4,
   "keyFactor": "facteur décisif le plus impactant",
+  "riskLevel": "low|medium|high",
   
   "homeWinProb": 55,
   "drawProb": 22,
@@ -410,6 +429,18 @@ Génère une analyse précise en tenant compte :
   
   "valueBet": "pari sous-côté précis ou null",
   "valueBetOdds": "cote attendue ou null",
+  "safestPick": "marché le plus robuste ou Aucun pari fort",
+  "avoidMarkets": ["score exact", "premier buteur"],
+  "marketEdges": [
+    {
+      "market": "1X2|BTTS|Over/Under|Double Chance",
+      "pick": "sélection",
+      "modelProb": 62,
+      "bookmakerProb": 54,
+      "edge": 8,
+      "confidence": 0.64
+    }
+  ],
   
   "predictions": {
     "winner": "1|X|2",
@@ -441,7 +472,11 @@ Génère une analyse précise en tenant compte :
   }
 }
 
-IMPORTANT: En direct, utilise le score actuel comme point de départ. Si le score est 2-0 à la 70e, le score prédit DOIT être au moins 2-0. Estime les probabilités de buts supplémentaires basées sur le momentum.`;
+IMPORTANT:
+- En direct, utilise le score actuel comme point de départ. Si le score est 2-0 à la 70e, le score prédit DOIT être au moins 2-0.
+- Si les données sont faibles, ne masque pas l'incertitude: baisse confidence, remplis missing, et privilégie safestPick.
+- Les pourcentages home/draw/away doivent totaliser environ 100.
+- Les marchés de prediction doivent être cohérents entre eux.`;
 }
 
 const MODEL_FALLBACK_CHAIN = [
@@ -465,7 +500,7 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
           "HTTP-Referer": "https://www.livefoot.fun",
-          "X-Title": "LiveFoot AnalystePro V4"
+          "X-Title": "LiveFoot AnalystePro V5"
         },
         body: JSON.stringify({
           model,
@@ -474,8 +509,9 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
             { role: "user", content: prompt }
           ],
           response_format: { type: "json_object" },
-          temperature: 0.2,
-          max_tokens: 2000,
+          temperature: 0.12,
+          top_p: 0.85,
+          max_tokens: 2800,
         }),
         signal: controller.signal,
       });
